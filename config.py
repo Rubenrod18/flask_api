@@ -1,0 +1,32 @@
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class BaseConfig(object):
+    """Default configuration options."""
+    ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+    DEVELOPMENT = False
+    DEBUG = False
+    LOGIN_DISABLED = False
+    DATABASE_NAME = os.environ.get('SQLITE_DB', 'one_esecurity.db')
+    DATABASE = {
+        'name': DATABASE_NAME,
+        'engine': 'peewee.SqliteDatabase',
+    }
+
+class DevConfig(BaseConfig):
+    """Development configuration options."""
+    DEVELOPMENT = True
+    DEBUG = True
+    DATABASE_NAME = os.environ.get('SQLITE_DB', 'dev_one_esecurity.db')
+    DATABASE = {
+        'name': DATABASE_NAME,
+        'engine': 'peewee.SqliteDatabase',
+    }
+
+class TestConfig(BaseConfig):
+    """Testing configuration options."""
+    DEVELOPMENT = True
+    TESTING = True
