@@ -3,7 +3,7 @@ import os.path
 import peewee
 
 from ..extensions import db_wrapper
-from .person import Person
+from .user import User
 
 def init_app(app):
     abs_path = os.path.abspath(__file__)
@@ -19,6 +19,6 @@ def init_app(app):
             models.append(basename)
 
     # TODO: This can do it better
-    models = [Person]
+    models = [User]
 
     db_wrapper.database.create_tables(models)
