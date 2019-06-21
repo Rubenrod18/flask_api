@@ -44,14 +44,21 @@ class UserResource(Resource):
         }
 
     def delete(self, user_id):
-        user = UserModel.get(user_id)
-        user_dict = model_to_dict(user)
+        query = UserModel.select().where(UserModel.id == user_id)
 
-        # TODO: improve this line
-        user = {k: custom_converter(v) for (k, v) in user_dict.items()}
+        if query.exists():
+            user = query.get()
+            user_dict = model_to_dict(user)
 
-        q = UserModel.delete().where(UserModel.id == user_id).execute()
+            # TODO: improve this line
+            user = {k: custom_converter(v) for (k, v) in user_dict.items()}
+
+            q = UserModel.delete().where(UserModel.id == user_id).execute()
+
+            response_data = user
+        else:
+            response_data = ''
 
         return {
-            'data': user
+            'data': response_data
         }
