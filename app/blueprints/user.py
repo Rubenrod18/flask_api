@@ -30,17 +30,22 @@ class UserResource(Resource):
     def put(self, user_id):
         data = dict(request.get_json())
 
-        data['id'] = user_id
-        UserModel(**data).save()
+        query = UserModel.select().where(UserModel.id == user_id)
 
-        user = UserModel.get(user_id)
-        user_dict = model_to_dict(user)
+        if query.exists():
+            data['id'] = user_id
+            user = UserModel.save(**data)
+            user_dict = model_to_dict(user)
 
-        # TODO: improve this line
-        user = {k: custom_converter(v) for (k, v) in user_dict.items()}
+            # TODO: improve this line
+            user = {k: custom_converter(v) for (k, v) in user_dict.items()}
+
+            response_data = user
+        else:
+            response_data = ''
 
         return {
-            'data': user
+            'data': response_data
         }
 
     def delete(self, user_id):

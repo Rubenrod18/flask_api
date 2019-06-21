@@ -44,7 +44,7 @@ def create_query(query, data):
 
         filters = [
             item for item in filters
-            if 'field_value' in item and not item.get('field_value')
+            if 'field_value' in item and item.get('field_value') != ''
             ]
 
         for item in filters:
