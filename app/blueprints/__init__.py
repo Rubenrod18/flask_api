@@ -1,7 +1,7 @@
-from .people import blueprint as blueprint_people
-from .person import blueprint as blueprint_person
+from .users import blueprint as blueprint_users
+from .user import blueprint as blueprint_user
 
 blueprints = [
-    blueprint_people,
-    blueprint_person
+    blueprint_users,
+    blueprint_user
 ]
