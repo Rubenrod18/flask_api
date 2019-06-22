@@ -1,8 +1,8 @@
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.0.1"
+version = "0.0.0"
 files = [
     "__version__.py",
     "pyproject.toml:version"
 ]
-tag_format = "v$minor.$major.$path$prerelease"
+tag_format = "v$minor.$major.$patch$prerelease"
