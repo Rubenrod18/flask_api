@@ -12,7 +12,7 @@ from peewee import CharField, DateField, DateTimeField, IntegerField
 # Local application/library specific imports
 from ..extensions import db_wrapper as db
 from ..models.user import User as UserModel
-from ..utils import custom_converter
+from ..utils import custom_converter, readable_converter
 
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
@@ -102,6 +102,83 @@ class ExportUsersExcelResource(Resource):
         root_dir = current_app.config['ROOT_DIRECTORY']
         excel_filename = root_dir + '/users.xlsx'
 
+        page_number, items_per_page = 1, 10
+
+        workbook = xlsxwriter.Workbook(excel_filename)
+        worksheet = workbook.add_worksheet()
+
+        original_column_names =  [
+                column.name
+                for column in db.database.get_columns('users')
+                if column.name != 'id'
+            ]
+
+        formatted_column_names = [
+                column.title().replace('_', ' ')
+                for column in original_column_names
+            ]
+        rows = [formatted_column_names]
+
+        # TODO: I need to improve this
+        #last_col_index = len(formatted_column_names)
+        #last_col = '{}{}.'.format(chr(last_col_index), last_col_index)
+        #cell_range = 'A1:I10'
+
+        cell_format = workbook.add_format({
+                'bold': True
+            })
+
+        worksheet.set_row(0, None, 'A1:I10')
+        worksheet.autofilter(cell_range)
+
+        select_fields = [
+                UserModel._meta.fields[column_name]
+                for column_name in original_column_names
+            ]
+
+        users_query = (UserModel
+                       .select(*select_fields)
+                       .paginate(page_number, items_per_page)
+                       .dicts())
+
+        users_list = []
+        for user in users_query:
+            user_dict = {
+                k: readable_converter(v)
+                for (k, v) in user.items()
+                }
+            users_list.append(user_dict)
+
+        for user in users_list:
+            list_values = list(user.values())
+            rows.append(list_values)
+
+        row, col = 0, 0
+        # Iterate over the data and write it out row by row.
+        for items in rows:
+            col = 0
+            for item in items:
+                worksheet.write(row, col, item)
+                col += 1
+            row += 1
+
+        workbook.close()
+
+        kwargs = {
+            'filename_or_fp' : excel_filename,
+            'mimetype' : magic.from_file(excel_filename, mime=True),
+            'as_attachment' : True,
+            'attachment_filename' : excel_filename
+        }
+
+        return send_file(**kwargs)
+
+@api.resource('/pdf')
+class ExportUsersPdfResource(Resource):
+    def get(self):
+        root_dir = current_app.config['ROOT_DIRECTORY']
+        excel_filename = root_dir + '/users.xlsx'
+
         workbook = xlsxwriter.Workbook(excel_filename)
         worksheet = workbook.add_worksheet()
 
@@ -126,11 +203,6 @@ class ExportUsersExcelResource(Resource):
 
         workbook.close()
 
-        kwargs = {
-            'filename_or_fp' : excel_filename,
-            'mimetype' : magic.from_file(excel_filename, mime=True),
-            'as_attachment' : True,
-            'attachment_filename' : excel_filename
-        }
+        # WIP
 
-        return send_file(**kwargs)
+        return {}
