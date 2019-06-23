@@ -13,46 +13,61 @@ from peewee import CharField, DateField, DateTimeField, IntegerField
 # Local application/library specific imports
 from ..extensions import db_wrapper as db
 from ..models.user import User as UserModel
-from ..utils import custom_converter, readable_converter
+from ..utils import to_json, to_readable
 
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
 
+class UserResource(Resource):
+    allowed_fields = set(
+            filter(
+                lambda x: x not in ['id', 'created_at', 'updated_at', 'deleted_at'],
+                list(UserModel._meta.fields)
+            )
+        )
 
-# TODO: improve this function
-def get_query_fields(data):
-    page_number = data.get('page_number') if 'page_number' in data else 1
+    def get_request_data(self, extend_allow_fields):
+        request_data = request.get_json()
 
-    items_per_page = data.get('items_per_page') if 'items_per_page' in data else 10
+        self.allowed_fields.update(extend_allow_fields)
 
-    if 'order' in data and 'sort' in data:
-        sort = data.get('sort')
-        order = data.get('order')
+        user_data = {
+                k: v
+                for k, v in request_data.items()
+                if k in self.allowed_fields
+            }
+
+        return user_data
+
+    def get_request_query_fields(self):
+        request_data = request.get_json()
+
+        page_number = request_data.get('page_number', 1)
+        items_per_page = request_data.get('items_per_page', 10)
+
+        sort = request_data.get('sort', 'id')
+        order = request_data.get('order', 'asc')
 
         order_by = UserModel._meta.fields[sort]
         if order == 'desc':
             order_by = order_by.desc()
-    else:
-        order_by = UserModel.id.desc()
 
-    return page_number, items_per_page, order_by
+        return page_number, items_per_page, order_by
 
-# TODO: improve this function
-def create_query(query, data):
-    if 'search' in data:
-        filters = data.get('search')
+    def create_query(self, query, data):
+        search_data = data.get('search', {})
 
         filters = [
-            item for item in filters
+            item for item in search_data
             if 'field_value' in item and item.get('field_value') != ''
             ]
 
-        for item in filters:
-            field_name = item['field_name']
+        for filter in filters:
+            field_name = filter['field_name']
             field = UserModel._meta.fields[field_name]
 
-            field_value = item['field_value']
+            field_value = filter['field_value']
 
             if isinstance(field, IntegerField):
                 query = query.where(field == field_value)
@@ -68,34 +83,100 @@ def create_query(query, data):
                 # TODO: add field_operator
                 pass
 
-    return query
+        return query
 
 @api.resource('')
-class UsersResource(Resource):
+class NewUserResource(UserResource):
     def post(self):
-        data = request.get_json()
+        data = self.get_request_data()
 
-        page_number, items_per_page, order_by = get_query_fields(data)
+        user = UserModel(**data).save()
+
+        return {
+            'data': user
+        }, 201
+
+@api.resource('/<int:user_id>')
+class UserResource(UserResource):
+    def put(self, user_id):
+        data = self.get_request_data()
+
+        query = UserModel.select().where(UserModel.id == user_id)
+
+        if query.exists():
+            data['id'] = user_id
+            user = UserModel.save(**data)
+            user_dict = model_to_dict(user)
+
+            # TODO: improve this line
+            user = {k: to_json(v) for (k, v) in user_dict.items()}
+
+            response_data = {
+                    'data': user
+                }
+            response_code = 200
+        else:
+            response_data = {
+                    'error': 'User doesn\'t exists'
+                }
+            response_code = 400
+
+        return response_data, response_code
+
+    def delete(self, user_id):
+        query = UserModel.select().where(UserModel.id == user_id)
+
+        if query.exists():
+            user = query.get()
+            user_dict = model_to_dict(user)
+
+            # TODO: improve this line
+            user = {k: to_json(v) for (k, v) in user_dict.items()}
+
+            q = UserModel.delete().where(UserModel.id == user_id).execute()
+
+            response_data = {
+                    'data': user
+                }
+            response_code = 200
+        else:
+            response_data = {
+                    'error': 'User doesn\'t exists'
+                }
+            response_code = 400
+
+        return response_data, response_code
+
+@api.resource('/search')
+class UsersResource(UserResource):
+    allowed_request_fields = {'search'}
+
+    def post(self):
+        print(self.allowed_request_fields)
+        data = self.get_request_data(self.allowed_request_fields)
+
+        page_number, items_per_page, order_by = self.get_request_query_fields()
 
         query = UserModel.select()
         records_total = query.count()
 
-        query = create_query(query, data)
+        query = self.create_query(query, data)
 
         query = query.order_by(order_by)
         records_filtered = query.count()
 
-        users_query = query.paginate(page_number, items_per_page).dicts()
-        users_list = []
-        for user in users_query:
-            user_dict = {k: custom_converter(v) for (k, v) in user.items()}
-            users_list.append(user_dict)
+        query = query.paginate(page_number, items_per_page).dicts()
+        user_list = []
+
+        for user in query:
+            user_dict = {k: to_json(v) for (k, v) in user.items()}
+            user_list.append(user_dict)
 
         return {
+            'data': user_list,
             'records_total': records_total,
             'records_filtered': records_filtered,
-            'data': users_list,
-        }
+        }, 200
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(Resource):
@@ -137,7 +218,7 @@ class ExportUsersExcelResource(Resource):
 
             for user in users_query:
                 user_dict = {
-                    k: readable_converter(v)
+                    k: to_readable(v)
                     for (k, v) in user.items()
                     }
                 users_list.append(user_dict)
@@ -214,38 +295,9 @@ class ExportUsersExcelResource(Resource):
             'attachment_filename' : excel_filename
         }
 
-        return send_file(**kwargs)
+        return send_file(**kwargs), 200
 
 @api.resource('/pdf')
 class ExportUsersPdfResource(Resource):
     def get(self):
-        root_dir = current_app.config['ROOT_DIRECTORY']
-        excel_filename = root_dir + '/users.xlsx'
-
-        workbook = xlsxwriter.Workbook(excel_filename)
-        worksheet = workbook.add_worksheet()
-
-        fieldnames = [p.name for p in db.database.get_columns('users')]
-        rows = [fieldnames]
-
-        users = UserModel.select().paginate(1, 10)
-        users_list = [model_to_dict(t, backrefs=True) for t in users]
-
-        for p in users_list:
-            list_values = list(p.values())
-            rows.append(list_values)
-
-        row, col = 0, 0
-        # Iterate over the data and write it out row by row.
-        for items in rows:
-            col = 0
-            for item in items:
-                worksheet.write(row, col, item)
-                col += 1
-            row += 1
-
-        workbook.close()
-
-        # WIP
-
-        return {}
+        pass

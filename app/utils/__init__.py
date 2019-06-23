@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-def custom_converter(obj):
+def to_json(obj):
     if isinstance(obj, datetime):
         return datetime.timestamp(obj)
     elif isinstance(obj, date):
@@ -8,7 +8,7 @@ def custom_converter(obj):
     else:
         return obj
 
-def readable_converter(obj):
+def to_readable(obj):
     if obj is None or obj == '':
         return 'N/D'
     elif isinstance(obj, datetime):
