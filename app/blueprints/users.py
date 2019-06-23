@@ -27,7 +27,7 @@ class UserResource(Resource):
             )
         )
 
-    def get_request_data(self, extend_allow_fields):
+    def get_request_data(self, extend_allow_fields = {}):
         request_data = request.get_json()
 
         self.allowed_fields.update(extend_allow_fields)
@@ -101,11 +101,15 @@ class UserResource(UserResource):
     def put(self, user_id):
         data = self.get_request_data()
 
-        query = UserModel.select().where(UserModel.id == user_id)
+        query = (UserModel
+                .select()
+                .where(UserModel.id == user_id))
 
         if query.exists():
             data['id'] = user_id
-            user = UserModel.save(**data)
+            UserModel(**data).save()
+
+            user = query.get()
             user_dict = model_to_dict(user)
 
             # TODO: improve this line
@@ -152,7 +156,6 @@ class UsersResource(UserResource):
     allowed_request_fields = {'search'}
 
     def post(self):
-        print(self.allowed_request_fields)
         data = self.get_request_data(self.allowed_request_fields)
 
         page_number, items_per_page, order_by = self.get_request_query_fields()
