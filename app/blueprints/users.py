@@ -1,5 +1,6 @@
 # Standard library imports
 import json
+from datetime import datetime
 
 # Related third party imports
 import xlsxwriter
@@ -99,68 +100,110 @@ class UsersResource(Resource):
 @api.resource('/xlsx')
 class ExportUsersExcelResource(Resource):
     def get(self):
-        root_dir = current_app.config['ROOT_DIRECTORY']
-        excel_filename = root_dir + '/users.xlsx'
+        def get_column_names():
+            column_names =  [
+                    column.name
+                    for column in db.database.get_columns('users')
+                    if column.name != 'id'
+                ]
+
+            return column_names
+
+        def format_column_names(rows):
+            formatted_column_names = [
+                    column.title().replace('_', ' ')
+                    for column in original_column_names
+                ]
+
+            rows.append(formatted_column_names)
+
+            return None
+
+        def get_users(column_names, page_number, items_per_page):
+            select_fields = [
+                    UserModel._meta.fields[column_name]
+                    for column_name in column_names
+                ]
+
+            users_query = (UserModel
+                           .select(*select_fields)
+                           .paginate(page_number, items_per_page)
+                           .dicts())
+
+            return users_query
+
+        def format_user_data(users_query, rows):
+            users_list = []
+
+            for user in users_query:
+                user_dict = {
+                    k: readable_converter(v)
+                    for (k, v) in user.items()
+                    }
+                users_list.append(user_dict)
+
+            for user_dict in users_list:
+                user_values = list(user_dict.values())
+                rows.append(user_values)
+
+            return None
+
+        def write_excel_rows(rows, workbook, worksheet):
+            # Iterate over the data and write it out row by row.
+            for i, row in enumerate(rows, 1):
+                format = None
+
+                if i == 1:
+                    format = workbook.add_format({
+                            'bold': True,
+                            'bg_color': '#CCCCCC'
+                        })
+                elif i % 2 == 0:
+                    format = workbook.add_format({
+                            'bg_color': '#f1f1f1'
+                        })
+
+                range_cells = "A%s:I10" % i
+
+                worksheet.write_row(range_cells, row, format)
+
+        def adjust_each_column_width(rows, worksheet):
+            lists = [
+                [row[i] for row in rows]
+                for i in range(len(rows))
+                ]
+
+            for i, v in enumerate(lists):
+                v3 = [str(v2) for v2 in v]
+                max_column_width = max(v3, key=len)
+                max_column_width_len = len(max_column_width)
+
+                worksheet.set_column(i, i + 1, max_column_width_len + 2)
+
+        storage_dir = current_app.config.get('STORAGE_DIRECTORY')
+        file_prefix = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        excel_filename = '{}/{}_users.xlsx'.format(storage_dir, file_prefix)
 
         page_number, items_per_page = 1, 10
+        rows = []
 
         workbook = xlsxwriter.Workbook(excel_filename)
         worksheet = workbook.add_worksheet()
 
-        original_column_names =  [
-                column.name
-                for column in db.database.get_columns('users')
-                if column.name != 'id'
-            ]
+        original_column_names = get_column_names()
+        format_column_names(rows)
 
-        formatted_column_names = [
-                column.title().replace('_', ' ')
-                for column in original_column_names
-            ]
-        rows = [formatted_column_names]
+        users_query = get_users(original_column_names, page_number, items_per_page)
+        format_user_data(users_query, rows)
 
-        # TODO: I need to improve this
+        # TODO: I need to improve this for doing dynamic
         #last_col_index = len(formatted_column_names)
         #last_col = '{}{}.'.format(chr(last_col_index), last_col_index)
         #cell_range = 'A1:I10'
+        worksheet.autofilter('A1:I10')
 
-        cell_format = workbook.add_format({
-                'bold': True
-            })
-
-        worksheet.set_row(0, None, 'A1:I10')
-        worksheet.autofilter(cell_range)
-
-        select_fields = [
-                UserModel._meta.fields[column_name]
-                for column_name in original_column_names
-            ]
-
-        users_query = (UserModel
-                       .select(*select_fields)
-                       .paginate(page_number, items_per_page)
-                       .dicts())
-
-        users_list = []
-        for user in users_query:
-            user_dict = {
-                k: readable_converter(v)
-                for (k, v) in user.items()
-                }
-            users_list.append(user_dict)
-
-        for user in users_list:
-            list_values = list(user.values())
-            rows.append(list_values)
-
-        row, col = 0, 0
-        # Iterate over the data and write it out row by row.
-        for items in rows:
-            col = 0
-            for item in items:
-                worksheet.write(row, col, item)
-                col += 1
-            row += 1
+        write_excel_rows(rows, workbook, worksheet)
+        adjust_each_column_width(rows, worksheet)
 
         workbook.close()
 
