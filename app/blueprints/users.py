@@ -1,10 +1,12 @@
 # Standard library imports
 import json
 from datetime import datetime
+from subprocess import call
 
 # Related third party imports
 import xlsxwriter
 import magic
+import docx
 from flask_restful import current_app, Api, Resource
 from flask import Blueprint, request, send_file
 from playhouse.shortcuts import model_to_dict
@@ -14,6 +16,7 @@ from peewee import CharField, DateField, DateTimeField, IntegerField
 from ..extensions import db_wrapper as db
 from ..models.user import User as UserModel
 from ..utils import to_json, to_readable
+from ..libs.libreoffice import convert_to
 
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
@@ -84,6 +87,54 @@ class UserResource(Resource):
                 pass
 
         return query
+
+    def get_column_names(self):
+        column_names =  [
+                column.name
+                for column in db.database.get_columns('users')
+                if column.name != 'id'
+            ]
+
+        return column_names
+
+    def format_column_names(self, rows, original_column_names):
+        formatted_column_names = [
+                column.title().replace('_', ' ')
+                for column in original_column_names
+            ]
+
+        rows.append(formatted_column_names)
+
+        return None
+
+    def get_users(self, column_names, page_number, items_per_page):
+        select_fields = [
+                UserModel._meta.fields[column_name]
+                for column_name in column_names
+            ]
+
+        users_query = (UserModel
+                       .select(*select_fields)
+                       .paginate(page_number, items_per_page)
+                       .dicts())
+
+        return users_query
+
+    def format_user_data(self, users_query, rows):
+        users_list = []
+
+        for user in users_query:
+            user_dict = {
+                k: to_readable(v)
+                for (k, v) in user.items()
+                }
+            users_list.append(user_dict)
+
+        for user_dict in users_list:
+            user_values = list(user_dict.values())
+            rows.append(user_values)
+
+        return None
 
 @api.resource('')
 class NewUserResource(UserResource):
@@ -166,9 +217,10 @@ class UsersResource(UserResource):
         query = self.create_query(query, data)
 
         query = query.order_by(order_by)
-        records_filtered = query.count()
 
         query = query.paginate(page_number, items_per_page).dicts()
+
+        records_filtered = query.count()
         user_list = []
 
         for user in query:
@@ -182,56 +234,8 @@ class UsersResource(UserResource):
         }, 200
 
 @api.resource('/xlsx')
-class ExportUsersExcelResource(Resource):
+class ExportUsersExcelResource(UserResource):
     def get(self):
-        def get_column_names():
-            column_names =  [
-                    column.name
-                    for column in db.database.get_columns('users')
-                    if column.name != 'id'
-                ]
-
-            return column_names
-
-        def format_column_names(rows):
-            formatted_column_names = [
-                    column.title().replace('_', ' ')
-                    for column in original_column_names
-                ]
-
-            rows.append(formatted_column_names)
-
-            return None
-
-        def get_users(column_names, page_number, items_per_page):
-            select_fields = [
-                    UserModel._meta.fields[column_name]
-                    for column_name in column_names
-                ]
-
-            users_query = (UserModel
-                           .select(*select_fields)
-                           .paginate(page_number, items_per_page)
-                           .dicts())
-
-            return users_query
-
-        def format_user_data(users_query, rows):
-            users_list = []
-
-            for user in users_query:
-                user_dict = {
-                    k: to_readable(v)
-                    for (k, v) in user.items()
-                    }
-                users_list.append(user_dict)
-
-            for user_dict in users_list:
-                user_values = list(user_dict.values())
-                rows.append(user_values)
-
-            return None
-
         def write_excel_rows(rows, workbook, worksheet):
             # Iterate over the data and write it out row by row.
             for i, row in enumerate(rows, 1):
@@ -252,14 +256,9 @@ class ExportUsersExcelResource(Resource):
                 worksheet.write_row(range_cells, row, format)
 
         def adjust_each_column_width(rows, worksheet):
-            lists = [
-                [row[i] for row in rows]
-                for i in range(len(rows))
-                ]
-
-            for i, v in enumerate(lists):
-                v3 = [str(v2) for v2 in v]
-                max_column_width = max(v3, key=len)
+            for i, v in enumerate(rows):
+                formatted_row = [str(item) for item in v]
+                max_column_width = max(formatted_row, key=len)
                 max_column_width_len = len(max_column_width)
 
                 worksheet.set_column(i, i + 1, max_column_width_len + 2)
@@ -268,17 +267,17 @@ class ExportUsersExcelResource(Resource):
         file_prefix = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         excel_filename = '{}/{}_users.xlsx'.format(storage_dir, file_prefix)
 
-        page_number, items_per_page = 1, 10
+        page_number, items_per_page = 1, UserModel.select().count()
         rows = []
 
         workbook = xlsxwriter.Workbook(excel_filename)
         worksheet = workbook.add_worksheet()
 
-        original_column_names = get_column_names()
-        format_column_names(rows)
+        original_column_names = self.get_column_names()
+        self.format_column_names(rows, original_column_names)
 
-        users_query = get_users(original_column_names, page_number, items_per_page)
-        format_user_data(users_query, rows)
+        users_query = self.get_users(original_column_names, page_number, items_per_page)
+        self.format_user_data(users_query, rows)
 
         # TODO: I need to improve this for doing dynamic
         #last_col_index = len(formatted_column_names)
@@ -298,9 +297,50 @@ class ExportUsersExcelResource(Resource):
             'attachment_filename' : excel_filename
         }
 
-        return send_file(**kwargs), 200
+        return send_file(**kwargs)
 
 @api.resource('/pdf')
-class ExportUsersPdfResource(Resource):
+class ExportUsersPdfResource(UserResource):
     def get(self):
-        pass
+        def write_docx_content(rows, document):
+            header_fields = rows[0]
+
+            table = document.add_table(rows=len(rows), cols=len(header_fields))
+
+            for i in range(len(rows)):
+                row = table.rows[i]
+                for j, table_cell in enumerate(rows[i]):
+                    row.cells[j].text = str(table_cell)
+
+        storage_dir = current_app.config.get('STORAGE_DIRECTORY')
+        file_prefix = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        basename = '{}_users'.format(file_prefix)
+        filename = '{}.docx'.format(basename)
+        docx_filename = '{}/{}'.format(storage_dir, filename)
+
+        page_number, items_per_page = 1, UserModel.select().count()
+        rows = []
+
+        original_column_names = self.get_column_names()
+        self.format_column_names(rows, original_column_names)
+
+        users_query = self.get_users(original_column_names, page_number, items_per_page)
+        self.format_user_data(users_query, rows)
+
+        document = docx.Document()
+
+        write_docx_content(rows, document)
+        document.save(docx_filename)
+
+        convert_to(storage_dir, filename)
+
+        pdf_filename = '{}/{}.pdf'.format(storage_dir, basename)
+
+        kwargs = {
+            'filename_or_fp' : pdf_filename,
+            'mimetype' : magic.from_file(pdf_filename, mime=True),
+            'as_attachment' : True,
+            'attachment_filename' : pdf_filename
+        }
+
+        return send_file(**kwargs)

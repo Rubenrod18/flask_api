@@ -22,6 +22,7 @@ itsdangerous==1.1.0
 jedi==0.13.3
 Jinja2==2.10.1
 lazy-object-proxy==1.4.1
+lxml==4.3.4
 MarkupSafe==1.1.1
 mccabe==0.6.1
 packaging==19.0
@@ -36,6 +37,7 @@ pyflakes==2.1.1
 pylint==2.3.1
 pyparsing==2.4.0
 python-dateutil==2.8.0
+python-docx==0.8.10
 python-dotenv==0.10.3
 python-jsonrpc-server==0.1.2
 python-language-server==0.26.1
