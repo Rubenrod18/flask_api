@@ -5,7 +5,6 @@ from subprocess import call
 
 # Related third party imports
 import xlsxwriter
-import magic
 import docx
 from flask_restful import current_app, Api, Resource
 from flask import Blueprint, request, send_file
@@ -292,7 +291,7 @@ class ExportUsersExcelResource(UserResource):
 
         kwargs = {
             'filename_or_fp' : excel_filename,
-            'mimetype' : magic.from_file(excel_filename, mime=True),
+            'mimetype' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'as_attachment' : True,
             'attachment_filename' : excel_filename
         }
