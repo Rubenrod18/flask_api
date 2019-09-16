@@ -32,3 +32,4 @@ build
 *.xlsx
 *.pdf
 .env
+.idea
