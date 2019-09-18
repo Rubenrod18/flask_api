@@ -1,12 +1,10 @@
 import os
 
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class BaseConfig(object):
     """Default configuration options."""
     ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+    STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
     DEVELOPMENT = False
     DEBUG = False
     LOGIN_DISABLED = False
