@@ -26,6 +26,7 @@ pip-log.txt
 
 # Mr Developer
 venv
+venv2
 *.pyc
 build
 *.db
@@ -33,3 +34,4 @@ build
 *.pdf
 .env
 .idea
+log
