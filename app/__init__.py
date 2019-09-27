@@ -29,7 +29,7 @@ def init_app(app):
 
     """
     extensions.init_app(app)
-    models.init_app(app)
+    models.init_app()
 
 
 def register_blueprints(app):
