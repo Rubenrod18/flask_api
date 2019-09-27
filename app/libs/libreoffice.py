@@ -1,17 +1,38 @@
+import os
 import sys
 import subprocess
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def convert_to(folder, source):
-    args = [libreoffice_exec(), '--headless', '--convert-to', 'pdf', '--outdir', folder, source]
+    logger.debug('Folder: %s' % folder)
+    logger.debug('Word file: %s' % source)
 
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-    filename = re.search('-> (.*?) using filter', stdout.decode())
+    if not os.path.isdir(folder):
+        raise FileNotFoundError('%s directory not found' % source)
+
+    if not os.path.isfile(source):
+        raise FileNotFoundError('%s file not found' % source)
+
+    args = [
+            libreoffice_exec(),
+            '--headless',
+            '--convert-to',
+            'pdf:writer_pdf_Export',
+            '--outdir',
+            folder,
+            source
+        ]
+
+    process = subprocess.run(args, stdout=subprocess.PIPE, env={'$HOME': os.environ.get('HOME')})
+    logger.debug(process)
+    filename = re.search('-> (.*?) using filter', process.stdout.decode('utf-8'))
 
     if filename is None:
-        raise LibreOfficeError(stdout.decode())
+        raise LibreOfficeError(process.stdout.decode('utf-8'))
     else:
         return filename.group(1)
 

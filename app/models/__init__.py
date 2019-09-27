@@ -1,11 +1,18 @@
+import logging
 import os
 import os.path
-import peewee
 
 from ..extensions import db_wrapper
 from .user import User
 
-def init_app(app):
+logger = logging.getLogger(__name__)
+
+def init_app():
+    pass
+    # TODO: I need to think about what place it's better for this logic
+    #create_tables()
+
+def create_tables():
     abs_path = os.path.abspath(__file__)
     path = os.path.dirname(abs_path)
     dirs = os.listdir(path)
@@ -18,7 +25,10 @@ def init_app(app):
         if basename.istitle() and filename.endswith('.py'):
             models.append(basename)
 
-    # TODO: This can do it better
     models = [User]
 
-    db_wrapper.database.create_tables(models)
+    # This line makes next error: raise OperationalError('Connection already opened.')
+    tables = db_wrapper.database.get_tables()
+
+    if tables == 0:
+        db_wrapper.database.create_tables(models)

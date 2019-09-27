@@ -1,7 +1,6 @@
 # Standard library imports
-import json
+import logging
 from datetime import datetime
-from subprocess import call
 
 # Related third party imports
 import xlsxwriter
@@ -20,6 +19,8 @@ from ..libs.libreoffice import convert_to
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
+
+logger = logging.getLogger(__name__)
 
 class UserResource(Resource):
     allowed_fields = set(
@@ -331,13 +332,13 @@ class ExportUsersPdfResource(UserResource):
         write_docx_content(rows, document)
         document.save(docx_filename)
 
-        convert_to(storage_dir, filename)
+        convert_to(storage_dir, docx_filename)
 
         pdf_filename = '{}/{}.pdf'.format(storage_dir, basename)
 
         kwargs = {
             'filename_or_fp' : pdf_filename,
-            'mimetype' : magic.from_file(pdf_filename, mime=True),
+            'mimetype' : 'application/pdf',
             'as_attachment' : True,
             'attachment_filename' : pdf_filename
         }
