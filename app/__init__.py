@@ -1,3 +1,8 @@
+import logging
+import os
+import sys
+from datetime import datetime
+
 import flask
 
 from .blueprints import blueprints
@@ -36,3 +41,29 @@ def register_blueprints(app):
     """
     for blueprint in blueprints:
         app.register_blueprint(blueprint)
+
+
+def logging_config():
+    # Function for catching unexpected errors
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+            return
+
+        logger.error('Uncaught exception', exc_info=(exc_type, exc_value, exc_traceback))
+
+    sys.excepthook = handle_exception
+
+    log_dirname = 'log/'
+    log_filename = '{}.log'.format(datetime.utcnow().strftime('%Y%m%d'))
+    log_fullpath = '{}{}'.format(log_dirname, log_filename)
+
+    if not os.path.exists(log_dirname):
+        os.mkdir(log_dirname)
+
+    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(filename=log_fullpath, format=FORMAT, level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+
+    handler = logging.StreamHandler(stream=sys.stdout)
+    logger.addHandler(handler)
