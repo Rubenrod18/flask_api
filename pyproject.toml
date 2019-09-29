@@ -5,4 +5,4 @@ files = [
     "__version__.py",
     "pyproject.toml:version"
 ]
-tag_format = "v$minor.$major.$patch$prerelease"
+tag_format = "v$major.$minor.$patch$prerelease"
