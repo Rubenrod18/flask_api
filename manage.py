@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from app import create_app
 from app.models import *
+from migrations import init_db
 
 # Import environment file variables
 load_dotenv()
@@ -54,6 +55,11 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
     response.headers.add('Cache-Control', 'no-cache')
     return response
+
+
+@manager.command
+def migrate():
+    init_db()
 
 
 if __name__ == '__main__':
