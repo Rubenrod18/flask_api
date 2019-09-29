@@ -1,0 +1,12 @@
+# requirements.in
+Flask
+Flask-RESTful
+Flask-Script
+XlsxWriter
+commitizen
+flask-peewee
+peewee
+pip-tools
+python-docx
+python-dotenv
+uwsgi
