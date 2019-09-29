@@ -1,34 +1,25 @@
 import logging
 import os
 import os.path
-
-from ..extensions import db_wrapper
-from .user import User
+from pydoc import locate
 
 logger = logging.getLogger(__name__)
 
-def init_app():
-    pass
-    # TODO: I need to think about what place it's better for this logic
-    #create_tables()
-
-def create_tables():
+def get_models():
     abs_path = os.path.abspath(__file__)
     path = os.path.dirname(abs_path)
     dirs = os.listdir(path)
 
     models = []
 
+    dirs.remove(os.path.basename(__file__))
+
     for filename in dirs:
         basename = filename[:-3]
 
-        if basename.istitle() and filename.endswith('.py'):
-            models.append(basename)
+        if filename.endswith('.py'):
+            path = '{}.{}.{}'.format(__name__, basename, basename.capitalize())
+            model_class = locate(path)
+            models.append(model_class)
 
-    models = [User]
-
-    # This line makes next error: raise OperationalError('Connection already opened.')
-    tables = db_wrapper.database.get_tables()
-
-    if tables == 0:
-        db_wrapper.database.create_tables(models)
+    return models
