@@ -1,4 +1,5 @@
 # requirements.in
+Faker
 Flask
 Flask-RESTful
 Flask-Script
@@ -7,6 +8,7 @@ commitizen
 flask-peewee
 peewee
 pip-tools
+python-dateutil
 python-docx
 python-dotenv
 uwsgi

@@ -10,6 +10,8 @@ from app.models import *
 from migrations import init_db
 
 # Import environment file variables
+from seeds import init_seed
+
 load_dotenv()
 
 # Log configuration
@@ -60,6 +62,11 @@ def after_request(response):
 @manager.command
 def migrate():
     init_db()
+
+
+@manager.command
+def seed():
+    init_seed()
 
 
 if __name__ == '__main__':
