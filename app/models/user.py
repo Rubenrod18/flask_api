@@ -9,6 +9,7 @@ from ..extensions import db_wrapper as db
 class User(db.Model):
     class Meta:
         table_name = 'users'
+
     name = CharField()
     last_name = CharField()
     age = IntegerField()
@@ -25,9 +26,9 @@ class User(db.Model):
         age = difference_in_years(birth_date, current_date)
 
         user = User(
-            name = fake.name(),
-            last_name = fake.last_name(),
-            age = age,
-            birth_date = birth_date.strftime('%Y-%m-%d')
+            name=fake.name(),
+            last_name=fake.last_name(),
+            age=age,
+            birth_date=birth_date.strftime('%Y-%m-%d')
         )
         user.save()

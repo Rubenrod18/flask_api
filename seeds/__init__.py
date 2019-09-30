@@ -4,6 +4,7 @@ from faker.providers import date_time
 
 from app.models.user import User
 
+
 def init_seed():
     print(' Seeding users table...')
     fake = Faker()
