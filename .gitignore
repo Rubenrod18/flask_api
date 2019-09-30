@@ -35,3 +35,4 @@ build
 .env
 .idea
 log
+uwsgi.ini

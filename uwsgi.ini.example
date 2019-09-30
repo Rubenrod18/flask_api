@@ -12,7 +12,6 @@ threads = true
 ; a couple of placeholder
 project_home = $(HOME)
 project_path = %(project_home)/develop/flask_api
-;project_path = %(project_home)/development/flask_api
 
 ; chdir to app project dir and set pythonpath
 chdir = %(project_path)
