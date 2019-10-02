@@ -5,6 +5,7 @@ from pydoc import locate
 
 logger = logging.getLogger(__name__)
 
+
 def get_models():
     abs_path = os.path.abspath(__file__)
     path = os.path.dirname(abs_path)

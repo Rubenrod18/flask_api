@@ -22,15 +22,17 @@ api = Api(blueprint)
 
 logger = logging.getLogger(__name__)
 
+
 class UserResource(Resource):
     allowed_fields = set(
             filter(
-                lambda x: x not in ['id', 'created_at', 'updated_at', 'deleted_at'],
+                lambda x: x not in ['id', 'created_at',
+                                    'updated_at', 'deleted_at'],
                 list(UserModel._meta.fields)
             )
         )
 
-    def get_request_data(self, extend_allow_fields = {}):
+    def get_request_data(self, extend_allow_fields={}):
         request_data = request.get_json()
 
         self.allowed_fields.update(extend_allow_fields)
@@ -77,7 +79,8 @@ class UserResource(Resource):
             elif isinstance(field, CharField):
                 field_value = field_value.__str__()
                 value = '%{0}%'.format(field_value)
-                # OR use the exponent operator. Note: you must include wildcards here:
+                # OR use the exponent operator.
+                # Note: you must include wildcards here:
                 query = query.where(field ** value)
             elif isinstance(field, DateField):
                 # TODO: WIP -> add field_operator
@@ -89,7 +92,7 @@ class UserResource(Resource):
         return query
 
     def get_column_names(self):
-        column_names =  [
+        column_names = [
                 column.name
                 for column in db.database.get_columns('users')
                 if column.name != 'id'
@@ -136,6 +139,7 @@ class UserResource(Resource):
 
         return None
 
+
 @api.resource('')
 class NewUserResource(UserResource):
     def post(self):
@@ -147,14 +151,13 @@ class NewUserResource(UserResource):
             'data': user
         }, 201
 
+
 @api.resource('/<int:user_id>')
 class UserResource(UserResource):
     def put(self, user_id):
         data = self.get_request_data()
 
-        query = (UserModel
-                .select()
-                .where(UserModel.id == user_id))
+        query = (UserModel.select().where(UserModel.id == user_id))
 
         if query.exists():
             data['id'] = user_id
@@ -202,6 +205,7 @@ class UserResource(UserResource):
 
         return response_data, response_code
 
+
 @api.resource('/search')
 class UsersResource(UserResource):
     allowed_request_fields = {'search'}
@@ -232,6 +236,7 @@ class UsersResource(UserResource):
             'records_total': records_total,
             'records_filtered': records_filtered,
         }, 200
+
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
@@ -276,7 +281,9 @@ class ExportUsersExcelResource(UserResource):
         original_column_names = self.get_column_names()
         self.format_column_names(rows, original_column_names)
 
-        users_query = self.get_users(original_column_names, page_number, items_per_page)
+        users_query = self.get_users(original_column_names,
+                                     page_number,
+                                     items_per_page)
         self.format_user_data(users_query, rows)
 
         # TODO: I need to improve this for doing dynamic
@@ -291,13 +298,14 @@ class ExportUsersExcelResource(UserResource):
         workbook.close()
 
         kwargs = {
-            'filename_or_fp' : excel_filename,
-            'mimetype' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'as_attachment' : True,
-            'attachment_filename' : excel_filename
-        }
+                'filename_or_fp': excel_filename,
+                'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'as_attachment': True,
+                'attachment_filename': excel_filename
+            }
 
         return send_file(**kwargs)
+
 
 @api.resource('/pdf')
 class ExportUsersPdfResource(UserResource):
@@ -324,7 +332,9 @@ class ExportUsersPdfResource(UserResource):
         original_column_names = self.get_column_names()
         self.format_column_names(rows, original_column_names)
 
-        users_query = self.get_users(original_column_names, page_number, items_per_page)
+        users_query = self.get_users(original_column_names,
+                                     page_number,
+                                     items_per_page)
         self.format_user_data(users_query, rows)
 
         document = docx.Document()
@@ -337,10 +347,10 @@ class ExportUsersPdfResource(UserResource):
         pdf_filename = '{}/{}.pdf'.format(storage_dir, basename)
 
         kwargs = {
-            'filename_or_fp' : pdf_filename,
-            'mimetype' : 'application/pdf',
-            'as_attachment' : True,
-            'attachment_filename' : pdf_filename
+            'filename_or_fp': pdf_filename,
+            'mimetype': 'application/pdf',
+            'as_attachment': True,
+            'attachment_filename': pdf_filename
         }
 
         return send_file(**kwargs)

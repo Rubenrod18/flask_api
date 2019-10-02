@@ -5,7 +5,8 @@ from faker.providers import date_time
 from app.models.user import User
 
 
-def init_seed():
+def init_seed() -> None:
+    """This is used for inserting fake data in database tables."""
     print(' Seeding users table...')
     fake = Faker()
     fake.add_provider(person)
@@ -15,3 +16,4 @@ def init_seed():
         User.seed(fake)
 
     print(' Users table seeded!')
+    return None

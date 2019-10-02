@@ -6,7 +6,6 @@ from datetime import datetime
 import flask
 
 from .blueprints import blueprints
-from . import models
 from . import extensions
 
 
@@ -49,7 +48,8 @@ def logging_config():
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
 
-        logger.error('Uncaught exception', exc_info=(exc_type, exc_value, exc_traceback))
+        logger.error('Uncaught exception',
+                     exc_info=(exc_type, exc_value, exc_traceback))
 
     sys.excepthook = handle_exception
 
@@ -61,7 +61,9 @@ def logging_config():
         os.mkdir(log_dirname)
 
     FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(filename=log_fullpath, format=FORMAT, level=logging.DEBUG)
+    logging.basicConfig(filename=log_fullpath,
+                        format=FORMAT,
+                        level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
     handler = logging.StreamHandler(stream=sys.stdout)

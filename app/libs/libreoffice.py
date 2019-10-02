@@ -27,9 +27,11 @@ def convert_to(folder, source):
             source
         ]
 
-    process = subprocess.run(args, stdout=subprocess.PIPE, env={'$HOME': os.environ.get('HOME')})
+    process = subprocess.run(args, stdout=subprocess.PIPE,
+                             env={'$HOME': os.environ.get('HOME')})
     logger.debug(process)
-    filename = re.search('-> (.*?) using filter', process.stdout.decode('utf-8'))
+    filename = re.search('-> (.*?) using filter',
+                         process.stdout.decode('utf-8'))
 
     if filename is None:
         raise LibreOfficeError(process.stdout.decode('utf-8'))

@@ -2,11 +2,15 @@ from app.extensions import db_wrapper
 from app.models import get_models
 
 
-def init_db():
+def init_db() -> None:
+    """This is used for creating database tables.
+
+    If database table are already created then the creation process is skipped.
+    """
     print(' Starting the process of creation of tables...')
     tables = db_wrapper.database.get_tables()
 
-    if len(tables) == 0:
+    if not tables:
         print(' There are not any table created. We\'re going to create them!')
         with db_wrapper.database:
             print(' We\'re going to getting database models...')
@@ -20,3 +24,4 @@ def init_db():
         print(' There are %s tables already created!' % len(tables))
 
     print(' Script finished!')
+    return None

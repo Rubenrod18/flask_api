@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
+
 def to_json(obj):
     if isinstance(obj, datetime):
         return datetime.timestamp(obj)
@@ -8,6 +9,7 @@ def to_json(obj):
         return obj.__str__()
     else:
         return obj
+
 
 def to_readable(obj):
     if obj is None or obj == '':
@@ -18,6 +20,7 @@ def to_readable(obj):
         return obj.__str__()
     else:
         return obj
+
 
 def difference_in_years(start_date, end_date):
     return relativedelta(end_date, start_date).years
