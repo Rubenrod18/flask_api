@@ -4,6 +4,7 @@ Flask
 Flask-RESTful
 Flask-Script
 XlsxWriter
+cerberus
 commitizen
 flask-peewee
 peewee

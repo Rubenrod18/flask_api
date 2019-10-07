@@ -5,6 +5,7 @@ from datetime import datetime
 # Related third party imports
 import xlsxwriter
 import docx
+from cerberus import Validator
 from flask_restful import current_app, Api, Resource
 from flask import Blueprint, request, send_file
 from playhouse.shortcuts import model_to_dict
@@ -15,7 +16,7 @@ from ..extensions import db_wrapper as db
 from ..models.user import User as UserModel
 from ..utils import to_json, to_readable
 from ..libs.libreoffice import convert_to
-
+from ..utils.cerberus_schema import user_model_schema
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
@@ -145,6 +146,14 @@ class NewUserResource(UserResource):
     def post(self):
         data = self.get_request_data()
 
+        v = Validator(schema=user_model_schema())
+
+        if not v.validate(data):
+            return {
+                'message': 'validation error',
+                'fields': v.errors,
+            }, 422
+
         user = UserModel(**data).save()
 
         return {
@@ -156,6 +165,14 @@ class NewUserResource(UserResource):
 class UserResource(UserResource):
     def put(self, user_id):
         data = self.get_request_data()
+
+        v = Validator(schema=user_model_schema())
+
+        if not v.validate(data):
+            return {
+                'message': 'validation error',
+                'fields': v.errors,
+            }, 422
 
         query = (UserModel.select().where(UserModel.id == user_id))
 
