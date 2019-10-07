@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from peewee import *
+from peewee import CharField, IntegerField, DateField, TimestampField
 
 from app.utils import difference_in_years
 from ..extensions import db_wrapper as db

@@ -5,6 +5,7 @@ from datetime import datetime
 # Related third party imports
 import xlsxwriter
 import docx
+from cerberus import Validator
 from flask_restful import current_app, Api, Resource
 from flask import Blueprint, request, send_file
 from playhouse.shortcuts import model_to_dict
@@ -15,22 +16,24 @@ from ..extensions import db_wrapper as db
 from ..models.user import User as UserModel
 from ..utils import to_json, to_readable
 from ..libs.libreoffice import convert_to
-
+from ..utils.cerberus_schema import user_model_schema
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)
 
+
 class UserResource(Resource):
     allowed_fields = set(
             filter(
-                lambda x: x not in ['id', 'created_at', 'updated_at', 'deleted_at'],
+                lambda x: x not in ['id', 'created_at',
+                                    'updated_at', 'deleted_at'],
                 list(UserModel._meta.fields)
             )
         )
 
-    def get_request_data(self, extend_allow_fields = {}):
+    def get_request_data(self, extend_allow_fields={}):
         request_data = request.get_json()
 
         self.allowed_fields.update(extend_allow_fields)
@@ -77,7 +80,8 @@ class UserResource(Resource):
             elif isinstance(field, CharField):
                 field_value = field_value.__str__()
                 value = '%{0}%'.format(field_value)
-                # OR use the exponent operator. Note: you must include wildcards here:
+                # OR use the exponent operator.
+                # Note: you must include wildcards here:
                 query = query.where(field ** value)
             elif isinstance(field, DateField):
                 # TODO: WIP -> add field_operator
@@ -89,7 +93,7 @@ class UserResource(Resource):
         return query
 
     def get_column_names(self):
-        column_names =  [
+        column_names = [
                 column.name
                 for column in db.database.get_columns('users')
                 if column.name != 'id'
@@ -136,10 +140,19 @@ class UserResource(Resource):
 
         return None
 
+
 @api.resource('')
 class NewUserResource(UserResource):
     def post(self):
         data = self.get_request_data()
+
+        v = Validator(schema=user_model_schema())
+
+        if not v.validate(data):
+            return {
+                'message': 'validation error',
+                'fields': v.errors,
+            }, 422
 
         user = UserModel(**data).save()
 
@@ -147,14 +160,21 @@ class NewUserResource(UserResource):
             'data': user
         }, 201
 
+
 @api.resource('/<int:user_id>')
 class UserResource(UserResource):
     def put(self, user_id):
         data = self.get_request_data()
 
-        query = (UserModel
-                .select()
-                .where(UserModel.id == user_id))
+        v = Validator(schema=user_model_schema())
+
+        if not v.validate(data):
+            return {
+                'message': 'validation error',
+                'fields': v.errors,
+            }, 422
+
+        query = (UserModel.select().where(UserModel.id == user_id))
 
         if query.exists():
             data['id'] = user_id
@@ -202,6 +222,7 @@ class UserResource(UserResource):
 
         return response_data, response_code
 
+
 @api.resource('/search')
 class UsersResource(UserResource):
     allowed_request_fields = {'search'}
@@ -232,6 +253,7 @@ class UsersResource(UserResource):
             'records_total': records_total,
             'records_filtered': records_filtered,
         }, 200
+
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
@@ -276,7 +298,9 @@ class ExportUsersExcelResource(UserResource):
         original_column_names = self.get_column_names()
         self.format_column_names(rows, original_column_names)
 
-        users_query = self.get_users(original_column_names, page_number, items_per_page)
+        users_query = self.get_users(original_column_names,
+                                     page_number,
+                                     items_per_page)
         self.format_user_data(users_query, rows)
 
         # TODO: I need to improve this for doing dynamic
@@ -291,13 +315,14 @@ class ExportUsersExcelResource(UserResource):
         workbook.close()
 
         kwargs = {
-            'filename_or_fp' : excel_filename,
-            'mimetype' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'as_attachment' : True,
-            'attachment_filename' : excel_filename
-        }
+                'filename_or_fp': excel_filename,
+                'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'as_attachment': True,
+                'attachment_filename': excel_filename
+            }
 
         return send_file(**kwargs)
+
 
 @api.resource('/pdf')
 class ExportUsersPdfResource(UserResource):
@@ -324,7 +349,9 @@ class ExportUsersPdfResource(UserResource):
         original_column_names = self.get_column_names()
         self.format_column_names(rows, original_column_names)
 
-        users_query = self.get_users(original_column_names, page_number, items_per_page)
+        users_query = self.get_users(original_column_names,
+                                     page_number,
+                                     items_per_page)
         self.format_user_data(users_query, rows)
 
         document = docx.Document()
@@ -337,10 +364,10 @@ class ExportUsersPdfResource(UserResource):
         pdf_filename = '{}/{}.pdf'.format(storage_dir, basename)
 
         kwargs = {
-            'filename_or_fp' : pdf_filename,
-            'mimetype' : 'application/pdf',
-            'as_attachment' : True,
-            'attachment_filename' : pdf_filename
+            'filename_or_fp': pdf_filename,
+            'mimetype': 'application/pdf',
+            'as_attachment': True,
+            'attachment_filename': pdf_filename
         }
 
         return send_file(**kwargs)

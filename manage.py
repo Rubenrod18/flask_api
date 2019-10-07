@@ -1,12 +1,12 @@
 import logging
+import os
 from datetime import datetime
 
 from flask_script import Manager
-from peewee import *
+from peewee import SqliteDatabase
 from dotenv import load_dotenv
 
 from app import create_app
-from app.models import *
 from migrations import init_db
 
 # Import environment file variables
@@ -31,7 +31,7 @@ dbname = '%s.db' % os.getenv('DATABASE_NAME', 'prod.db')
 database = SqliteDatabase(dbname)
 
 # App
-app = create_app(os.getenv('FLASK_CONFIG', 'config.ProdConfig'))
+app = create_app(os.getenv('FLASK_CONFIG', 'config.DevConfig'))
 manager = Manager(app)
 
 
