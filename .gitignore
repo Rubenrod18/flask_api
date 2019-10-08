@@ -36,3 +36,4 @@ build
 .idea
 log
 uwsgi.ini
+coverage_html_report

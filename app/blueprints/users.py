@@ -36,7 +36,8 @@ class UserResource(Resource):
     def get_request_data(self, extend_allow_fields={}):
         request_data = request.get_json()
 
-        self.allowed_fields.update(extend_allow_fields)
+        # TODO: pending to implement
+        # self.allowed_fields.update(extend_allow_fields)
 
         user_data = {
                 k: v
@@ -154,6 +155,8 @@ class NewUserResource(UserResource):
                 'fields': v.errors,
             }, 422
 
+        data['created_at'] = datetime.utcnow()
+
         user = UserModel(**data).save()
 
         return {
@@ -199,28 +202,31 @@ class UserResource(UserResource):
         return response_data, response_code
 
     def delete(self, user_id):
-        query = UserModel.select().where(UserModel.id == user_id)
+        query = (UserModel.select()
+                          .where(UserModel.id == user_id,
+                                 UserModel.deleted_at.is_null()))
 
         if query.exists():
             user = query.get()
+            user.deleted_at = datetime.utcnow()
+            user.save()
+
             user_dict = model_to_dict(user)
 
             # TODO: improve this line
             user = {k: to_json(v) for (k, v) in user_dict.items()}
 
-            q = UserModel.delete().where(UserModel.id == user_id).execute()
-
-            response_data = {
-                    'data': user
-                }
-            response_code = 200
+            response = {
+                'data': user
+            }
+            status_code = 200
         else:
-            response_data = {
-                    'error': 'User doesn\'t exists'
-                }
-            response_code = 400
+            response = {
+                'error': 'User doesn\'t exists'
+            }
+            status_code = 400
 
-        return response_data, response_code
+        return response, status_code
 
 
 @api.resource('/search')
