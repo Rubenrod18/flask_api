@@ -20,11 +20,13 @@ class User(db.Model):
     deleted_at = TimestampField(default=None, null=True)
 
     def save(self, *args, **kwargs):
+        current_date = datetime.utcnow()
+
         if self.id is None:
-            self.created_at = datetime.utcnow()
+            self.created_at = current_date
 
         if self.deleted_at is None:
-            self.updated_at = datetime.utcnow()
+            self.updated_at = current_date
         else:
             self.updated_at = self.deleted_at
 

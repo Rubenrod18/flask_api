@@ -27,8 +27,7 @@ logger = logging.getLogger(__name__)
 class UserResource(Resource):
     allowed_fields = set(
             filter(
-                lambda x: x not in ['id', 'created_at',
-                                    'updated_at', 'deleted_at'],
+                lambda x: x not in ['id'],
                 list(UserModel._meta.fields)
             )
         )
@@ -37,7 +36,7 @@ class UserResource(Resource):
         request_data = request.get_json()
 
         # TODO: pending to implement
-        # self.allowed_fields.update(extend_allow_fields)
+        self.allowed_fields.update(extend_allow_fields)
 
         user_data = {
                 k: v
@@ -57,6 +56,7 @@ class UserResource(Resource):
         order = request_data.get('order', 'asc')
 
         order_by = UserModel._meta.fields[sort]
+
         if order == 'desc':
             order_by = order_by.desc()
 
@@ -68,7 +68,7 @@ class UserResource(Resource):
         filters = [
             item for item in search_data
             if 'field_value' in item and item.get('field_value') != ''
-            ]
+        ]
 
         for filter in filters:
             field_name = filter['field_name']
@@ -148,6 +148,7 @@ class NewUserResource(UserResource):
         data = self.get_request_data()
 
         v = Validator(schema=user_model_schema())
+        v.allow_unknown = False
 
         if not v.validate(data):
             return {
@@ -170,6 +171,7 @@ class UserResource(UserResource):
         data = self.get_request_data()
 
         v = Validator(schema=user_model_schema())
+        v.allow_unknown = False
 
         if not v.validate(data):
             return {
