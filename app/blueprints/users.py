@@ -27,8 +27,7 @@ logger = logging.getLogger(__name__)
 class UserResource(Resource):
     allowed_fields = set(
             filter(
-                lambda x: x not in ['id', 'created_at',
-                                    'updated_at', 'deleted_at'],
+                lambda x: x not in ['id'],
                 list(UserModel._meta.fields)
             )
         )
@@ -36,6 +35,7 @@ class UserResource(Resource):
     def get_request_data(self, extend_allow_fields={}):
         request_data = request.get_json()
 
+        # TODO: pending to implement
         self.allowed_fields.update(extend_allow_fields)
 
         user_data = {
@@ -56,6 +56,7 @@ class UserResource(Resource):
         order = request_data.get('order', 'asc')
 
         order_by = UserModel._meta.fields[sort]
+
         if order == 'desc':
             order_by = order_by.desc()
 
@@ -67,7 +68,7 @@ class UserResource(Resource):
         filters = [
             item for item in search_data
             if 'field_value' in item and item.get('field_value') != ''
-            ]
+        ]
 
         for filter in filters:
             field_name = filter['field_name']
@@ -147,12 +148,15 @@ class NewUserResource(UserResource):
         data = self.get_request_data()
 
         v = Validator(schema=user_model_schema())
+        v.allow_unknown = False
 
         if not v.validate(data):
             return {
                 'message': 'validation error',
                 'fields': v.errors,
             }, 422
+
+        data['created_at'] = datetime.utcnow()
 
         user = UserModel(**data).save()
 
@@ -167,6 +171,7 @@ class UserResource(UserResource):
         data = self.get_request_data()
 
         v = Validator(schema=user_model_schema())
+        v.allow_unknown = False
 
         if not v.validate(data):
             return {
@@ -199,28 +204,31 @@ class UserResource(UserResource):
         return response_data, response_code
 
     def delete(self, user_id):
-        query = UserModel.select().where(UserModel.id == user_id)
+        query = (UserModel.select()
+                          .where(UserModel.id == user_id,
+                                 UserModel.deleted_at.is_null()))
 
         if query.exists():
             user = query.get()
+            user.deleted_at = datetime.utcnow()
+            user.save()
+
             user_dict = model_to_dict(user)
 
             # TODO: improve this line
             user = {k: to_json(v) for (k, v) in user_dict.items()}
 
-            q = UserModel.delete().where(UserModel.id == user_id).execute()
-
-            response_data = {
-                    'data': user
-                }
-            response_code = 200
+            response = {
+                'data': user
+            }
+            status_code = 200
         else:
-            response_data = {
-                    'error': 'User doesn\'t exists'
-                }
-            response_code = 400
+            response = {
+                'error': 'User doesn\'t exists'
+            }
+            status_code = 400
 
-        return response_data, response_code
+        return response, status_code
 
 
 @api.resource('/search')

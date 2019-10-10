@@ -23,5 +23,6 @@ def init_db() -> None:
     else:
         print(' There are %s tables already created!' % len(tables))
 
+    db_wrapper.database.close()
     print(' Script finished!')
     return None

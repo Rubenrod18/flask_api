@@ -10,9 +10,9 @@ class BaseConfig(object):
     LOGIN_DISABLED = False
     DATABASE_NAME = os.environ.get('SQLITE_DB', 'prod.db')
     DATABASE = {
-            'name': DATABASE_NAME,
-            'engine': 'peewee.SqliteDatabase',
-        }
+        'name': DATABASE_NAME,
+        'engine': 'peewee.SqliteDatabase',
+    }
 
 
 class DevConfig(BaseConfig):
@@ -21,13 +21,17 @@ class DevConfig(BaseConfig):
     DEBUG = True
     DATABASE_NAME = os.environ.get('SQLITE_DB', 'dev.db')
     DATABASE = {
-            'name': DATABASE_NAME,
-            'engine': 'peewee.SqliteDatabase',
-        }
+        'name': DATABASE_NAME,
+        'engine': 'peewee.SqliteDatabase',
+    }
 
 
 class TestConfig(BaseConfig):
     """Testing configuration options."""
     DEVELOPMENT = True
-    DATABASE_NAME = os.environ.get('SQLITE_DB', 'test.db')
     TESTING = True
+    DATABASE_NAME = os.environ.get('SQLITE_DB', 'test.db')
+    DATABASE = {
+        'name': DATABASE_NAME,
+        'engine': 'peewee.SqliteDatabase',
+    }

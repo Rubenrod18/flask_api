@@ -6,9 +6,11 @@ Flask-Script
 XlsxWriter
 cerberus
 commitizen
+coverage
 flask-peewee
 peewee
 pip-tools
+pytest
 python-dateutil
 python-docx
 python-dotenv
