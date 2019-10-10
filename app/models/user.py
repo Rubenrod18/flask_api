@@ -2,6 +2,7 @@ from datetime import datetime
 
 from peewee import CharField, IntegerField, DateField, TimestampField
 
+from . import fake
 from app.utils import difference_in_years
 from ..extensions import db_wrapper as db
 
@@ -14,21 +15,42 @@ class User(db.Model):
     last_name = CharField()
     age = IntegerField()
     birth_date = DateField()
-    created_at = TimestampField(default=datetime.utcnow())
-    updated_at = TimestampField(default=datetime.utcnow())
+    created_at = TimestampField(default=None)
+    updated_at = TimestampField()
     deleted_at = TimestampField(default=None, null=True)
 
+    def save(self, *args, **kwargs):
+        current_date = datetime.utcnow()
+
+        if self.id is None:
+            self.created_at = current_date
+
+        if self.deleted_at is None:
+            self.updated_at = current_date
+        else:
+            self.updated_at = self.deleted_at
+
+        return super(User, self).save(*args, **kwargs)
+
     @classmethod
-    def seed(cls, fake):
+    def fake(cls):
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
-        current_date = datetime.now()
+        current_date = datetime.utcnow()
 
         age = difference_in_years(birth_date, current_date)
 
-        user = User(
+        return User(
             name=fake.name(),
             last_name=fake.last_name(),
             age=age,
-            birth_date=birth_date.strftime('%Y-%m-%d')
+            birth_date=birth_date.strftime('%Y-%m-%d'),
+            created_at=datetime.utcnow()
         )
+
+    @classmethod
+    def seed(cls):
+        user = User.fake()
         user.save()
+
+        db.database.commit()
+        db.database.close()
