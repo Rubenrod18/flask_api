@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from peewee import CharField, IntegerField, DateField, TimestampField
 
@@ -31,6 +31,30 @@ class User(db.Model):
             self.updated_at = self.deleted_at
 
         return super(User, self).save(*args, **kwargs)
+
+    @property
+    def serialize(self):
+        birth_date = self.birth_date
+        deleted_at = self.deleted_at
+
+        if isinstance(deleted_at, datetime):
+            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%M:%S')
+
+        if isinstance(birth_date, date):
+            birth_date = birth_date.strftime('%Y-%m-%d')
+
+        data = {
+            'id': self.id,
+            'name': self.name,
+            'last_name': self.last_name,
+            'age': self.age,
+            'birth_date': birth_date,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'deleted_at': deleted_at
+        }
+
+        return data
 
     @classmethod
     def fake(cls):

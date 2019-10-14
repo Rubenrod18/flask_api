@@ -7,7 +7,7 @@ import xlsxwriter
 import docx
 from cerberus import Validator
 from flask_restful import current_app, Api, Resource
-from flask import Blueprint, request, send_file
+from flask import Blueprint, jsonify, request, send_file
 from playhouse.shortcuts import model_to_dict
 from peewee import CharField, DateField, DateTimeField, IntegerField
 
@@ -32,7 +32,10 @@ class UserResource(Resource):
             )
         )
 
-    def get_request_data(self, extend_allow_fields={}):
+    def get_request_data(self, extend_allow_fields=None):
+        if extend_allow_fields is None:
+            extend_allow_fields = {}
+
         request_data = request.get_json()
 
         # TODO: pending to implement
@@ -132,7 +135,7 @@ class UserResource(Resource):
             user_dict = {
                 k: to_readable(v)
                 for (k, v) in user.items()
-                }
+            }
             users_list.append(user_dict)
 
         for user_dict in users_list:
@@ -156,12 +159,10 @@ class NewUserResource(UserResource):
                 'fields': v.errors,
             }, 422
 
-        data['created_at'] = datetime.utcnow()
-
-        user = UserModel(**data).save()
+        user = UserModel.create(**data).serialize
 
         return {
-            'data': user
+            'data': user,
         }, 201
 
 
@@ -179,52 +180,45 @@ class UserResource(UserResource):
                 'fields': v.errors,
             }, 422
 
-        query = (UserModel.select().where(UserModel.id == user_id))
-
-        if query.exists():
+        user = (UserModel.get_or_none(UserModel.id == user_id,
+                                      UserModel.deleted_at.is_null()))
+        if user:
             data['id'] = user_id
             UserModel(**data).save()
 
-            user = query.get()
-            user_dict = model_to_dict(user)
-
-            # TODO: improve this line
-            user = {k: to_json(v) for (k, v) in user_dict.items()}
+            user = (UserModel.get_or_none(UserModel.id == user_id,
+                                          UserModel.deleted_at.is_null()))
+            user_dict = user.serialize
 
             response_data = {
-                    'data': user
-                }
+                'data': user_dict,
+            }
             response_code = 200
         else:
             response_data = {
-                    'error': 'User doesn\'t exists'
-                }
+                'error': 'User doesn\'t exist',
+            }
             response_code = 400
 
         return response_data, response_code
 
     def delete(self, user_id):
-        query = (UserModel.select()
-                          .where(UserModel.id == user_id,
-                                 UserModel.deleted_at.is_null()))
+        user = (UserModel.get_or_none(UserModel.id == user_id,
+                                      UserModel.deleted_at.is_null()))
 
-        if query.exists():
-            user = query.get()
+        if user:
             user.deleted_at = datetime.utcnow()
             user.save()
 
-            user_dict = model_to_dict(user)
-
-            # TODO: improve this line
-            user = {k: to_json(v) for (k, v) in user_dict.items()}
+            user_dict = user.serialize
 
             response = {
-                'data': user
+                'data': user_dict
             }
             status_code = 200
         else:
             response = {
-                'error': 'User doesn\'t exists'
+                'error': 'User doesn\'t exist'
             }
             status_code = 400
 

@@ -31,8 +31,17 @@ def test_save_user_endpoint(client):
 
     response = client.post('/users', json=data)
 
+    json_response = response.get_json()
+    json_user_data = json_response.get('data')
+
     assert 201 == response.status_code
-    assert response.data == b'{"data": 1}\n'
+    assert data.get('name') == json_user_data.get('name')
+    assert data.get('last_name') == json_user_data.get('last_name')
+    assert data.get('age') == json_user_data.get('age')
+    assert data.get('birth_date') == json_user_data.get('birth_date')
+    assert json_user_data.get('created_at')
+    assert json_user_data.get('updated_at') == json_user_data.get('created_at')
+    assert json_user_data.get('deleted_at') is None
 
 
 def test_update_user_endpoint(client):
