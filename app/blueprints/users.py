@@ -7,14 +7,13 @@ import xlsxwriter
 import docx
 from cerberus import Validator
 from flask_restful import current_app, Api, Resource
-from flask import Blueprint, jsonify, request, send_file
-from playhouse.shortcuts import model_to_dict
+from flask import Blueprint, request, send_file
 from peewee import CharField, DateField, DateTimeField, IntegerField
 
 # Local application/library specific imports
 from ..extensions import db_wrapper as db
 from ..models.user import User as UserModel
-from ..utils import to_json, to_readable
+from ..utils import to_readable
 from ..libs.libreoffice import convert_to
 from ..utils.cerberus_schema import user_model_schema
 
@@ -42,10 +41,10 @@ class UserResource(Resource):
         self.allowed_fields.update(extend_allow_fields)
 
         user_data = {
-                k: v
-                for k, v in request_data.items()
-                if k in self.allowed_fields
-            }
+            k: v
+            for k, v in request_data.items()
+            if k in self.allowed_fields
+        }
 
         return user_data
 
@@ -121,10 +120,9 @@ class UserResource(Resource):
                 for column_name in column_names
             ]
 
-        users_query = (UserModel
-                       .select(*select_fields)
-                       .paginate(page_number, items_per_page)
-                       .dicts())
+        users_query = (UserModel.select(*select_fields)
+                                .paginate(page_number, items_per_page)
+                                .dicts())
 
         return users_query
 
@@ -213,12 +211,12 @@ class UserResource(UserResource):
             user_dict = user.serialize
 
             response = {
-                'data': user_dict
+                'data': user_dict,
             }
             status_code = 200
         else:
             response = {
-                'error': 'User doesn\'t exist'
+                'error': 'User doesn\'t exist',
             }
             status_code = 400
 
@@ -247,7 +245,7 @@ class UsersResource(UserResource):
         user_list = []
 
         for user in query:
-            user_dict = {k: to_json(v) for (k, v) in user.items()}
+            user_dict = user.serialize
             user_list.append(user_dict)
 
         return {
@@ -317,11 +315,11 @@ class ExportUsersExcelResource(UserResource):
         workbook.close()
 
         kwargs = {
-                'filename_or_fp': excel_filename,
-                'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'as_attachment': True,
-                'attachment_filename': excel_filename
-            }
+            'filename_or_fp': excel_filename,
+            'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'as_attachment': True,
+            'attachment_filename': excel_filename,
+        }
 
         return send_file(**kwargs)
 
@@ -369,7 +367,7 @@ class ExportUsersPdfResource(UserResource):
             'filename_or_fp': pdf_filename,
             'mimetype': 'application/pdf',
             'as_attachment': True,
-            'attachment_filename': pdf_filename
+            'attachment_filename': pdf_filename,
         }
 
         return send_file(**kwargs)
