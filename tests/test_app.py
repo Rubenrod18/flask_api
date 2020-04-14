@@ -122,7 +122,7 @@ def test_search_users_endpoint(client):
 
 
 def test_export_pdf_endpoint(client):
-    response = client.get('/users/pdf')
+    response = client.post('/users/pdf')
 
     try:
         base64.decodebytes(response.data)
@@ -136,7 +136,7 @@ def test_export_pdf_endpoint(client):
 
 
 def test_export_excel_endpoint(client):
-    response = client.get('/users/xlsx')
+    response = client.post('/users/xlsx')
 
     try:
         base64.decodebytes(response.data)

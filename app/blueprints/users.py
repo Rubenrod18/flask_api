@@ -25,31 +25,33 @@ logger = logging.getLogger(__name__)
 
 class UserResource(Resource):
     allowed_fields = set(
-            filter(
-                lambda x: x not in ['id'],
-                list(UserModel._meta.fields)
-            )
+        filter(
+            lambda x: x not in ['id'],
+            list(UserModel._meta.fields)
         )
+    )
 
     def get_request_data(self, extend_allow_fields=None):
         if extend_allow_fields is None:
             extend_allow_fields = {}
 
+        user_data = dict()
         request_data = request.get_json()
 
         # TODO: pending to implement
         self.allowed_fields.update(extend_allow_fields)
 
-        user_data = {
-            k: v
-            for k, v in request_data.items()
-            if k in self.allowed_fields
-        }
+        if request_data:
+            user_data = {
+                k: v
+                for k, v in request_data.items()
+                if k in self.allowed_fields
+            }
 
         return user_data
 
     def get_request_query_fields(self):
-        request_data = request.get_json()
+        request_data = request.get_json() or {}
 
         page_number = request_data.get('page_number', 1)
         items_per_page = request_data.get('items_per_page', 10)
@@ -97,18 +99,19 @@ class UserResource(Resource):
 
     def get_column_names(self):
         column_names = [
-                column.name
-                for column in db.database.get_columns('users')
-                if column.name != 'id'
-            ]
+            column.name
+            for column in db.database.get_columns('users')
+            if column.name != 'id'
+        ]
 
         return column_names
 
     def format_column_names(self, rows, original_column_names):
         formatted_column_names = [
-                column.title().replace('_', ' ')
-                for column in original_column_names
-            ]
+            column.title().replace('_', ' ')
+            for column in original_column_names
+            if column
+        ]
 
         rows.append(formatted_column_names)
 
@@ -116,13 +119,13 @@ class UserResource(Resource):
 
     def get_users(self, column_names, page_number, items_per_page):
         select_fields = [
-                UserModel._meta.fields[column_name]
-                for column_name in column_names
-            ]
+            UserModel._meta.fields[column_name]
+            for column_name in column_names
+        ]
 
         users_query = (UserModel.select(*select_fields)
-                                .paginate(page_number, items_per_page)
-                                .dicts())
+                       .paginate(page_number, items_per_page)
+                       .dicts())
 
         return users_query
 
@@ -153,15 +156,16 @@ class NewUserResource(UserResource):
 
         if not v.validate(data):
             return {
-                'message': 'validation error',
-                'fields': v.errors,
-            }, 422
+                       'message': 'validation error',
+                       'fields': v.errors,
+                   }, 422
 
-        user = UserModel.create(**data).serialize
+        user = UserModel.create(**data)
+        user_dict = user.serialize()
 
         return {
-            'data': user,
-        }, 201
+                   'data': user_dict,
+               }, 201
 
 
 @api.resource('/<int:user_id>')
@@ -174,9 +178,9 @@ class UserResource(UserResource):
 
         if not v.validate(data):
             return {
-                'message': 'validation error',
-                'fields': v.errors,
-            }, 422
+                       'message': 'validation error',
+                       'fields': v.errors,
+                   }, 422
 
         user = (UserModel.get_or_none(UserModel.id == user_id,
                                       UserModel.deleted_at.is_null()))
@@ -186,7 +190,7 @@ class UserResource(UserResource):
 
             user = (UserModel.get_or_none(UserModel.id == user_id,
                                           UserModel.deleted_at.is_null()))
-            user_dict = user.serialize
+            user_dict = user.serialize()
 
             response_data = {
                 'data': user_dict,
@@ -201,24 +205,29 @@ class UserResource(UserResource):
         return response_data, response_code
 
     def delete(self, user_id):
-        user = (UserModel.get_or_none(UserModel.id == user_id,
-                                      UserModel.deleted_at.is_null()))
+        response = {
+            'error': 'User doesn\'t exist',
+        }
+        status_code = 404
 
-        if user:
-            user.deleted_at = datetime.utcnow()
-            user.save()
+        user = UserModel.get_or_none(UserModel.id == user_id)
 
-            user_dict = user.serialize
+        if isinstance(user, UserModel):
+            if user.deleted_at is None:
+                user.deleted_at = datetime.utcnow()
+                user.save()
 
-            response = {
-                'data': user_dict,
-            }
-            status_code = 200
-        else:
-            response = {
-                'error': 'User doesn\'t exist',
-            }
-            status_code = 400
+                user_dict = user.serialize()
+
+                response = {
+                    'data': user_dict,
+                }
+                status_code = 200
+            else:
+                response = {
+                    'error': 'User already deleted',
+                }
+                status_code = 400
 
         return response, status_code
 
@@ -237,27 +246,28 @@ class UsersResource(UserResource):
 
         query = self.create_query(query, data)
 
-        query = query.order_by(order_by)
-
-        query = query.paginate(page_number, items_per_page).dicts()
+        query = (query.order_by(order_by)
+                 .paginate(page_number, items_per_page))
 
         records_filtered = query.count()
         user_list = []
 
         for user in query:
-            user_dict = user.serialize
+            user_dict = user.serialize()
             user_list.append(user_dict)
 
         return {
-            'data': user_list,
-            'records_total': records_total,
-            'records_filtered': records_filtered,
-        }, 200
+                   'data': user_list,
+                   'records_total': records_total,
+                   'records_filtered': records_filtered,
+               }, 200
 
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
-    def get(self):
+    allowed_request_fields = {'search'}
+
+    def post(self):
         def write_excel_rows(rows, workbook, worksheet):
             # Iterate over the data and write it out row by row.
             for i, row in enumerate(rows, 1):
@@ -265,13 +275,13 @@ class ExportUsersExcelResource(UserResource):
 
                 if i == 1:
                     format = workbook.add_format({
-                            'bold': True,
-                            'bg_color': '#CCCCCC'
-                        })
+                        'bold': True,
+                        'bg_color': '#CCCCCC'
+                    })
                 elif i % 2 == 0:
                     format = workbook.add_format({
-                            'bg_color': '#f1f1f1'
-                        })
+                        'bg_color': '#f1f1f1'
+                    })
 
                 range_cells = "A%s:I10" % i
 
@@ -289,7 +299,6 @@ class ExportUsersExcelResource(UserResource):
         file_prefix = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         excel_filename = '{}/{}_users.xlsx'.format(storage_dir, file_prefix)
 
-        page_number, items_per_page = 1, UserModel.select().count()
         rows = []
 
         workbook = xlsxwriter.Workbook(excel_filename)
@@ -298,15 +307,29 @@ class ExportUsersExcelResource(UserResource):
         original_column_names = self.get_column_names()
         self.format_column_names(rows, original_column_names)
 
-        users_query = self.get_users(original_column_names,
-                                     page_number,
-                                     items_per_page)
+        data = self.get_request_data(self.allowed_request_fields)
+
+        page_number, items_per_page, order_by = self.get_request_query_fields()
+
+        select_fields = [
+            UserModel._meta.fields[column_name]
+            for column_name in original_column_names
+        ]
+
+        query = UserModel.select(*select_fields)
+
+        query = self.create_query(query, data)
+
+        users_query = (query.order_by(order_by)
+                       .paginate(page_number, items_per_page)
+                       .dicts())
+
         self.format_user_data(users_query, rows)
 
         # TODO: I need to improve this for doing dynamic
-        #last_col_index = len(formatted_column_names)
-        #last_col = '{}{}.'.format(chr(last_col_index), last_col_index)
-        #cell_range = 'A1:I10'
+        # last_col_index = len(formatted_column_names)
+        # last_col = '{}{}.'.format(chr(last_col_index), last_col_index)
+        # cell_range = 'A1:I10'
         worksheet.autofilter('A1:I10')
 
         write_excel_rows(rows, workbook, worksheet)
@@ -326,7 +349,9 @@ class ExportUsersExcelResource(UserResource):
 
 @api.resource('/pdf')
 class ExportUsersPdfResource(UserResource):
-    def get(self):
+    allowed_request_fields = {'search'}
+
+    def post(self):
         def write_docx_content(rows, document):
             header_fields = rows[0]
 
@@ -343,15 +368,27 @@ class ExportUsersPdfResource(UserResource):
         filename = '{}.docx'.format(basename)
         docx_filename = '{}/{}'.format(storage_dir, filename)
 
-        page_number, items_per_page = 1, UserModel.select().count()
+        page_number, items_per_page, order_by = self.get_request_query_fields()
         rows = []
 
         original_column_names = self.get_column_names()
         self.format_column_names(rows, original_column_names)
 
-        users_query = self.get_users(original_column_names,
-                                     page_number,
-                                     items_per_page)
+        data = self.get_request_data(self.allowed_request_fields)
+
+        select_fields = [
+            UserModel._meta.fields[column_name]
+            for column_name in original_column_names
+        ]
+
+        query = UserModel.select(*select_fields)
+
+        query = self.create_query(query, data)
+
+        users_query = (query.order_by(order_by)
+                       .paginate(page_number, items_per_page)
+                       .dicts())
+
         self.format_user_data(users_query, rows)
 
         document = docx.Document()

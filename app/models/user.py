@@ -1,10 +1,17 @@
+import logging
+import time
 from datetime import datetime, date
+from typing import Type, TypeVar
 
 from peewee import CharField, IntegerField, DateField, TimestampField
 
 from . import fake
 from app.utils import difference_in_years
 from ..extensions import db_wrapper as db
+
+logger = logging.getLogger(__name__)
+
+U = TypeVar('U', bound='User')
 
 
 class User(db.Model):
@@ -27,37 +34,40 @@ class User(db.Model):
 
         if self.deleted_at is None:
             self.updated_at = current_date
-        else:
-            self.updated_at = self.deleted_at
 
         return super(User, self).save(*args, **kwargs)
 
-    @property
-    def serialize(self):
-        birth_date = self.birth_date
-        deleted_at = self.deleted_at
+    def serialize(self: Type[U], ignore_fields: list = list) -> dict:
+        data = self.__dict__.get('__data__')
+        logger.debug(data)
+
+        birth_date = data.get('birth_date')
+        deleted_at = data.get('deleted_at')
 
         if isinstance(deleted_at, datetime):
-            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%M:%S')
+            deleted_at = time.mktime(deleted_at.timetuple())
 
         if isinstance(birth_date, date):
             birth_date = birth_date.strftime('%Y-%m-%d')
 
         data = {
-            'id': self.id,
-            'name': self.name,
-            'last_name': self.last_name,
-            'age': self.age,
+            'id': data.get('id'),
+            'name': data.get('name'),
+            'last_name': data.get('last_name'),
+            'age': data.get('age'),
             'birth_date': birth_date,
-            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-            'deleted_at': deleted_at
+            'created_at': time.mktime(data.get('created_at').timetuple()),
+            'updated_at': time.mktime(data.get('updated_at').timetuple()),
+            'deleted_at': deleted_at,
         }
+
+        if ignore_fields:
+            pass
 
         return data
 
     @classmethod
-    def fake(cls):
+    def fake(cls: Type[U]) -> U:
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 
@@ -72,9 +82,11 @@ class User(db.Model):
         )
 
     @classmethod
-    def seed(cls):
+    def seed(cls: Type[U]) -> None:
         user = User.fake()
         user.save()
 
         db.database.commit()
         db.database.close()
+
+        return None
