@@ -1,6 +1,7 @@
 import logging
 import time
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+from random import randint
 from typing import Type, TypeVar
 
 from peewee import CharField, IntegerField, DateField, TimestampField
@@ -71,6 +72,15 @@ class User(db.Model):
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 
+        created_at = datetime.utcnow()
+        updated_at = created_at
+        deleted_at = None
+
+        if randint(0, 1):
+            deleted_at = created_at + timedelta(days=randint(1, 7), minutes=randint(0, 60))
+        else:
+            updated_at = created_at + timedelta(days=randint(1, 7), minutes=randint(0, 60))
+
         age = difference_in_years(birth_date, current_date)
 
         return User(
@@ -78,7 +88,9 @@ class User(db.Model):
             last_name=fake.last_name(),
             age=age,
             birth_date=birth_date.strftime('%Y-%m-%d'),
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
+            updated_at=updated_at,
+            deleted_at=deleted_at
         )
 
     @classmethod

@@ -5,7 +5,7 @@ def init_seed() -> None:
     """This is used for inserting fake data in database tables."""
     print(' Seeding users table...')
 
-    for i in range(10):
+    for i in range(50):
         User.seed()
 
     print(' Users table seeded!')

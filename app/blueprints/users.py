@@ -330,7 +330,7 @@ class ExportUsersExcelResource(UserResource):
         # last_col_index = len(formatted_column_names)
         # last_col = '{}{}.'.format(chr(last_col_index), last_col_index)
         # cell_range = 'A1:I10'
-        worksheet.autofilter('A1:I10')
+        worksheet.autofilter('A1:G10')
 
         write_excel_rows(rows, workbook, worksheet)
         adjust_each_column_width(rows, worksheet)
