@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def convert_to(folder, source):
+def convert_to(folder: str, source: str) -> object:
     logger.debug('Folder: %s' % folder)
     logger.debug('Word file: %s' % source)
 
@@ -18,14 +18,14 @@ def convert_to(folder, source):
         raise FileNotFoundError('%s file not found' % source)
 
     args = [
-            libreoffice_exec(),
-            '--headless',
-            '--convert-to',
-            'pdf:writer_pdf_Export',
-            '--outdir',
-            folder,
-            source
-        ]
+        libreoffice_exec(),
+        '--headless',
+        '--convert-to',
+        'pdf:writer_pdf_Export',
+        '--outdir',
+        folder,
+        source
+    ]
 
     process = subprocess.run(args, stdout=subprocess.PIPE,
                              env={'$HOME': os.environ.get('HOME')})
@@ -39,7 +39,7 @@ def convert_to(folder, source):
         return filename.group(1)
 
 
-def libreoffice_exec():
+def libreoffice_exec() -> str:
     # TODO: Provide support for more platforms
     if sys.platform == 'darwin':
         return '/Applications/LibreOffice.app/Contents/MacOS/soffice'

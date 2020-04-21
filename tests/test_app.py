@@ -1,6 +1,7 @@
 import base64
 import binascii
 
+from flask.testing import FlaskClient
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
 
@@ -10,17 +11,17 @@ from app.models.user import User as UserModel
 
 
 def test_config():
-    assert create_app('config.TestConfig').config.get('TESTING')
+    assert create_app('config.TestConfig').config.get('TESTING') == True
 
 
-def test_welcome_api(client):
+def test_welcome_api(client: FlaskClient):
     response = client.get('/')
 
     assert 200 == response.status_code
     assert response.data == b'"Welcome to flask_api!"\n'
 
 
-def test_save_user_endpoint(client):
+def test_save_user_endpoint(client: FlaskClient):
     user = UserModel.fake()
 
     data = model_to_dict(user)
@@ -44,7 +45,7 @@ def test_save_user_endpoint(client):
     assert json_user_data.get('deleted_at') is None
 
 
-def test_update_user_endpoint(client):
+def test_update_user_endpoint(client: FlaskClient):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -64,7 +65,6 @@ def test_update_user_endpoint(client):
     response = client.put('/users/%s' % user_id, json=data)
 
     json_response = response.get_json()
-    print(json_response)
     json_user_data = json_response.get('data')
 
     assert 200 == response.status_code
@@ -78,7 +78,7 @@ def test_update_user_endpoint(client):
     assert json_user_data.get('deleted_at') is None
 
 
-def test_delete_user_endpoint(client):
+def test_delete_user_endpoint(client: FlaskClient):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -98,7 +98,7 @@ def test_delete_user_endpoint(client):
     assert json_user_data.get('deleted_at') >= json_user_data.get('updated_at')
 
 
-def test_search_users_endpoint(client):
+def test_search_users_endpoint(client: FlaskClient):
     json_body = {
         'search': [
             {
@@ -107,7 +107,7 @@ def test_search_users_endpoint(client):
             }
         ],
         'order': 'desc',
-        'sort': 'id'
+        'sort': 'id',
     }
 
     response = client.post('/users/search', json=json_body)
@@ -125,7 +125,7 @@ def test_search_users_endpoint(client):
     assert user_data[0]['name'].find('a') != -1
 
 
-def test_export_pdf_endpoint(client):
+def test_export_pdf_endpoint(client: FlaskClient):
     response = client.post('/users/pdf')
 
     try:
@@ -139,7 +139,7 @@ def test_export_pdf_endpoint(client):
     assert is_pdf
 
 
-def test_export_excel_endpoint(client):
+def test_export_excel_endpoint(client: FlaskClient):
     response = client.post('/users/xlsx')
 
     try:

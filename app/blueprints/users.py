@@ -6,9 +6,12 @@ from datetime import datetime
 import xlsxwriter
 import docx
 from cerberus import Validator
+from docx import Document
 from flask_restful import current_app, Api, Resource
 from flask import Blueprint, request, send_file
 from peewee import CharField, DateField, DateTimeField, IntegerField, ModelSelect
+from xlsxwriter import Workbook
+from xlsxwriter.worksheet import Worksheet
 
 # Local application/library specific imports
 from ..extensions import db_wrapper as db
@@ -26,7 +29,7 @@ logger = logging.getLogger(__name__)
 class UserResource(Resource):
     allowed_request_fields = UserModel.get_fields(['id'])
 
-    def get_request_data(self, extend_allow_fields=None):
+    def get_request_data(self, extend_allow_fields=None) -> dict:
         if extend_allow_fields is None:
             extend_allow_fields = {}
 
@@ -44,7 +47,7 @@ class UserResource(Resource):
 
         return user_data
 
-    def get_request_query_fields(self, request_data=None):
+    def get_request_query_fields(self, request_data=None) -> tuple:
         if request_data is None:
             request_data = request.get_json() or {}
 
@@ -66,7 +69,7 @@ class UserResource(Resource):
 
         return page_number, items_per_page, order_by
 
-    def create_query(self, query: ModelSelect = ModelSelect, data: dict = None):
+    def create_query(self, query: ModelSelect = ModelSelect, data: dict = None) -> ModelSelect:
         if data is None:
             data = {}
 
@@ -100,7 +103,7 @@ class UserResource(Resource):
 
         return query
 
-    def get_column_names(self):
+    def get_column_names(self) -> list:
         column_names = [
             column.name
             for column in db.database.get_columns('users')
@@ -109,7 +112,7 @@ class UserResource(Resource):
 
         return column_names
 
-    def format_column_names(self, rows, original_column_names):
+    def format_column_names(self, rows: list, original_column_names: list) -> None:
         formatted_column_names = [
             column.title().replace('_', ' ')
             for column in original_column_names
@@ -120,7 +123,7 @@ class UserResource(Resource):
 
         return None
 
-    def get_users(self, column_names, page_number, items_per_page):
+    def get_users(self, column_names: list, page_number: int, items_per_page: int) -> UserModel:
         select_fields = [
             UserModel._meta.fields[column_name]
             for column_name in column_names
@@ -132,7 +135,7 @@ class UserResource(Resource):
 
         return users_query
 
-    def format_user_data(self, users_query, rows):
+    def format_user_data(self, users_query: list, rows: list) -> None:
         users_list = []
 
         for user in users_query:
@@ -160,7 +163,7 @@ class NewUserResource(UserResource):
         if not v.validate(data):
             return {
                        'message': 'validation error',
-                       'fields': v.errors
+                       'fields': v.errors,
                    }, 422
 
         user = UserModel.create(**data)
@@ -237,7 +240,7 @@ class UserResource(UserResource):
 
 @api.resource('/search')
 class UsersResource(UserResource):
-    def post(self):
+    def post(self) -> tuple:
         data = request.get_json()
 
         v = Validator(schema=search_model_schema())
@@ -246,7 +249,7 @@ class UsersResource(UserResource):
         if not v.validate(data):
             return {
                        'message': 'validation error',
-                       'fields': v.errors
+                       'fields': v.errors,
                    }, 422
 
         page_number, items_per_page, order_by = self.get_request_query_fields(data)
@@ -275,8 +278,8 @@ class UsersResource(UserResource):
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
-    def post(self):
-        def write_excel_rows(rows, workbook, worksheet):
+    def post(self) -> tuple:
+        def write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> None:
             # Iterate over the data and write it out row by row.
             for i, row in enumerate(rows, 1):
                 format = None
@@ -295,7 +298,7 @@ class ExportUsersExcelResource(UserResource):
 
                 worksheet.write_row(range_cells, row, format)
 
-        def adjust_each_column_width(rows, worksheet):
+        def adjust_each_column_width(rows: list, worksheet: Worksheet) -> None:
             for i, v in enumerate(rows):
                 formatted_row = [str(item) for item in v]
                 max_column_width = max(formatted_row, key=len)
@@ -357,8 +360,8 @@ class ExportUsersExcelResource(UserResource):
 
 @api.resource('/pdf')
 class ExportUsersPdfResource(UserResource):
-    def post(self):
-        def write_docx_content(rows, document):
+    def post(self) -> tuple:
+        def write_docx_content(rows: list, document: Document) -> None:
             header_fields = rows[0]
 
             table = document.add_table(rows=len(rows), cols=len(header_fields))

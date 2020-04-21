@@ -27,7 +27,7 @@ class User(db.Model):
     updated_at = TimestampField()
     deleted_at = TimestampField(default=None, null=True)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: list, **kwargs: dict) -> int:
         current_date = datetime.utcnow()
 
         if self.id is None:
@@ -71,7 +71,7 @@ class User(db.Model):
         return data
 
     @classmethod
-    def get_fields(self, ignore_fields: list = None):
+    def get_fields(self: Type[U], ignore_fields: list = None) -> set:
         if ignore_fields is None:
             ignore_fields = []
 
@@ -83,7 +83,7 @@ class User(db.Model):
         )
 
     @classmethod
-    def fake(cls: Type[U]) -> U:
+    def fake(self) -> U:
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 

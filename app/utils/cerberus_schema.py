@@ -1,7 +1,11 @@
 from app.models.user import User as UserModel
 
-def user_model_schema():
-    """This is a Cerberus schema for validating user field requests."""
+
+def user_model_schema() -> dict:
+    """Cerberus schema for validating user fields.
+
+    :return: dict
+    """
     return {
         'name': {
             'type': 'string',
@@ -33,12 +37,15 @@ def user_model_schema():
             'regex': r'^(19[0-9]{2}|2[0-9]{3})'  # Year
                      r'-(0[1-9]|1[012])'  # Month
                      r'-([123]0|[012][1-9]|31)$'  # Day
-        }
+        },
     }
 
 
-def search_model_schema():
-    """Cerberus schema for search fields such as: items_per_page, page_number, etc."""
+def search_model_schema() -> dict:
+    """Cerberus schema for search fields such as: items_per_page, page_number, etc.
+
+    :return: dict
+    """
     return {
         'search': {
             'type': 'list',
@@ -86,5 +93,5 @@ def search_model_schema():
             'empty': False,
             'nullable': False,
             'min': 1
-        }
+        },
     }

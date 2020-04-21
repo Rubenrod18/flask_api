@@ -15,7 +15,7 @@ from seeds import init_seed
 load_dotenv()
 
 # Log configuration
-log_dirname = 'log/'
+log_dirname = 'logs/'
 log_filename = '{}.log'.format(datetime.utcnow().strftime('%Y%m%d'))
 log_fullpath = '{}{}'.format(log_dirname, log_filename)
 
