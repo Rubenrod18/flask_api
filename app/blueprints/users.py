@@ -8,14 +8,14 @@ import docx
 from cerberus import Validator
 from flask_restful import current_app, Api, Resource
 from flask import Blueprint, request, send_file
-from peewee import CharField, DateField, DateTimeField, IntegerField
+from peewee import CharField, DateField, DateTimeField, IntegerField, ModelSelect
 
 # Local application/library specific imports
 from ..extensions import db_wrapper as db
 from ..models.user import User as UserModel
 from ..utils import to_readable
 from ..libs.libreoffice import convert_to
-from ..utils.cerberus_schema import user_model_schema
+from ..utils.cerberus_schema import user_model_schema, search_model_schema
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
@@ -24,12 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class UserResource(Resource):
-    allowed_fields = set(
-        filter(
-            lambda x: x not in ['id'],
-            list(UserModel._meta.fields)
-        )
-    )
+    allowed_request_fields = UserModel.get_fields(['id'])
 
     def get_request_data(self, extend_allow_fields=None):
         if extend_allow_fields is None:
@@ -38,23 +33,28 @@ class UserResource(Resource):
         user_data = dict()
         request_data = request.get_json()
 
-        # TODO: pending to implement
-        self.allowed_fields.update(extend_allow_fields)
+        self.allowed_request_fields.update(extend_allow_fields)
 
         if request_data:
             user_data = {
                 k: v
                 for k, v in request_data.items()
-                if k in self.allowed_fields
+                if k in self.allowed_request_fields
             }
 
         return user_data
 
-    def get_request_query_fields(self):
-        request_data = request.get_json() or {}
+    def get_request_query_fields(self, request_data=None):
+        if request_data is None:
+            request_data = request.get_json() or {}
 
-        page_number = request_data.get('page_number', 1)
-        items_per_page = request_data.get('items_per_page', 10)
+        # Page numbers are 1-based, so the first page of results will be page 1.
+        # http://docs.peewee-orm.com/en/latest/peewee/querying.html#paginating-records
+        tmp = int(request_data.get('page_number', 1))
+        page_number = 1 if tmp < 1 else tmp
+
+        tmp = int(request_data.get('items_per_page', 10))
+        items_per_page = 10 if tmp < 1 else tmp
 
         sort = request_data.get('sort', 'id')
         order = request_data.get('order', 'asc')
@@ -66,7 +66,10 @@ class UserResource(Resource):
 
         return page_number, items_per_page, order_by
 
-    def create_query(self, query, data):
+    def create_query(self, query: ModelSelect = ModelSelect, data: dict = None):
+        if data is None:
+            data = {}
+
         search_data = data.get('search', {})
 
         filters = [
@@ -149,7 +152,7 @@ class UserResource(Resource):
 @api.resource('')
 class NewUserResource(UserResource):
     def post(self):
-        data = self.get_request_data()
+        data = request.get_json()
 
         v = Validator(schema=user_model_schema())
         v.allow_unknown = False
@@ -157,7 +160,7 @@ class NewUserResource(UserResource):
         if not v.validate(data):
             return {
                        'message': 'validation error',
-                       'fields': v.errors,
+                       'fields': v.errors
                    }, 422
 
         user = UserModel.create(**data)
@@ -171,7 +174,7 @@ class NewUserResource(UserResource):
 @api.resource('/<int:user_id>')
 class UserResource(UserResource):
     def put(self, user_id):
-        data = self.get_request_data()
+        data = request.get_json()
 
         v = Validator(schema=user_model_schema())
         v.allow_unknown = False
@@ -179,7 +182,7 @@ class UserResource(UserResource):
         if not v.validate(data):
             return {
                        'message': 'validation error',
-                       'fields': v.errors,
+                       'fields': v.errors
                    }, 422
 
         user = (UserModel.get_or_none(UserModel.id == user_id,
@@ -234,12 +237,19 @@ class UserResource(UserResource):
 
 @api.resource('/search')
 class UsersResource(UserResource):
-    allowed_request_fields = {'search'}
-
     def post(self):
-        data = self.get_request_data(self.allowed_request_fields)
+        data = request.get_json()
 
-        page_number, items_per_page, order_by = self.get_request_query_fields()
+        v = Validator(schema=search_model_schema())
+        v.allow_unknown = False
+
+        if not v.validate(data):
+            return {
+                       'message': 'validation error',
+                       'fields': v.errors
+                   }, 422
+
+        page_number, items_per_page, order_by = self.get_request_query_fields(data)
 
         query = UserModel.select()
         records_total = query.count()
@@ -265,8 +275,6 @@ class UsersResource(UserResource):
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
-    allowed_request_fields = {'search'}
-
     def post(self):
         def write_excel_rows(rows, workbook, worksheet):
             # Iterate over the data and write it out row by row.
@@ -307,7 +315,7 @@ class ExportUsersExcelResource(UserResource):
         original_column_names = self.get_column_names()
         self.format_column_names(rows, original_column_names)
 
-        data = self.get_request_data(self.allowed_request_fields)
+        data = request.get_json()
 
         page_number, items_per_page, order_by = self.get_request_query_fields()
 
@@ -349,8 +357,6 @@ class ExportUsersExcelResource(UserResource):
 
 @api.resource('/pdf')
 class ExportUsersPdfResource(UserResource):
-    allowed_request_fields = {'search'}
-
     def post(self):
         def write_docx_content(rows, document):
             header_fields = rows[0]
@@ -374,7 +380,7 @@ class ExportUsersPdfResource(UserResource):
         original_column_names = self.get_column_names()
         self.format_column_names(rows, original_column_names)
 
-        data = self.get_request_data(self.allowed_request_fields)
+        data = request.get_json()
 
         select_fields = [
             UserModel._meta.fields[column_name]

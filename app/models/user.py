@@ -38,7 +38,10 @@ class User(db.Model):
 
         return super(User, self).save(*args, **kwargs)
 
-    def serialize(self: Type[U], ignore_fields: list = list) -> dict:
+    def serialize(self: Type[U], ignore_fields: list = None) -> dict:
+        if ignore_fields is None:
+            ignore_fields = []
+
         data = self.__dict__.get('__data__')
         logger.debug(data)
 
@@ -66,6 +69,18 @@ class User(db.Model):
             pass
 
         return data
+
+    @classmethod
+    def get_fields(self, ignore_fields: list = None):
+        if ignore_fields is None:
+            ignore_fields = []
+
+        return set(
+            filter(
+                lambda x: x not in ignore_fields,
+                list(self._meta.fields)
+            )
+        )
 
     @classmethod
     def fake(cls: Type[U]) -> U:
