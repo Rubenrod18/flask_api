@@ -14,7 +14,7 @@ fake.add_provider(person)
 fake.add_provider(date_time)
 
 
-def get_models():
+def get_models() -> list:
     abs_path = os.path.abspath(__file__)
     path = os.path.dirname(abs_path)
     dirs = os.listdir(path)

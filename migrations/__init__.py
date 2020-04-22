@@ -3,10 +3,6 @@ from app.models import get_models
 
 
 def init_db() -> None:
-    """This is used for creating database tables.
-
-    If database table are already created then the creation process is skipped.
-    """
     print(' Starting the process of creation of tables...')
     tables = db_wrapper.database.get_tables()
 

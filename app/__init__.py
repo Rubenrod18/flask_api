@@ -4,12 +4,13 @@ import sys
 from datetime import datetime
 
 import flask
+from flask import Flask
 
 from .blueprints import blueprints
 from . import extensions
 
 
-def create_app(env_config):
+def create_app(env_config: str) -> Flask:
     app = flask.Flask(__name__)
     app.config.from_object(env_config)
 
@@ -19,7 +20,7 @@ def create_app(env_config):
     return app
 
 
-def init_app(app):
+def init_app(app: Flask) -> None:
     """Call the method 'init_app' to register the extensions in the flask.Flask
     object passed as parameter.
 
@@ -30,7 +31,7 @@ def init_app(app):
     extensions.init_app(app)
 
 
-def register_blueprints(app):
+def register_blueprints(app: Flask) -> None:
     """Register all blueprints.
 
     :app: flask.Flask object
@@ -41,12 +42,12 @@ def register_blueprints(app):
         app.register_blueprint(blueprint)
 
 
-def logging_config():
+def logging_config() -> None:
     # Function for catching unexpected errors
     def handle_exception(exc_type, exc_value, exc_traceback):
         if issubclass(exc_type, KeyboardInterrupt):
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
-            return
+            return False
 
         logger.error('Uncaught exception',
                      exc_info=(exc_type, exc_value, exc_traceback))

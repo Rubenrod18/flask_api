@@ -1,12 +1,10 @@
-from app.models.user import User
+from app.models.user import User as UserModel
 
 
 def init_seed() -> None:
-    """This is used for inserting fake data in database tables."""
     print(' Seeding users table...')
 
-    for i in range(10):
-        User.seed()
+    for i in range(100):
+        UserModel.seed()
 
     print(' Users table seeded!')
-    return None
