@@ -115,5 +115,3 @@ class User(db.Model):
 
         db.database.commit()
         db.database.close()
-
-        return None

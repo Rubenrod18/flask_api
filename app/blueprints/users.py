@@ -121,8 +121,6 @@ class UserResource(Resource):
 
         rows.append(formatted_column_names)
 
-        return None
-
     def get_users(self, column_names: list, page_number: int, items_per_page: int) -> UserModel:
         select_fields = [
             UserModel._meta.fields[column_name]
@@ -148,8 +146,6 @@ class UserResource(Resource):
         for user_dict in users_list:
             user_values = list(user_dict.values())
             rows.append(user_values)
-
-        return None
 
 
 @api.resource('')
