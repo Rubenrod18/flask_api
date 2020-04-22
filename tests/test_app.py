@@ -1,27 +1,28 @@
 import base64
 import binascii
 
+from flask.testing import FlaskClient
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
 
 from app import create_app
 from app.extensions import db_wrapper
-from app.models.user import User
+from app.models.user import User as UserModel
 
 
 def test_config():
-    assert create_app('config.TestConfig').config.get('TESTING')
+    assert create_app('config.TestConfig').config.get('TESTING') == True
 
 
-def test_welcome_api(client):
+def test_welcome_api(client: FlaskClient):
     response = client.get('/')
 
     assert 200 == response.status_code
     assert response.data == b'"Welcome to flask_api!"\n'
 
 
-def test_save_user_endpoint(client):
-    user = User.fake()
+def test_save_user_endpoint(client: FlaskClient):
+    user = UserModel.fake()
 
     data = model_to_dict(user)
     del data['id']
@@ -44,15 +45,16 @@ def test_save_user_endpoint(client):
     assert json_user_data.get('deleted_at') is None
 
 
-def test_update_user_endpoint(client):
-    user_id = (User.select(User.id)
-                   .order_by(fn.Random())
-                   .limit(1)
-                   .get()
-                   .id)
+def test_update_user_endpoint(client: FlaskClient):
+    user_id = (UserModel.select(UserModel.id)
+               .where(UserModel.deleted_at.is_null())
+               .order_by(fn.Random())
+               .limit(1)
+               .get()
+               .id)
     db_wrapper.database.close()
 
-    user = User.fake()
+    user = UserModel.fake()
 
     data = model_to_dict(user)
     del data['id']
@@ -72,16 +74,17 @@ def test_update_user_endpoint(client):
     assert data.get('age') == json_user_data.get('age')
     assert data.get('birth_date') == json_user_data.get('birth_date')
     assert json_user_data.get('created_at')
-    assert json_user_data.get('updated_at') > json_user_data.get('created_at')
+    assert json_user_data.get('updated_at') >= json_user_data.get('created_at')
     assert json_user_data.get('deleted_at') is None
 
 
-def test_delete_user_endpoint(client):
-    user_id = (User.select(User.id)
-                   .order_by(fn.Random())
-                   .limit(1)
-                   .get()
-                   .id)
+def test_delete_user_endpoint(client: FlaskClient):
+    user_id = (UserModel.select(UserModel.id)
+               .where(UserModel.deleted_at.is_null())
+               .order_by(fn.Random())
+               .limit(1)
+               .get()
+               .id)
     db_wrapper.database.close()
 
     response = client.delete('/users/%s' % user_id)
@@ -95,16 +98,16 @@ def test_delete_user_endpoint(client):
     assert json_user_data.get('deleted_at') >= json_user_data.get('updated_at')
 
 
-def test_search_users_endpoint(client):
+def test_search_users_endpoint(client: FlaskClient):
     json_body = {
         'search': [
             {
-                'field_name': 'id',
-                'field_value': ''
+                'field_name': 'name',
+                'field_value': 'a'
             }
         ],
         'order': 'desc',
-        'sort': 'id'
+        'sort': 'id',
     }
 
     response = client.post('/users/search', json=json_body)
@@ -119,10 +122,11 @@ def test_search_users_endpoint(client):
     assert isinstance(user_data, list)
     assert records_total > 0
     assert records_filtered > 0 and records_filtered <= records_total
+    assert user_data[0]['name'].find('a') != -1
 
 
-def test_export_pdf_endpoint(client):
-    response = client.get('/users/pdf')
+def test_export_pdf_endpoint(client: FlaskClient):
+    response = client.post('/users/pdf')
 
     try:
         base64.decodebytes(response.data)
@@ -135,8 +139,8 @@ def test_export_pdf_endpoint(client):
     assert is_pdf
 
 
-def test_export_excel_endpoint(client):
-    response = client.get('/users/xlsx')
+def test_export_excel_endpoint(client: FlaskClient):
+    response = client.post('/users/xlsx')
 
     try:
         base64.decodebytes(response.data)

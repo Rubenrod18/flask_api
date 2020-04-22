@@ -34,6 +34,6 @@ build
 *.pdf
 .env
 .idea
-log
+logs
 uwsgi.ini
 coverage_html_report
