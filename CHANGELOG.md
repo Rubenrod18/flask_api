@@ -4,28 +4,16 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [0.7.0](https://github.com/rubenrod18/flask-api/compare/v0.6.1...v0.7.0) (2020-04-23)
 
-
-### ⚠ BREAKING CHANGES
-
-* update python dependencies
-* update python dependencies
-
 ### Features
 
 * **doc:** add standard-version NodeJS package ([c1b2cb3](https://github.com/rubenrod18/flask-api/commit/c1b2cb37702040843c854a9137249273d0793a6b))
 
-
-### build
-
-* update requirements.txt ([f783e78](https://github.com/rubenrod18/flask-api/commit/f783e7848beaf13e5cc1fb67a7ddd42d55d572af))
-* update requirements.txt ([b6378ba](https://github.com/rubenrod18/flask-api/commit/b6378ba72f88289b811fa494893e21031338f22f))
 
 ### 0.6.1 (2020-04-23)
 
 
 ### ⚠ BREAKING CHANGES
 
-* update python dependencies
 * update python dependencies
 
 ### Features
