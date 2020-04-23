@@ -28,7 +28,6 @@ pip-log.txt
 venv
 venv2
 *.pyc
-build
 *.db
 *.xlsx
 *.pdf
@@ -37,3 +36,4 @@ build
 logs
 uwsgi.ini
 coverage_html_report
+node_modules
