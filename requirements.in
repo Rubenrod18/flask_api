@@ -15,4 +15,3 @@ python-dateutil
 python-docx
 python-dotenv
 uwsgi
-wheel

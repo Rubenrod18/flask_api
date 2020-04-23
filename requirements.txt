@@ -43,7 +43,6 @@ tomlkit==0.5.11           # via commitizen
 uwsgi==2.0.18             # via -r requirements.in
 wcwidth==0.1.9            # via pytest
 werkzeug==1.0.1           # via flask, flask-peewee
-wheel==0.34.2             # via -r requirements.in
 wtf-peewee==3.0.0         # via flask-peewee
 wtforms==2.3.1            # via flask-peewee, wtf-peewee
 xlsxwriter==1.2.8         # via -r requirements.in
