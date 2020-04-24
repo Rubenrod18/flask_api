@@ -35,7 +35,7 @@ class Role(BaseModel):
             updated_at = created_at + timedelta(days=randint(1, 7), minutes=randint(0, 60))
 
         return Role(
-            name=fake.jobTitle(),
+            name=fake.word(),
             slug=fake.slug(),
             created_at=datetime.utcnow(),
             updated_at=updated_at,

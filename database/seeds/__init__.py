@@ -8,6 +8,8 @@ def init_seed() -> None:
     for i in range(10):
         RoleModel.seed()
 
+    print(' Roles table seeded!')
+
     print(' Seeding users table...')
 
     for i in range(100):
