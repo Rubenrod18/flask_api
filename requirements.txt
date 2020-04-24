@@ -13,18 +13,17 @@ commitizen==1.18.3        # via -r requirements.in
 coverage==5.1             # via -r requirements.in
 decli==0.5.1              # via commitizen
 faker==4.0.3              # via -r requirements.in
-flask-peewee==3.0.3       # via -r requirements.in
 flask-restful==0.3.8      # via -r requirements.in
 flask-script==2.0.6       # via -r requirements.in
-flask==1.1.2              # via -r requirements.in, flask-peewee, flask-restful, flask-script
+flask==1.1.2              # via -r requirements.in, flask-restful, flask-script
 importlib-metadata==1.6.0  # via pluggy, pytest
 itsdangerous==1.1.0       # via flask
-jinja2==2.11.2            # via commitizen, flask, flask-peewee
+jinja2==2.11.2            # via commitizen, flask
 lxml==4.5.0               # via python-docx
-markupsafe==1.1.1         # via jinja2, wtforms
+markupsafe==1.1.1         # via jinja2
 more-itertools==8.2.0     # via pytest
 packaging==20.3           # via commitizen, pytest
-peewee==3.13.2            # via -r requirements.in, flask-peewee, wtf-peewee
+peewee==3.13.2            # via -r requirements.in
 pip-tools==5.0.0          # via -r requirements.in
 pluggy==0.13.1            # via pytest
 prompt-toolkit==3.0.5     # via questionary
@@ -42,9 +41,7 @@ text-unidecode==1.3       # via faker
 tomlkit==0.5.11           # via commitizen
 uwsgi==2.0.18             # via -r requirements.in
 wcwidth==0.1.9            # via pytest
-werkzeug==1.0.1           # via flask, flask-peewee
-wtf-peewee==3.0.0         # via flask-peewee
-wtforms==2.3.1            # via flask-peewee, wtf-peewee
+werkzeug==1.0.1           # via flask
 xlsxwriter==1.2.8         # via -r requirements.in
 zipp==3.1.0               # via importlib-metadata
 
