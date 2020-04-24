@@ -9,10 +9,9 @@ from dotenv import load_dotenv
 
 from app import create_app
 from migrations import init_db
-
-# Import environment file variables
 from seeds import init_seed
 
+# Import environment file variables
 load_dotenv()
 
 # Log configuration
