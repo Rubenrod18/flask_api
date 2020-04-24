@@ -1,5 +1,6 @@
 import base64
 import binascii
+from datetime import datetime
 
 from flask.testing import FlaskClient
 from peewee import fn
@@ -19,7 +20,6 @@ def test_welcome_api(client: FlaskClient):
 
     assert 200 == response.status_code
     assert response.data == b'"Welcome to flask_api!"\n'
-
 
 def test_save_user_endpoint(client: FlaskClient):
     user = UserModel.fake()
@@ -43,6 +43,36 @@ def test_save_user_endpoint(client: FlaskClient):
     assert json_user_data.get('created_at')
     assert json_user_data.get('updated_at') == json_user_data.get('created_at')
     assert json_user_data.get('deleted_at') is None
+
+
+def test_get_user_endpoint(client: FlaskClient):
+    user_id = (UserModel.select(UserModel.id)
+               .where(UserModel.deleted_at.is_null())
+               .order_by(fn.Random())
+               .limit(1)
+               .get()
+               .id)
+
+    user = UserModel.get(UserModel.id == user_id)
+
+    db_wrapper.database.close()
+
+    response = client.get('/users/%s' % user_id)
+
+    json_response = response.get_json()
+    print(user.deleted_at)
+    json_user_data = json_response.get('data')
+    print(json_user_data)
+
+    assert 200 == response.status_code
+    assert user_id == json_user_data.get('id')
+    assert user.name == json_user_data.get('name')
+    assert user.last_name == json_user_data.get('last_name')
+    assert user.age == json_user_data.get('age')
+    assert user.birth_date.strftime('%Y-%m-%d') == json_user_data.get('birth_date')
+    assert datetime.timestamp(user.created_at) == json_user_data.get('created_at')
+    assert datetime.timestamp(user.updated_at) == json_user_data.get('updated_at')
+    assert user.deleted_at == json_user_data.get('deleted_at')
 
 
 def test_update_user_endpoint(client: FlaskClient):
