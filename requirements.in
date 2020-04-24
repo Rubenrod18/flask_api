@@ -7,7 +7,6 @@ XlsxWriter
 cerberus
 commitizen
 coverage
-flask-peewee
 peewee
 pip-tools
 pytest
