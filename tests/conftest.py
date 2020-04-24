@@ -4,8 +4,8 @@ import pytest
 from flask import Flask
 
 from app import create_app
-from migrations import init_db
-from seeds import init_seed
+from database.migrations import init_db
+from database.seeds import init_seed
 
 
 @pytest.fixture

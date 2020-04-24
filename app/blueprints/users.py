@@ -14,7 +14,6 @@ from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
 # Local application/library specific imports
-from ..extensions import db_wrapper as db
 from ..models.user import User as UserModel
 from ..utils import to_readable
 from ..libs.libreoffice import convert_to

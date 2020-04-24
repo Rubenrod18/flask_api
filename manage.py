@@ -8,8 +8,8 @@ from peewee import SqliteDatabase
 from dotenv import load_dotenv
 
 from app import create_app
-from migrations import init_db
-from seeds import init_seed
+from database.migrations import init_db
+from database.seeds import init_seed
 
 # Import environment file variables
 load_dotenv()
