@@ -20,7 +20,7 @@ def app():
 
     print(' Deleting test database...')
     bd_fd = '%s/%s' % (app.config.get('ROOT_DIRECTORY'),
-                       app.config.get('DATABASE_NAME'))
+                       app.config.get('DATABASE_FILENAME'))
     os.remove(bd_fd)
     print(' Deleted test database!')
 
