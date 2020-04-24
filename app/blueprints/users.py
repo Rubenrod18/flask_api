@@ -29,24 +29,6 @@ logger = logging.getLogger(__name__)
 class UserResource(Resource):
     allowed_request_fields = UserModel.get_fields(['id'])
 
-    def get_request_data(self, extend_allow_fields=None) -> dict:
-        if extend_allow_fields is None:
-            extend_allow_fields = {}
-
-        user_data = dict()
-        request_data = request.get_json()
-
-        self.allowed_request_fields.update(extend_allow_fields)
-
-        if request_data:
-            user_data = {
-                k: v
-                for k, v in request_data.items()
-                if k in self.allowed_request_fields
-            }
-
-        return user_data
-
     def get_request_query_fields(self, request_data=None) -> tuple:
         if request_data is None:
             request_data = request.get_json() or {}
@@ -103,16 +85,7 @@ class UserResource(Resource):
 
         return query
 
-    def get_column_names(self) -> list:
-        column_names = [
-            column.name
-            for column in db.database.get_columns('users')
-            if column.name != 'id'
-        ]
-
-        return column_names
-
-    def format_column_names(self, rows: list, original_column_names: list) -> None:
+    def format_column_names(self, rows: list, original_column_names: set) -> None:
         formatted_column_names = [
             column.title().replace('_', ' ')
             for column in original_column_names
@@ -150,7 +123,7 @@ class UserResource(Resource):
 
 @api.resource('')
 class NewUserResource(UserResource):
-    def post(self):
+    def post(self) -> tuple:
         data = request.get_json()
 
         v = Validator(schema=user_model_schema())
@@ -172,7 +145,31 @@ class NewUserResource(UserResource):
 
 @api.resource('/<int:user_id>')
 class UserResource(UserResource):
-    def put(self, user_id):
+    def get(self, user_id: int) -> tuple:
+        response = {
+            'error': 'User doesn\'t exist',
+        }
+        status_code = 404
+
+        user = UserModel.get_or_none(UserModel.id == user_id)
+
+        if isinstance(user, UserModel):
+            if user.deleted_at is None:
+                user_dict = user.serialize()
+
+                response = {
+                    'data': user_dict,
+                }
+                status_code = 200
+            else:
+                response = {
+                    'error': 'User has been deleted',
+                }
+                status_code = 400
+
+        return response, status_code
+
+    def put(self, user_id: int) -> tuple:
         data = request.get_json()
 
         v = Validator(schema=user_model_schema())
@@ -206,7 +203,7 @@ class UserResource(UserResource):
 
         return response_data, response_code
 
-    def delete(self, user_id):
+    def delete(self, user_id: int) -> tuple:
         response = {
             'error': 'User doesn\'t exist',
         }
@@ -311,7 +308,7 @@ class ExportUsersExcelResource(UserResource):
         workbook = xlsxwriter.Workbook(excel_filename)
         worksheet = workbook.add_worksheet()
 
-        original_column_names = self.get_column_names()
+        original_column_names = UserModel.get_fields()
         self.format_column_names(rows, original_column_names)
 
         data = request.get_json()
@@ -376,7 +373,7 @@ class ExportUsersPdfResource(UserResource):
         page_number, items_per_page, order_by = self.get_request_query_fields()
         rows = []
 
-        original_column_names = self.get_column_names()
+        original_column_names = UserModel.get_fields()
         self.format_column_names(rows, original_column_names)
 
         data = request.get_json()
