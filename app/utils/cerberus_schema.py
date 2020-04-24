@@ -12,14 +12,14 @@ def user_model_schema() -> dict:
             'required': True,
             'empty': False,
             'nullable': False,
-            'maxlength': 255
+            'maxlength': 255,
         },
         'last_name': {
             'type': 'string',
             'required': True,
             'empty': False,
             'nullable': False,
-            'maxlength': 255
+            'maxlength': 255,
         },
         'age': {
             'type': 'integer',
@@ -27,7 +27,7 @@ def user_model_schema() -> dict:
             'empty': False,
             'nullable': False,
             'min': 0,
-            'max': 100
+            'max': 100,
         },
         'birth_date': {
             'type': 'string',
@@ -36,7 +36,7 @@ def user_model_schema() -> dict:
             'nullable': False,
             'regex': r'^(19[0-9]{2}|2[0-9]{3})'  # Year
                      r'-(0[1-9]|1[012])'  # Month
-                     r'-([123]0|[012][1-9]|31)$'  # Day
+                     r'-([123]0|[012][1-9]|31)$',  # Day
         },
     }
 
@@ -58,40 +58,56 @@ def search_model_schema() -> dict:
                 'schema': {
                     'field_name': {
                         'type': 'string',
-                        'allowed': UserModel.get_fields(['id'])
+                        'allowed': UserModel.get_fields(['id']),
                     },
                     'field_value': {
-                        'type': ['string', 'integer']
+                        'type': ['string', 'integer'],
                     }
-                }
-            }
+                },
+            },
         },
         'order': {
             'type': 'string',
             'required': False,
             'empty': False,
             'nullable': False,
-            'allowed': ['asc', 'desc']
+            'allowed': ['asc', 'desc'],
         },
         'sort': {
             'type': 'string',
             'required': False,
             'empty': False,
             'nullable': False,
-            'allowed': UserModel.get_fields()
+            'allowed': UserModel.get_fields(),
         },
         'items_per_page': {
             'type': 'integer',
             'required': False,
             'empty': False,
             'nullable': False,
-            'min': 1
+            'min': 1,
         },
         'page_number': {
             'type': 'integer',
             'required': False,
             'empty': False,
             'nullable': False,
-            'min': 1
+            'min': 1,
+        },
+    }
+
+
+def role_model_schema() -> dict:
+    """Cerberus schema for validating role fields.
+
+    :return: dict
+    """
+    return {
+        'name': {
+            'type': 'string',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'maxlength': 255,
         },
     }
