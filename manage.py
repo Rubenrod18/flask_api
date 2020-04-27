@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # Database
 DATABASE_FILEPATH = os.getenv('DATABASE_FILEPATH')
-database = SqliteDatabase(DATABASE_FILEPATH)
+database = SqliteDatabase(DATABASE_FILEPATH, pragmas={'foreign_keys': 1}, autoconnect=False)
 
 # App
 app = create_app(os.getenv('FLASK_CONFIG', 'config.DevConfig'))

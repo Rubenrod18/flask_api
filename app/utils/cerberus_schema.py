@@ -1,3 +1,4 @@
+from app.models.role import Role as RoleModel
 from app.models.user import User as UserModel
 
 
@@ -6,6 +7,10 @@ def user_model_schema() -> dict:
 
     :return: dict
     """
+    query = (RoleModel.select(RoleModel.id)
+                     .where(RoleModel.deleted_at.is_null(False)))
+    deleted_role_ids = [item.id for item in query]
+
     return {
         'name': {
             'type': 'string',
@@ -38,6 +43,13 @@ def user_model_schema() -> dict:
                      r'-(0[1-9]|1[012])'  # Month
                      r'-([123]0|[012][1-9]|31)$',  # Day
         },
+        'role_id': {
+            'type': 'integer',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'forbidden': deleted_role_ids,
+        }
     }
 
 

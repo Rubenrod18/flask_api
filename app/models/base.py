@@ -11,7 +11,7 @@ class BaseModel(db.Model):
     def save(self, *args: list, **kwargs: dict) -> int:
         current_date = datetime.utcnow()
 
-        if self.id is None:
+        if self.id is None and self.created_at is None:
             self.created_at = current_date
 
         if self.deleted_at is None:
@@ -21,7 +21,7 @@ class BaseModel(db.Model):
 
     @abstractmethod
     def serialize(self, ignore_fields: list = None) -> dict:
-        pass
+        return {}
 
     @classmethod
     @abstractmethod
@@ -39,9 +39,9 @@ class BaseModel(db.Model):
     @classmethod
     @abstractmethod
     def fake(self) -> B:
-        pass
+        return B
 
     @classmethod
     @abstractmethod
     def seed(self) -> None:
-        pass
+        return None

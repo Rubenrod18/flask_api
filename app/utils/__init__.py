@@ -19,3 +19,9 @@ def difference_in_years(start_date: object, end_date: object) -> int:
 
 def pos_to_char(pos: int) -> str:
     return chr(pos + 97)
+
+
+def find_longest_word(word_list: list) -> str:
+    str_list = [str(item) for item in word_list]
+    longest_word = max(str_list, key=len)
+    return str(longest_word)
