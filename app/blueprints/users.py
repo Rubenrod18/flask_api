@@ -14,7 +14,7 @@ from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
 # Local application/library specific imports
-from ..extensions import db_wrapper as db
+from .base import BaseResource
 from ..models.user import User as UserModel
 from ..utils import to_readable
 from ..libs.libreoffice import convert_to
@@ -26,64 +26,8 @@ api = Api(blueprint)
 logger = logging.getLogger(__name__)
 
 
-class UserResource(Resource):
-    allowed_request_fields = UserModel.get_fields(['id'])
-
-    def get_request_query_fields(self, request_data=None) -> tuple:
-        if request_data is None:
-            request_data = request.get_json() or {}
-
-        # Page numbers are 1-based, so the first page of results will be page 1.
-        # http://docs.peewee-orm.com/en/latest/peewee/querying.html#paginating-records
-        tmp = int(request_data.get('page_number', 1))
-        page_number = 1 if tmp < 1 else tmp
-
-        tmp = int(request_data.get('items_per_page', 10))
-        items_per_page = 10 if tmp < 1 else tmp
-
-        sort = request_data.get('sort', 'id')
-        order = request_data.get('order', 'asc')
-
-        order_by = UserModel._meta.fields[sort]
-
-        if order == 'desc':
-            order_by = order_by.desc()
-
-        return page_number, items_per_page, order_by
-
-    def create_query(self, query: ModelSelect = ModelSelect, data: dict = None) -> ModelSelect:
-        if data is None:
-            data = {}
-
-        search_data = data.get('search', {})
-
-        filters = [
-            item for item in search_data
-            if 'field_value' in item and item.get('field_value') != ''
-        ]
-
-        for filter in filters:
-            field_name = filter['field_name']
-            field = UserModel._meta.fields[field_name]
-
-            field_value = filter['field_value']
-
-            if isinstance(field, IntegerField):
-                query = query.where(field == field_value)
-            elif isinstance(field, CharField):
-                field_value = field_value.__str__()
-                value = '%{0}%'.format(field_value)
-                # OR use the exponent operator.
-                # Note: you must include wildcards here:
-                query = query.where(field ** value)
-            elif isinstance(field, DateField):
-                # TODO: WIP -> add field_operator
-                pass
-            elif isinstance(field, DateTimeField):
-                # TODO: add field_operator
-                pass
-
-        return query
+class UserResource(BaseResource):
+    db_model = UserModel
 
     def format_column_names(self, rows: list, original_column_names: set) -> None:
         formatted_column_names = [
@@ -154,18 +98,12 @@ class UserResource(UserResource):
         user = UserModel.get_or_none(UserModel.id == user_id)
 
         if isinstance(user, UserModel):
-            if user.deleted_at is None:
-                user_dict = user.serialize()
+            user_dict = user.serialize()
 
-                response = {
-                    'data': user_dict,
-                }
-                status_code = 200
-            else:
-                response = {
-                    'error': 'User has been deleted',
-                }
-                status_code = 400
+            response = {
+                'data': user_dict,
+            }
+            status_code = 200
 
         return response, status_code
 
@@ -236,7 +174,8 @@ class UsersResource(UserResource):
     def post(self) -> tuple:
         data = request.get_json()
 
-        v = Validator(schema=search_model_schema())
+        user_fields = UserModel.get_fields(['id'])
+        v = Validator(schema=search_model_schema(user_fields))
         v.allow_unknown = False
 
         if not v.validate(data):

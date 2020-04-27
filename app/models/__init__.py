@@ -22,6 +22,7 @@ def get_models() -> list:
     models = []
 
     dirs.remove(os.path.basename(__file__))
+    dirs.remove(os.path.basename('base.py'))
 
     for filename in dirs:
         basename = filename[:-3]

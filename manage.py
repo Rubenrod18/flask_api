@@ -8,8 +8,8 @@ from peewee import SqliteDatabase
 from dotenv import load_dotenv
 
 from app import create_app
-from migrations import init_db
-from seeds import init_seed
+from database.migrations import init_db
+from database.seeds import init_seed
 
 # Import environment file variables
 load_dotenv()
@@ -27,8 +27,8 @@ logging.basicConfig(filename=log_fullpath, format=FORMAT, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Database
-dbfilename = '%s.db' % os.getenv('DATABASE_NAME', 'prod')
-database = SqliteDatabase(dbfilename)
+DATABASE_FILEPATH = os.getenv('DATABASE_FILEPATH')
+database = SqliteDatabase(DATABASE_FILEPATH)
 
 # App
 app = create_app(os.getenv('FLASK_CONFIG', 'config.DevConfig'))

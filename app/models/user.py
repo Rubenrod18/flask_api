@@ -2,7 +2,7 @@ import logging
 import time
 from datetime import datetime, date, timedelta
 from random import randint
-from typing import Type, TypeVar
+from typing import TypeVar
 
 from peewee import CharField, IntegerField, DateField, TimestampField
 
@@ -38,7 +38,7 @@ class User(db.Model):
 
         return super(User, self).save(*args, **kwargs)
 
-    def serialize(self: Type[U], ignore_fields: list = None) -> dict:
+    def serialize(self, ignore_fields: list = None) -> dict:
         if ignore_fields is None:
             ignore_fields = []
 
@@ -71,7 +71,7 @@ class User(db.Model):
         return data
 
     @classmethod
-    def get_fields(self: Type[U], ignore_fields: list = None) -> set:
+    def get_fields(self, ignore_fields: list = None) -> set:
         if ignore_fields is None:
             ignore_fields = []
 
@@ -109,7 +109,7 @@ class User(db.Model):
         )
 
     @classmethod
-    def seed(cls: Type[U]) -> None:
+    def seed(self) -> None:
         user = User.fake()
         user.save()
 
