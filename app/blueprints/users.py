@@ -9,14 +9,13 @@ from cerberus import Validator
 from docx import Document
 from flask_restful import current_app, Api, Resource
 from flask import Blueprint, request, send_file
-from peewee import CharField, DateField, DateTimeField, IntegerField, ModelSelect
 from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
 # Local application/library specific imports
 from .base import BaseResource
 from ..models.user import User as UserModel
-from ..utils import to_readable
+from ..utils import to_readable, pos_to_char
 from ..libs.libreoffice import convert_to
 from ..utils.cerberus_schema import user_model_schema, search_model_schema
 
@@ -219,7 +218,7 @@ class ExportUsersExcelResource(UserResource):
                 if i == 1:
                     format = workbook.add_format({
                         'bold': True,
-                        'bg_color': '#CCCCCC'
+                        'bg_color': '#cccccc'
                     })
                 elif i % 2 == 0:
                     format = workbook.add_format({
@@ -269,11 +268,9 @@ class ExportUsersExcelResource(UserResource):
 
         self.format_user_data(users_query, rows)
 
-        # TODO: I need to improve this for doing dynamic
-        # last_col_index = len(formatted_column_names)
-        # last_col = '{}{}.'.format(chr(last_col_index), last_col_index)
-        # cell_range = 'A1:I10'
-        worksheet.autofilter('A1:G10')
+        total_fields = len(UserModel.get_fields(['id']))
+        columns = 'A1:%s10' % pos_to_char(total_fields).upper()
+        worksheet.autofilter(columns)
 
         write_excel_rows(rows, workbook, worksheet)
         adjust_each_column_width(rows, worksheet)
