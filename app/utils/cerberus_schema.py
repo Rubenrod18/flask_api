@@ -41,11 +41,12 @@ def user_model_schema() -> dict:
     }
 
 
-def search_model_schema() -> dict:
+def search_model_schema(allowed_fields: set) -> dict:
     """Cerberus schema for search fields such as: items_per_page, page_number, etc.
 
     :return: dict
     """
+
     return {
         'search': {
             'type': 'list',
@@ -58,7 +59,7 @@ def search_model_schema() -> dict:
                 'schema': {
                     'field_name': {
                         'type': 'string',
-                        'allowed': UserModel.get_fields(['id']),
+                        'allowed': allowed_fields,
                     },
                     'field_value': {
                         'type': ['string', 'integer'],

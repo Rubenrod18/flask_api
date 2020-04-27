@@ -3,10 +3,11 @@ from datetime import datetime
 
 from cerberus import Validator
 from flask import Blueprint, request
-from flask_restful import Api, Resource
+from flask_restful import Api
 
+from .base import BaseResource
 from app.models.role import Role as RoleModel
-from app.utils.cerberus_schema import role_model_schema
+from app.utils.cerberus_schema import role_model_schema, search_model_schema
 
 blueprint = Blueprint('roles', __name__, url_prefix='/roles')
 api = Api(blueprint)
@@ -14,8 +15,8 @@ api = Api(blueprint)
 logger = logging.getLogger(__name__)
 
 
-class RoleBaseResource(Resource):
-    pass
+class RoleBaseResource(BaseResource):
+    db_model = RoleModel
 
 
 @api.resource('')
@@ -53,18 +54,12 @@ class RoleResource(RoleBaseResource):
         role = RoleModel.get_or_none(RoleModel.id == role_id)
 
         if isinstance(role, RoleModel):
-            if role.deleted_at is None:
-                role_dict = role.serialize()
+            role_dict = role.serialize()
 
-                response = {
-                    'data': role_dict,
-                }
-                status_code = 200
-            else:
-                response = {
-                    'error': 'Role has been deleted',
-                }
-                status_code = 400
+            response = {
+                'data': role_dict,
+            }
+            status_code = 200
 
         return response, status_code
 
@@ -130,3 +125,42 @@ class RoleResource(RoleBaseResource):
                 status_code = 400
 
         return response, status_code
+
+
+@api.resource('/search')
+class UsersSearchResource(RoleBaseResource):
+    def post(self) -> tuple:
+        data = request.get_json()
+
+        role_fields = RoleModel.get_fields(['id'])
+        v = Validator(schema=search_model_schema(role_fields))
+        v.allow_unknown = False
+
+        if not v.validate(data):
+            return {
+                       'message': 'validation error',
+                       'fields': v.errors,
+                   }, 422
+
+        page_number, items_per_page, order_by = self.get_request_query_fields(data)
+
+        query = RoleModel.select()
+        records_total = query.count()
+
+        query = self.create_query(query, data)
+
+        query = (query.order_by(order_by)
+                 .paginate(page_number, items_per_page))
+
+        records_filtered = query.count()
+        user_list = []
+
+        for user in query:
+            user_dict = user.serialize()
+            user_list.append(user_dict)
+
+        return {
+                   'data': user_list,
+                   'records_total': records_total,
+                   'records_filtered': records_filtered,
+               }, 200

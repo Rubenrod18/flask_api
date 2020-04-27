@@ -109,5 +109,28 @@ def test_delete_role_endpoint(client: FlaskClient):
     assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
 
-def test_search_roles_endpoint():
-    pass
+def test_search_roles_endpoint(client: FlaskClient):
+    json_body = {
+        'search': [
+            {
+                'field_name': 'name',
+                'field_value': 'a'
+            }
+        ],
+        'order': 'desc',
+        'sort': 'id',
+    }
+
+    response = client.post('/roles/search', json=json_body)
+
+    json_response = response.get_json()
+
+    role_data = json_response.get('data')
+    records_total = json_response.get('records_total')
+    records_filtered = json_response.get('records_filtered')
+
+    assert 200 == response.status_code
+    assert isinstance(role_data, list)
+    assert records_total > 0
+    assert records_filtered > 0 and records_filtered <= records_total
+    assert role_data[0]['name'].find('a') != -1
