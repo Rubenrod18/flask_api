@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from flask.testing import FlaskClient
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
@@ -29,32 +27,6 @@ def test_save_role_endpoint(client: FlaskClient):
     assert json_data.get('created_at')
     assert json_data.get('updated_at') == json_data.get('created_at')
     assert json_data.get('deleted_at') is None
-
-
-def test_get_role_endpoint(client: FlaskClient):
-    role_id = (RoleModel.select(RoleModel.id)
-               .where(RoleModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get()
-               .id)
-
-    role = RoleModel.get(RoleModel.id == role_id)
-
-    db_wrapper.database.close()
-
-    response = client.get('/roles/%s' % role_id)
-
-    json_response = response.get_json()
-    json_data = json_response.get('data')
-
-    assert 200 == response.status_code
-    assert role_id == json_data.get('id')
-    assert role.name == json_data.get('name')
-    assert role.name.lower() == json_data.get('name').lower().replace('-', ' ')
-    assert datetime.timestamp(role.created_at) == json_data.get('created_at')
-    assert datetime.timestamp(role.updated_at) == json_data.get('updated_at')
-    assert role.deleted_at == json_data.get('deleted_at')
 
 
 def test_update_role_endpoint(client: FlaskClient):
@@ -89,6 +61,32 @@ def test_update_role_endpoint(client: FlaskClient):
     assert json_data.get('deleted_at') is None
 
 
+def test_get_role_endpoint(client: FlaskClient):
+    role_id = (RoleModel.select(RoleModel.id)
+               .where(RoleModel.deleted_at.is_null())
+               .order_by(fn.Random())
+               .limit(1)
+               .get()
+               .id)
+
+    role = RoleModel.get(RoleModel.id == role_id)
+
+    db_wrapper.database.close()
+
+    response = client.get('/roles/%s' % role_id)
+
+    json_response = response.get_json()
+    json_data = json_response.get('data')
+
+    assert 200 == response.status_code
+    assert role_id == json_data.get('id')
+    assert role.name == json_data.get('name')
+    assert role.name.lower() == json_data.get('name').lower().replace('-', ' ')
+    assert role.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('created_at')
+    assert role.updated_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('updated_at')
+    assert role.deleted_at == json_data.get('deleted_at')
+
+
 def test_delete_role_endpoint(client: FlaskClient):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
@@ -110,11 +108,19 @@ def test_delete_role_endpoint(client: FlaskClient):
 
 
 def test_search_roles_endpoint(client: FlaskClient):
+    role_name = (RoleModel.select(RoleModel.name)
+               .where(RoleModel.deleted_at.is_null())
+               .order_by(fn.Random())
+               .limit(1)
+               .get()
+               .name)
+    db_wrapper.database.close()
+
     json_body = {
         'search': [
             {
                 'field_name': 'name',
-                'field_value': 'a'
+                'field_value': role_name,
             }
         ],
         'order': 'desc',
@@ -133,4 +139,4 @@ def test_search_roles_endpoint(client: FlaskClient):
     assert isinstance(role_data, list)
     assert records_total > 0
     assert records_filtered > 0 and records_filtered <= records_total
-    assert role_data[0]['name'].find('a') != -1
+    assert role_data[0]['name'].find(role_name) != -1

@@ -7,16 +7,15 @@ import xlsxwriter
 import docx
 from cerberus import Validator
 from docx import Document
-from flask_restful import current_app, Api, Resource
+from flask_restful import current_app, Api
 from flask import Blueprint, request, send_file
-from peewee import CharField, DateField, DateTimeField, IntegerField, ModelSelect
 from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
 # Local application/library specific imports
 from .base import BaseResource
 from ..models.user import User as UserModel
-from ..utils import to_readable
+from ..utils import to_readable, pos_to_char, find_longest_word
 from ..libs.libreoffice import convert_to
 from ..utils.cerberus_schema import user_model_schema, search_model_schema
 
@@ -28,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 class UserResource(BaseResource):
     db_model = UserModel
+    column_display_order = ['name', 'last_name', 'age', 'birth_date', 'role', 'created_at', 'updated_at',
+                            'deleted_at']
 
     def format_column_names(self, rows: list, original_column_names: set) -> None:
         formatted_column_names = [
@@ -55,9 +56,16 @@ class UserResource(BaseResource):
 
         for user in users_query:
             user_dict = {
-                k: to_readable(v)
-                for (k, v) in user.items()
+                'role': user.role.name,
             }
+
+            user_dict.update({
+                k: to_readable(v)
+                for (k, v) in user.serialize(['id', 'role']).items()
+            })
+
+            user_dict = dict(sorted(user_dict.items(), key=lambda x: self.column_display_order.index(x[0])))
+
             users_list.append(user_dict)
 
         for user_dict in users_list:
@@ -211,15 +219,16 @@ class UsersResource(UserResource):
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
     def post(self) -> tuple:
-        def write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> None:
-            # Iterate over the data and write it out row by row.
+        def write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> int:
+            excel_longest_word = ''
+
             for i, row in enumerate(rows, 1):
                 format = None
 
                 if i == 1:
                     format = workbook.add_format({
                         'bold': True,
-                        'bg_color': '#CCCCCC'
+                        'bg_color': '#cccccc'
                     })
                 elif i % 2 == 0:
                     format = workbook.add_format({
@@ -228,15 +237,24 @@ class ExportUsersExcelResource(UserResource):
 
                 range_cells = "A%s:I10" % i
 
+                row_longest_word = find_longest_word(row)
+
+                if len(row_longest_word) > len(excel_longest_word):
+                    excel_longest_word = row_longest_word
+
                 worksheet.write_row(range_cells, row, format)
 
-        def adjust_each_column_width(rows: list, worksheet: Worksheet) -> None:
-            for i, v in enumerate(rows):
-                formatted_row = [str(item) for item in v]
-                max_column_width = max(formatted_row, key=len)
-                max_column_width_len = len(max_column_width)
+            return len(excel_longest_word)
 
-                worksheet.set_column(i, i + 1, max_column_width_len + 2)
+        def adjust_each_column_width(rows: list, worksheet: Worksheet, excel_longest_word: int) -> None:
+            if rows:
+                for i, v in enumerate(rows[0]):
+                    formatted_row = [str(item) for item in v]
+                    max_column_width = max(formatted_row, key=len)
+                    max_column_width_len = len(max_column_width)
+
+                    # worksheet.set_column(i, i + 1, max_column_width_len + 2)
+                    worksheet.set_column(i, i + 1, excel_longest_word + 1)
 
         storage_dir = current_app.config.get('STORAGE_DIRECTORY')
         file_prefix = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
@@ -246,8 +264,9 @@ class ExportUsersExcelResource(UserResource):
 
         workbook = xlsxwriter.Workbook(excel_filename)
         worksheet = workbook.add_worksheet()
+        worksheet.set_zoom(120)
 
-        original_column_names = UserModel.get_fields()
+        original_column_names = UserModel.get_fields(['id'], self.column_display_order)
         self.format_column_names(rows, original_column_names)
 
         data = request.get_json()
@@ -264,19 +283,16 @@ class ExportUsersExcelResource(UserResource):
         query = self.create_query(query, data)
 
         users_query = (query.order_by(order_by)
-                       .paginate(page_number, items_per_page)
-                       .dicts())
+                       .paginate(page_number, items_per_page))
 
         self.format_user_data(users_query, rows)
 
-        # TODO: I need to improve this for doing dynamic
-        # last_col_index = len(formatted_column_names)
-        # last_col = '{}{}.'.format(chr(last_col_index), last_col_index)
-        # cell_range = 'A1:I10'
-        worksheet.autofilter('A1:G10')
+        total_fields = len(UserModel.get_fields(['id'])) - 1
+        columns = 'A1:%s10' % pos_to_char(total_fields).upper()
+        worksheet.autofilter(columns)
 
-        write_excel_rows(rows, workbook, worksheet)
-        adjust_each_column_width(rows, worksheet)
+        excel_longest_word = write_excel_rows(rows, workbook, worksheet)
+        adjust_each_column_width(rows, worksheet, excel_longest_word)
 
         workbook.close()
 
@@ -312,7 +328,7 @@ class ExportUsersPdfResource(UserResource):
         page_number, items_per_page, order_by = self.get_request_query_fields()
         rows = []
 
-        original_column_names = UserModel.get_fields()
+        original_column_names = UserModel.get_fields(['id'], self.column_display_order)
         self.format_column_names(rows, original_column_names)
 
         data = request.get_json()
@@ -327,8 +343,7 @@ class ExportUsersPdfResource(UserResource):
         query = self.create_query(query, data)
 
         users_query = (query.order_by(order_by)
-                       .paginate(page_number, items_per_page)
-                       .dicts())
+                       .paginate(page_number, items_per_page))
 
         self.format_user_data(users_query, rows)
 

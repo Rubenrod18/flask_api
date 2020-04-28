@@ -1,13 +1,13 @@
 import logging
-import time
 from datetime import datetime, date, timedelta
 from random import randint
 from typing import TypeVar
 
-from peewee import CharField, IntegerField, DateField, TimestampField
+from peewee import CharField, IntegerField, DateField, TimestampField, ForeignKeyField, fn
 
 from . import fake
 from app.utils import difference_in_years
+from .role import Role as RoleModel
 from ..extensions import db_wrapper as db
 
 logger = logging.getLogger(__name__)
@@ -19,6 +19,7 @@ class User(db.Model):
     class Meta:
         table_name = 'users'
 
+    role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
     age = IntegerField()
@@ -30,7 +31,7 @@ class User(db.Model):
     def save(self, *args: list, **kwargs: dict) -> int:
         current_date = datetime.utcnow()
 
-        if self.id is None:
+        if self.id is None and self.created_at is None:
             self.created_at = current_date
 
         if self.deleted_at is None:
@@ -49,7 +50,7 @@ class User(db.Model):
         deleted_at = data.get('deleted_at')
 
         if isinstance(deleted_at, datetime):
-            deleted_at = time.mktime(deleted_at.timetuple())
+            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%m:%S')
 
         if isinstance(birth_date, date):
             birth_date = birth_date.strftime('%Y-%m-%d')
@@ -60,50 +61,69 @@ class User(db.Model):
             'last_name': data.get('last_name'),
             'age': data.get('age'),
             'birth_date': birth_date,
-            'created_at': time.mktime(data.get('created_at').timetuple()),
-            'updated_at': time.mktime(data.get('updated_at').timetuple()),
+            'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
+            'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
             'deleted_at': deleted_at,
+            'role': self.role.serialize(),
         }
 
         if ignore_fields:
-            pass
+            match_fields = set(data.keys()) & set(ignore_fields)
+
+            data = {
+                k: v
+                for (k, v) in data.items()
+                if k not in match_fields
+            }
 
         return data
 
     @classmethod
-    def get_fields(self, ignore_fields: list = None) -> set:
+    def get_fields(self, ignore_fields: list = None, sort_order: list = None) -> set:
         if ignore_fields is None:
             ignore_fields = []
 
-        return set(
-            filter(
-                lambda x: x not in ignore_fields,
-                list(self._meta.fields)
-            )
-        )
+        if sort_order is None:
+            sort_order = []
+
+        fields = set(filter(
+            lambda x: x not in ignore_fields,
+            list(self._meta.fields)
+        ))
+
+        if sort_order and len(fields) == len(sort_order):
+            fields = sorted(fields, key=lambda x: sort_order.index(x))
+
+        return fields
 
     @classmethod
     def fake(self) -> U:
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 
-        created_at = datetime.utcnow()
+        created_at = current_date - timedelta(days=randint(1, 100), minutes=randint(0, 60))
         updated_at = created_at
         deleted_at = None
 
         if randint(0, 1):
-            deleted_at = created_at + timedelta(days=randint(1, 7), minutes=randint(0, 60))
+            deleted_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
         else:
-            updated_at = created_at + timedelta(days=randint(1, 7), minutes=randint(0, 60))
+            updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
 
         age = difference_in_years(birth_date, current_date)
 
+        role = (RoleModel.select()
+               .where(RoleModel.deleted_at.is_null())
+               .order_by(fn.Random())
+               .get())
+
         return User(
+            role=role,
             name=fake.name(),
             last_name=fake.last_name(),
             age=age,
             birth_date=birth_date.strftime('%Y-%m-%d'),
-            created_at=datetime.utcnow(),
+            created_at=created_at,
             updated_at=updated_at,
             deleted_at=deleted_at
         )
