@@ -1,6 +1,7 @@
 # requirements.in
 Faker
 Flask
+Flask-HTTPAuth
 Flask-RESTful
 Flask-Script
 XlsxWriter
