@@ -1,9 +1,9 @@
 # requirements.in
 Faker
 Flask
-Flask-HTTPAuth
 Flask-RESTful
 Flask-Script
+Flask-Security-Too
 XlsxWriter
 cerberus
 commitizen
