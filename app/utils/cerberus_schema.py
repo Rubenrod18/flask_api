@@ -1,5 +1,40 @@
-from app.models.role import Role as RoleModel
+from cerberus import Validator
+from peewee import ModelBase
+
 from app.models.user import User as UserModel
+from app.utils import BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name
+
+
+class MyValidator(Validator):
+    def _validate_exists(self, exists, field, value):
+        """Test if value of a field exists or not in database.
+
+        The rule's arguments are validated against this schema:
+        {'type': 'dict'}
+        """
+        module_name = exists.get('module_name')
+        class_name = exists.get('class_name')
+        model_field = exists.get('field_name')
+        search_deleted = exists.get('search_deleted', False)
+        exists_record_message = exists.get('exists_record_message', 'already exists')
+        no_exists_record_message = exists.get('no_exists_record_message', 'already deleted')
+
+        model = class_for_name(module_name, class_name)
+
+        if isinstance(model, ModelBase):
+            query_field = getattr(model, model_field)
+
+            if search_deleted:
+                query = model.get_or_none(query_field == value)
+            else:
+                query = (model.select()
+                         .where(query_field == value, model.deleted_at.is_null(True))
+                         .first())
+
+            if query and exists_record_message:
+                self._error(field, exists_record_message)
+            elif not query and no_exists_record_message:
+                self._error(field, no_exists_record_message)
 
 
 def user_model_schema() -> dict:
@@ -7,10 +42,6 @@ def user_model_schema() -> dict:
 
     :return: dict
     """
-    query = (RoleModel.select(RoleModel.id)
-                     .where(RoleModel.deleted_at.is_null(False)))
-    deleted_role_ids = [item.id for item in query]
-
     return {
         'name': {
             'type': 'string',
@@ -26,6 +57,28 @@ def user_model_schema() -> dict:
             'nullable': False,
             'maxlength': 255,
         },
+        'email': {
+            'type': 'string',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'regex': EMAIL_REGEX,
+            'exists': {
+                'module_name': 'app.models.user',
+                'class_name': 'User',
+                'field_name': 'email',
+                'no_exists_record_message': '',
+                'search_deleted': True,
+            },
+        },
+        'password': {
+            'type': 'string',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'minlength': 5,
+            'maxlength': 50,
+        },
         'age': {
             'type': 'integer',
             'required': True,
@@ -39,16 +92,19 @@ def user_model_schema() -> dict:
             'required': True,
             'empty': False,
             'nullable': False,
-            'regex': r'^(19[0-9]{2}|2[0-9]{3})'  # Year
-                     r'-(0[1-9]|1[012])'  # Month
-                     r'-([123]0|[012][1-9]|31)$',  # Day
+            'regex': BIRTH_DATE_REGEX,
         },
         'role_id': {
             'type': 'integer',
             'required': True,
             'empty': False,
             'nullable': False,
-            'forbidden': deleted_role_ids,
+            'exists': {
+                'module_name': 'app.models.role',
+                'class_name': 'Role',
+                'field_name': 'id',
+                'exists_record_message': '',
+            },
         }
     }
 
@@ -91,7 +147,7 @@ def search_model_schema(allowed_fields: set) -> dict:
             'required': False,
             'empty': False,
             'nullable': False,
-            'allowed': UserModel.get_fields(),
+            'allowed': UserModel.get_fields(['password']),
         },
         'items_per_page': {
             'type': 'integer',

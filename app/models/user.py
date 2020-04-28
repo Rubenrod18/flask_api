@@ -4,6 +4,7 @@ from random import randint
 from typing import TypeVar
 
 from peewee import CharField, IntegerField, DateField, TimestampField, ForeignKeyField, fn
+from werkzeug.security import generate_password_hash
 
 from . import fake
 from app.utils import difference_in_years
@@ -22,6 +23,8 @@ class User(db.Model):
     role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
+    email = CharField(null=False, unique=True)
+    password = CharField(null=False)
     age = IntegerField()
     birth_date = DateField()
     created_at = TimestampField(default=None)
@@ -36,6 +39,9 @@ class User(db.Model):
 
         if self.deleted_at is None:
             self.updated_at = current_date
+
+        if self.password:
+            self.password = generate_password_hash(self.password)
 
         return super(User, self).save(*args, **kwargs)
 
@@ -59,6 +65,7 @@ class User(db.Model):
             'id': data.get('id'),
             'name': data.get('name'),
             'last_name': data.get('last_name'),
+            'email': data.get('email'),
             'age': data.get('age'),
             'birth_date': birth_date,
             'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
@@ -121,6 +128,8 @@ class User(db.Model):
             role=role,
             name=fake.name(),
             last_name=fake.last_name(),
+            email=fake.email(),
+            password=generate_password_hash('123456'),
             age=age,
             birth_date=birth_date.strftime('%Y-%m-%d'),
             created_at=created_at,
@@ -130,8 +139,9 @@ class User(db.Model):
 
     @classmethod
     def seed(self) -> None:
-        user = User.fake()
-        user.save()
+        with db.database.atomic():
+            for i in range(100):
+                user = User.fake()
+                user.save()
 
-        db.database.commit()
         db.database.close()

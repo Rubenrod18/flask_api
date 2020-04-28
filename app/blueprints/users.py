@@ -17,7 +17,7 @@ from .base import BaseResource
 from ..models.user import User as UserModel
 from ..utils import to_readable, pos_to_char, find_longest_word
 from ..libs.libreoffice import convert_to
-from ..utils.cerberus_schema import user_model_schema, search_model_schema
+from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
@@ -78,7 +78,7 @@ class NewUserResource(UserResource):
     def post(self) -> tuple:
         data = request.get_json()
 
-        v = Validator(schema=user_model_schema())
+        v = MyValidator(schema=user_model_schema())
         v.allow_unknown = False
 
         if not v.validate(data):
@@ -118,7 +118,7 @@ class UserResource(UserResource):
     def put(self, user_id: int) -> tuple:
         data = request.get_json()
 
-        v = Validator(schema=user_model_schema())
+        v = MyValidator(schema=user_model_schema())
         v.allow_unknown = False
 
         if not v.validate(data):
@@ -182,7 +182,7 @@ class UsersResource(UserResource):
     def post(self) -> tuple:
         data = request.get_json()
 
-        user_fields = UserModel.get_fields(['id'])
+        user_fields = UserModel.get_fields(['id', 'password'])
         v = Validator(schema=search_model_schema(user_fields))
         v.allow_unknown = False
 
@@ -266,7 +266,7 @@ class ExportUsersExcelResource(UserResource):
         worksheet = workbook.add_worksheet()
         worksheet.set_zoom(120)
 
-        original_column_names = UserModel.get_fields(['id'], self.column_display_order)
+        original_column_names = UserModel.get_fields(['id', 'password'], self.column_display_order)
         self.format_column_names(rows, original_column_names)
 
         data = request.get_json()
@@ -287,7 +287,7 @@ class ExportUsersExcelResource(UserResource):
 
         self.format_user_data(users_query, rows)
 
-        total_fields = len(UserModel.get_fields(['id'])) - 1
+        total_fields = len(UserModel.get_fields(['id', 'password'])) - 1
         columns = 'A1:%s10' % pos_to_char(total_fields).upper()
         worksheet.autofilter(columns)
 
@@ -328,7 +328,7 @@ class ExportUsersPdfResource(UserResource):
         page_number, items_per_page, order_by = self.get_request_query_fields()
         rows = []
 
-        original_column_names = UserModel.get_fields(['id'], self.column_display_order)
+        original_column_names = UserModel.get_fields(['id', 'password'], self.column_display_order)
         self.format_column_names(rows, original_column_names)
 
         data = request.get_json()

@@ -1,5 +1,4 @@
 import logging
-import time
 from datetime import datetime, timedelta
 from random import randint
 from typing import TypeVar
@@ -73,8 +72,9 @@ class Role(BaseModel):
 
     @classmethod
     def seed(self) -> None:
-        role = Role.fake()
-        role.save()
+        with db.database.atomic():
+            for i in range(10):
+                role = Role.fake()
+                role.save()
 
-        db.database.commit()
         db.database.close()
