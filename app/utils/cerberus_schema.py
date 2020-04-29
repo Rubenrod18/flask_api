@@ -181,3 +181,32 @@ def role_model_schema() -> dict:
         },
     }
 
+
+def user_login_schema() -> dict:
+    """Cerberus schema for validating user login fields.
+
+    :return: dict
+    """
+    return {
+        'email': {
+            'type': 'string',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'regex': EMAIL_REGEX,
+            'exists': {
+                'module_name': 'app.models.user',
+                'class_name': 'User',
+                'field_name': 'email',
+                'exists_record_message': '',
+            },
+        },
+        'password': {
+            'type': 'string',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'minlength': 5,
+            'maxlength': 50,
+        },
+    }
