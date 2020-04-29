@@ -37,29 +37,30 @@ class MyValidator(Validator):
                 self._error(field, no_exists_record_message)
 
 
-def user_model_schema() -> dict:
+def user_model_schema(is_creation: bool = True) -> dict:
     """Cerberus schema for validating user fields.
 
     :return: dict
     """
+
     return {
         'name': {
             'type': 'string',
-            'required': True,
+            'required': is_creation,
             'empty': False,
             'nullable': False,
             'maxlength': 255,
         },
         'last_name': {
             'type': 'string',
-            'required': True,
+            'required': is_creation,
             'empty': False,
             'nullable': False,
             'maxlength': 255,
         },
         'email': {
             'type': 'string',
-            'required': True,
+            'required': is_creation,
             'empty': False,
             'nullable': False,
             'regex': EMAIL_REGEX,
@@ -73,30 +74,22 @@ def user_model_schema() -> dict:
         },
         'password': {
             'type': 'string',
-            'required': True,
+            'required': is_creation,
             'empty': False,
             'nullable': False,
             'minlength': 5,
             'maxlength': 50,
         },
-        'age': {
-            'type': 'integer',
-            'required': True,
-            'empty': False,
-            'nullable': False,
-            'min': 0,
-            'max': 100,
-        },
         'birth_date': {
             'type': 'string',
-            'required': True,
+            'required': is_creation,
             'empty': False,
             'nullable': False,
             'regex': BIRTH_DATE_REGEX,
         },
         'role_id': {
             'type': 'integer',
-            'required': True,
+            'required': is_creation,
             'empty': False,
             'nullable': False,
             'exists': {
@@ -105,7 +98,7 @@ def user_model_schema() -> dict:
                 'field_name': 'id',
                 'exists_record_message': '',
             },
-        }
+        },
     }
 
 
@@ -179,4 +172,12 @@ def role_model_schema() -> dict:
             'nullable': False,
             'maxlength': 255,
         },
+        'description': {
+            'type': 'string',
+            'required': False,
+            'empty': True,
+            'nullable': True,
+            'maxlength': 255,
+        },
     }
+

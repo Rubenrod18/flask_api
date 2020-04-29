@@ -27,7 +27,8 @@ logger = logging.getLogger(__name__)
 
 class UserResource(BaseResource):
     db_model = UserModel
-    column_display_order = ['name', 'last_name', 'age', 'birth_date', 'role', 'created_at', 'updated_at',
+    column_display_order = ['name', 'last_name', 'email', 'birth_date', 'active', 'role', 'created_at',
+                            'updated_at',
                             'deleted_at']
 
     def format_column_names(self, rows: list, original_column_names: set) -> None:
@@ -118,7 +119,7 @@ class UserResource(UserResource):
     def put(self, user_id: int) -> tuple:
         data = request.get_json()
 
-        v = MyValidator(schema=user_model_schema())
+        v = MyValidator(schema=user_model_schema(False))
         v.allow_unknown = False
 
         if not v.validate(data):

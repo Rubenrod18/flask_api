@@ -19,7 +19,7 @@ def app():
     yield app
 
     print(' Deleting test database...')
-    os.remove(app.config.get('DATABASE_FILEPATH'))
+    os.remove(app.config.get('DATABASE').get('name'))
     print(' Deleted test database!')
 
 

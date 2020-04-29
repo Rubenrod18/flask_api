@@ -1,7 +1,6 @@
 from app.models.role import Role as RoleModel
 from app.models.user import User as UserModel
 
-
 def init_seed() -> None:
     print(' Seeding roles table...')
     RoleModel.seed()
