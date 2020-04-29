@@ -6,42 +6,59 @@
 #
 aniso8601==8.0.0          # via flask-restful
 attrs==19.3.0             # via pytest
+babel==2.8.0              # via flask-babelex
+bcrypt==3.1.7             # via -r requirements.in
+blinker==1.4              # via flask-mail, flask-principal
 cerberus==1.3.2           # via -r requirements.in
+cffi==1.14.0              # via bcrypt
 click==7.1.1              # via flask, pip-tools
 colorama==0.4.3           # via commitizen
 commitizen==1.18.3        # via -r requirements.in
 coverage==5.1             # via -r requirements.in
 decli==0.5.1              # via commitizen
+dnspython==1.16.0         # via email-validator
+email-validator==1.0.5    # via flask-security-too
 faker==4.0.3              # via -r requirements.in
+flask-babelex==0.9.4      # via flask-security-too
+flask-login==0.5.0        # via flask-security-too
+flask-mail==0.9.1         # via flask-security-too
+flask-principal==0.4.0    # via flask-security-too
 flask-restful==0.3.8      # via -r requirements.in
 flask-script==2.0.6       # via -r requirements.in
-flask==1.1.2              # via -r requirements.in, flask-restful, flask-script
+flask-security-too==3.4.1  # via -r requirements.in
+flask-wtf==0.14.3         # via flask-security-too
+flask==1.1.2              # via -r requirements.in, flask-babelex, flask-login, flask-mail, flask-principal, flask-restful, flask-script, flask-security-too, flask-wtf
+idna==2.9                 # via email-validator
 importlib-metadata==1.6.0  # via pluggy, pytest
-itsdangerous==1.1.0       # via flask
-jinja2==2.11.2            # via commitizen, flask
+itsdangerous==1.1.0       # via flask, flask-security-too, flask-wtf
+jinja2==2.11.2            # via commitizen, flask, flask-babelex
 lxml==4.5.0               # via python-docx
-markupsafe==1.1.1         # via jinja2
+markupsafe==1.1.1         # via jinja2, wtforms
 more-itertools==8.2.0     # via pytest
 packaging==20.3           # via commitizen, pytest
+passlib==1.7.2            # via flask-security-too
 peewee==3.13.2            # via -r requirements.in
 pip-tools==5.0.0          # via -r requirements.in
 pluggy==0.13.1            # via pytest
 prompt-toolkit==3.0.5     # via questionary
 py==1.8.1                 # via pytest
+pycparser==2.20           # via cffi
 pyparsing==2.4.7          # via packaging
 pytest==5.4.1             # via -r requirements.in
 python-dateutil==2.8.1    # via -r requirements.in, faker
 python-docx==0.8.10       # via -r requirements.in
 python-dotenv==0.13.0     # via -r requirements.in
-pytz==2019.3              # via flask-restful
+pytz==2019.3              # via babel, flask-restful
 questionary==1.5.2        # via commitizen
-six==1.14.0               # via flask-restful, packaging, pip-tools, python-dateutil
+six==1.14.0               # via bcrypt, flask-restful, packaging, pip-tools, python-dateutil
+speaklater==1.3           # via flask-babelex
 termcolor==1.1.0          # via commitizen
 text-unidecode==1.3       # via faker
 tomlkit==0.5.11           # via commitizen
 uwsgi==2.0.18             # via -r requirements.in
-wcwidth==0.1.9            # via pytest
+wcwidth==0.1.9            # via prompt-toolkit, pytest
 werkzeug==1.0.1           # via flask
+wtforms==2.3.1            # via flask-wtf
 xlsxwriter==1.2.8         # via -r requirements.in
 zipp==3.1.0               # via importlib-metadata
 

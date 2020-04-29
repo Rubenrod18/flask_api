@@ -1,13 +1,16 @@
 import logging
+import os
+import time
 from datetime import datetime, date, timedelta
 from random import randint
 from typing import TypeVar
 
-from peewee import CharField, IntegerField, DateField, TimestampField, ForeignKeyField, fn
+from flask_security import UserMixin, PeeweeUserDatastore, hash_password
+from peewee import CharField, DateField, TimestampField, ForeignKeyField, fn, BooleanField
 
 from . import fake
-from app.utils import difference_in_years
-from .role import Role as RoleModel
+from .base import BaseModel as BaseModel
+from .role import Role as RoleModel, Role
 from ..extensions import db_wrapper as db
 
 logger = logging.getLogger(__name__)
@@ -15,15 +18,17 @@ logger = logging.getLogger(__name__)
 U = TypeVar('U', bound='User')
 
 
-class User(db.Model):
+class User(BaseModel, UserMixin):
     class Meta:
         table_name = 'users'
 
     role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
-    age = IntegerField()
+    email = CharField(null=False, unique=True)
+    password = CharField(null=False)
     birth_date = DateField()
+    active = BooleanField(default=True)
     created_at = TimestampField(default=None)
     updated_at = TimestampField()
     deleted_at = TimestampField(default=None, null=True)
@@ -37,6 +42,9 @@ class User(db.Model):
         if self.deleted_at is None:
             self.updated_at = current_date
 
+        if self.password:
+            self.password = hash_password(self.password)
+
         return super(User, self).save(*args, **kwargs)
 
     def serialize(self, ignore_fields: list = None) -> dict:
@@ -48,6 +56,7 @@ class User(db.Model):
 
         birth_date = data.get('birth_date')
         deleted_at = data.get('deleted_at')
+        active = 1 if data.get('active') else 0
 
         if isinstance(deleted_at, datetime):
             deleted_at = deleted_at.strftime('%Y-%m-%d %H:%m:%S')
@@ -59,8 +68,9 @@ class User(db.Model):
             'id': data.get('id'),
             'name': data.get('name'),
             'last_name': data.get('last_name'),
-            'age': data.get('age'),
+            'email': data.get('email'),
             'birth_date': birth_date,
+            'active': active,
             'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
             'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
             'deleted_at': deleted_at,
@@ -97,7 +107,10 @@ class User(db.Model):
         return fields
 
     @classmethod
-    def fake(self) -> U:
+    def fake(self, data: dict = None) -> U:
+        if data is None:
+            data = {}
+
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 
@@ -105,33 +118,46 @@ class User(db.Model):
         updated_at = created_at
         deleted_at = None
 
-        if randint(0, 1):
+        if randint(0, 1) and 'deleted_at' not in data:
             deleted_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
         else:
             updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
 
-        age = difference_in_years(birth_date, current_date)
-
         role = (RoleModel.select()
-               .where(RoleModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .get())
+                .where(RoleModel.deleted_at.is_null())
+                .order_by(fn.Random())
+                .get())
 
-        return User(
-            role=role,
-            name=fake.name(),
-            last_name=fake.last_name(),
-            age=age,
-            birth_date=birth_date.strftime('%Y-%m-%d'),
-            created_at=created_at,
-            updated_at=updated_at,
-            deleted_at=deleted_at
-        )
+        user = User()
+        user.role = data.get('role') if data.get('role') else role
+        user.name = data.get('name') if data.get('name') else fake.name()
+        user.last_name = data.get('last_name') if data.get('last_name') else fake.last_name()
+        user.email = data.get('email') if data.get('email') else fake.email()
+        user.password = data.get('password') if data.get('password') else '123456'
+        user.birth_date = data.get('birth_date') if data.get('birth_date') else birth_date.strftime('%Y-%m-%d')
+        user.active = data.get('active') if data.get('active') else fake.boolean()
+        user.created_at = created_at
+        user.updated_at = updated_at
+        user.deleted_at = deleted_at
+
+        return user
 
     @classmethod
     def seed(self) -> None:
-        user = User.fake()
-        user.save()
+        with db.database.atomic():
+            for i in range(10):
+                user = self.fake()
+                user.save()
 
-        db.database.commit()
+            user = self.fake({
+                'email': os.environ.get('TEST_USER_EMAIL'),
+                'password': os.environ.get('TEST_USER_PASSWORD'),
+                'deleted_at': None,
+                'active': True,
+            })
+            user.save()
+
         db.database.close()
+
+
+user_datastore = PeeweeUserDatastore(db, User, Role, None)

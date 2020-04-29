@@ -1,20 +1,33 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 class BaseConfig(object):
     """Default configuration options."""
-    ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-    STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
     DEVELOPMENT = False
     DEBUG = False
-    LOGIN_DISABLED = False
 
-    DATABASE_NAME = os.environ.get('SQLITE_DB', 'prod')
-    DATABASE_FILEPATH = '%s/%s.db' % (ROOT_DIRECTORY, DATABASE_NAME)
     DATABASE = {
-        'name': DATABASE_FILEPATH,
+        'name': os.getenv('DATABASE_NAME'),
         'engine': 'peewee.SqliteDatabase',
     }
+    TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
+    TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')
+
+    # SECRET_KEY generated using: secrets.token_urlsafe()
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    # PASSWORD_SALT secrets.SystemRandom().getrandbits(128)
+    SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT')
+    SECURITY_PASSWORD_HASH = 'pbkdf2_sha512'
+    SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authorization'
+    SECURITY_TOKEN_MAX_AGE = None
+    SECURITY_PASSWORD_LENGTH_MIN = 5
+
+    ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+    STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
 
 
 class DevConfig(BaseConfig):
@@ -22,22 +35,13 @@ class DevConfig(BaseConfig):
     DEVELOPMENT = True
     DEBUG = True
 
-    DATABASE_NAME = os.environ.get('SQLITE_DB', 'dev')
-    DATABASE_FILEPATH = '%s/%s.db' % (BaseConfig.ROOT_DIRECTORY, DATABASE_NAME)
-    DATABASE = {
-        'name': DATABASE_FILEPATH,
-        'engine': 'peewee.SqliteDatabase',
-    }
-
 
 class TestConfig(BaseConfig):
     """Testing configuration options."""
     DEVELOPMENT = True
     TESTING = True
 
-    DATABASE_NAME = os.environ.get('SQLITE_DB', 'test')
-    DATABASE_FILEPATH = '%s/%s.db' % (BaseConfig.ROOT_DIRECTORY, DATABASE_NAME)
     DATABASE = {
-        'name': DATABASE_FILEPATH,
+        'name': 'test.db',
         'engine': 'peewee.SqliteDatabase',
     }

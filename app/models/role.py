@@ -1,10 +1,10 @@
 import logging
-import time
 from datetime import datetime, timedelta
 from random import randint
 from typing import TypeVar
 
-from peewee import CharField, TimestampField
+from flask_security import RoleMixin
+from peewee import CharField, TimestampField, TextField
 
 from . import fake
 from .base import BaseModel
@@ -14,11 +14,13 @@ logger = logging.getLogger(__name__)
 
 R = TypeVar('R', bound='Role')
 
-class Role(BaseModel):
+
+class Role(BaseModel, RoleMixin):
     class Meta:
         table_name = 'roles'
 
     name = CharField()
+    description = TextField(null=True)
     slug = CharField(unique=True)
     created_at = TimestampField(default=None)
     updated_at = TimestampField()
@@ -39,6 +41,7 @@ class Role(BaseModel):
         data = {
             'id': data.get('id'),
             'name': data.get('name'),
+            'description': data.get('description'),
             'slug': data.get('slug'),
             'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
             'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
@@ -63,18 +66,21 @@ class Role(BaseModel):
         else:
             updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
 
-        return Role(
-            name=fake.word(),
-            slug=fake.slug(),
-            created_at=created_at,
-            updated_at=updated_at,
-            deleted_at=deleted_at
-        )
+        role = Role()
+        role.name = fake.word()
+        role.description = fake.sentence()
+        role.slug = fake.slug()
+        role.created_at = created_at
+        role.updated_at = updated_at
+        role.deleted_at = deleted_at
+
+        return role
 
     @classmethod
     def seed(self) -> None:
-        role = Role.fake()
-        role.save()
+        with db.database.atomic():
+            for i in range(10):
+                role = Role.fake()
+                role.save()
 
-        db.database.commit()
         db.database.close()

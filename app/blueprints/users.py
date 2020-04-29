@@ -1,8 +1,6 @@
-# Standard library imports
 import logging
 from datetime import datetime
 
-# Related third party imports
 import xlsxwriter
 import docx
 from cerberus import Validator
@@ -12,12 +10,12 @@ from flask import Blueprint, request, send_file
 from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
-# Local application/library specific imports
 from .base import BaseResource
 from ..models.user import User as UserModel
 from ..utils import to_readable, pos_to_char, find_longest_word
 from ..libs.libreoffice import convert_to
-from ..utils.cerberus_schema import user_model_schema, search_model_schema
+from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
+from ..utils.decorators import token_required
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
@@ -27,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class UserResource(BaseResource):
     db_model = UserModel
-    column_display_order = ['name', 'last_name', 'age', 'birth_date', 'role', 'created_at', 'updated_at',
+    column_display_order = ['name', 'last_name', 'email', 'birth_date', 'active', 'role', 'created_at', 'updated_at',
                             'deleted_at']
 
     def format_column_names(self, rows: list, original_column_names: set) -> None:
@@ -75,10 +73,11 @@ class UserResource(BaseResource):
 
 @api.resource('')
 class NewUserResource(UserResource):
+    @token_required
     def post(self) -> tuple:
         data = request.get_json()
 
-        v = Validator(schema=user_model_schema())
+        v = MyValidator(schema=user_model_schema())
         v.allow_unknown = False
 
         if not v.validate(data):
@@ -97,6 +96,7 @@ class NewUserResource(UserResource):
 
 @api.resource('/<int:user_id>')
 class UserResource(UserResource):
+    @token_required
     def get(self, user_id: int) -> tuple:
         response = {
             'error': 'User doesn\'t exist',
@@ -115,10 +115,11 @@ class UserResource(UserResource):
 
         return response, status_code
 
+    @token_required
     def put(self, user_id: int) -> tuple:
         data = request.get_json()
 
-        v = Validator(schema=user_model_schema())
+        v = MyValidator(schema=user_model_schema(False))
         v.allow_unknown = False
 
         if not v.validate(data):
@@ -149,6 +150,7 @@ class UserResource(UserResource):
 
         return response_data, response_code
 
+    @token_required
     def delete(self, user_id: int) -> tuple:
         response = {
             'error': 'User doesn\'t exist',
@@ -179,10 +181,11 @@ class UserResource(UserResource):
 
 @api.resource('/search')
 class UsersResource(UserResource):
+    @token_required
     def post(self) -> tuple:
         data = request.get_json()
 
-        user_fields = UserModel.get_fields(['id'])
+        user_fields = UserModel.get_fields(['id', 'password'])
         v = Validator(schema=search_model_schema(user_fields))
         v.allow_unknown = False
 
@@ -218,6 +221,7 @@ class UsersResource(UserResource):
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
+    @token_required
     def post(self) -> tuple:
         def write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> int:
             excel_longest_word = ''
@@ -266,7 +270,7 @@ class ExportUsersExcelResource(UserResource):
         worksheet = workbook.add_worksheet()
         worksheet.set_zoom(120)
 
-        original_column_names = UserModel.get_fields(['id'], self.column_display_order)
+        original_column_names = UserModel.get_fields(['id', 'password'], self.column_display_order)
         self.format_column_names(rows, original_column_names)
 
         data = request.get_json()
@@ -287,7 +291,7 @@ class ExportUsersExcelResource(UserResource):
 
         self.format_user_data(users_query, rows)
 
-        total_fields = len(UserModel.get_fields(['id'])) - 1
+        total_fields = len(UserModel.get_fields(['id', 'password'])) - 1
         columns = 'A1:%s10' % pos_to_char(total_fields).upper()
         worksheet.autofilter(columns)
 
@@ -308,6 +312,7 @@ class ExportUsersExcelResource(UserResource):
 
 @api.resource('/pdf')
 class ExportUsersPdfResource(UserResource):
+    @token_required
     def post(self) -> tuple:
         def write_docx_content(rows: list, document: Document) -> None:
             header_fields = rows[0]
@@ -328,7 +333,7 @@ class ExportUsersPdfResource(UserResource):
         page_number, items_per_page, order_by = self.get_request_query_fields()
         rows = []
 
-        original_column_names = UserModel.get_fields(['id'], self.column_display_order)
+        original_column_names = UserModel.get_fields(['id', 'password'], self.column_display_order)
         self.format_column_names(rows, original_column_names)
 
         data = request.get_json()
