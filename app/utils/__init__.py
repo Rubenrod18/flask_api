@@ -1,11 +1,17 @@
+import functools
 import importlib
 from datetime import date, datetime
-from dateutil.relativedelta import relativedelta
+
+import flask_security
+from flask import current_app, request
+from flask_security.passwordless import login_token_status
 
 BIRTH_DATE_REGEX = (r'^(19[0-9]{2}|2[0-9]{3})'  # Year
                     r'-(0[1-9]|1[012])'  # Month
                     r'-([123]0|[012][1-9]|31)$')  # Day
 EMAIL_REGEX = (r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+TOKEN_REGEX = r'^Bearer\s(\S+)$'
+
 
 
 def class_for_name(module_name: str, class_name: str) -> object:
@@ -25,10 +31,6 @@ def to_readable(obj: object) -> object:
         return obj.__str__()
     else:
         return obj
-
-
-def difference_in_years(start_date: object, end_date: object) -> int:
-    return relativedelta(end_date, start_date).years
 
 
 def pos_to_char(pos: int) -> str:

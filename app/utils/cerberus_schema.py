@@ -16,8 +16,8 @@ class MyValidator(Validator):
         class_name = exists.get('class_name')
         model_field = exists.get('field_name')
         search_deleted = exists.get('search_deleted', False)
-        exists_record_message = exists.get('exists_record_message', 'already exists')
-        no_exists_record_message = exists.get('no_exists_record_message', 'already deleted')
+        exists_record_message = exists.get('exists_record_message', 'Already exists')
+        no_exists_record_message = exists.get('no_exists_record_message', 'Already deleted')
 
         model = class_for_name(module_name, class_name)
 

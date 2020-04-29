@@ -10,7 +10,7 @@ from app.extensions import db_wrapper
 from app.models.user import User as UserModel
 
 
-def test_save_user_endpoint(client: FlaskClient, app: Flask):
+def test_save_user_endpoint(client: FlaskClient, app: Flask, auth_header: object):
     with app.app_context():
         user = UserModel.fake()
     data = user.serialize()
@@ -28,7 +28,7 @@ def test_save_user_endpoint(client: FlaskClient, app: Flask):
     del data['updated_at']
     del data['deleted_at']
 
-    response = client.post('/users', json=data)
+    response = client.post('/users', json=data, headers=auth_header())
 
     json_response = response.get_json()
     json_data = json_response.get('data')
@@ -49,7 +49,7 @@ def test_save_user_endpoint(client: FlaskClient, app: Flask):
     assert role.get('deleted_at') == json_data.get('role').get('deleted_at')
 
 
-def test_update_user_endpoint(client: FlaskClient, app: Flask):
+def test_update_user_endpoint(client: FlaskClient, app: Flask, auth_header: object):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -73,7 +73,7 @@ def test_update_user_endpoint(client: FlaskClient, app: Flask):
     del data['updated_at']
     del data['deleted_at']
 
-    response = client.put('/users/%s' % user_id, json=data)
+    response = client.put('/users/%s' % user_id, json=data, headers=auth_header())
 
     json_response = response.get_json()
     json_data = json_response.get('data')
@@ -95,7 +95,7 @@ def test_update_user_endpoint(client: FlaskClient, app: Flask):
     assert role.get('deleted_at') == json_data.get('role').get('deleted_at')
 
 
-def test_get_user_endpoint(client: FlaskClient):
+def test_get_user_endpoint(client: FlaskClient, auth_header: object):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -107,7 +107,7 @@ def test_get_user_endpoint(client: FlaskClient):
 
     db_wrapper.database.close()
 
-    response = client.get('/users/%s' % user_id)
+    response = client.get('/users/%s' % user_id, headers=auth_header())
 
     json_response = response.get_json()
     json_data = json_response.get('data')
@@ -122,7 +122,7 @@ def test_get_user_endpoint(client: FlaskClient):
     assert user.deleted_at == json_data.get('deleted_at')
 
 
-def test_delete_user_endpoint(client: FlaskClient):
+def test_delete_user_endpoint(client: FlaskClient, auth_header: object):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -131,7 +131,7 @@ def test_delete_user_endpoint(client: FlaskClient):
                .id)
     db_wrapper.database.close()
 
-    response = client.delete('/users/%s' % user_id)
+    response = client.delete('/users/%s' % user_id, headers=auth_header())
 
     json_response = response.get_json()
     json_data = json_response.get('data')
@@ -142,7 +142,7 @@ def test_delete_user_endpoint(client: FlaskClient):
     assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
 
-def test_search_users_endpoint(client: FlaskClient):
+def test_search_users_endpoint(client: FlaskClient, auth_header: object):
     user_name = (UserModel.select(UserModel.name)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -162,7 +162,7 @@ def test_search_users_endpoint(client: FlaskClient):
         'sort': 'id',
     }
 
-    response = client.post('/users/search', json=json_body)
+    response = client.post('/users/search', json=json_body, headers=auth_header())
 
     json_response = response.get_json()
 
@@ -177,8 +177,8 @@ def test_search_users_endpoint(client: FlaskClient):
     assert user_data[0]['name'].find(user_name) != -1
 
 
-def test_export_pdf_endpoint(client: FlaskClient):
-    response = client.post('/users/pdf')
+def test_export_pdf_endpoint(client: FlaskClient, auth_header: object):
+    response = client.post('/users/pdf', headers=auth_header())
 
     try:
         base64.decodebytes(response.data)
@@ -191,8 +191,8 @@ def test_export_pdf_endpoint(client: FlaskClient):
     assert is_pdf
 
 
-def test_export_excel_endpoint(client: FlaskClient):
-    response = client.post('/users/xlsx')
+def test_export_excel_endpoint(client: FlaskClient, auth_header: object):
+    response = client.post('/users/xlsx', headers=auth_header())
 
     try:
         base64.decodebytes(response.data)

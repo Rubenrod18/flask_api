@@ -6,7 +6,7 @@ from app.extensions import db_wrapper
 from app.models.role import Role as RoleModel
 
 
-def test_save_role_endpoint(client: FlaskClient):
+def test_save_role_endpoint(client: FlaskClient, auth_header: object):
     role = RoleModel.fake()
 
     data = model_to_dict(role)
@@ -16,7 +16,7 @@ def test_save_role_endpoint(client: FlaskClient):
     del data['updated_at']
     del data['deleted_at']
 
-    response = client.post('/roles', json=data)
+    response = client.post('/roles', json=data, headers=auth_header())
 
     json_response = response.get_json()
     json_data = json_response.get('data')
@@ -29,7 +29,7 @@ def test_save_role_endpoint(client: FlaskClient):
     assert json_data.get('deleted_at') is None
 
 
-def test_update_role_endpoint(client: FlaskClient):
+def test_update_role_endpoint(client: FlaskClient, auth_header: object):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -47,7 +47,7 @@ def test_update_role_endpoint(client: FlaskClient):
     del data['updated_at']
     del data['deleted_at']
 
-    response = client.put('/roles/%s' % role_id, json=data)
+    response = client.put('/roles/%s' % role_id, json=data, headers=auth_header())
 
     json_response = response.get_json()
     json_data = json_response.get('data')
@@ -61,7 +61,7 @@ def test_update_role_endpoint(client: FlaskClient):
     assert json_data.get('deleted_at') is None
 
 
-def test_get_role_endpoint(client: FlaskClient):
+def test_get_role_endpoint(client: FlaskClient, auth_header: object):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -73,7 +73,7 @@ def test_get_role_endpoint(client: FlaskClient):
 
     db_wrapper.database.close()
 
-    response = client.get('/roles/%s' % role_id)
+    response = client.get('/roles/%s' % role_id, headers=auth_header())
 
     json_response = response.get_json()
     json_data = json_response.get('data')
@@ -87,7 +87,7 @@ def test_get_role_endpoint(client: FlaskClient):
     assert role.deleted_at == json_data.get('deleted_at')
 
 
-def test_delete_role_endpoint(client: FlaskClient):
+def test_delete_role_endpoint(client: FlaskClient, auth_header: object):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -96,7 +96,7 @@ def test_delete_role_endpoint(client: FlaskClient):
                .id)
     db_wrapper.database.close()
 
-    response = client.delete('/roles/%s' % role_id)
+    response = client.delete('/roles/%s' % role_id, headers=auth_header())
 
     json_response = response.get_json()
     json_data = json_response.get('data')
@@ -107,7 +107,7 @@ def test_delete_role_endpoint(client: FlaskClient):
     assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
 
-def test_search_roles_endpoint(client: FlaskClient):
+def test_search_roles_endpoint(client: FlaskClient, auth_header: object):
     role_name = (RoleModel.select(RoleModel.name)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -127,7 +127,7 @@ def test_search_roles_endpoint(client: FlaskClient):
         'sort': 'id',
     }
 
-    response = client.post('/roles/search', json=json_body)
+    response = client.post('/roles/search', json=json_body, headers=auth_header())
 
     json_response = response.get_json()
 
