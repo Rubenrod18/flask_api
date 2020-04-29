@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.8.0](https://github.com/rubenrod18/flask-api/compare/v0.7.0...v0.8.0) (2020-04-29)
+
+
+### Features
+
+* **roles:** add role logic ([d7a0535](https://github.com/rubenrod18/flask-api/commit/d7a05359667af549fe079d3dcd4e7b63c44fcf56))
+* **security:** add jwt authentication ([fb51089](https://github.com/rubenrod18/flask-api/commit/fb51089de828d14887bad0f3417ce08d1f120f3d))
+* **users:** add role model integration to user model ([69bc124](https://github.com/rubenrod18/flask-api/commit/69bc12491a3b60ca28b5be05dde0176fbc1be7ae))
+* **users:** add user get endpoint ([018b965](https://github.com/rubenrod18/flask-api/commit/018b965f29b3eed8eaaa9bb886d309a963f46573))
+
 ## [0.7.0](https://github.com/rubenrod18/flask-api/compare/v0.6.1...v0.7.0) (2020-04-23)
 
 ### Features
