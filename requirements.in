@@ -7,7 +7,6 @@ Flask-Security-Too
 XlsxWriter
 bcrypt
 cerberus
-commitizen
 coverage
 peewee
 pip-tools
