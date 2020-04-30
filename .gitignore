@@ -33,7 +33,7 @@ venv2
 *.pdf
 .env
 .idea
-logs
+log
 uwsgi.ini
 coverage_html_report
 node_modules

@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 
 import flask
 from flask import Flask
@@ -42,7 +43,7 @@ def register_blueprints(app: Flask) -> None:
         app.register_blueprint(blueprint)
 
 
-def logging_config() -> None:
+def init_logging(app: Flask) -> None:
     # Function for catching unexpected errors
     def handle_exception(exc_type, exc_value, exc_traceback):
         if issubclass(exc_type, KeyboardInterrupt):
@@ -54,18 +55,22 @@ def logging_config() -> None:
 
     sys.excepthook = handle_exception
 
-    log_dirname = 'log/'
-    log_filename = '{}.log'.format(datetime.utcnow().strftime('%Y%m%d'))
-    log_fullpath = '{}{}'.format(log_dirname, log_filename)
+    log_dirname = app.config.get('LOG_DIRECTORY')
+    log_filename = '{}/{}.log'.format(log_dirname, datetime.utcnow().strftime('%Y%m%d'))
 
     if not os.path.exists(log_dirname):
         os.mkdir(log_dirname)
 
-    FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(filename=log_fullpath,
-                        format=FORMAT,
-                        level=logging.DEBUG)
-    logger = logging.getLogger(__name__)
+    handler = TimedRotatingFileHandler(log_filename, when='midnight', interval=1, backupCount=3, utc=True)
 
-    handler = logging.StreamHandler(stream=sys.stdout)
-    logger.addHandler(handler)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(formatter)
+
+    kwargs = {
+        'handlers': [handler],
+        'level': logging.DEBUG,
+    }
+
+    logging.basicConfig(**kwargs)
+    logger = logging.getLogger(__name__)
