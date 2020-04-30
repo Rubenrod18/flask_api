@@ -3,10 +3,10 @@ import os
 from datetime import datetime
 
 from flask import Response
-from flask_script import Manager
 from dotenv import load_dotenv
 
 from app import create_app
+from app.extensions import db_wrapper as db
 from database.migrations import init_db
 from database.seeds import init_seed
 
@@ -25,9 +25,7 @@ FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(filename=log_fullpath, format=FORMAT, level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# App
 app = create_app(os.getenv('FLASK_CONFIG'))
-manager = Manager(app)
 
 
 @app.after_request
@@ -39,15 +37,15 @@ def after_request(response: Response) -> Response:
     return response
 
 
-@manager.command
+@app.cli.command('migrate')
 def migrate():
     init_db()
 
 
-@manager.command
+@app.cli.command('seed')
 def seed():
     init_seed()
 
 
 if __name__ == '__main__':
-    manager.run()
+    app.run()
