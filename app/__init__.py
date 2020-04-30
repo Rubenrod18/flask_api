@@ -44,17 +44,6 @@ def register_blueprints(app: Flask) -> None:
 
 
 def init_logging(app: Flask) -> None:
-    # Function for catching unexpected errors
-    def handle_exception(exc_type, exc_value, exc_traceback):
-        if issubclass(exc_type, KeyboardInterrupt):
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
-            return False
-
-        logger.error('Uncaught exception',
-                     exc_info=(exc_type, exc_value, exc_traceback))
-
-    sys.excepthook = handle_exception
-
     log_dirname = app.config.get('LOG_DIRECTORY')
     log_filename = '{}/{}.log'.format(log_dirname, datetime.utcnow().strftime('%Y%m%d'))
 
