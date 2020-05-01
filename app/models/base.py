@@ -6,7 +6,11 @@ from ..extensions import db_wrapper as db
 
 B = TypeVar('B', bound='BaseModel')
 
+
 class BaseModel(db.Model):
+    class Meta:
+        database = db.database
+
     @abstractmethod
     def save(self, *args: list, **kwargs: dict) -> int:
         current_date = datetime.utcnow()
@@ -35,13 +39,3 @@ class BaseModel(db.Model):
                 list(self._meta.fields)
             )
         )
-
-    @classmethod
-    @abstractmethod
-    def fake(self) -> B:
-        return B
-
-    @classmethod
-    @abstractmethod
-    def seed(self) -> None:
-        return None

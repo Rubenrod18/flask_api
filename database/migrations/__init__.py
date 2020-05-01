@@ -62,7 +62,7 @@ def rollback_actions(fnc):
     return message
 
 
-def init_db() -> None:
+def init_database() -> None:
     print(' Creating tables...')
     table_names = db_wrapper.database.get_tables()
 
@@ -97,7 +97,7 @@ def get_migration_names() -> list:
     return migrations
 
 
-def execute_migrations(rollback: bool = False) -> None:
+def init_migrations(rollback: bool = False) -> None:
     migration_names = get_migration_names()
 
     rows = _Migration.select()
@@ -114,8 +114,8 @@ def execute_migrations(rollback: bool = False) -> None:
                 migration_name = rows[-1].name
                 class_name = migration_name[4:].title().replace('_', '')
 
-                path = '{}.{}.{}'.format(__name__, migration_name, class_name)
-                migration = pydoc.locate(path)
+                migration_path = '{}.{}.{}'.format(__name__, migration_name, class_name)
+                migration = pydoc.locate(migration_path)
 
                 migration.down()
             else:

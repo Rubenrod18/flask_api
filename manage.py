@@ -7,7 +7,9 @@ from flask import Response
 from dotenv import load_dotenv
 
 from app import create_app
-from database.migrations import execute_migrations, init_db
+from app.extensions import db_wrapper
+from database.migrations import init_database, init_migrations
+from database.seeds import init_seed
 
 load_dotenv()
 
@@ -35,16 +37,29 @@ def after_request(response: Response) -> Response:
     return response
 
 
+@app.cli.command('init-db')
+def db():
+    init_database()
+
+
 @app.cli.command('migrate')
-@click.option('--rollback', default=False)
-def migrations(rollback):
-    execute_migrations(bool(rollback))
+def migrations():
+    init_migrations(False)
 
 
-@app.cli.command('init')
-@click.argument('db')
-def migrations(db):
-    init_db()
+@app.cli.command('migrate-rollback')
+def migrations():
+    init_migrations(True)
+
+
+@app.cli.command('seed')
+def seeds():
+    init_seed()
+
+
+@app.shell_context_processor
+def make_shell_context():
+    return {'app': app, 'db_wrapper': db_wrapper}
 
 
 if __name__ == '__main__':
