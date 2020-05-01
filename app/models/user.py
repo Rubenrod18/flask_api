@@ -1,6 +1,5 @@
 import logging
 import os
-import time
 from datetime import datetime, date, timedelta
 from random import randint
 from typing import TypeVar
@@ -25,7 +24,7 @@ class User(BaseModel, UserMixin):
     role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
-    email = CharField(null=False, unique=True)
+    email = CharField(unique=True)
     password = CharField(null=False)
     birth_date = DateField()
     active = BooleanField(default=True)

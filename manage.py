@@ -2,15 +2,13 @@ import logging
 import os
 from datetime import datetime
 
+import click
 from flask import Response
 from dotenv import load_dotenv
 
 from app import create_app
-from app.extensions import db_wrapper as db
-from database.migrations import init_db
-from database.seeds import init_seed
+from database.migrations import execute_migrations, init_db
 
-# Import environment file variables
 load_dotenv()
 
 # Log configuration
@@ -38,13 +36,15 @@ def after_request(response: Response) -> Response:
 
 
 @app.cli.command('migrate')
-def migrate():
+@click.option('--rollback', default=False)
+def migrations(rollback):
+    execute_migrations(bool(rollback))
+
+
+@app.cli.command('init')
+@click.argument('db')
+def migrations(db):
     init_db()
-
-
-@app.cli.command('seed')
-def seed():
-    init_seed()
 
 
 if __name__ == '__main__':

@@ -25,15 +25,16 @@ pip-log.txt
 *.mo
 
 # Mr Developer
-venv
-venv2
+.env
 *.pyc
-*.db
+*.db*
 *.xlsx
 *.pdf
-.env
+uwsgi.ini
+
+venv
+venv2
 .idea
 logs
-uwsgi.ini
 coverage_html_report
 node_modules
