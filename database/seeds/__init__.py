@@ -11,14 +11,14 @@ def seed_actions(fnc):
     def message(*args, **kwargs):
         seeder = args[0]
 
-        print(' Seeding: %s' % seeder.__name__)
+        print(' Seeding: %s' % seeder.name)
         exec_time = 0
         try:
             start = time.time()
             res = fnc(*args, **kwargs)
             exec_time = round((time.time() - start), 2)
         finally:
-            print(' Seeded:  %s ( %s seconds )' % (seeder.__name__, exec_time))
+            print(' Seeded:  %s ( %s seconds )' % (seeder.name, exec_time))
         return res
 
     return message
@@ -35,11 +35,11 @@ def get_seeders() -> list:
 
     for filename in dirs:
         basename = filename[:-3]
-        seed_name = basename[4:].title().replace('_', '')
+        seed_class = basename[4:].title().replace('_', '')
 
         if filename.endswith('.py'):
             module_path = '{}.{}'.format(__name__, basename)
-            seed = class_for_name(module_path, seed_name)
+            seed = class_for_name(module_path, seed_class)
 
             seeders.append(seed)
 

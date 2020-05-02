@@ -1,12 +1,12 @@
 import functools
 import os
-import pydoc
 import time
 
 from peewee import CompositeKey, CharField
 
 from app.extensions import db_wrapper
 from app.models import get_models
+from app.utils import class_for_name
 
 
 class _Migration(db_wrapper.Model):
@@ -111,22 +111,22 @@ def init_migrations(rollback: bool = False) -> None:
     with db_wrapper.database.atomic():
         if rollback == True:
             if rows:
-                migration_name = rows[-1].name
-                class_name = migration_name[4:].title().replace('_', '')
+                migration_filename = rows[-1].name
+                class_name = migration_filename[4:].title().replace('_', '')
 
-                migration_path = '{}.{}.{}'.format(__name__, migration_name, class_name)
-                migration = pydoc.locate(migration_path)
+                module_path = '{}.{}'.format(__name__, migration_filename)
+                migration = class_for_name(module_path, class_name)()
 
                 migration.down()
             else:
                 print(' There aren\'t any migration created.')
         else:
             if diff:
-                for migration_name in diff:
-                    class_name = migration_name[4:].title().replace('_', '')
+                for migration_filename in diff:
+                    class_name = migration_filename[4:].title().replace('_', '')
 
-                    path = '{}.{}.{}'.format(__name__, migration_name, class_name)
-                    migration = pydoc.locate(path)
+                    module_path = '{}.{}'.format(__name__, migration_filename)
+                    migration = class_for_name(module_path, class_name)()
 
                     exists = _Migration.get_or_none(name=migration.name)
 

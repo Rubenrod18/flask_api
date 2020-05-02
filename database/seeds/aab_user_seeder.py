@@ -6,7 +6,7 @@ from database.seeds import seed_actions
 
 
 class UserSeeder():
-    __name__ = 'UserSeeder'
+    name = 'UserSeeder'
 
     @seed_actions
     def __init__(self, rows: int = 10):
@@ -16,11 +16,10 @@ class UserSeeder():
         test_user = UserModel.get_or_none(email=test_user_email)
 
         if test_user is None:
-            kwargs = {
-                'email': test_user,
+            params = {
+                'email': test_user_email,
                 'password': os.getenv('TEST_USER_PASSWORD'),
                 'deleted_at': None,
                 'active': True,
             }
-
-            Factory('User').save(**kwargs)
+            Factory('User').save(params)

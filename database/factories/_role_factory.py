@@ -6,9 +6,9 @@ from database import fake
 
 
 class _RoleFactory():
-    def _fill(self, data: dict = None) -> dict:
-        if data is None:
-            data = {}
+    def _fill(self, params: dict = None) -> dict:
+        if params is None:
+            params = {}
 
         current_date = datetime.utcnow()
 
@@ -21,20 +21,20 @@ class _RoleFactory():
         else:
             updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
 
-        role_name = data.get('name') if data.get('name') else ' '.join(fake.words(nb=2))
+        role_name = params.get('name') if params.get('name') else ' '.join(fake.words(nb=2))
         role_slug = role_name.lower().replace(' ', '-')
 
         return {
             'name': role_name,
-            'description': data.get('description') if data.get('description') else fake.sentence(),
+            'description': params.get('description') if params.get('description') else fake.sentence(),
             'slug': role_slug,
             'created_at': created_at,
             'updated_at': updated_at,
             'deleted_at': deleted_at,
         }
 
-    def make(self, data: dict = None) -> RoleModel:
-        data = self._fill(data)
+    def make(self, params: dict = None) -> RoleModel:
+        data = self._fill(params)
 
         role = RoleModel()
         role.name = data.get('name')
@@ -46,7 +46,21 @@ class _RoleFactory():
 
         return role
 
-    def create(self, data: dict = None) -> RoleModel:
-        kwargs = self._fill(data)
+    def create(self, params: dict = None) -> RoleModel:
+        if params is None:
+            params = {}
 
-        return RoleModel.create(**kwargs)
+        data = self._fill(params)
+
+        return RoleModel.create(**data)
+
+    def bulk_create(self, total: int, params: dict = None) -> None:
+        if params is None:
+            params = {}
+
+        data = []
+
+        for item in range(total):
+            data.append(self.make(params))
+
+        RoleModel.bulk_create(data)

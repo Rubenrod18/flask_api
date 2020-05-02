@@ -8,7 +8,7 @@ EMAIL_REGEX = (r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 TOKEN_REGEX = r'^Bearer\s(\S+)$'
 
 
-def class_for_name(module_name: str, class_name: str) -> object:
+def class_for_name(module_name: str, class_name: str) -> any:
     # load the module, will raise ImportError if module cannot be loaded
     m = importlib.import_module(module_name)
     # get the class, will raise AttributeError if class cannot be found
