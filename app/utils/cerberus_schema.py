@@ -165,7 +165,7 @@ def search_model_schema(allowed_fields: set) -> dict:
     }
 
 
-def role_model_schema() -> dict:
+def role_model_schema(is_creation: bool = True) -> dict:
     """Cerberus schema for validating role fields.
 
     :return: dict
@@ -185,6 +185,20 @@ def role_model_schema() -> dict:
             'nullable': True,
             'maxlength': 255,
         },
+        'slug': {
+            'type': 'string',
+            'required': is_creation,
+            'empty': False if is_creation else False,
+            'nullable': False if is_creation else False,
+            'maxlength': 255,
+            'exists': {
+                'module_name': 'app.models.role',
+                'class_name': 'Role',
+                'field_name': 'slug',
+                'no_exists_record_message': '',
+                'search_deleted': True,
+            },
+        }
     }
 
 
