@@ -10,8 +10,6 @@ class UserSeeder():
 
     @seed_actions
     def __init__(self, rows: int = 10):
-        Factory('User', rows).save()
-
         test_user_email = os.getenv('TEST_USER_EMAIL')
         test_user = UserModel.get_or_none(email=test_user_email)
 
@@ -21,5 +19,8 @@ class UserSeeder():
                 'password': os.getenv('TEST_USER_PASSWORD'),
                 'deleted_at': None,
                 'active': True,
+                'created_by': None,
             }
             Factory('User').save(params)
+
+        Factory('User', rows).save()

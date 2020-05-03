@@ -28,9 +28,20 @@ class _UserFactory():
         role = (RoleModel.select()
                 .where(RoleModel.deleted_at.is_null())
                 .order_by(fn.Random())
+                .limit(1)
                 .get())
 
+        if randint(0, 1) and 'created_by' not in params:
+            created_by = (UserModel.select()
+                          .where(UserModel.created_by.is_null())
+                          .order_by(fn.Random())
+                          .limit(1)
+                          .get())
+        else:
+            created_by = None
+
         return {
+            'created_by': params.get('created_by') if params.get('created_by') else created_by,
             'role': params.get('role') if params.get('role') else role,
             'name': params.get('name') if params.get('name') else fake.name(),
             'last_name': params.get('last_name') if params.get('last_name') else fake.last_name(),
@@ -49,6 +60,7 @@ class _UserFactory():
         data = self._fill(params)
 
         user = UserModel()
+        user.created_by = data.get('created_by')
         user.role = data.get('role')
         user.name = data.get('name')
         user.last_name = data.get('last_name')

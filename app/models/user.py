@@ -3,7 +3,7 @@ from datetime import datetime, date
 from typing import TypeVar
 
 from flask_security import UserMixin, PeeweeUserDatastore, hash_password
-from peewee import CharField, DateField, TimestampField, ForeignKeyField, fn, BooleanField, FixedCharField
+from peewee import CharField, DateField, TimestampField, ForeignKeyField, BooleanField, FixedCharField
 
 from .base import BaseModel as BaseModel
 from .role import Role as RoleModel, Role
@@ -18,6 +18,7 @@ class User(BaseModel, UserMixin):
     class Meta:
         table_name = 'users'
 
+    created_by = ForeignKeyField('self', null=True, backref='children', column_name='created_by')
     role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
@@ -72,6 +73,7 @@ class User(BaseModel, UserMixin):
             'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
             'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
             'deleted_at': deleted_at,
+            'created_by': data.get('created_by'),
             'role': self.role.serialize(),
         }
 

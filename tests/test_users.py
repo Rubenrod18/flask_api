@@ -13,7 +13,7 @@ from database.factories import Factory
 
 def test_save_user_endpoint(client: FlaskClient, auth_header: any):
     ignore_fields = [UserModel.id, UserModel.role, UserModel.active, UserModel.created_at, UserModel.updated_at,
-                     UserModel.deleted_at]
+                     UserModel.deleted_at, UserModel.created_by]
     user = Factory('User').make()
     role = user.role
 
@@ -50,7 +50,7 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any):
                .id)
 
     ignore_fields = [UserModel.id, UserModel.role, UserModel.active, UserModel.created_at, UserModel.updated_at,
-                     UserModel.deleted_at]
+                     UserModel.deleted_at, UserModel.created_by]
     user = Factory('User').make()
     role = user.role
 
