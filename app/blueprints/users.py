@@ -60,6 +60,7 @@ class UserResource(BaseResource):
             user_dict.update({
                 k: to_readable(v)
                 for (k, v) in user.serialize(['id', 'role']).items()
+                if k in self.column_display_order
             })
 
             user_dict = dict(sorted(user_dict.items(), key=lambda x: self.column_display_order.index(x[0])))
@@ -180,7 +181,7 @@ class UserResource(UserResource):
 
 
 @api.resource('/search')
-class UsersResource(UserResource):
+class UsersSearchResource(UserResource):
     @token_required
     def post(self) -> tuple:
         data = request.get_json()

@@ -1,14 +1,10 @@
 import logging
-import os
-import time
-from datetime import datetime, date, timedelta
-from random import randint
+from datetime import datetime, date
 from typing import TypeVar
 
 from flask_security import UserMixin, PeeweeUserDatastore, hash_password
-from peewee import CharField, DateField, TimestampField, ForeignKeyField, fn, BooleanField
+from peewee import CharField, DateField, TimestampField, ForeignKeyField, fn, BooleanField, FixedCharField
 
-from . import fake
 from .base import BaseModel as BaseModel
 from .role import Role as RoleModel, Role
 from ..extensions import db_wrapper as db
@@ -25,8 +21,9 @@ class User(BaseModel, UserMixin):
     role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
-    email = CharField(null=False, unique=True)
+    email = CharField(unique=True)
     password = CharField(null=False)
+    genre = FixedCharField(max_length=1, choices=(('m', 'male',), ('f', 'female')), null=True)
     birth_date = DateField()
     active = BooleanField(default=True)
     created_at = TimestampField(default=None)
@@ -69,6 +66,7 @@ class User(BaseModel, UserMixin):
             'name': data.get('name'),
             'last_name': data.get('last_name'),
             'email': data.get('email'),
+            'genre': data.get('genre'),
             'birth_date': birth_date,
             'active': active,
             'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
@@ -105,59 +103,6 @@ class User(BaseModel, UserMixin):
             fields = sorted(fields, key=lambda x: sort_order.index(x))
 
         return fields
-
-    @classmethod
-    def fake(self, data: dict = None) -> U:
-        if data is None:
-            data = {}
-
-        birth_date = fake.date_between(start_date='-50y', end_date='-5y')
-        current_date = datetime.utcnow()
-
-        created_at = current_date - timedelta(days=randint(1, 100), minutes=randint(0, 60))
-        updated_at = created_at
-        deleted_at = None
-
-        if randint(0, 1) and 'deleted_at' not in data:
-            deleted_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
-        else:
-            updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
-
-        role = (RoleModel.select()
-                .where(RoleModel.deleted_at.is_null())
-                .order_by(fn.Random())
-                .get())
-
-        user = User()
-        user.role = data.get('role') if data.get('role') else role
-        user.name = data.get('name') if data.get('name') else fake.name()
-        user.last_name = data.get('last_name') if data.get('last_name') else fake.last_name()
-        user.email = data.get('email') if data.get('email') else fake.email()
-        user.password = data.get('password') if data.get('password') else '123456'
-        user.birth_date = data.get('birth_date') if data.get('birth_date') else birth_date.strftime('%Y-%m-%d')
-        user.active = data.get('active') if data.get('active') else fake.boolean()
-        user.created_at = created_at
-        user.updated_at = updated_at
-        user.deleted_at = deleted_at
-
-        return user
-
-    @classmethod
-    def seed(self) -> None:
-        with db.database.atomic():
-            for i in range(10):
-                user = self.fake()
-                user.save()
-
-            user = self.fake({
-                'email': os.environ.get('TEST_USER_EMAIL'),
-                'password': os.environ.get('TEST_USER_PASSWORD'),
-                'deleted_at': None,
-                'active': True,
-            })
-            user.save()
-
-        db.database.close()
 
 
 user_datastore = PeeweeUserDatastore(db, User, Role, None)

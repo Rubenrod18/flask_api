@@ -72,6 +72,12 @@ def user_model_schema(is_creation: bool = True) -> dict:
                 'search_deleted': True,
             },
         },
+        'genre': {
+            'type': 'string',
+            'empty': False,
+            'nullable': False,
+            'allowed': ['m', 'f'],
+        },
         'password': {
             'type': 'string',
             'required': is_creation,

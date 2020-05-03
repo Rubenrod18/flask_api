@@ -133,7 +133,7 @@ class RoleResource(RoleBaseResource):
 
 
 @api.resource('/search')
-class UsersSearchResource(RoleBaseResource):
+class RolesSearchResource(RoleBaseResource):
     @token_required
     def post(self) -> tuple:
         data = request.get_json()

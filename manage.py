@@ -2,15 +2,15 @@ import logging
 import os
 from datetime import datetime
 
+import click
 from flask import Response
 from dotenv import load_dotenv
 
 from app import create_app
-from app.extensions import db_wrapper as db
-from database.migrations import init_db
+from app.extensions import db_wrapper
+from database.migrations import init_database, init_migrations
 from database.seeds import init_seed
 
-# Import environment file variables
 load_dotenv()
 
 # Log configuration
@@ -37,14 +37,29 @@ def after_request(response: Response) -> Response:
     return response
 
 
+@app.cli.command('init-db')
+def db():
+    init_database()
+
+
 @app.cli.command('migrate')
-def migrate():
-    init_db()
+def migrations():
+    init_migrations(False)
+
+
+@app.cli.command('migrate-rollback')
+def migrations():
+    init_migrations(True)
 
 
 @app.cli.command('seed')
-def seed():
+def seeds():
     init_seed()
+
+
+@app.shell_context_processor
+def make_shell_context():
+    return {'app': app, 'db_wrapper': db_wrapper}
 
 
 if __name__ == '__main__':
