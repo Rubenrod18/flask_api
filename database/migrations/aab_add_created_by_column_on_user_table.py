@@ -1,6 +1,6 @@
 import os
 
-from peewee import FixedCharField
+from peewee import ForeignKeyField
 from playhouse.migrate import SqliteMigrator, migrate
 
 from app.extensions import db_wrapper
@@ -10,13 +10,14 @@ from database.migrations import migrate_actions, rollback_actions
 migrator = SqliteMigrator(db_wrapper.database)
 
 
-class AddGenreColumnOnUserTable():
+class AddCreatedByColumnOnUserTable():
 
     def __init__(self):
         self.name = os.path.basename(__file__)[:-3]
         self.table = 'users'
-        self.column_name = 'genre'
-        self.field = FixedCharField(max_length=1, choices=(('m', 'male',), ('f', 'female')), null=True)
+        self.column_name = 'created_by'
+        self.field = ForeignKeyField(UserModel, field=UserModel.id, null=True, backref='children',
+                                     column_name=self.column_name)
         self.columns = UserModel.get_fields()
 
     def _exists_column(self) -> bool:
