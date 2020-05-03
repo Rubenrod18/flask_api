@@ -53,3 +53,4 @@ def init_seed() -> None:
         for seed in seeders:
             seed()
         print(' Database seeding completed successfully.')
+    db_wrapper.database.close()

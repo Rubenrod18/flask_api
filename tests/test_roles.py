@@ -4,17 +4,12 @@ from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
 from app.models.role import Role as RoleModel
+from database.factories import Factory
 
 
-def test_save_role_endpoint(client: FlaskClient, auth_header: object):
-    role = RoleModel.fake()
-
-    data = model_to_dict(role)
-    del data['id']
-    del data['slug']
-    del data['created_at']
-    del data['updated_at']
-    del data['deleted_at']
+def test_save_role_endpoint(client: FlaskClient, auth_header: any):
+    ignore_fields = [RoleModel.id, RoleModel.slug, RoleModel.created_at, RoleModel.updated_at, RoleModel.deleted_at]
+    data = model_to_dict(Factory('Role').make(), exclude=ignore_fields)
 
     response = client.post('/roles', json=data, headers=auth_header())
 
@@ -29,7 +24,7 @@ def test_save_role_endpoint(client: FlaskClient, auth_header: object):
     assert json_data.get('deleted_at') is None
 
 
-def test_update_role_endpoint(client: FlaskClient, auth_header: object):
+def test_update_role_endpoint(client: FlaskClient, auth_header: any):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -38,14 +33,10 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: object):
                .id)
     db_wrapper.database.close()
 
-    role = RoleModel.fake()
+    role = Factory('Role').make()
 
-    data = model_to_dict(role)
-    del data['id']
-    del data['slug']
-    del data['created_at']
-    del data['updated_at']
-    del data['deleted_at']
+    ignore_fields = [RoleModel.id, RoleModel.slug, RoleModel.created_at, RoleModel.updated_at, RoleModel.deleted_at]
+    data = model_to_dict(role, exclude=ignore_fields)
 
     response = client.put('/roles/%s' % role_id, json=data, headers=auth_header())
 
@@ -61,7 +52,7 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: object):
     assert json_data.get('deleted_at') is None
 
 
-def test_get_role_endpoint(client: FlaskClient, auth_header: object):
+def test_get_role_endpoint(client: FlaskClient, auth_header: any):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -87,7 +78,7 @@ def test_get_role_endpoint(client: FlaskClient, auth_header: object):
     assert role.deleted_at == json_data.get('deleted_at')
 
 
-def test_delete_role_endpoint(client: FlaskClient, auth_header: object):
+def test_delete_role_endpoint(client: FlaskClient, auth_header: any):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -107,7 +98,7 @@ def test_delete_role_endpoint(client: FlaskClient, auth_header: object):
     assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
 
-def test_search_roles_endpoint(client: FlaskClient, auth_header: object):
+def test_search_roles_endpoint(client: FlaskClient, auth_header: any):
     role_name = (RoleModel.select(RoleModel.name)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())

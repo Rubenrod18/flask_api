@@ -134,3 +134,4 @@ def init_migrations(rollback: bool = False) -> None:
                         migration.up()
             else:
                 print(' Nothing to migrate.')
+    db_wrapper.database.close()

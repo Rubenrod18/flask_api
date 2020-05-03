@@ -16,7 +16,7 @@ class _UserFactory():
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 
-        created_at = current_date - timedelta(days=randint(1, 100), minutes=randint(0, 60))
+        created_at = current_date - timedelta(days=randint(31, 100), minutes=randint(0, 60))
         updated_at = created_at
         deleted_at = None
 
