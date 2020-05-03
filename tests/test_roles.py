@@ -8,7 +8,7 @@ from database.factories import Factory
 
 
 def test_save_role_endpoint(client: FlaskClient, auth_header: any):
-    ignore_fields = [RoleModel.id, RoleModel.slug, RoleModel.created_at, RoleModel.updated_at, RoleModel.deleted_at]
+    ignore_fields = [RoleModel.id, RoleModel.created_at, RoleModel.updated_at, RoleModel.deleted_at]
     data = model_to_dict(Factory('Role').make(), exclude=ignore_fields)
 
     response = client.post('/roles', json=data, headers=auth_header())
