@@ -11,17 +11,17 @@ bcrypt==3.1.7             # via -r requirements.in
 blinker==1.4              # via flask-mail, flask-principal
 cerberus==1.3.2           # via -r requirements.in
 cffi==1.14.0              # via bcrypt
-click==7.1.1              # via flask, pip-tools
+click==7.1.2              # via flask, pip-tools
 coverage==5.1             # via -r requirements.in
 dnspython==1.16.0         # via email-validator
-email-validator==1.0.5    # via flask-security-too
+email-validator==1.1.0    # via flask-security-too
 faker==4.0.3              # via -r requirements.in
 flask-babelex==0.9.4      # via flask-security-too
 flask-login==0.5.0        # via flask-security-too
 flask-mail==0.9.1         # via flask-security-too
 flask-principal==0.4.0    # via flask-security-too
 flask-restful==0.3.8      # via -r requirements.in
-flask-security-too==3.4.1  # via -r requirements.in
+flask-security-too==3.4.2  # via -r requirements.in
 flask-wtf==0.14.3         # via flask-security-too
 flask==1.1.2              # via -r requirements.in, flask-babelex, flask-login, flask-mail, flask-principal, flask-restful, flask-security-too, flask-wtf
 idna==2.9                 # via email-validator
@@ -33,8 +33,8 @@ markupsafe==1.1.1         # via jinja2, wtforms
 more-itertools==8.2.0     # via pytest
 packaging==20.3           # via pytest
 passlib==1.7.2            # via flask-security-too
-peewee==3.13.2            # via -r requirements.in
-pip-tools==5.0.0          # via -r requirements.in
+peewee==3.13.3            # via -r requirements.in
+pip-tools==5.1.1          # via -r requirements.in
 pluggy==0.13.1            # via pytest
 py==1.8.1                 # via pytest
 pycparser==2.20           # via cffi
@@ -43,7 +43,7 @@ pytest==5.4.1             # via -r requirements.in
 python-dateutil==2.8.1    # via -r requirements.in, faker
 python-docx==0.8.10       # via -r requirements.in
 python-dotenv==0.13.0     # via -r requirements.in
-pytz==2019.3              # via babel, flask-restful
+pytz==2020.1              # via babel, flask-restful
 six==1.14.0               # via bcrypt, flask-restful, packaging, pip-tools, python-dateutil
 speaklater==1.3           # via flask-babelex
 text-unidecode==1.3       # via faker
