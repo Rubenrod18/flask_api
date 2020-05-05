@@ -1,4 +1,5 @@
 # requirements.in
+Celery
 Faker
 Flask
 Flask-RESTful
@@ -7,6 +8,7 @@ XlsxWriter
 bcrypt
 cerberus
 coverage
+librabbitmq
 peewee
 pip-tools
 pytest
