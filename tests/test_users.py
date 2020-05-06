@@ -2,34 +2,26 @@ import base64
 import binascii
 import os
 
-from flask import Flask
 from flask.testing import FlaskClient
 from peewee import fn
+from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
 from app.models.user import User as UserModel
+from database.factories import Factory
 
 
-def test_save_user_endpoint(client: FlaskClient, app: Flask, auth_header: object):
-    with app.app_context():
-        user = UserModel.fake()
-    data = user.serialize()
-    db_wrapper.database.close()
+def test_save_user_endpoint(client: FlaskClient, auth_header: any):
+    ignore_fields = [UserModel.id, UserModel.role, UserModel.active, UserModel.created_at, UserModel.updated_at,
+                     UserModel.deleted_at, UserModel.created_by]
+    user = Factory('User').make()
+    role = user.role
 
-    data['role_id'] = data['role']['id']
+    data = model_to_dict(user, exclude=ignore_fields)
+    data['role_id'] = role.id
     data['password'] = os.getenv('TEST_USER_PASSWORD')
 
-    role = data['role']
-
-    del data['id']
-    del data['role']
-    del data['active']
-    del data['created_at']
-    del data['updated_at']
-    del data['deleted_at']
-
     response = client.post('/users', json=data, headers=auth_header())
-
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -41,40 +33,32 @@ def test_save_user_endpoint(client: FlaskClient, app: Flask, auth_header: object
     assert json_data.get('updated_at') == json_data.get('created_at')
     assert json_data.get('deleted_at') is None
 
-    assert role.get('id') == json_data.get('role').get('id')
-    assert role.get('name') == json_data.get('role').get('name')
-    assert role.get('slug') == json_data.get('role').get('slug')
-    assert role.get('created_at') == json_data.get('role').get('created_at')
-    assert role.get('updated_at') == json_data.get('role').get('updated_at')
-    assert role.get('deleted_at') == json_data.get('role').get('deleted_at')
+    assert role.id == json_data.get('role').get('id')
+    assert role.name == json_data.get('role').get('name')
+    assert role.slug == json_data.get('role').get('slug')
+    assert role.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('role').get('created_at')
+    assert role.updated_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('role').get('updated_at')
+    assert role.deleted_at == json_data.get('role').get('deleted_at')
 
 
-def test_update_user_endpoint(client: FlaskClient, app: Flask, auth_header: object):
+def test_update_user_endpoint(client: FlaskClient, auth_header: any):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
                .limit(1)
                .get()
                .id)
-    with app.app_context():
-        user = UserModel.fake()
-    data = user.serialize()
-    db_wrapper.database.close()
 
-    data['role_id'] = data['role']['id']
+    ignore_fields = [UserModel.id, UserModel.role, UserModel.active, UserModel.created_at, UserModel.updated_at,
+                     UserModel.deleted_at, UserModel.created_by]
+    user = Factory('User').make()
+    role = user.role
+
+    data = model_to_dict(user, exclude=ignore_fields)
+    data['role_id'] = role.id
     data['password'] = os.getenv('TEST_USER_PASSWORD')
 
-    role = data['role']
-
-    del data['id']
-    del data['role']
-    del data['active']
-    del data['created_at']
-    del data['updated_at']
-    del data['deleted_at']
-
     response = client.put('/users/%s' % user_id, json=data, headers=auth_header())
-
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -87,15 +71,15 @@ def test_update_user_endpoint(client: FlaskClient, app: Flask, auth_header: obje
     assert json_data.get('updated_at') >= json_data.get('created_at')
     assert json_data.get('deleted_at') is None
 
-    assert role.get('id') == json_data.get('role').get('id')
-    assert role.get('name') == json_data.get('role').get('name')
-    assert role.get('slug') == json_data.get('role').get('slug')
-    assert role.get('created_at') == json_data.get('role').get('created_at')
-    assert role.get('updated_at') == json_data.get('role').get('updated_at')
-    assert role.get('deleted_at') == json_data.get('role').get('deleted_at')
+    assert role.id == json_data.get('role').get('id')
+    assert role.name == json_data.get('role').get('name')
+    assert role.slug == json_data.get('role').get('slug')
+    assert role.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('role').get('created_at')
+    assert role.updated_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('role').get('updated_at')
+    assert role.deleted_at == json_data.get('role').get('deleted_at')
 
 
-def test_get_user_endpoint(client: FlaskClient, auth_header: object):
+def test_get_user_endpoint(client: FlaskClient, auth_header: any):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -122,7 +106,7 @@ def test_get_user_endpoint(client: FlaskClient, auth_header: object):
     assert user.deleted_at == json_data.get('deleted_at')
 
 
-def test_delete_user_endpoint(client: FlaskClient, auth_header: object):
+def test_delete_user_endpoint(client: FlaskClient, auth_header: any):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -142,7 +126,7 @@ def test_delete_user_endpoint(client: FlaskClient, auth_header: object):
     assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
 
-def test_search_users_endpoint(client: FlaskClient, auth_header: object):
+def test_search_users_endpoint(client: FlaskClient, auth_header: any):
     user_name = (UserModel.select(UserModel.name)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -177,7 +161,7 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: object):
     assert user_data[0]['name'].find(user_name) != -1
 
 
-def test_export_pdf_endpoint(client: FlaskClient, auth_header: object):
+def test_export_pdf_endpoint(client: FlaskClient, auth_header: any):
     response = client.post('/users/pdf', headers=auth_header())
 
     try:
@@ -191,7 +175,7 @@ def test_export_pdf_endpoint(client: FlaskClient, auth_header: object):
     assert is_pdf
 
 
-def test_export_excel_endpoint(client: FlaskClient, auth_header: object):
+def test_export_excel_endpoint(client: FlaskClient, auth_header: any):
     response = client.post('/users/xlsx', headers=auth_header())
 
     try:

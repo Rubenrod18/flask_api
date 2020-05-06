@@ -13,6 +13,14 @@ class BaseConfig(object):
     DATABASE = {
         'name': os.getenv('DATABASE_NAME'),
         'engine': 'peewee.SqliteDatabase',
+        # Sqlite3 recommended settings
+        'pragmas': {
+            'journal_mode': 'wal',
+            'cache_size': -1 * 64000,  # 64MB
+            'foreign_keys': 1,
+            'ignore_check_constraints': 0,
+            'synchronous': 0,
+        },
     }
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
     TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')

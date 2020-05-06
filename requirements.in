@@ -2,7 +2,6 @@
 Faker
 Flask
 Flask-RESTful
-Flask-Script
 Flask-Security-Too
 XlsxWriter
 bcrypt

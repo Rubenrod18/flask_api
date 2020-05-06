@@ -1,17 +1,16 @@
 import os
 
 from flask import Response
-from flask_script import Manager
 from dotenv import load_dotenv
 
 from app import create_app, init_logging
-from database.migrations import init_db
+from app.extensions import db_wrapper
+from database.migrations import init_database, init_migrations
 from database.seeds import init_seed
 
 load_dotenv()
 
 app = create_app(os.getenv('FLASK_CONFIG'))
-manager = Manager(app)
 
 init_logging(app)
 
@@ -25,15 +24,30 @@ def after_request(response: Response) -> Response:
     return response
 
 
-@manager.command
-def migrate():
-    init_db()
+@app.cli.command('init-db')
+def db():
+    init_database()
 
 
-@manager.command
-def seed():
+@app.cli.command('migrate')
+def migrations():
+    init_migrations(False)
+
+
+@app.cli.command('migrate-rollback')
+def migrations():
+    init_migrations(True)
+
+
+@app.cli.command('seed')
+def seeds():
     init_seed()
 
 
+@app.shell_context_processor
+def make_shell_context():
+    return {'app': app, 'db_wrapper': db_wrapper}
+
+
 if __name__ == '__main__':
-    manager.run()
+    app.run()

@@ -3,15 +3,7 @@ import os
 import os.path
 from pydoc import locate
 
-from faker import Faker
-from faker.providers import person
-from faker.providers import date_time
-
 logger = logging.getLogger(__name__)
-
-fake = Faker()
-fake.add_provider(person)
-fake.add_provider(date_time)
 
 
 def get_models() -> list:

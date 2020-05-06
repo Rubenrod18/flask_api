@@ -1,5 +1,4 @@
 from cerberus import Validator
-from peewee import ModelBase
 
 from app.models.user import User as UserModel
 from app.utils import BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name
@@ -7,7 +6,7 @@ from app.utils import BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name
 
 class MyValidator(Validator):
     def _validate_exists(self, exists, field, value):
-        """Test if value of a field exists or not in database.
+        """Test if value of a value exists in database.
 
         The rule's arguments are validated against this schema:
         {'type': 'dict'}
@@ -15,26 +14,48 @@ class MyValidator(Validator):
         module_name = exists.get('module_name')
         class_name = exists.get('class_name')
         model_field = exists.get('field_name')
-        search_deleted = exists.get('search_deleted', False)
-        exists_record_message = exists.get('exists_record_message', 'Already exists')
-        no_exists_record_message = exists.get('no_exists_record_message', 'Already deleted')
+        only_deleted = exists.get('only_deleted', False)
+        message = 'Doesn\'t exists in database'
 
         model = class_for_name(module_name, class_name)
+        query_field = getattr(model, model_field)
+        query = model.select()
 
-        if isinstance(model, ModelBase):
-            query_field = getattr(model, model_field)
+        if only_deleted:
+            query = query.where(query_field == value, model.deleted_at.is_null(False))
+        else:
+            query = query.where(query_field == value)
 
-            if search_deleted:
-                query = model.get_or_none(query_field == value)
-            else:
-                query = (model.select()
-                         .where(query_field == value, model.deleted_at.is_null(True))
-                         .first())
+        row = query.first()
 
-            if query and exists_record_message:
-                self._error(field, exists_record_message)
-            elif not query and no_exists_record_message:
-                self._error(field, no_exists_record_message)
+        if not row:
+            self._error(field, message)
+
+    def _validate_no_exists(self, exists, field, value):
+        """Test if value of a value doesn't exists in database.
+
+        The rule's arguments are validated against this schema:
+        {'type': 'dict'}
+        """
+        module_name = exists.get('module_name')
+        class_name = exists.get('class_name')
+        model_field = exists.get('field_name')
+        only_deleted = exists.get('only_deleted', False)
+        message = 'Already exists'
+
+        model = class_for_name(module_name, class_name)
+        query_field = getattr(model, model_field)
+        query = model.select()
+
+        if only_deleted:
+            query = query.where(query_field == value, model.deleted_at.is_null(False))
+        else:
+            query = query.where(query_field == value)
+
+        row = query.first()
+
+        if row:
+            self._error(field, message)
 
 
 def user_model_schema(is_creation: bool = True) -> dict:
@@ -64,13 +85,18 @@ def user_model_schema(is_creation: bool = True) -> dict:
             'empty': False,
             'nullable': False,
             'regex': EMAIL_REGEX,
-            'exists': {
+            'no_exists': {
                 'module_name': 'app.models.user',
                 'class_name': 'User',
                 'field_name': 'email',
-                'no_exists_record_message': '',
-                'search_deleted': True,
+                'only_deleted': False,
             },
+        },
+        'genre': {
+            'type': 'string',
+            'empty': False,
+            'nullable': False,
+            'allowed': ['m', 'f'],
         },
         'password': {
             'type': 'string',
@@ -96,7 +122,6 @@ def user_model_schema(is_creation: bool = True) -> dict:
                 'module_name': 'app.models.role',
                 'class_name': 'Role',
                 'field_name': 'id',
-                'exists_record_message': '',
             },
         },
     }
@@ -159,7 +184,7 @@ def search_model_schema(allowed_fields: set) -> dict:
     }
 
 
-def role_model_schema() -> dict:
+def role_model_schema(is_creation: bool = True) -> dict:
     """Cerberus schema for validating role fields.
 
     :return: dict
@@ -179,6 +204,19 @@ def role_model_schema() -> dict:
             'nullable': True,
             'maxlength': 255,
         },
+        'slug': {
+            'type': 'string',
+            'required': is_creation,
+            'empty': False if is_creation else False,
+            'nullable': False if is_creation else False,
+            'maxlength': 255,
+            'no_exists': {
+                'module_name': 'app.models.role',
+                'class_name': 'Role',
+                'field_name': 'slug',
+                'only_deleted': False,
+            },
+        }
     }
 
 
@@ -198,7 +236,6 @@ def user_login_schema() -> dict:
                 'module_name': 'app.models.user',
                 'class_name': 'User',
                 'field_name': 'email',
-                'exists_record_message': '',
             },
         },
         'password': {
