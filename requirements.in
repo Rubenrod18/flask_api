@@ -1,12 +1,15 @@
 # requirements.in
+Celery
 Faker
 Flask
 Flask-RESTful
 Flask-Security-Too
+SQLAlchemy
 XlsxWriter
 bcrypt
 cerberus
 coverage
+librabbitmq
 peewee
 pip-tools
 pytest

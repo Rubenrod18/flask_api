@@ -38,6 +38,20 @@ class BaseConfig(object):
     STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
     LOG_DIRECTORY = '%s/log' % ROOT_DIRECTORY
 
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'pyamqp://')
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'amqp://')
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_SERIALIZER = 'json'
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TIMEZONE = os.getenv('CELERY_TIMEZONE', 'Etc/Greenwich')
+    CELERY_ENABLE_UTC = True
+    CELERY_INCLUDE = ['app.celery.tasks']
+    CELERY_TASK_TRACK_STARTED = True
+    CELERY_RESULT_EXPIRES = 3600
+    CELERY_WORKER_LOG_FORMAT = '%(asctime)s - %(levelname)s - %(processName)s - %(message)s'
+    CELERY_WORKER_TASK_LOG_FORMAT = '%(asctime)s - %(levelname)s - %(processName)s - %(task_name)s - %(task_id)s - %(message)s'
+    CELERY_RESULT_EXTENDED = True
+
 
 class DevConfig(BaseConfig):
     """Development configuration options."""

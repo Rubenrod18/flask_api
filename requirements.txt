@@ -4,11 +4,14 @@
 #
 #    pip-compile
 #
+amqp==2.5.2               # via kombu, librabbitmq
 aniso8601==8.0.0          # via flask-restful
 attrs==19.3.0             # via pytest
 babel==2.8.0              # via flask-babelex
 bcrypt==3.1.7             # via -r requirements.in
+billiard==3.6.3.0         # via celery
 blinker==1.4              # via flask-mail, flask-principal
+celery==4.4.2             # via -r requirements.in
 cerberus==1.3.2           # via -r requirements.in
 cffi==1.14.0              # via bcrypt
 click==7.1.2              # via flask, pip-tools
@@ -25,16 +28,18 @@ flask-security-too==3.4.2  # via -r requirements.in
 flask-wtf==0.14.3         # via flask-security-too
 flask==1.1.2              # via -r requirements.in, flask-babelex, flask-login, flask-mail, flask-principal, flask-restful, flask-security-too, flask-wtf
 idna==2.9                 # via email-validator
-importlib-metadata==1.6.0  # via pluggy, pytest
+importlib-metadata==1.6.0  # via kombu, pluggy, pytest
 itsdangerous==1.1.0       # via flask, flask-security-too, flask-wtf
 jinja2==2.11.2            # via flask, flask-babelex
+kombu==4.6.8              # via celery
+librabbitmq==2.0.0        # via -r requirements.in
 lxml==4.5.0               # via python-docx
 markupsafe==1.1.1         # via jinja2, wtforms
 more-itertools==8.2.0     # via pytest
 packaging==20.3           # via pytest
 passlib==1.7.2            # via flask-security-too
 peewee==3.13.3            # via -r requirements.in
-pip-tools==5.1.1          # via -r requirements.in
+pip-tools==5.1.2          # via -r requirements.in
 pluggy==0.13.1            # via pytest
 py==1.8.1                 # via pytest
 pycparser==2.20           # via cffi
@@ -43,11 +48,13 @@ pytest==5.4.1             # via -r requirements.in
 python-dateutil==2.8.1    # via -r requirements.in, faker
 python-docx==0.8.10       # via -r requirements.in
 python-dotenv==0.13.0     # via -r requirements.in
-pytz==2020.1              # via babel, flask-restful
-six==1.14.0               # via bcrypt, flask-restful, packaging, pip-tools, python-dateutil
+pytz==2020.1              # via babel, celery, flask-restful
+six==1.14.0               # via bcrypt, flask-restful, librabbitmq, packaging, pip-tools, python-dateutil
 speaklater==1.3           # via flask-babelex
+sqlalchemy==1.3.16        # via -r requirements.in
 text-unidecode==1.3       # via faker
 uwsgi==2.0.18             # via -r requirements.in
+vine==1.3.0               # via amqp, celery
 wcwidth==0.1.9            # via pytest
 werkzeug==1.0.1           # via flask
 wtforms==2.3.1            # via flask-wtf

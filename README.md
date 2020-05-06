@@ -3,7 +3,8 @@
 Prerequisites:
 - sudo apt-get update
 - sudo apt-get install libreoffice-writer libxml2-dev libxslt1-dev
-  libxslt1.1 libffi-dev
+  libxslt1.1 libffi-dev librabbitmq-dev rabbitmq-server cmake libtool
+  autoconf
 
 
 For logging configuration this application use [logrotate](https://linux.die.net/man/8/logrotate). The config
