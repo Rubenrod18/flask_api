@@ -35,6 +35,6 @@ uwsgi.ini
 venv
 venv2
 .idea
-logs
+log
 coverage_html_report
 node_modules

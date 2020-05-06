@@ -1,3 +1,5 @@
+import logging
+
 from flask_restful import Api, Resource
 from flask import Blueprint, request
 from peewee import ModelSelect, IntegerField, CharField, DateField, DateTimeField
@@ -6,6 +8,9 @@ from ..extensions import db_wrapper as db
 
 blueprint = Blueprint('base', __name__, url_prefix='/')
 api = Api(blueprint)
+
+logger = logging.getLogger(__name__)
+
 
 class BaseResource(Resource):
     db_model: db.Model
@@ -65,6 +70,7 @@ class BaseResource(Resource):
                 pass
 
         return query
+
 
 @api.resource('')
 class WelcomeResource(Resource):
