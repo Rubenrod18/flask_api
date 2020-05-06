@@ -1,8 +1,5 @@
 import logging
 import os
-import sys
-from datetime import datetime
-from logging.handlers import TimedRotatingFileHandler
 
 import flask
 from flask import Flask
@@ -44,22 +41,14 @@ def register_blueprints(app: Flask) -> None:
 
 
 def init_logging(app: Flask) -> None:
-    log_dirname = app.config.get('LOG_DIRECTORY')
-    log_filename = '{}/{}.log'.format(log_dirname, datetime.utcnow().strftime('%Y%m%d'))
+    log_basename = os.path.basename(app.config.get('ROOT_DIRECTORY'))
+    log_dirname = '{}/app'.format(app.config.get('LOG_DIRECTORY'))
+    log_filename = f'{log_dirname}/{log_basename}.log'
 
-    if not os.path.exists(log_dirname):
-        os.mkdir(log_dirname)
-
-    handler = TimedRotatingFileHandler(log_filename, when='midnight', interval=1, backupCount=3, utc=True)
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setLevel(logging.DEBUG)
-    handler.setFormatter(formatter)
-
-    kwargs = {
-        'handlers': [handler],
+    config = {
+        'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         'level': logging.DEBUG,
+        'filename': log_filename,
     }
 
-    logging.basicConfig(**kwargs)
-    logger = logging.getLogger(__name__)
+    logging.basicConfig(**config)
