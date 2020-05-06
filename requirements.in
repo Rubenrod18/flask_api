@@ -4,6 +4,7 @@ Faker
 Flask
 Flask-RESTful
 Flask-Security-Too
+SQLAlchemy
 XlsxWriter
 bcrypt
 cerberus

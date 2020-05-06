@@ -1,4 +1,4 @@
-<path>/flask_api/log/*.log {
+<path>/flask_api/log/app/*.log {
 	# Log files are rotated every day.
     daily
 

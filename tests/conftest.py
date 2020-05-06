@@ -7,7 +7,7 @@ from flask_security.passwordless import generate_login_token
 from app import create_app
 from app.extensions import db_wrapper
 from app.models.user import User as UserModel
-from database.migrations import init_database, init_migrations
+from database.migrations import init_database
 from database.seeds import init_seed
 
 

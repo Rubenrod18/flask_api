@@ -1,26 +1,14 @@
+import time
+
 from celery.utils.log import get_task_logger
 
-from app.celery.celery import app
+from app.celery.celery import celery
 
 logger = get_task_logger(__name__)
 
 
-@app.task
-def add(x, y):
-    result = x + y
-    logger.info(f'sum args: {x} + {y} = {result}')
-    return result
-
-
-@app.task
-def mul(x, y):
-    result = x * y
-    logger.info(f'mul args: {x} * {y} = {result}')
-    return result
-
-
-@app.task
-def xsum(numbers):
-    result = sum(numbers)
-    logger.info(f'xsum args: {numbers} = {result}')
-    return sum(numbers)
+@celery.task(name='hello_world')
+def hello_world():
+    logger.info(f'task id: %s' % hello_world.request.id)
+    time.sleep(5)
+    return 'Hello workd'

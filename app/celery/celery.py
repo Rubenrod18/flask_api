@@ -1,11 +1,7 @@
 from celery import Celery
 
-app = Celery('celery')
-app.config_from_object('app.celery.celeryconfig')
-
-app.conf.update(
-    result_expires=3600,
-)
+celery = Celery('celery')
+celery.config_from_object('app.celery.celeryconfig')
 
 if __name__ == '__main__':
-    app.start()
+    celery.start()
