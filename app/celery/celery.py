@@ -1,7 +1,7 @@
-from celery import Celery
+from app import init_celery, create_app
 
-celery = Celery('celery')
-celery.config_from_object('app.celery.celeryconfig')
+flask_app = create_app('config.DevConfig')
+celery = init_celery(flask_app)
 
 if __name__ == '__main__':
-    celery.start()
+    celery.run()
