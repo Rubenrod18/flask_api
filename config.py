@@ -1,15 +1,42 @@
 import os
+from typing import TypeVar
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
+M = TypeVar('M', bound='Meta')
 
-class BaseConfig(object):
+class Meta(type):
+    def __new__(cls, name: str, bases: tuple, dict: dict):
+        config = super().__new__(cls, name, bases, dict)
+        cls._add_celery_new_lowercase_settings(config)
+        return config
+
+    @classmethod
+    def _add_celery_new_lowercase_settings(cls, config: M) -> None:
+        """ https://docs.celeryproject.org/en/latest/userguide/configuration.html#new-lowercase-settings """
+        config.broker_url = config.CELERY_BROKER_URL
+        config.result_backend = config.CELERY_RESULT_BACKEND
+        config.task_serializer = config.CELERY_TASK_SERIALIZER
+        config.result_serializer = config.CELERY_RESULT_SERIALIZER
+        config.accept_content = config.CELERY_ACCEPT_CONTENT
+        config.timezone = config.CELERY_TIMEZONE
+        config.enable_utc = config.CELERY_ENABLE_UTC
+        config.include = config.CELERY_INCLUDE
+        config.task_track_started = config.CELERY_TASK_TRACK_STARTED
+        config.result_expires = config.CELERY_RESULT_EXPIRES
+        config.worker_log_format = config.CELERY_WORKER_LOG_FORMAT
+        config.worker_task_log_format = config.CELERY_WORKER_TASK_LOG_FORMAT
+        config.result_extended = config.CELERY_RESULT_EXTENDED
+
+
+class BaseConfig(metaclass=Meta):
     """Default configuration options."""
     # Flask
     DEVELOPMENT = False
     DEBUG = False
+    TESTING = False
 
     # Flask-Security-Too
     # generated using: secrets.token_urlsafe()
@@ -33,7 +60,8 @@ class BaseConfig(object):
     CELERY_TASK_TRACK_STARTED = True
     CELERY_RESULT_EXPIRES = 3600
     CELERY_WORKER_LOG_FORMAT = '%(asctime)s - %(levelname)s - %(processName)s - %(message)s'
-    CELERY_WORKER_TASK_LOG_FORMAT = '%(asctime)s - %(levelname)s - %(processName)s - %(task_name)s - %(task_id)s - %(message)s'
+    CELERY_WORKER_TASK_LOG_FORMAT = '%(asctime)s - %(levelname)s - %(processName)s - %(' \
+                                    'task_name)s - %(task_id)s - %(message)s'
     CELERY_RESULT_EXTENDED = True
 
     # Flask-Mail

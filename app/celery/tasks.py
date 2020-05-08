@@ -2,10 +2,10 @@ from celery.utils.log import get_task_logger
 from flask import render_template
 from flask_mail import Message
 
-from app.extensions import mail, celery, ContextTask
+from app.celery import ContextTask
+from app.extensions import mail, celery
 
 logger = get_task_logger(__name__)
-
 
 @celery.task(name='send_mail_after_create_user', base=ContextTask)
 def send_mail_after_create_user(email_data) -> bool:

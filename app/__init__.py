@@ -5,14 +5,17 @@ import flask
 from celery import Celery
 from flask import Flask
 
-from app.extensions import ContextTask
+from app import extensions
+from app.blueprints import blueprints
 
 
 def create_app(env_config: str) -> Flask:
     app = flask.Flask(__name__)
     app.config.from_object(env_config)
 
-    celery = init_celery(app)
+    celery = Celery(app.import_name)
+    celery.conf.update(app.config)
+
     init_app(app)
     register_blueprints(app)
 
@@ -27,7 +30,6 @@ def init_app(app: Flask) -> None:
     :returns: None
 
     """
-    from . import extensions
     extensions.init_app(app)
 
 
@@ -38,8 +40,6 @@ def register_blueprints(app: Flask) -> None:
     :returns: None
 
     """
-    from .blueprints import blueprints
-
     for blueprint in blueprints:
         app.register_blueprint(blueprint)
 
@@ -56,49 +56,3 @@ def init_logging(app: Flask) -> None:
     }
 
     logging.basicConfig(**config)
-
-
-def init_celery(app: Flask):
-    celery = Celery(app.import_name, broker_url=app.config.get('CELERY_BROKER_URL'),
-                    result_backend=app.config.get('CELERY_RESULT_BACKEND'), include=app.config.get('CELERY_INCLUDE'), )
-    celery.conf.update(
-        # General settings
-        accept_content=app.config.get('CELERY_ACCEPT_CONTENT'),
-
-        # Broker settings
-        broker_url=app.config.get('CELERY_BROKER_URL'),
-
-        # Task result backend settings
-        result_backend=app.config.get('CELERY_RESULT_BACKEND'),
-        result_serializer=app.config.get('CELERY_RESULT_SERIALIZER'),
-        result_expires=app.config.get('CELERY_RESULT_EXPIRES'),
-        result_extended=app.config.get('CELERY_RESULT_EXTENDED'),
-
-        # Task settings
-        task_serializer=app.config.get('CELERY_TASK_SERIALIZER'),
-
-        # Time and date settings
-        timezone=app.config.get('CELERY_TIMEZONE'),
-        enable_utc=app.config.get('CELERY_ENABLE_UTC'),
-
-        # Worker
-        include=app.config.get('CELERY_INCLUDE'),
-
-        # Task execution settings
-        task_track_started=app.config.get('CELERY_TASK_TRACK_STARTED'),
-
-        # Logging
-        worker_log_format=app.config.get('CELERY_WORKER_LOG_FORMAT'),
-        worker_task_log_format=app.config.get('CELERY_WORKER_TASK_LOG_FORMAT'),
-    )
-
-    TaskBase = celery.Task
-
-    def __call__(self, *args, **kwargs):
-        with app.app_context():
-            return TaskBase.__call__(self, *args, **kwargs)
-
-    ContextTask.__call__ = __call__
-
-    celery.register_task(ContextTask())
-    return celery

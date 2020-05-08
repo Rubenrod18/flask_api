@@ -7,7 +7,8 @@ from playhouse.flask_utils import FlaskDB
 db_wrapper = FlaskDB()
 security = Security()
 mail = Mail()
-celery = Celery('flask_api')
+celery = Celery()
+
 TaskBase = celery.Task
 
 class ContextTask(TaskBase):

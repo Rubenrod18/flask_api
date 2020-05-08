@@ -1,6 +1,13 @@
-from app import init_celery, create_app
+import os
 
-flask_app = create_app('config.DevConfig')
+from dotenv import load_dotenv
+
+from app import create_app
+from app.celery import init_celery
+
+load_dotenv()
+
+flask_app = create_app(os.getenv('FLASK_CONFIG'))
 celery = init_celery(flask_app)
 
 if __name__ == '__main__':
