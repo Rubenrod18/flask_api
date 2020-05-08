@@ -10,6 +10,7 @@ from flask import Blueprint, request, send_file
 from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
+from app.celery.tasks import send_mail_after_create_user
 from .base import BaseResource
 from ..models.user import User as UserModel
 from ..utils import to_readable, pos_to_char, find_longest_word
@@ -89,6 +90,8 @@ class NewUserResource(UserResource):
 
         user = UserModel.create(**data)
         user_dict = user.serialize()
+
+        send_mail_after_create_user.delay(user_dict)
 
         return {
                    'data': user_dict,

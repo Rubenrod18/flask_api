@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, date
-from typing import TypeVar
 
 from flask_security import UserMixin, PeeweeUserDatastore, hash_password
 from peewee import CharField, DateField, TimestampField, ForeignKeyField, BooleanField, FixedCharField
@@ -10,8 +9,6 @@ from .role import Role as RoleModel, Role
 from ..extensions import db_wrapper as db
 
 logger = logging.getLogger(__name__)
-
-U = TypeVar('U', bound='User')
 
 
 class User(BaseModel, UserMixin):

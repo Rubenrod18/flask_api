@@ -1,14 +1,24 @@
-import time
-
 from celery.utils.log import get_task_logger
+from flask import render_template
+from flask_mail import Message
 
-from app.celery.celery import celery
+from app.celery import ContextTask
+from app.extensions import mail, celery
 
 logger = get_task_logger(__name__)
 
+@celery.task(name='send_mail_after_create_user', base=ContextTask)
+def send_mail_after_create_user(email_data) -> bool:
+    logger.info(f'to: {email_data}')
 
-@celery.task(name='hello_world')
-def hello_world():
-    logger.info(f'task id: %s' % hello_world.request.id)
-    time.sleep(5)
-    return 'Hello workd'
+    to = [email_data.get('email')]
+
+    email_args = {
+        'subject': 'Welcome to Flask Api!',
+        'sender': 'hello@flaskapi.com',
+        'recipients': to,
+    }
+    msg = Message(**email_args)
+    msg.html = render_template('mails/new_user.html', **email_data)
+    mail.send(msg)
+    return True

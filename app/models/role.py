@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import TypeVar
 
 from flask_security import RoleMixin
 from peewee import CharField, TimestampField, TextField
@@ -8,8 +7,6 @@ from peewee import CharField, TimestampField, TextField
 from .base import BaseModel
 
 logger = logging.getLogger(__name__)
-
-R = TypeVar('R', bound='Role')
 
 
 class Role(BaseModel, RoleMixin):

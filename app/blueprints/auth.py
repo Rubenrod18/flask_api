@@ -13,6 +13,7 @@ api = Api(blueprint)
 
 logger = logging.getLogger(__name__)
 
+# TODO: recovery password, update new password
 
 @api.resource('/login')
 class AuthUserLoginResource(Resource):
