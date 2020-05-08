@@ -5,15 +5,13 @@ import xlsxwriter
 import docx
 from cerberus import Validator
 from docx import Document
-from flask_mail import Message
 from flask_restful import current_app, Api
-from flask import Blueprint, request, send_file, render_template
+from flask import Blueprint, request, send_file
 from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
 from app.celery.tasks import send_mail_after_create_user
 from .base import BaseResource
-from ..extensions import mail
 from ..models.user import User as UserModel
 from ..utils import to_readable, pos_to_char, find_longest_word
 from ..libs.libreoffice import convert_to
