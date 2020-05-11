@@ -7,6 +7,7 @@ load_dotenv()
 
 M = TypeVar('M', bound='Meta')
 
+
 class Meta(type):
     def __new__(cls, name: str, bases: tuple, dict: dict):
         config = super().__new__(cls, name, bases, dict)
@@ -31,7 +32,7 @@ class Meta(type):
         config.result_extended = config.CELERY_RESULT_EXTENDED
 
 
-class BaseConfig(metaclass=Meta):
+class Config(metaclass=Meta):
     """Default configuration options."""
     # Flask
     DEVELOPMENT = False
@@ -46,6 +47,28 @@ class BaseConfig(metaclass=Meta):
     SECURITY_PASSWORD_HASH = 'pbkdf2_sha512'
     SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authorization'
     SECURITY_TOKEN_MAX_AGE = None
+
+    # Peewee
+    DATABASE = {
+        'name': os.getenv('DATABASE_NAME'),
+        'engine': 'peewee.SqliteDatabase',
+        # Sqlite3 recommended settings
+        'pragmas': {
+            'journal_mode': 'wal',
+            'cache_size': -1 * 64000,  # 64MB
+            'foreign_keys': 1,
+            'ignore_check_constraints': 0,
+            'synchronous': 0,
+        },
+    }
+
+    # Flask-Mail
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = os.getenv('MAIL_PORT')
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False
 
     # Celery
     CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'pyamqp://')
@@ -63,28 +86,6 @@ class BaseConfig(metaclass=Meta):
                                     'task_name)s - %(task_id)s - %(message)s'
     CELERY_RESULT_EXTENDED = True
 
-    # Flask-Mail
-    MAIL_SERVER = os.getenv('MAIL_SERVER')
-    MAIL_PORT = os.getenv('MAIL_PORT')
-    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
-    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
-    MAIL_USE_TLS = True
-    MAIL_USE_SSL = False
-
-    # Peewee
-    DATABASE = {
-        'name': os.getenv('DATABASE_NAME'),
-        'engine': 'peewee.SqliteDatabase',
-        # Sqlite3 recommended settings
-        'pragmas': {
-            'journal_mode': 'wal',
-            'cache_size': -1 * 64000,  # 64MB
-            'foreign_keys': 1,
-            'ignore_check_constraints': 0,
-            'synchronous': 0,
-        },
-    }
-
     # Mr Developer
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
     TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')
@@ -93,25 +94,28 @@ class BaseConfig(metaclass=Meta):
     STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
     LOG_DIRECTORY = '%s/log' % ROOT_DIRECTORY
 
-    RESET_TOKEN_EXPIRES = 86400 # 1 day = 86400
+    RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
 
 
-class DevConfig(BaseConfig):
+class ProdConfig(Config):
+    """Production configuration options."""
+    pass
+
+
+class DevConfig(Config):
     """Development configuration options."""
     DEVELOPMENT = True
     DEBUG = True
-
     SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')
 
 
-class TestConfig(BaseConfig):
+class TestConfig(Config):
     """Testing configuration options."""
     DEVELOPMENT = True
     TESTING = True
+    SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')
 
     DATABASE = {
         'name': 'test.db',
         'engine': 'peewee.SqliteDatabase',
     }
-
-    SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')

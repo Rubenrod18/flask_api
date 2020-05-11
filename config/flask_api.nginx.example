@@ -1,0 +1,16 @@
+server {
+    listen 80;
+    # Remember add "flask-api.dev" to your "hosts" file
+    server_name flask-api.dev;
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:/home/<username>/flask_api.sock;
+    }
+
+    location /flower/ {
+        rewrite ^/flower/(.*)$ /$1 break;
+        proxy_pass http://flask-api.dev:5555;
+        proxy_set_header Host $host;
+    }
+}
