@@ -3,6 +3,17 @@ from cerberus import Validator
 from app.models.user import User as UserModel
 from app.utils import BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name
 
+PASSWORD_SCHEMA = {
+    'password': {
+        'type': 'string',
+        'required': True,
+        'empty': False,
+        'nullable': False,
+        'minlength': 5,
+        'maxlength': 50,
+    },
+}
+
 
 class MyValidator(Validator):
     def _validate_exists(self, exists, field, value):
@@ -94,6 +105,7 @@ def user_model_schema(is_creation: bool = True) -> dict:
         },
         'genre': {
             'type': 'string',
+            'required': is_creation,
             'empty': False,
             'nullable': False,
             'allowed': ['m', 'f'],
@@ -225,7 +237,7 @@ def user_login_schema() -> dict:
 
     :return: dict
     """
-    return {
+    schema = {
         'email': {
             'type': 'string',
             'required': True,
@@ -238,12 +250,12 @@ def user_login_schema() -> dict:
                 'field_name': 'email',
             },
         },
-        'password': {
-            'type': 'string',
-            'required': True,
-            'empty': False,
-            'nullable': False,
-            'minlength': 5,
-            'maxlength': 50,
-        },
     }
+
+    schema.update(PASSWORD_SCHEMA)
+
+    return schema
+
+
+def confirm_reset_password_schema() -> dict:
+    return PASSWORD_SCHEMA

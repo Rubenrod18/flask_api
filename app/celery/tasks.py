@@ -7,8 +7,8 @@ from app.extensions import mail, celery
 
 logger = get_task_logger(__name__)
 
-@celery.task(name='send_mail_after_create_user', base=ContextTask)
-def send_mail_after_create_user(email_data) -> bool:
+@celery.task(name='create_user_email', base=ContextTask)
+def create_user_email(email_data) -> bool:
     logger.info(f'to: {email_data}')
 
     to = [email_data.get('email')]
@@ -20,5 +20,21 @@ def send_mail_after_create_user(email_data) -> bool:
     }
     msg = Message(**email_args)
     msg.html = render_template('mails/new_user.html', **email_data)
+    mail.send(msg)
+    return True
+
+@celery.task(name='reset_password_email', base=ContextTask)
+def reset_password_email(email_data) -> bool:
+    logger.info(f'to: {email_data}')
+
+    to = [email_data.get('email')]
+
+    email_args = {
+        'subject': 'Reset password',
+        'sender': 'noreply@flaskapi.com',
+        'recipients': to,
+    }
+    msg = Message(**email_args)
+    msg.html = render_template('mails/reset_password.html', **email_data)
     mail.send(msg)
     return True

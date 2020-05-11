@@ -5,12 +5,13 @@ import xlsxwriter
 import docx
 from cerberus import Validator
 from docx import Document
+from flask_login import current_user
 from flask_restful import current_app, Api
 from flask import Blueprint, request, send_file
 from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
-from app.celery.tasks import send_mail_after_create_user
+from app.celery.tasks import create_user_email
 from .base import BaseResource
 from ..models.user import User as UserModel
 from ..utils import to_readable, pos_to_char, find_longest_word
@@ -89,9 +90,10 @@ class NewUserResource(UserResource):
                    }, 422
 
         user = UserModel.create(**data)
+        user.created_by = current_user.id
         user_dict = user.serialize()
 
-        send_mail_after_create_user.delay(user_dict)
+        create_user_email.delay(data)
 
         return {
                    'data': user_dict,

@@ -18,17 +18,22 @@ def token_required(fnc):
 
         if not token or not match_data:
             return {
-                'message': 'A valid token is missing'
+                'message': 'A valid token is missing',
             }, 400
 
         expired, invalid, user = login_token_status(match_data[1])
 
         if not expired and not invalid and user:
-            flask_security.login_user(user)
-            return fnc(*args, **kwargs)
+            if user.active:
+                flask_security.login_user(user)
+                return fnc(*args, **kwargs)
+            else:
+                return {
+                    'message': 'User not authorized',
+                }, 403
         else:
             return {
-                       'message': 'Token invalid'
+                       'message': 'Token invalid',
                    }, 401
 
     return decorator

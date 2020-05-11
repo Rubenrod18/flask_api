@@ -7,6 +7,7 @@ from flask_security.passwordless import generate_login_token
 from app import create_app
 from app.extensions import db_wrapper
 from app.models.user import User as UserModel
+from database.factories import Factory
 from database.migrations import init_database
 from database.seeds import init_seed
 
@@ -18,8 +19,7 @@ def app():
     with app.app_context():
         init_database()
         init_seed()
-
-    yield app
+        yield app
 
     print(' Deleting test database...')
     os.remove(app.config.get('DATABASE').get('name'))
@@ -34,6 +34,7 @@ def client(app: Flask):
 @pytest.fixture
 def runner(app: Flask):
     return app.test_cli_runner()
+
 
 @pytest.fixture
 def auth_header(app: Flask):
@@ -51,3 +52,11 @@ def auth_header(app: Flask):
         }
 
     return _create_auth_header
+
+
+@pytest.fixture
+def factory(app: Flask):
+    def _create_factory(model_name: str):
+        return Factory(model_name)
+
+    return _create_factory

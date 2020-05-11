@@ -1,7 +1,10 @@
 import logging
 from datetime import datetime, date
+from typing import TypeVar
 
+from flask import current_app
 from flask_security import UserMixin, PeeweeUserDatastore, hash_password
+from itsdangerous import URLSafeSerializer, TimestampSigner
 from peewee import CharField, DateField, TimestampField, ForeignKeyField, BooleanField, FixedCharField
 
 from .base import BaseModel as BaseModel
@@ -10,6 +13,7 @@ from ..extensions import db_wrapper as db
 
 logger = logging.getLogger(__name__)
 
+U = TypeVar('U', bound='User')
 
 class User(BaseModel, UserMixin):
     class Meta:
@@ -38,7 +42,7 @@ class User(BaseModel, UserMixin):
             self.updated_at = current_date
 
         if self.password:
-            self.password = hash_password(self.password)
+            self.password = self.ensure_password(self.password)
 
         return super(User, self).save(*args, **kwargs)
 
@@ -85,8 +89,19 @@ class User(BaseModel, UserMixin):
 
         return data
 
+    def get_reset_token(self) -> str:
+        secret_key = current_app.config.get('SECRET_KEY')
+        expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
+        salt = expire_in.__str__()
+
+        s1 = URLSafeSerializer(secret_key, salt)
+        s2 = TimestampSigner(secret_key)
+
+        data = s1.dumps({'user_id': self.id})
+        return s2.sign(data).decode('utf-8')
+
     @classmethod
-    def get_fields(self, ignore_fields: list = None, sort_order: list = None) -> set:
+    def get_fields(cls, ignore_fields: list = None, sort_order: list = None) -> set:
         if ignore_fields is None:
             ignore_fields = []
 
@@ -95,13 +110,33 @@ class User(BaseModel, UserMixin):
 
         fields = set(filter(
             lambda x: x not in ignore_fields,
-            list(self._meta.fields)
+            list(cls._meta.fields)
         ))
 
         if sort_order and len(fields) == len(sort_order):
             fields = sorted(fields, key=lambda x: sort_order.index(x))
 
         return fields
+
+    @staticmethod
+    def verify_reset_token(token: str) -> any:
+        secret_key = current_app.config.get('SECRET_KEY')
+        expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
+        salt = expire_in.__str__()
+
+        s1 = URLSafeSerializer(secret_key, salt)
+        s2 = TimestampSigner(secret_key)
+
+        try:
+            parsed_token = s2.unsign(token, max_age=expire_in).decode('utf-8')
+            user_id = s1.loads(parsed_token)['user_id']
+        except:
+            return None
+        return User.get_or_none(user_id)
+
+    @staticmethod
+    def ensure_password(plain_text: str) -> str:
+        return hash_password(plain_text)
 
 
 user_datastore = PeeweeUserDatastore(db, User, Role, None)

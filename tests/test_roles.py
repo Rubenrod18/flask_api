@@ -4,12 +4,11 @@ from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
 from app.models.role import Role as RoleModel
-from database.factories import Factory
 
 
-def test_save_role_endpoint(client: FlaskClient, auth_header: any):
+def test_save_role_endpoint(client: FlaskClient, auth_header: any, factory: any):
     ignore_fields = [RoleModel.id, RoleModel.created_at, RoleModel.updated_at, RoleModel.deleted_at]
-    data = model_to_dict(Factory('Role').make(), exclude=ignore_fields)
+    data = model_to_dict(factory('Role').make(), exclude=ignore_fields)
 
     response = client.post('/roles', json=data, headers=auth_header())
 
@@ -24,7 +23,7 @@ def test_save_role_endpoint(client: FlaskClient, auth_header: any):
     assert json_data.get('deleted_at') is None
 
 
-def test_update_role_endpoint(client: FlaskClient, auth_header: any):
+def test_update_role_endpoint(client: FlaskClient, auth_header: any, factory: any):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -33,7 +32,7 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: any):
                .id)
     db_wrapper.database.close()
 
-    role = Factory('Role').make()
+    role = factory('Role').make()
 
     ignore_fields = [RoleModel.id, RoleModel.slug, RoleModel.created_at, RoleModel.updated_at, RoleModel.deleted_at]
     data = model_to_dict(role, exclude=ignore_fields)
