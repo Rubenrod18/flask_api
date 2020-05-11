@@ -8,13 +8,13 @@ from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
 from app.models.user import User as UserModel
-from database.factories import Factory
 
 
-def test_save_user_endpoint(client: FlaskClient, auth_header: any):
+def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
     ignore_fields = [UserModel.id, UserModel.role, UserModel.active, UserModel.created_at, UserModel.updated_at,
                      UserModel.deleted_at, UserModel.created_by]
-    user = Factory('User').make()
+
+    user = factory('User').make()
     role = user.role
 
     data = model_to_dict(user, exclude=ignore_fields)
@@ -29,6 +29,7 @@ def test_save_user_endpoint(client: FlaskClient, auth_header: any):
     assert data.get('name') == json_data.get('name')
     assert data.get('last_name') == json_data.get('last_name')
     assert data.get('birth_date') == json_data.get('birth_date')
+    assert data.get('genre') == json_data.get('genre')
     assert json_data.get('created_at')
     assert json_data.get('updated_at') == json_data.get('created_at')
     assert json_data.get('deleted_at') is None
@@ -41,7 +42,7 @@ def test_save_user_endpoint(client: FlaskClient, auth_header: any):
     assert role.deleted_at == json_data.get('role').get('deleted_at')
 
 
-def test_update_user_endpoint(client: FlaskClient, auth_header: any):
+def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -51,7 +52,7 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any):
 
     ignore_fields = [UserModel.id, UserModel.role, UserModel.active, UserModel.created_at, UserModel.updated_at,
                      UserModel.deleted_at, UserModel.created_by]
-    user = Factory('User').make()
+    user = factory('User').make()
     role = user.role
 
     data = model_to_dict(user, exclude=ignore_fields)
@@ -67,6 +68,7 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any):
     assert data.get('name') == json_data.get('name')
     assert data.get('last_name') == json_data.get('last_name')
     assert data.get('birth_date') == json_data.get('birth_date')
+    assert data.get('genre') == json_data.get('genre')
     assert json_data.get('created_at')
     assert json_data.get('updated_at') >= json_data.get('created_at')
     assert json_data.get('deleted_at') is None

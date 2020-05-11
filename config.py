@@ -46,7 +46,6 @@ class BaseConfig(metaclass=Meta):
     SECURITY_PASSWORD_HASH = 'pbkdf2_sha512'
     SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authorization'
     SECURITY_TOKEN_MAX_AGE = None
-    SECURITY_PASSWORD_LENGTH_MIN = 5
 
     # Celery
     CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'pyamqp://')
@@ -94,11 +93,15 @@ class BaseConfig(metaclass=Meta):
     STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
     LOG_DIRECTORY = '%s/log' % ROOT_DIRECTORY
 
+    RESET_TOKEN_EXPIRES = 86400 # 1 day = 86400
+
 
 class DevConfig(BaseConfig):
     """Development configuration options."""
     DEVELOPMENT = True
     DEBUG = True
+
+    SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')
 
 
 class TestConfig(BaseConfig):
@@ -110,3 +113,5 @@ class TestConfig(BaseConfig):
         'name': 'test.db',
         'engine': 'peewee.SqliteDatabase',
     }
+
+    SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')

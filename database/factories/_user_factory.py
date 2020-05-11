@@ -66,7 +66,7 @@ class _UserFactory():
         user.last_name = data.get('last_name')
         user.email = data.get('email')
         user.genre = data.get('genre')
-        user.password = data.get('password')
+        user.password = UserModel.ensure_password(data.get('password'))
         user.birth_date = data.get('birth_date')
         user.active = data.get('active')
         user.created_at = data.get('created_at')
