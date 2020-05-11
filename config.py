@@ -47,6 +47,28 @@ class BaseConfig(metaclass=Meta):
     SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authorization'
     SECURITY_TOKEN_MAX_AGE = None
 
+    # Peewee
+    DATABASE = {
+        'name': os.getenv('DATABASE_NAME'),
+        'engine': 'peewee.SqliteDatabase',
+        # Sqlite3 recommended settings
+        'pragmas': {
+            'journal_mode': 'wal',
+            'cache_size': -1 * 64000,  # 64MB
+            'foreign_keys': 1,
+            'ignore_check_constraints': 0,
+            'synchronous': 0,
+        },
+    }
+
+    # Flask-Mail
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = os.getenv('MAIL_PORT')
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False
+
     # Celery
     CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'pyamqp://')
     CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'amqp://')
@@ -63,27 +85,9 @@ class BaseConfig(metaclass=Meta):
                                     'task_name)s - %(task_id)s - %(message)s'
     CELERY_RESULT_EXTENDED = True
 
-    # Flask-Mail
-    MAIL_SERVER = os.getenv('MAIL_SERVER')
-    MAIL_PORT = os.getenv('MAIL_PORT')
-    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
-    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
-    MAIL_USE_TLS = True
-    MAIL_USE_SSL = False
-
-    # Peewee
-    DATABASE = {
-        'name': os.getenv('DATABASE_NAME'),
-        'engine': 'peewee.SqliteDatabase',
-        # Sqlite3 recommended settings
-        'pragmas': {
-            'journal_mode': 'wal',
-            'cache_size': -1 * 64000,  # 64MB
-            'foreign_keys': 1,
-            'ignore_check_constraints': 0,
-            'synchronous': 0,
-        },
-    }
+    # Flower
+    FLOWER_BROKER_API = os.getenv('FLOWER_BROKER_API', 'http://guest:guest@localhost:15672/api/')
+    FLOWER_LOGGING = os.getenv('FLOWER_LOGGING', 'DEBUG')
 
     # Mr Developer
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
@@ -100,7 +104,6 @@ class DevConfig(BaseConfig):
     """Development configuration options."""
     DEVELOPMENT = True
     DEBUG = True
-
     SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')
 
 
@@ -108,10 +111,9 @@ class TestConfig(BaseConfig):
     """Testing configuration options."""
     DEVELOPMENT = True
     TESTING = True
+    SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')
 
     DATABASE = {
         'name': 'test.db',
         'engine': 'peewee.SqliteDatabase',
     }
-
-    SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')
