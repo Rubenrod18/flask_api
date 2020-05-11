@@ -7,6 +7,7 @@ load_dotenv()
 
 M = TypeVar('M', bound='Meta')
 
+
 class Meta(type):
     def __new__(cls, name: str, bases: tuple, dict: dict):
         config = super().__new__(cls, name, bases, dict)
@@ -31,7 +32,7 @@ class Meta(type):
         config.result_extended = config.CELERY_RESULT_EXTENDED
 
 
-class BaseConfig(metaclass=Meta):
+class Config(metaclass=Meta):
     """Default configuration options."""
     # Flask
     DEVELOPMENT = False
@@ -85,10 +86,6 @@ class BaseConfig(metaclass=Meta):
                                     'task_name)s - %(task_id)s - %(message)s'
     CELERY_RESULT_EXTENDED = True
 
-    # Flower
-    FLOWER_BROKER_API = os.getenv('FLOWER_BROKER_API', 'http://guest:guest@localhost:15672/api/')
-    FLOWER_LOGGING = os.getenv('FLOWER_LOGGING', 'DEBUG')
-
     # Mr Developer
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
     TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')
@@ -97,17 +94,22 @@ class BaseConfig(metaclass=Meta):
     STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
     LOG_DIRECTORY = '%s/log' % ROOT_DIRECTORY
 
-    RESET_TOKEN_EXPIRES = 86400 # 1 day = 86400
+    RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
 
 
-class DevConfig(BaseConfig):
+class ProdConfig(Config):
+    """Production configuration options."""
+    pass
+
+
+class DevConfig(Config):
     """Development configuration options."""
     DEVELOPMENT = True
     DEBUG = True
     SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')
 
 
-class TestConfig(BaseConfig):
+class TestConfig(Config):
     """Testing configuration options."""
     DEVELOPMENT = True
     TESTING = True
