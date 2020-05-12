@@ -5,12 +5,6 @@ server {
 
     location / {
         include uwsgi_params;
-        uwsgi_pass unix:/home/<username>/flask_api.sock;
-    }
-
-    location /flower/ {
-        rewrite ^/flower/(.*)$ /$1 break;
-        proxy_pass http://flask-api.dev:5555;
-        proxy_set_header Host $host;
+        uwsgi_pass unix:/<path>/flask_api.sock;
     }
 }
