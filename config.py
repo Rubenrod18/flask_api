@@ -30,6 +30,7 @@ class Meta(type):
         config.worker_log_format = config.CELERY_WORKER_LOG_FORMAT
         config.worker_task_log_format = config.CELERY_WORKER_TASK_LOG_FORMAT
         config.result_extended = config.CELERY_RESULT_EXTENDED
+        config.task_default_rate_limit = config.CELERY_TASK_DEFAULT_RATE_LIMIT
 
 
 class Config(metaclass=Meta):
@@ -85,6 +86,7 @@ class Config(metaclass=Meta):
     CELERY_WORKER_TASK_LOG_FORMAT = '%(asctime)s - %(levelname)s - %(processName)s - %(' \
                                     'task_name)s - %(task_id)s - %(message)s'
     CELERY_RESULT_EXTENDED = True
+    CELERY_TASK_DEFAULT_RATE_LIMIT = 3
 
     # Mr Developer
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
