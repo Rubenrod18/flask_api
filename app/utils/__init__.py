@@ -35,3 +35,13 @@ def find_longest_word(word_list: list) -> str:
     str_list = [str(item) for item in word_list]
     longest_word = max(str_list, key=len)
     return str(longest_word)
+
+
+def ignore_keys(data: dict, exclude: list) -> dict:
+    new_dict = dict({
+        (k,v)
+        for k, v in data.items()
+        if k not in exclude
+    })
+
+    return new_dict
