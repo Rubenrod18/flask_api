@@ -31,6 +31,7 @@ pip-log.txt
 *.xlsx
 *.pdf
 uwsgi.ini
+supervisor.conf
 
 venv
 venv2
