@@ -1,14 +1,13 @@
 from flask.testing import FlaskClient
 from peewee import fn
-from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
 from app.models.role import Role as RoleModel
 
 
 def test_save_role_endpoint(client: FlaskClient, auth_header: any, factory: any):
-    ignore_fields = [RoleModel.id, RoleModel.created_at, RoleModel.updated_at, RoleModel.deleted_at]
-    data = model_to_dict(factory('Role').make(), exclude=ignore_fields)
+    ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at']
+    data = factory('Role').make(exclude=ignore_fields, to_dict=True)
 
     response = client.post('/roles', json=data, headers=auth_header())
 
@@ -32,10 +31,8 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: any, factory: an
                .id)
     db_wrapper.database.close()
 
-    role = factory('Role').make()
-
-    ignore_fields = [RoleModel.id, RoleModel.slug, RoleModel.created_at, RoleModel.updated_at, RoleModel.deleted_at]
-    data = model_to_dict(role, exclude=ignore_fields)
+    ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at']
+    data = factory('Role').make(exclude=ignore_fields, to_dict=True)
 
     response = client.put('/roles/%s' % role_id, json=data, headers=auth_header())
 
@@ -45,7 +42,7 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: any, factory: an
     assert 200 == response.status_code
     assert role_id == json_data.get('id')
     assert data.get('name') == json_data.get('name')
-    assert role.name.lower() == json_data.get('name').lower().replace('-', ' ')
+    assert data.get('slug') == json_data.get('slug')
     assert json_data.get('created_at')
     assert json_data.get('updated_at') >= json_data.get('created_at')
     assert json_data.get('deleted_at') is None
@@ -99,11 +96,11 @@ def test_delete_role_endpoint(client: FlaskClient, auth_header: any):
 
 def test_search_roles_endpoint(client: FlaskClient, auth_header: any):
     role_name = (RoleModel.select(RoleModel.name)
-               .where(RoleModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get()
-               .name)
+                 .where(RoleModel.deleted_at.is_null())
+                 .order_by(fn.Random())
+                 .limit(1)
+                 .get()
+                 .name)
     db_wrapper.database.close()
 
     json_body = {

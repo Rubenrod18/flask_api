@@ -4,7 +4,7 @@ from app.utils import class_for_name
 class Factory():
     models: list = None
 
-    def __init__(self, class_name, num=1):
+    def __init__(self, class_name, num: int = 1):
         factory_name = '_%sFactory' % class_name
         module_name = 'database.factories._%s_factory' % class_name.lower()
 
@@ -15,14 +15,14 @@ class Factory():
             factory = factory_class()
             self.models.append(factory)
 
-    def make(self, params: dict = None) -> any:
-        if params is None:
-            params = {}
+    def make(self, params: dict = None, to_dict: bool = False, exclude: list = None) -> any:
+        params = params or {}
+        exclude = exclude or []
 
         data = []
 
         for item in self.models:
-            data.append(item.make(params))
+            data.append(item.make(params, to_dict, exclude))
 
         if len(data) == 1:
             data = data[0]
@@ -30,8 +30,7 @@ class Factory():
         return data
 
     def save(self, params: dict = None) -> any:
-        if params is None:
-            params = {}
+        params = params or {}
 
         if len(self.models) == 1:
             data = self.models[0].create(params)

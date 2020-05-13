@@ -1,6 +1,5 @@
 from flask import url_for, Flask
 from peewee import fn
-from playhouse.shortcuts import model_to_dict
 
 from app.celery.tasks import create_user_email, reset_password_email
 
@@ -8,8 +7,8 @@ from app.models.user import User as UserModel
 
 
 def test_create_user_email(factory: any):
-    user = factory('User').make()
-    data = model_to_dict(user)
+    ignore_fields = ['role', 'created_by']
+    data = factory('User').make(exclude=ignore_fields, to_dict=True)
 
     task = create_user_email.delay(data)
     result = task.get()

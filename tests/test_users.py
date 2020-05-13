@@ -4,22 +4,20 @@ import os
 
 from flask.testing import FlaskClient
 from peewee import fn
-from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
 from app.models.user import User as UserModel
 
 
 def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
-    ignore_fields = [UserModel.id, UserModel.role, UserModel.active, UserModel.created_at, UserModel.updated_at,
-                     UserModel.deleted_at, UserModel.created_by]
+    ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by']
+    data = factory('User').make(exclude=ignore_fields, to_dict=True)
+    role = data.get('role')
 
-    user = factory('User').make()
-    role = user.role
-
-    data = model_to_dict(user, exclude=ignore_fields)
     data['role_id'] = role.id
     data['password'] = os.getenv('TEST_USER_PASSWORD')
+
+    del data['role']
 
     response = client.post('/users', json=data, headers=auth_header())
     json_response = response.get_json()
@@ -50,14 +48,14 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: an
                .get()
                .id)
 
-    ignore_fields = [UserModel.id, UserModel.role, UserModel.active, UserModel.created_at, UserModel.updated_at,
-                     UserModel.deleted_at, UserModel.created_by]
-    user = factory('User').make()
-    role = user.role
+    ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by']
+    data = factory('User').make(to_dict=True, exclude=ignore_fields)
+    role = data.get('role')
 
-    data = model_to_dict(user, exclude=ignore_fields)
     data['role_id'] = role.id
     data['password'] = os.getenv('TEST_USER_PASSWORD')
+
+    del data['role']
 
     response = client.put('/users/%s' % user_id, json=data, headers=auth_header())
     json_response = response.get_json()

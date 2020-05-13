@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 U = TypeVar('U', bound='User')
 
+
 class User(BaseModel, UserMixin):
     class Meta:
         table_name = 'users'
@@ -136,7 +137,12 @@ class User(BaseModel, UserMixin):
 
     @staticmethod
     def ensure_password(plain_text: str) -> str:
-        return hash_password(plain_text)
+        hashed_password = None
+
+        if plain_text:
+            hashed_password = hash_password(plain_text)
+
+        return hashed_password
 
 
 user_datastore = PeeweeUserDatastore(db, User, Role, None)
