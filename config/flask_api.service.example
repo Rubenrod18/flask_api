@@ -3,11 +3,11 @@ Description=uWSGI instance to serve flask_api
 After=network.target
 
 [Service]
-User=ubuntu
+User=<username>
 Group=www-data
-WorkingDirectory=/home/ubuntu/develop/flask_api
-Environment="PATH=/home/ubuntu/develop/flask_api/venv/bin"
-ExecStart=/home/ubuntu/develop/flask_api/venv/bin/uwsgi --ini uwsgi.ini
+WorkingDirectory=/<path>/flask_api
+Environment="PATH=/<path>/flask_api/venv/bin"
+ExecStart=/<path>/flask_api/venv/bin/uwsgi --ini uwsgi.ini
 
 [Install]
 WantedBy=multi-user.target

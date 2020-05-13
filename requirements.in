@@ -18,3 +18,5 @@ python-docx
 python-dotenv
 uwsgi
 flower
+supervisor
+supervisord-dependent-startup

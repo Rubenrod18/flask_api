@@ -4,8 +4,11 @@ Prerequisites:
 - sudo apt-get update
 - sudo apt-get install libreoffice-writer libxml2-dev libxslt1-dev
   libxslt1.1 libffi-dev librabbitmq-dev rabbitmq-server cmake libtool
-  autoconf
+  autoconf supervisor nginx
 
+Run next commands for tasks monitoring:
+- sudo rabbitmq-plugins enable rabbitmq_management
+- sudo service rabbitmq-server restart
 
 For logging configuration this application use [logrotate](https://linux.die.net/man/8/logrotate). The config
 file is defined you only need:

@@ -1,0 +1,9 @@
+[program:celery]
+user=<username>
+directory=/<path>/flask_api
+command=/<path>/flask_api/venv/bin/celery -A app.celery worker -l info
+autostart=false
+dependent_startup=true
+autorestart=true
+stdout_logfile=/<path>/flask_api/log/celery/celery.log
+redirect_stderr=true
