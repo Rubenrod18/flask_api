@@ -24,22 +24,22 @@ def after_request(response: Response) -> Response:
     return response
 
 
-@app.cli.command('init-db')
+@app.cli.command('init-db', help='Create database tables')
 def db():
     init_database()
 
 
-@app.cli.command('migrate')
+@app.cli.command('migrate', help='Update database schema')
 def migrations():
     init_migrations(False)
 
 
-@app.cli.command('migrate-rollback')
+@app.cli.command('migrate-rollback', help='Revert last migration saved in database')
 def migrations():
     init_migrations(True)
 
 
-@app.cli.command('seed')
+@app.cli.command('seed', help='Fill database with fake data')
 def seeds():
     init_seed()
 
