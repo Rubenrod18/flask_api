@@ -7,8 +7,8 @@ from flask_security import UserMixin, PeeweeUserDatastore, hash_password
 from itsdangerous import URLSafeSerializer, TimestampSigner
 from peewee import CharField, DateField, TimestampField, ForeignKeyField, BooleanField, FixedCharField
 
-from .base import BaseModel as BaseModel
-from .role import Role as RoleModel, Role
+from .base import Base as BaseModel
+from .role import Role as RoleModel
 from ..extensions import db_wrapper as db
 
 logger = logging.getLogger(__name__)
@@ -145,4 +145,4 @@ class User(BaseModel, UserMixin):
         return hashed_password
 
 
-user_datastore = PeeweeUserDatastore(db, User, Role, None)
+user_datastore = PeeweeUserDatastore(db, User, RoleModel, None)

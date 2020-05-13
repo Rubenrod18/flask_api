@@ -4,7 +4,7 @@ from datetime import datetime
 from flask_security import RoleMixin
 from peewee import CharField, TimestampField, TextField
 
-from .base import BaseModel
+from .base import Base as BaseModel
 
 logger = logging.getLogger(__name__)
 

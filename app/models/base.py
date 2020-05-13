@@ -7,7 +7,7 @@ from ..extensions import db_wrapper as db
 B = TypeVar('B', bound='BaseModel')
 
 
-class BaseModel(db.Model):
+class Base(db.Model):
     class Meta:
         database = db.database
 

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from random import randint
 
+from flask import current_app
 from peewee import fn
 
 from app.models.role import Role as RoleModel
@@ -47,7 +48,7 @@ class _UserFactory():
             'email': params.get('email') or fake.random_element(
                 [fake.email(), fake.safe_email(), fake.free_email(), fake.company_email()]),
             'genre': params.get('genre') or fake.random_element(['m', 'f']),
-            'password': params.get('password') or '123456',
+            'password': params.get('password') or current_app.config.get('TEST_USER_PASSWORD'),
             'birth_date': params.get('birth_date') or birth_date.strftime('%Y-%m-%d'),
             'active': params.get('active') or fake.boolean(),
             'created_at': created_at,
