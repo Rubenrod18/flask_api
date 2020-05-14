@@ -1,4 +1,6 @@
+import magic
 from cerberus import Validator
+from flask import current_app
 
 from app.models.user import User as UserModel
 from app.utils import BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name
@@ -26,7 +28,7 @@ class MyValidator(Validator):
         class_name = exists.get('class_name')
         model_field = exists.get('field_name')
         only_deleted = exists.get('only_deleted', False)
-        message = 'Doesn\'t exists in database'
+        message = exists.get('message', 'Doesn\'t exists in database')
 
         model = class_for_name(module_name, class_name)
         query_field = getattr(model, model_field)
@@ -52,7 +54,7 @@ class MyValidator(Validator):
         class_name = exists.get('class_name')
         model_field = exists.get('field_name')
         only_deleted = exists.get('only_deleted', False)
-        message = 'Already exists'
+        message = exists.get('message', 'Already exists')
 
         model = class_for_name(module_name, class_name)
         query_field = getattr(model, model_field)
@@ -68,6 +70,16 @@ class MyValidator(Validator):
         if row:
             self._error(field, message)
 
+    def _validate_valid_mime_type(self, mime_types, field, value):
+        """Test if a request file is valid.
+
+        The rule's arguments are validated against this schema:
+        {'type': 'list'}
+        """
+        file_content_type = magic.from_buffer(value, mime=True)
+
+        if not file_content_type in mime_types:
+            self._error(field, 'file invalid')
 
 def user_model_schema(is_creation: bool = True) -> dict:
     """Cerberus schema for validating user fields.
@@ -259,3 +271,82 @@ def user_login_schema() -> dict:
 
 def confirm_reset_password_schema() -> dict:
     return PASSWORD_SCHEMA
+
+
+def document_save_model_schema() -> dict:
+    return {
+        'document': {
+            'type': 'dict',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'schema': {
+                'mime_type': {
+                    'type': 'string',
+                    'required': True,
+                    'empty': False,
+                    'nullable': False,
+                    'allowed': current_app.config.get('ALLOWED_MIME_TYPES'),
+                },
+                'filename': {
+                    'type': 'string',
+                    'required': True,
+                    'empty': False,
+                    'nullable': False,
+                },
+                'file': {
+                    'type': 'binary',
+                    'required': True,
+                    'empty': False,
+                    'nullable': False,
+                    'valid_mime_type': current_app.config.get('ALLOWED_MIME_TYPES'),
+                },
+            },
+        },
+    }
+
+
+def document_update_model_schema() -> dict:
+    return {
+        'id': {
+            'type': 'integer',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'no_exists': {
+                'module_name': 'app.models.document',
+                'class_name': 'Document',
+                'field_name': 'id',
+                'only_deleted': True,
+                'message': 'Already deleted',
+            },
+        },
+        'document': {
+            'type': 'dict',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'schema': {
+                'mime_type': {
+                    'type': 'string',
+                    'required': True,
+                    'empty': False,
+                    'nullable': False,
+                    'allowed': current_app.config.get('ALLOWED_MIME_TYPES'),
+                },
+                'filename': {
+                    'type': 'string',
+                    'required': True,
+                    'empty': False,
+                    'nullable': False,
+                },
+                'file': {
+                    'type': 'binary',
+                    'required': True,
+                    'empty': False,
+                    'nullable': False,
+                    'valid_mime_type': current_app.config.get('ALLOWED_MIME_TYPES'),
+                },
+            },
+        },
+    }

@@ -20,3 +20,4 @@ uwsgi
 flower
 supervisor
 supervisord-dependent-startup
+python-magic
