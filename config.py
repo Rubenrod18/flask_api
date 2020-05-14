@@ -98,6 +98,11 @@ class Config(metaclass=Meta):
 
     RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
 
+    ALLOWED_MIME_TYPES = [
+        'application/pdf',
+        'application/vnd.ms-excel',
+    ]
+
 
 class ProdConfig(Config):
     """Production configuration options."""

@@ -1,6 +1,6 @@
 from app.models.role import Role as RoleModel
+from database import seed_actions
 from database.factories import Factory
-from database.seeds import seed_actions
 
 class RoleSeeder():
     name = 'RoleSeeder'

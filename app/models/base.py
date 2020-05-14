@@ -21,7 +21,7 @@ class Base(db.Model):
         if self.deleted_at is None:
             self.updated_at = current_date
 
-        return super(BaseModel, self).save(*args, **kwargs)
+        return super(Base, self).save(*args, **kwargs)
 
     @abstractmethod
     def serialize(self, ignore_fields: list = None) -> dict:

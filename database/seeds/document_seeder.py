@@ -1,5 +1,5 @@
+from database import seed_actions
 from database.factories import Factory
-from database.seeds import seed_actions
 
 
 class DocumentSeeder():

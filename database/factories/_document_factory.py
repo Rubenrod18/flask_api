@@ -1,6 +1,8 @@
+import mimetypes
 import uuid
 from datetime import timedelta, datetime
 from random import randint
+from shutil import copyfile
 
 from flask import current_app
 from peewee import fn
@@ -30,20 +32,23 @@ class _DocumentFactory():
                       .get()
                       .id)
 
-        file_extension = fake.random_element(['xlsx', 'pdf'])
-        mime_types = {
-            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'pdf': 'application/pdf',
-        }
+        mime_type = fake.random_element([
+            'application/pdf',
+            # TODO: add more MIME types
+        ])
+        file_extension = mimetypes.guess_extension(mime_type).replace('.', '')
+        internal_filename = '%s.%s' % (uuid.uuid1().hex, file_extension)
 
-        internal_name = '%s.%s' % (uuid.uuid1().hex, file_extension)
+        pdf_file = '%s/example.pdf' % current_app.config.get('STORAGE_DIRECTORY')
+        abs_file = '%s/%s' % (current_app.config.get('STORAGE_DIRECTORY'), internal_filename)
+        copyfile(pdf_file, abs_file)
 
         data = {
             'created_by': params.get('created_by') or created_by,
             'name': params.get('name') or fake.file_name(category='office', extension=file_extension),
-            'internal_name': params.get('internal_name') or internal_name,
-            'mime_type': params.get('mime_type') or mime_types.get(file_extension),
-            'filepath': current_app.config.get('STORAGE_DIRECTORY'),
+            'internal_filename': params.get('internal_filename') or internal_filename,
+            'mime_type': params.get('mime_type') or mime_type,
+            'directory_path': current_app.config.get('STORAGE_DIRECTORY'),
             'size': params.get('size', fake.random_int(2000000, 10000000)), # Between 2MB to 10MB
             'created_at': created_at,
             'updated_at': updated_at,
@@ -61,12 +66,12 @@ class _DocumentFactory():
             document = DocumentModel()
             document.created_by = data.get('created_by')
             document.name = data.get('name')
-            document.internal_name = data.get('internal_name')
+            document.internal_filename = data.get('internal_filename')
             document.mime_type = data.get('mime_type')
-            document.filepath = data.get('filepath')
+            document.directory_path = data.get('directory_path')
             document.size = data.get('size')
             document.created_at = data.get('created_at')
-            document.update_at = data.get('updated_at')
+            document.updated_at = data.get('updated_at')
             document.deleted_at = data.get('deleted_at')
 
         return document
