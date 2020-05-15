@@ -24,6 +24,10 @@ class Document(BaseModel):
     updated_at = TimestampField()
     deleted_at = TimestampField(default=None, null=True)
 
+    @property
+    def url(self):
+        return url_for('documents.documentresource', document_id=self.id, _external=True)
+
     def get_filepath(self):
         return '%s/%s' % (self.directory_path, self.internal_filename)
 
@@ -43,7 +47,7 @@ class Document(BaseModel):
             'name': data.get('name'),
             'mime_type': data.get('mime_type'),
             'size': data.get('size'),
-            'url': url_for('documents.documentresource', document_id=data.get('id'), _external=True),
+            'url': self.url,
             'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
             'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
             'deleted_at': deleted_at,

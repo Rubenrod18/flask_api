@@ -7,6 +7,9 @@ BIRTH_DATE_REGEX = (r'^(19[0-9]{2}|2[0-9]{3})'  # Year
 EMAIL_REGEX = (r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 TOKEN_REGEX = r'^Bearer\s(\S+)$'
 
+class FileEmptyError(OSError):
+    pass
+
 
 def class_for_name(module_name: str, class_name: str) -> any:
     # load the module, will raise ImportError if module cannot be loaded

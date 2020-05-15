@@ -102,17 +102,21 @@ class User(BaseModel, UserMixin):
         return s2.sign(data).decode('utf-8')
 
     @classmethod
-    def get_fields(cls, ignore_fields: list = None, sort_order: list = None) -> set:
-        if ignore_fields is None:
-            ignore_fields = []
-
-        if sort_order is None:
-            sort_order = []
+    def get_fields(cls, exclude: list = None, include: list = None, sort_order: list = None) -> set:
+        exclude = exclude or []
+        include = include or []
+        sort_order = sort_order or []
 
         fields = set(filter(
-            lambda x: x not in ignore_fields,
+            lambda x: x not in exclude,
             list(cls._meta.fields)
         ))
+
+        if include:
+            fields = set(filter(
+                lambda x: x in include,
+                list(cls._meta.fields)
+            ))
 
         if sort_order and len(fields) == len(sort_order):
             fields = sorted(fields, key=lambda x: sort_order.index(x))
