@@ -1,7 +1,7 @@
 [program:flower]
 user=<username>
 directory=/<path>/flask_api
-command=/<path>/flask_api/venv/bin/flower -A app.celery --broker_api=http://guest:guest@127.0.0.1:15672/api/
+command=/<path>/flask_api/venv/bin/flower -A app.celery --broker_api=http://guest:guest@127.0.0.1:15672/api/ --port=5555
 --url_prefix=flower
 autostart=false
 dependent_startup=true
