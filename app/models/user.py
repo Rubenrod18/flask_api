@@ -95,11 +95,11 @@ class User(BaseModel, UserMixin):
         expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
         salt = expire_in.__str__()
 
-        s1 = URLSafeSerializer(secret_key, salt)
-        s2 = TimestampSigner(secret_key)
+        url_safe_serializer = URLSafeSerializer(secret_key, salt)
+        timestamp_signer = TimestampSigner(secret_key)
 
-        data = s1.dumps({'user_id': self.id})
-        return s2.sign(data).decode('utf-8')
+        data = url_safe_serializer.dumps({'user_id': self.id})
+        return timestamp_signer.sign(data).decode('utf-8')
 
     @classmethod
     def get_fields(cls, exclude: list = None, include: list = None, sort_order: list = None) -> set:
@@ -129,12 +129,12 @@ class User(BaseModel, UserMixin):
         expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
         salt = expire_in.__str__()
 
-        s1 = URLSafeSerializer(secret_key, salt)
-        s2 = TimestampSigner(secret_key)
+        url_safe_serializer = URLSafeSerializer(secret_key, salt)
+        timestamp_signer = TimestampSigner(secret_key)
 
         try:
-            parsed_token = s2.unsign(token, max_age=expire_in).decode('utf-8')
-            user_id = s1.loads(parsed_token)['user_id']
+            parsed_token = timestamp_signer.unsign(token, max_age=expire_in).decode('utf-8')
+            user_id = url_safe_serializer.loads(parsed_token)['user_id']
         except:
             return None
         return User.get_or_none(user_id)
