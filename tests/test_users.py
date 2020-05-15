@@ -164,26 +164,18 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
 def test_export_pdf_endpoint(client: FlaskClient, auth_header: any):
     response = client.post('/users/pdf', headers=auth_header())
 
-    try:
-        base64.decodebytes(response.data)
-    except binascii.Error:
-        is_pdf = False
-    else:
-        is_pdf = True
+    json_response = response.get_json()
 
-    assert 200 == response.status_code
-    assert is_pdf
+    assert 202 == response.status_code
+    assert json_response.get('task')
+    assert json_response.get('url')
 
 
 def test_export_excel_endpoint(client: FlaskClient, auth_header: any):
     response = client.post('/users/xlsx', headers=auth_header())
 
-    try:
-        base64.decodebytes(response.data)
-    except binascii.Error:
-        is_excel = False
-    else:
-        is_excel = True
+    json_response = response.get_json()
 
-    assert 200 == response.status_code
-    assert is_excel
+    assert 202 == response.status_code
+    assert json_response.get('task')
+    assert json_response.get('url')
