@@ -39,6 +39,7 @@ class Config(metaclass=Meta):
     DEVELOPMENT = False
     DEBUG = False
     TESTING = False
+    SERVER_NAME = os.getenv('SERVER_NAME')
 
     # Flask-Security-Too
     # generated using: secrets.token_urlsafe()
@@ -89,6 +90,8 @@ class Config(metaclass=Meta):
     CELERY_TASK_DEFAULT_RATE_LIMIT = 3
 
     # Mr Developer
+    HOME = os.getenv('HOME')
+
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
     TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')
 
@@ -113,14 +116,12 @@ class DevConfig(Config):
     """Development configuration options."""
     DEVELOPMENT = True
     DEBUG = True
-    SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')
 
 
 class TestConfig(Config):
     """Testing configuration options."""
     DEVELOPMENT = True
     TESTING = True
-    SERVER_NAME = os.getenv('SERVER_NAME', '127.0.0.1:5000')
 
     DATABASE = {
         'name': 'test.db',
