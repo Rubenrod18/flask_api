@@ -1,10 +1,10 @@
 [program:celery]
-user=<username>
-directory=/<path>/flask_api
-command=/<path>/flask_api/venv/bin/celery -A app.celery worker -l info -E
+user=username
+directory=/path/flask_api
+command=/path/flask_api/venv/bin/celery -A app.celery worker -l info -E
 autostart=false
 dependent_startup=true
 dependent_startup_wait_for=uwsgi:running
 autorestart=true
-stdout_logfile=/<path>/flask_api/log/celery/celery.log
+stdout_logfile=/path/flask_api/log/celery/celery.log
 redirect_stderr=true

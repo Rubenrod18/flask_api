@@ -1,4 +1,4 @@
-/<path>/flask_api/log/app/*.log {
+/path/flask_api/log/app/*.log {
 	# Log files are rotated every day.
     daily
 
@@ -37,5 +37,5 @@
     # specifies the user name who will own the log file, and group specifies the group the log file will belong to. Any
     # of the log file attributes may be omitted, in which case those attributes for the new file will use the same
     # values as the original log file for the omitted attributes. This option can be disabled using the nocreate option.
-	create 664 <username> <usergroup>
+	create 664 username usergroup
 }
