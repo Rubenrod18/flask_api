@@ -7,6 +7,7 @@ BIRTH_DATE_REGEX = (r'^(19[0-9]{2}|2[0-9]{3})'  # Year
 EMAIL_REGEX = (r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 TOKEN_REGEX = r'^Bearer\s(\S+)$'
 
+
 class FileEmptyError(OSError):
     pass
 
@@ -41,10 +42,8 @@ def find_longest_word(word_list: list) -> str:
 
 
 def ignore_keys(data: dict, exclude: list) -> dict:
-    new_dict = dict({
-        (k,v)
-        for k, v in data.items()
-        if k not in exclude
+    return dict({
+        item: data[item]
+        for item in data
+        if item not in exclude
     })
-
-    return new_dict

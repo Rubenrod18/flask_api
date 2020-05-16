@@ -1,17 +1,14 @@
 import logging
 from datetime import datetime
 
-import docx
 from cerberus import Validator
-from docx import Document
 from flask_login import current_user
-from flask_restful import current_app, Api
-from flask import Blueprint, request, send_file, url_for
+from flask_restful import Api
+from flask import Blueprint, request, url_for
 
 from app.celery.tasks import create_user_email, export_users_excel, export_users_pdf
 from .base import BaseResource
 from ..models.user import User as UserModel
-from ..libs.libreoffice import convert_to
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
 from ..utils.decorators import token_required
 

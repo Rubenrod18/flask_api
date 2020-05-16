@@ -1,6 +1,5 @@
 import mimetypes
 import os
-import time
 import uuid
 from datetime import datetime
 from tempfile import NamedTemporaryFile
@@ -124,7 +123,6 @@ def export_users_excel(self, created_by: int, user_list: list):
                 'total': self.total,
                 'status': 'In progress...',
             })
-            time.sleep(2)
 
         return len(excel_longest_word)
 
@@ -208,7 +206,6 @@ def export_users_pdf(self, created_by: int, user_list: list):
                 'total': self.total,
                 'status': 'In progress...',
             })
-            time.sleep(2)
 
     self.total = len(user_list) + 2
     tempfile = NamedTemporaryFile(suffix='.docx')

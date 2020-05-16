@@ -121,9 +121,20 @@ class DevConfig(Config):
 class TestConfig(Config):
     """Testing configuration options."""
     DEVELOPMENT = True
+    DEBUG = True
     TESTING = True
 
     DATABASE = {
         'name': 'test.db',
         'engine': 'peewee.SqliteDatabase',
+        # Sqlite3 recommended settings
+        'pragmas': {
+            'journal_mode': 'wal',
+            'cache_size': -1 * 64000,  # 64MB
+            'foreign_keys': 1,
+            'ignore_check_constraints': 0,
+            'synchronous': 0,
+        },
     }
+
+    STORAGE_DIRECTORY = '%s/storage/test' % Config.ROOT_DIRECTORY
