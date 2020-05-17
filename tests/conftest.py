@@ -7,8 +7,20 @@ from flask_security.passwordless import generate_login_token
 from app import create_app
 from app.extensions import db_wrapper
 from app.models.user import User as UserModel
-from database.migrations import init_db
+from database.factories import Factory
+from database.migrations import init_database
 from database.seeds import init_seed
+
+
+def _remove_test_files(storage_path: str) -> None:
+    print(' Deleting test files...')
+    dirs = os.listdir(storage_path)
+    dirs.remove(os.path.basename('example.pdf'))
+
+    for filename in dirs:
+        abs_path = f'{storage_path}/{filename}'
+        os.remove(abs_path)
+    print(' Deleted test files!')
 
 
 @pytest.fixture
@@ -16,10 +28,12 @@ def app():
     app = create_app('config.TestConfig')
 
     with app.app_context():
-        init_db()
+        init_database()
         init_seed()
+        yield app
 
-    yield app
+    storage_path = app.config.get('STORAGE_DIRECTORY')
+    _remove_test_files(storage_path)
 
     print(' Deleting test database...')
     os.remove(app.config.get('DATABASE').get('name'))
@@ -35,9 +49,10 @@ def client(app: Flask):
 def runner(app: Flask):
     return app.test_cli_runner()
 
+
 @pytest.fixture
 def auth_header(app: Flask):
-    def _create_auth_header(user_email: str = None):
+    def _create_auth_header(user_email: str = None) -> dict:
         if user_email is None:
             user_email = os.getenv('TEST_USER_EMAIL')
 
@@ -51,3 +66,11 @@ def auth_header(app: Flask):
         }
 
     return _create_auth_header
+
+
+@pytest.fixture
+def factory(app: Flask):
+    def _create_factory(model_name: str, num: int = 1):
+        return Factory(model_name, num)
+
+    return _create_factory

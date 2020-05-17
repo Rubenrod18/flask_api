@@ -1,11 +1,22 @@
-from app.models.role import Role as RoleModel
-from app.models.user import User as UserModel
+from app.extensions import db_wrapper
+from database.seeds.role_seeder import RoleSeeder
+from database.seeds.user_seeder import UserSeeder
+from database.seeds.document_seeder import DocumentSeeder
+
+
+def get_seeders() -> list:
+    return [
+        RoleSeeder,
+        UserSeeder,
+        DocumentSeeder,
+    ]
+
 
 def init_seed() -> None:
-    print(' Seeding roles table...')
-    RoleModel.seed()
-    print(' Roles table seeded!')
+    seeders = get_seeders()
 
-    print(' Seeding users table...')
-    UserModel.seed()
-    print(' Users table seeded!')
+    with db_wrapper.database.atomic():
+        for seed in seeders:
+            seed()
+        print(' Database seeding completed successfully.')
+    db_wrapper.database.close()

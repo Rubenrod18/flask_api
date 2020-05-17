@@ -6,7 +6,11 @@ from ..extensions import db_wrapper as db
 
 B = TypeVar('B', bound='BaseModel')
 
-class BaseModel(db.Model):
+
+class Base(db.Model):
+    class Meta:
+        database = db.database
+
     @abstractmethod
     def save(self, *args: list, **kwargs: dict) -> int:
         current_date = datetime.utcnow()
@@ -17,7 +21,7 @@ class BaseModel(db.Model):
         if self.deleted_at is None:
             self.updated_at = current_date
 
-        return super(BaseModel, self).save(*args, **kwargs)
+        return super(Base, self).save(*args, **kwargs)
 
     @abstractmethod
     def serialize(self, ignore_fields: list = None) -> dict:
@@ -35,13 +39,3 @@ class BaseModel(db.Model):
                 list(self._meta.fields)
             )
         )
-
-    @classmethod
-    @abstractmethod
-    def fake(self) -> B:
-        return B
-
-    @classmethod
-    @abstractmethod
-    def seed(self) -> None:
-        return None

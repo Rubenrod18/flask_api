@@ -1,18 +1,12 @@
 import logging
-from datetime import datetime, timedelta
-from random import randint
-from typing import TypeVar
+from datetime import datetime
 
 from flask_security import RoleMixin
 from peewee import CharField, TimestampField, TextField
 
-from . import fake
-from .base import BaseModel
-from ..extensions import db_wrapper as db
+from .base import Base as BaseModel
 
 logger = logging.getLogger(__name__)
-
-R = TypeVar('R', bound='Role')
 
 
 class Role(BaseModel, RoleMixin):
@@ -52,35 +46,3 @@ class Role(BaseModel, RoleMixin):
             pass
 
         return data
-
-    @classmethod
-    def fake(self) -> R:
-        current_date = datetime.utcnow()
-
-        created_at = current_date - timedelta(days=randint(1, 100), minutes=randint(0, 60))
-        updated_at = created_at
-        deleted_at = None
-
-        if randint(0, 1):
-            deleted_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
-        else:
-            updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
-
-        role = Role()
-        role.name = fake.word()
-        role.description = fake.sentence()
-        role.slug = fake.slug()
-        role.created_at = created_at
-        role.updated_at = updated_at
-        role.deleted_at = deleted_at
-
-        return role
-
-    @classmethod
-    def seed(self) -> None:
-        with db.database.atomic():
-            for i in range(10):
-                role = Role.fake()
-                role.save()
-
-        db.database.close()

@@ -7,7 +7,7 @@ from flask_restful import Api
 
 from .base import BaseResource
 from app.models.role import Role as RoleModel
-from app.utils.cerberus_schema import role_model_schema, search_model_schema
+from app.utils.cerberus_schema import role_model_schema, search_model_schema, MyValidator
 from ..utils.decorators import token_required
 
 blueprint = Blueprint('roles', __name__, url_prefix='/roles')
@@ -26,7 +26,7 @@ class NewRoleResource(RoleBaseResource):
     def post(self) -> tuple:
         data = request.get_json()
 
-        v = Validator(schema=role_model_schema())
+        v = MyValidator(schema=role_model_schema())
         v.allow_unknown = False
 
         if not v.validate(data):
@@ -34,8 +34,6 @@ class NewRoleResource(RoleBaseResource):
                        'message': 'validation error',
                        'fields': v.errors,
                    }, 422
-
-        data['slug'] = data['name'].lower().replace(' ', '-')
 
         role = RoleModel.create(**data)
         role_dict = role.serialize()
@@ -70,7 +68,7 @@ class RoleResource(RoleBaseResource):
     def put(self, role_id: int) -> tuple:
         data = request.get_json()
 
-        v = Validator(schema=role_model_schema())
+        v = MyValidator(schema=role_model_schema(False))
         v.allow_unknown = False
 
         if not v.validate(data):
@@ -84,7 +82,6 @@ class RoleResource(RoleBaseResource):
 
         if role:
             data['id'] = role_id
-            data['slug'] = data['name'].lower().replace(' ', '-')
             RoleModel(**data).save()
 
             role = (RoleModel.get_or_none(RoleModel.id == role_id,
@@ -133,7 +130,7 @@ class RoleResource(RoleBaseResource):
 
 
 @api.resource('/search')
-class UsersSearchResource(RoleBaseResource):
+class RolesSearchResource(RoleBaseResource):
     @token_required
     def post(self) -> tuple:
         data = request.get_json()

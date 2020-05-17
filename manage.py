@@ -1,33 +1,18 @@
-import logging
 import os
-from datetime import datetime
 
 from flask import Response
-from flask_script import Manager
 from dotenv import load_dotenv
 
-from app import create_app
-from database.migrations import init_db
+from app import create_app, init_logging
+from app.extensions import db_wrapper
+from database.migrations import init_database, init_migrations
 from database.seeds import init_seed
 
-# Import environment file variables
 load_dotenv()
 
-# Log configuration
-log_dirname = 'logs/'
-log_filename = '{}.log'.format(datetime.utcnow().strftime('%Y%m%d'))
-log_fullpath = '{}{}'.format(log_dirname, log_filename)
-
-if not os.path.exists(log_dirname):
-    os.mkdir(log_dirname)
-
-FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-logging.basicConfig(filename=log_fullpath, format=FORMAT, level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-# App
 app = create_app(os.getenv('FLASK_CONFIG'))
-manager = Manager(app)
+
+init_logging(app)
 
 
 @app.after_request
@@ -39,15 +24,30 @@ def after_request(response: Response) -> Response:
     return response
 
 
-@manager.command
-def migrate():
-    init_db()
+@app.cli.command('init-db', help='Create database tables')
+def db():
+    init_database()
 
 
-@manager.command
-def seed():
+@app.cli.command('migrate', help='Update database schema')
+def migrations():
+    init_migrations(False)
+
+
+@app.cli.command('migrate-rollback', help='Revert last migration saved in database')
+def migrations():
+    init_migrations(True)
+
+
+@app.cli.command('seed', help='Fill database with fake data')
+def seeds():
     init_seed()
 
 
+@app.shell_context_processor
+def make_shell_context():
+    return {'app': app, 'db_wrapper': db_wrapper}
+
+
 if __name__ == '__main__':
-    manager.run()
+    app.run()

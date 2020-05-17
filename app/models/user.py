@@ -1,16 +1,14 @@
 import logging
-import os
-import time
-from datetime import datetime, date, timedelta
-from random import randint
+from datetime import datetime, date
 from typing import TypeVar
 
+from flask import current_app
 from flask_security import UserMixin, PeeweeUserDatastore, hash_password
-from peewee import CharField, DateField, TimestampField, ForeignKeyField, fn, BooleanField
+from itsdangerous import URLSafeSerializer, TimestampSigner
+from peewee import CharField, DateField, TimestampField, ForeignKeyField, BooleanField, FixedCharField
 
-from . import fake
-from .base import BaseModel as BaseModel
-from .role import Role as RoleModel, Role
+from .base import Base as BaseModel
+from .role import Role as RoleModel
 from ..extensions import db_wrapper as db
 
 logger = logging.getLogger(__name__)
@@ -22,11 +20,13 @@ class User(BaseModel, UserMixin):
     class Meta:
         table_name = 'users'
 
+    created_by = ForeignKeyField('self', null=True, backref='children', column_name='created_by')
     role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
-    email = CharField(null=False, unique=True)
+    email = CharField(unique=True)
     password = CharField(null=False)
+    genre = FixedCharField(max_length=1, choices=(('m', 'male',), ('f', 'female')), null=True)
     birth_date = DateField()
     active = BooleanField(default=True)
     created_at = TimestampField(default=None)
@@ -43,7 +43,7 @@ class User(BaseModel, UserMixin):
             self.updated_at = current_date
 
         if self.password:
-            self.password = hash_password(self.password)
+            self.password = self.ensure_password(self.password)
 
         return super(User, self).save(*args, **kwargs)
 
@@ -69,11 +69,13 @@ class User(BaseModel, UserMixin):
             'name': data.get('name'),
             'last_name': data.get('last_name'),
             'email': data.get('email'),
+            'genre': data.get('genre'),
             'birth_date': birth_date,
             'active': active,
             'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
             'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
             'deleted_at': deleted_at,
+            'created_by': data.get('created_by'),
             'role': self.role.serialize(),
         }
 
@@ -88,76 +90,63 @@ class User(BaseModel, UserMixin):
 
         return data
 
-    @classmethod
-    def get_fields(self, ignore_fields: list = None, sort_order: list = None) -> set:
-        if ignore_fields is None:
-            ignore_fields = []
+    def get_reset_token(self) -> str:
+        secret_key = current_app.config.get('SECRET_KEY')
+        expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
+        salt = expire_in.__str__()
 
-        if sort_order is None:
-            sort_order = []
+        url_safe_serializer = URLSafeSerializer(secret_key, salt)
+        timestamp_signer = TimestampSigner(secret_key)
+
+        data = url_safe_serializer.dumps({'user_id': self.id})
+        return timestamp_signer.sign(data).decode('utf-8')
+
+    @classmethod
+    def get_fields(cls, exclude: list = None, include: list = None, sort_order: list = None) -> set:
+        exclude = exclude or []
+        include = include or []
+        sort_order = sort_order or []
 
         fields = set(filter(
-            lambda x: x not in ignore_fields,
-            list(self._meta.fields)
+            lambda x: x not in exclude,
+            list(cls._meta.fields)
         ))
+
+        if include:
+            fields = set(filter(
+                lambda x: x in include,
+                list(cls._meta.fields)
+            ))
 
         if sort_order and len(fields) == len(sort_order):
             fields = sorted(fields, key=lambda x: sort_order.index(x))
 
         return fields
 
-    @classmethod
-    def fake(self, data: dict = None) -> U:
-        if data is None:
-            data = {}
+    @staticmethod
+    def verify_reset_token(token: str) -> any:
+        secret_key = current_app.config.get('SECRET_KEY')
+        expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
+        salt = expire_in.__str__()
 
-        birth_date = fake.date_between(start_date='-50y', end_date='-5y')
-        current_date = datetime.utcnow()
+        url_safe_serializer = URLSafeSerializer(secret_key, salt)
+        timestamp_signer = TimestampSigner(secret_key)
 
-        created_at = current_date - timedelta(days=randint(1, 100), minutes=randint(0, 60))
-        updated_at = created_at
-        deleted_at = None
+        try:
+            parsed_token = timestamp_signer.unsign(token, max_age=expire_in).decode('utf-8')
+            user_id = url_safe_serializer.loads(parsed_token)['user_id']
+        except:
+            return None
+        return User.get_or_none(user_id)
 
-        if randint(0, 1) and 'deleted_at' not in data:
-            deleted_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
-        else:
-            updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
+    @staticmethod
+    def ensure_password(plain_text: str) -> str:
+        hashed_password = None
 
-        role = (RoleModel.select()
-                .where(RoleModel.deleted_at.is_null())
-                .order_by(fn.Random())
-                .get())
+        if plain_text:
+            hashed_password = hash_password(plain_text)
 
-        user = User()
-        user.role = data.get('role') if data.get('role') else role
-        user.name = data.get('name') if data.get('name') else fake.name()
-        user.last_name = data.get('last_name') if data.get('last_name') else fake.last_name()
-        user.email = data.get('email') if data.get('email') else fake.email()
-        user.password = data.get('password') if data.get('password') else '123456'
-        user.birth_date = data.get('birth_date') if data.get('birth_date') else birth_date.strftime('%Y-%m-%d')
-        user.active = data.get('active') if data.get('active') else fake.boolean()
-        user.created_at = created_at
-        user.updated_at = updated_at
-        user.deleted_at = deleted_at
-
-        return user
-
-    @classmethod
-    def seed(self) -> None:
-        with db.database.atomic():
-            for i in range(10):
-                user = self.fake()
-                user.save()
-
-            user = self.fake({
-                'email': os.environ.get('TEST_USER_EMAIL'),
-                'password': os.environ.get('TEST_USER_PASSWORD'),
-                'deleted_at': None,
-                'active': True,
-            })
-            user.save()
-
-        db.database.close()
+        return hashed_password
 
 
-user_datastore = PeeweeUserDatastore(db, User, Role, None)
+user_datastore = PeeweeUserDatastore(db, User, RoleModel, None)

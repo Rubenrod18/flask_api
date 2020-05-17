@@ -1,0 +1,41 @@
+/path/flask_api/log/app/*.log {
+	# Log files are rotated every day.
+    daily
+
+	# If the log file is missing, go on to the next one without issuing an error message.
+    missingok
+
+	# Log files are rotated count times before being removed or mailed to the address specified in a mail directive.
+    rotate 31
+
+	# Old versions of log files are compressed with gzip by default.
+    compress
+
+	# Postpone compression of the previous log file to the next rotation cycle.
+	# It can be used when some program cannot be told to close its logfile and thus might continue writing to the
+	# previous log file for some time.
+    delaycompress
+
+	# Do not rotate the log if it is empty.
+    notifempty
+
+	# Truncate the original log file in place after creating a copy, instead of moving the old log file and optionally
+	# creating a new one.
+    copytruncate
+
+	# Normally, prerotate and postrotate scripts are run for each log which is rotated and the absolute path to the log
+	# file is passed as first argument to the script. That means a single script may be run multiple times for log file
+	# entries which match multiple files (such as the /var/log/news/* example). If sharedscripts is specified, the
+	# scripts are only run once, no matter how many logs match the wildcarded pattern, and whole pattern is passed to
+	# them. However, if none of the logs in the pattern require rotating, the scripts will not be run at all. If the
+	# scripts exit with error, the remaining actions will not be executed for any logs. This option overrides the
+	# nosharedscripts option and implies create option.
+    sharedscripts
+
+    # Immediately after rotation (before the postrotate script is run) the log file is created (with the same name as
+    # the log file just rotated). mode specifies the mode for the log file in octal (the same as chmod(2)), owner
+    # specifies the user name who will own the log file, and group specifies the group the log file will belong to. Any
+    # of the log file attributes may be omitted, in which case those attributes for the new file will use the same
+    # values as the original log file for the omitted attributes. This option can be disabled using the nocreate option.
+	create 664 username usergroup
+}

@@ -1,0 +1,10 @@
+[program:uwsgi]
+user=username
+group=www-data
+directory=/path/flask_api
+command=/path/flask_api/venv/bin/uwsgi --ini /path/uwsgi.ini
+autostart=false
+dependent_startup=true
+autorestart=true
+stdout_logfile=/path/flask_api/log/uwsgi/uwsgi.log
+redirect_stderr=true

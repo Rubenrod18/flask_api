@@ -1,14 +1,15 @@
 # requirements.in
+Celery
 Faker
 Flask
 Flask-RESTful
-Flask-Script
 Flask-Security-Too
+SQLAlchemy
 XlsxWriter
 bcrypt
 cerberus
-commitizen
 coverage
+librabbitmq
 peewee
 pip-tools
 pytest
@@ -16,3 +17,7 @@ python-dateutil
 python-docx
 python-dotenv
 uwsgi
+flower
+supervisor
+supervisord-dependent-startup
+python-magic

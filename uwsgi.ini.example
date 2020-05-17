@@ -11,23 +11,24 @@ threads = true
 
 ; a couple of placeholder
 project_home = $(HOME)
-project_path = %(project_home)/develop/flask_api
+project_path = %(project_home)/flask_api
 
 ; chdir to app project dir and set pythonpath
 chdir = %(project_path)
 python_path = %(project_path)/venv
 
 ; bind on a file socket
-;socket = 127.0.0.1:3031
-socket = %(project_home)/sockets/flask_api.sock
+socket = %(project_home)/flask_api.sock
 
 ; log file location
-logto = %(project_home)/logs/flask_api.log
+logto = %(project_home)/flask_api.log
 
 ; ... with appropriate permissions - may be needed
 chmod-socket    = 664
-uid             = ubuntu
+uid             = username
 gid             = www-data
+; www-data group must be added to username user because uwsgi.
+chown-socket    = user-name:www-data
 
 ; clear environment on exit
 vacuum          = true
