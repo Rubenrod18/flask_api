@@ -21,7 +21,7 @@ All notable changes to this project will be documented in this file. See [standa
 * **users:** add recovery password feature ([e1e916e](https://github.com/rubenrod18/flask-api/commit/e1e916e925c3bdb8606d3f45548cd6b423760a6f))
 
 
-### build
+### Build
 
 * **pip:** update requirements.txt ([6193153](https://github.com/rubenrod18/flask-api/commit/6193153fb30dfe3af911a0f4c7e999c4ad6d0d8e))
 
@@ -68,7 +68,7 @@ All notable changes to this project will be documented in this file. See [standa
 * request search fields in search users, export PDF and export Excel endpoints ([2ae7ab7](https://github.com/rubenrod18/flask-api/commit/2ae7ab770499ed62d862506f4356a7c46c3c7b81))
 
 
-### build
+### Build
 
 * update requirements.txt ([f783e78](https://github.com/rubenrod18/flask-api/commit/f783e7848beaf13e5cc1fb67a7ddd42d55d572af))
 * update requirements.txt ([b6378ba](https://github.com/rubenrod18/flask-api/commit/b6378ba72f88289b811fa494893e21031338f22f))
