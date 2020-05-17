@@ -36,6 +36,5 @@ supervisor.conf
 venv
 venv2
 .idea
-log
 coverage_html_report
 node_modules
