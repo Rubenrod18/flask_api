@@ -12,6 +12,17 @@ from database.migrations import init_database
 from database.seeds import init_seed
 
 
+def _remove_test_files(storage_path: str) -> None:
+    print(' Deleting test files...')
+    dirs = os.listdir(storage_path)
+    dirs.remove(os.path.basename('example.pdf'))
+
+    for filename in dirs:
+        abs_path = f'{storage_path}/{filename}'
+        os.remove(abs_path)
+    print(' Deleted test files!')
+
+
 @pytest.fixture
 def app():
     app = create_app('config.TestConfig')
@@ -20,6 +31,9 @@ def app():
         init_database()
         init_seed()
         yield app
+
+    storage_path = app.config.get('STORAGE_DIRECTORY')
+    _remove_test_files(storage_path)
 
     print(' Deleting test database...')
     os.remove(app.config.get('DATABASE').get('name'))
@@ -56,7 +70,7 @@ def auth_header(app: Flask):
 
 @pytest.fixture
 def factory(app: Flask):
-    def _create_factory(model_name: str):
-        return Factory(model_name)
+    def _create_factory(model_name: str, num: int = 1):
+        return Factory(model_name, num)
 
     return _create_factory

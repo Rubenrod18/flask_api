@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def convert_to(folder: str, source: str) -> object:
+def convert_to(folder: str, source: str) -> str:
     logger.debug('Folder: %s' % folder)
     logger.debug('Word file: %s' % source)
 
@@ -24,11 +24,11 @@ def convert_to(folder: str, source: str) -> object:
         'pdf:writer_pdf_Export',
         '--outdir',
         folder,
-        source
+        source,
     ]
 
     process = subprocess.run(args, stdout=subprocess.PIPE,
-                             env={'$HOME': os.environ.get('HOME')})
+                             env={'$HOME': os.getenv('HOME')})
     logger.debug(process)
     filename = re.search('-> (.*?) using filter',
                          process.stdout.decode('utf-8'))

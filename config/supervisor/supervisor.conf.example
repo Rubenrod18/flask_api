@@ -168,9 +168,9 @@ serverurl=unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
 
 ; Mr Developer
 [eventlistener:dependentstartup]
-user=dev
-directory=/home/dev/projects/flask_api
-command=/home/dev/projects/flask_api/venv/bin/supervisord-dependent-startup
+user=username
+directory=/path/flask_api
+command=/path/flask_api/venv/bin/supervisord-dependent-startup
 autostart=true
 autorestart=unexpected
 startretries=0
@@ -178,4 +178,4 @@ exitcodes=0,3
 events=PROCESS_STATE
 
 [include]
-files = relative/directory/*.ini
+files = relative/directory/*.conf

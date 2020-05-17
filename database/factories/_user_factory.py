@@ -11,7 +11,7 @@ from database import fake
 
 
 class _UserFactory():
-    def _fill(self, params: dict, exclude: list) -> dict:
+    def _fill(self, params: dict, to_dict: bool, exclude: list) -> dict:
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 
@@ -56,10 +56,13 @@ class _UserFactory():
             'deleted_at': deleted_at,
         }
 
+        if to_dict:
+            data['role'] = data.get('role').serialize()
+
         return ignore_keys(data, exclude)
 
     def make(self, params: dict, to_dict: bool, exclude: list) -> UserModel:
-        data = self._fill(params, exclude)
+        data = self._fill(params, to_dict, exclude)
 
         if to_dict:
             user = data
@@ -81,9 +84,7 @@ class _UserFactory():
         return user
 
     def create(self, params: dict) -> UserModel:
-        exclude = []
-
-        data = self._fill(params, exclude)
+        data = self._fill(params, to_dict=False, exclude=[])
 
         return UserModel.create(**data)
 
@@ -91,6 +92,6 @@ class _UserFactory():
         data = []
 
         for item in range(total):
-            data.append(self.make(params, False, []))
+            data.append(self.make(params, to_dict=False, exclude=[]))
 
         UserModel.bulk_create(data)

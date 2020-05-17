@@ -2,6 +2,8 @@ import logging
 import os
 from pathlib import Path
 
+from app.utils import FileEmptyError
+
 logger = logging.getLogger(__name__)
 
 class FileStorage():
@@ -15,7 +17,7 @@ class FileStorage():
 
                 filesize = self.get_filesize(filename)
                 if filesize == 0:
-                    raise Exception(f'The file {filename} was created empty')
+                    raise FileEmptyError(f'The file {filename} was created empty')
 
                 return True
         except Exception as e:
@@ -26,6 +28,19 @@ class FileStorage():
             raise e
 
     @staticmethod
+    def rename(src: str, dst: str) -> None:
+        os.rename(src, dst)
+
+    @staticmethod
     def get_filesize(filename: str) -> int:
         p = Path(filename)
         return p.stat().st_size
+
+    @staticmethod
+    def get_basename(filename: str, include_path: bool = False) -> str:
+        if include_path:
+            basename = os.path.splitext(filename)[0]
+        else:
+            basename = os.path.splitext(os.path.basename(filename))[0]
+
+        return basename

@@ -2,7 +2,6 @@ import logging
 import os
 
 import flask
-from celery import Celery
 from flask import Flask
 
 from app import extensions
@@ -12,9 +11,6 @@ from app.blueprints import blueprints
 def create_app(env_config: str) -> Flask:
     app = flask.Flask(__name__)
     app.config.from_object(env_config)
-
-    celery = Celery(app.import_name)
-    celery.conf.update(app.config)
 
     init_app(app)
     register_blueprints(app)

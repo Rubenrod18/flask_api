@@ -14,7 +14,7 @@ def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any)
     data = factory('User').make(exclude=ignore_fields, to_dict=True)
     role = data.get('role')
 
-    data['role_id'] = role.id
+    data['role_id'] = role.get('id')
     data['password'] = os.getenv('TEST_USER_PASSWORD')
 
     del data['role']
@@ -32,12 +32,12 @@ def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any)
     assert json_data.get('updated_at') == json_data.get('created_at')
     assert json_data.get('deleted_at') is None
 
-    assert role.id == json_data.get('role').get('id')
-    assert role.name == json_data.get('role').get('name')
-    assert role.slug == json_data.get('role').get('slug')
-    assert role.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('role').get('created_at')
-    assert role.updated_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('role').get('updated_at')
-    assert role.deleted_at == json_data.get('role').get('deleted_at')
+    assert role.get('id') == json_data.get('role').get('id')
+    assert role.get('name') == json_data.get('role').get('name')
+    assert role.get('slug') == json_data.get('role').get('slug')
+    assert role.get('created_at') == json_data.get('role').get('created_at')
+    assert role.get('updated_at') == json_data.get('role').get('updated_at')
+    assert role.get('deleted_at') == json_data.get('role').get('deleted_at')
 
 
 def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
@@ -52,7 +52,7 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: an
     data = factory('User').make(to_dict=True, exclude=ignore_fields)
     role = data.get('role')
 
-    data['role_id'] = role.id
+    data['role_id'] = role.get('id')
     data['password'] = os.getenv('TEST_USER_PASSWORD')
 
     del data['role']
@@ -71,12 +71,12 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: an
     assert json_data.get('updated_at') >= json_data.get('created_at')
     assert json_data.get('deleted_at') is None
 
-    assert role.id == json_data.get('role').get('id')
-    assert role.name == json_data.get('role').get('name')
-    assert role.slug == json_data.get('role').get('slug')
-    assert role.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('role').get('created_at')
-    assert role.updated_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('role').get('updated_at')
-    assert role.deleted_at == json_data.get('role').get('deleted_at')
+    assert role.get('id') == json_data.get('role').get('id')
+    assert role.get('name') == json_data.get('role').get('name')
+    assert role.get('slug') == json_data.get('role').get('slug')
+    assert role.get('created_at') == json_data.get('role').get('created_at')
+    assert role.get('updated_at') == json_data.get('role').get('updated_at')
+    assert role.get('deleted_at') == json_data.get('role').get('deleted_at')
 
 
 def test_get_user_endpoint(client: FlaskClient, auth_header: any):
@@ -164,26 +164,18 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
 def test_export_pdf_endpoint(client: FlaskClient, auth_header: any):
     response = client.post('/users/pdf', headers=auth_header())
 
-    try:
-        base64.decodebytes(response.data)
-    except binascii.Error:
-        is_pdf = False
-    else:
-        is_pdf = True
+    json_response = response.get_json()
 
-    assert 200 == response.status_code
-    assert is_pdf
+    assert 202 == response.status_code
+    assert json_response.get('task')
+    assert json_response.get('url')
 
 
 def test_export_excel_endpoint(client: FlaskClient, auth_header: any):
     response = client.post('/users/xlsx', headers=auth_header())
 
-    try:
-        base64.decodebytes(response.data)
-    except binascii.Error:
-        is_excel = False
-    else:
-        is_excel = True
+    json_response = response.get_json()
 
-    assert 200 == response.status_code
-    assert is_excel
+    assert 202 == response.status_code
+    assert json_response.get('task')
+    assert json_response.get('url')
