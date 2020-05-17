@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.0.0](https://github.com/rubenrod18/flask-api/compare/v0.8.0...v1.0.0) (2020-05-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **pip:** update Python dependencies
+
+### Features
+
+* **celery:** add basic installation ([147dd2c](https://github.com/rubenrod18/flask-api/commit/147dd2c90ea0c378de9b99fa272d906afff943d5))
+* **db:** add pewee migrations ([231696c](https://github.com/rubenrod18/flask-api/commit/231696c69096174e94526623e3cda31b0987789f))
+* **documents:** add document logic ([1eb7ec1](https://github.com/rubenrod18/flask-api/commit/1eb7ec191031f6479af5aefe37e77d3a56cb71bf))
+* **emails:** add send emails after creation an user ([7c2cfe0](https://github.com/rubenrod18/flask-api/commit/7c2cfe0a127c5278f15d155d29bac485f1bfceff))
+* **log:** add support for logrotate ([09925e1](https://github.com/rubenrod18/flask-api/commit/09925e134e424e507cb46da9d8b391203c8c2fd3))
+* **users:** add created_by column in user model ([8a3d013](https://github.com/rubenrod18/flask-api/commit/8a3d013ad774bc119bf12e9d1badcd3a0d4fc447))
+* **users:** add Excel and PDF users export to background processes ([781e091](https://github.com/rubenrod18/flask-api/commit/781e09180ec30286295dfa9fd76b8053934e0d45))
+* **users:** add recovery password feature ([e1e916e](https://github.com/rubenrod18/flask-api/commit/e1e916e925c3bdb8606d3f45548cd6b423760a6f))
+
+
+### build
+
+* **pip:** update requirements.txt ([6193153](https://github.com/rubenrod18/flask-api/commit/6193153fb30dfe3af911a0f4c7e999c4ad6d0d8e))
+
 ## [0.8.0](https://github.com/rubenrod18/flask-api/compare/v0.7.0...v0.8.0) (2020-04-29)
 
 
