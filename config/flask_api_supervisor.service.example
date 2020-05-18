@@ -8,7 +8,7 @@ User=username
 Group=usergroup
 ExecStart=/path/flask_api/venv/bin/supervisord -n -c /path/flask_api/supervisord.conf
 ExecStop=/path/flask_api/venv/bin/supervisorctl -c /path/flask_api/supervisord.conf stop all
-ExecRestart=/path/flask_api/venv/bin/supervisorctl -c /path/flask_api/supervisord.conf reread && /<path>/flask_api/venv/bin/supervisorctl -c /<path>/flask_api/supervisord.conf stop all && /<path>/flask_api/venv/bin/supervisorctl -c /path/flask_api/supervisord.conf start dependentstartup
+ExecReload=/path/flask_api/venv/bin/supervisorctl -c /path/flask_api/supervisord.conf reread && /<path>/flask_api/venv/bin/supervisorctl -c /<path>/flask_api/supervisord.conf stop all && /<path>/flask_api/venv/bin/supervisorctl -c /path/flask_api/supervisord.conf start dependentstartup
 
 [Install]
 WantedBy=multi-user.target
