@@ -39,7 +39,7 @@ class _DocumentFactory():
         file_extension = mimetypes.guess_extension(mime_type).replace('.', '')
         internal_filename = '%s.%s' % (uuid.uuid1().hex, file_extension)
 
-        pdf_file = '%s/example.pdf' % current_app.config.get('STORAGE_DIRECTORY')
+        pdf_file = '%s/storage/test/example.pdf' % current_app.config.get('ROOT_DIRECTORY')
         abs_file = '%s/%s' % (current_app.config.get('STORAGE_DIRECTORY'), internal_filename)
         copyfile(pdf_file, abs_file)
 
