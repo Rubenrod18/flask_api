@@ -9,8 +9,7 @@ The project is developed in Python 3.7 and use next main libraries:
 - [RabbitMQ](https://www.rabbitmq.com): message broker
 - [Nginx](https://www.nginx.com): web server, reverse proxy, etc.
 - [uWSGI](https://uwsgi-docs.readthedocs.io): Web Server Gateway Interface (WSGI) server implementation
-- [Flower](https://flower.readthedocs.io/en/latest): monitoring and  
-  administrating Celery clusters
+- [Flower](https://flower.readthedocs.io/en/latest): monitoring and administrating Celery clusters
 - [Supervisor](http://supervisord.org): client/server system that allows its users to monitor and control a number of processes on UNIX-like operating systems.
 
 
@@ -37,12 +36,14 @@ pip install -r requirements.txt --no-cache-dir
 ```
 
 4. Project domain configuration: add local domain to our */etc/hosts* file in guest host.
-   `127.0.0.1 flask-api.prod`
+```
+127.0.0.1 flask-api.prod
+```
 
 
-5. Environment configuration: create a new **.env** file based on *.env.example* in the root project and we fill all variables.
+5. Environment configuration: create a new **.env** file based on *.env.example* file in the root project and we fill all variables.
 
-6. uWSGI configuration: create a new **uwsgi.ini** file based on *uwsgi.ini.example* in the root project and we fill all variables. You must replace "username" and "project_path" values if was required, the "www-data" group must to be added to your user: `sudo usermod -a -G www-data username`
+6. uWSGI configuration: create a new **uwsgi.ini** file based on *uwsgi.ini.example* file in the root project and we fill all variables. You must replace "username" and "project_path" values if was required, the "www-data" group must to be added to your user: `sudo usermod -a -G www-data username`
 
 7. Nginx configuration:  create a new **flask_api** file based on *config/flask_api.nginx.example* file. Replace "uwsgi_pass" variable with the value in "socket" variable from **uwsgi.ini** file:
 ```
@@ -66,10 +67,14 @@ sudo systemctl start flask_api_supervisor.service
 The systemd unit file and supervisor configuration allow us have our project always start up when the system is reboot.
 
 For checking process status in command line:
-`sudo systemctl status flask_api_supervisor.service`
+```
+sudo systemctl status flask_api_supervisor.service
+```
 
 For restart all processes in command line:
-`sudo systemctl restart flask_api_supervisor.service`
+```
+sudo systemctl restart flask_api_supervisor.service
+```
 This command reread the supervisor configuration files, stop all processes and start them again.
 
 
@@ -84,22 +89,30 @@ The setup is finished, we only need to create the database tables and fill them 
 You can use an API client such as Insomnia or Postman and starting to consume the API!
 
 You can see the processes status here:
-```http://flask-api.prod/supervisor```
+```
+http://flask-api.prod/supervisor
+```
 
 The credentials are user:123 by default you can change the credentials
 as you wish in supervisord.conf file in "inet_http_server" section.
 
 You can management the Celery tasks status here:
-```http://flask-api.prod/flower```
+```
+http://flask-api.prod/flower
+```
 
 
 # Optional installation
-This project use [logrotate](https://linux.die.net/man/8/logrotate) for logging configuration. The config file is defined you only need to do these steps:
-1. Create new **flask_api.logrotate** file based on *config/flask_api.logrotate.example*
+This project use [logrotate](https://linux.die.net/man/8/logrotate) for logging configuration. The config file is already defined you only need to do these steps:
+1. Create new **flask_api.logrotate** file based on *config/flask_api.logrotate.example* file
 2. Update "path", "username" and "usergroup" variables with appropiate values.
 3. Move flask_api_logrotate to "/etc/logrotate.d":
-`sudo mv config/flask_api.logrotate /etc/logrotate.d`
+```
+sudo mv config/flask_api.logrotate /etc/logrotate.d
+```
 4. Restart logrotate service:
-`sudo service log rotate restart`
+```
+sudo service log rotate restart
+```
 
 Now a new log file will be created every day.
