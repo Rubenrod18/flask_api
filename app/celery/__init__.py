@@ -1,18 +1,40 @@
-from celery import Celery
+from celery import Celery, Task
+from celery.utils.log import get_task_logger
 from flask import Flask
 
-from app.extensions import ContextTask
+logger = get_task_logger(__name__)
+
+
+class ContextTask(Task):
+    abstract = True
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo) -> None:
+        """
+        :param exc: The exception raised by the task.
+        :param task_id: Unique id of the failed task.
+        :param args: Original arguments for the task that failed.
+        :param kwargs: Original keyword arguments for the task that failed.
+        :param einfo: ExceptionInfo instance, containing the traceback
+        :return: None
+        """
+        logger.info(f"""
+            task id: {task_id}
+            args: {args}
+            kwargs: {kwargs}
+            einfo: {einfo}
+            exception: {exc}
+        """)
 
 
 def init_celery(app: Flask) -> Celery:
     celery = Celery(app.import_name)
     celery.conf.update(app.config)
 
-    TaskBase = celery.Task
+    logger.debug(celery.conf.table(with_defaults=True))
 
     def __call__(self, *args, **kwargs):
         with app.app_context():
-            return TaskBase.__call__(self, *args, **kwargs)
+            return self.run(*args, **kwargs)
 
     ContextTask.__call__ = __call__
 

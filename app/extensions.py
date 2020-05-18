@@ -9,11 +9,6 @@ security = Security()
 mail = Mail()
 celery = Celery()
 
-TaskBase = celery.Task
-
-class ContextTask(TaskBase):
-    abstract = True
-
 def init_app(app: Flask) -> None:
     from app.models.user import user_datastore
 
