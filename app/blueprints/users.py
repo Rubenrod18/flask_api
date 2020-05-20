@@ -12,7 +12,7 @@ from app.celery.tasks import create_user_email
 from .base import BaseResource
 from ..models.user import User as UserModel
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
-from ..utils.decorators import token_required
+from ..utils.decorators import authenticated
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
@@ -25,7 +25,7 @@ class UserResource(BaseResource):
 
 @api.resource('')
 class NewUserResource(UserResource):
-    @token_required
+    @authenticated
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -51,7 +51,7 @@ class NewUserResource(UserResource):
 
 @api.resource('/<int:user_id>')
 class UserResource(UserResource):
-    @token_required
+    @authenticated
     def get(self, user_id: int) -> tuple:
         response = {
             'error': 'User doesn\'t exist',
@@ -70,7 +70,7 @@ class UserResource(UserResource):
 
         return response, status_code
 
-    @token_required
+    @authenticated
     def put(self, user_id: int) -> tuple:
         data = request.get_json()
 
@@ -105,7 +105,7 @@ class UserResource(UserResource):
 
         return response_data, response_code
 
-    @token_required
+    @authenticated
     def delete(self, user_id: int) -> tuple:
         response = {
             'error': 'User doesn\'t exist',
@@ -136,7 +136,7 @@ class UserResource(UserResource):
 
 @api.resource('/search')
 class UsersSearchResource(UserResource):
-    @token_required
+    @authenticated
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -176,7 +176,7 @@ class UsersSearchResource(UserResource):
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
-    @token_required
+    @authenticated
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -201,7 +201,7 @@ class ExportUsersExcelResource(UserResource):
 
 @api.resource('/word')
 class ExportUsersPdfResource(UserResource):
-    @token_required
+    @authenticated
     def post(self) -> tuple:
         # TODO: RequestParse will be deprecated in the future. Replace RequestParse to marshmallow
         # https://flask-restful.readthedocs.io/en/latest/reqparse.html

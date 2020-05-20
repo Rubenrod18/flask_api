@@ -8,7 +8,7 @@ from werkzeug.exceptions import NotFound
 from app.extensions import db_wrapper
 from app.utils import class_for_name
 
-from app.utils.decorators import token_required
+from app.utils.decorators import authenticated
 
 blueprint = Blueprint('tasks', __name__, url_prefix='/tasks')
 api = Api(blueprint)
@@ -41,7 +41,7 @@ class TaskResource(Resource):
 
 @api.resource('/status/<string:task_id>')
 class TaskStatusResource(TaskResource):
-    @token_required
+    @authenticated
     def get(self, task_id: str):
         task_promise = self.get_task(task_id)
 

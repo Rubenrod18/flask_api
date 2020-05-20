@@ -8,7 +8,7 @@ from flask_security.passwordless import login_token_status
 from app.utils import TOKEN_REGEX
 
 
-def token_required(fnc):
+def authenticated(fnc):
     @functools.wraps(fnc)
     def decorator(*args, **kwargs):
         key = current_app.config.get('SECURITY_TOKEN_AUTHENTICATION_HEADER')

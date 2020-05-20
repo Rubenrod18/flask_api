@@ -8,7 +8,7 @@ from flask_restful import Api
 from .base import BaseResource
 from app.models.role import Role as RoleModel
 from app.utils.cerberus_schema import role_model_schema, search_model_schema, MyValidator
-from ..utils.decorators import token_required
+from ..utils.decorators import authenticated
 
 blueprint = Blueprint('roles', __name__, url_prefix='/roles')
 api = Api(blueprint)
@@ -22,7 +22,7 @@ class RoleBaseResource(BaseResource):
 
 @api.resource('')
 class NewRoleResource(RoleBaseResource):
-    @token_required
+    @authenticated
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -45,7 +45,7 @@ class NewRoleResource(RoleBaseResource):
 
 @api.resource('/<int:role_id>')
 class RoleResource(RoleBaseResource):
-    @token_required
+    @authenticated
     def get(self, role_id: int) -> tuple:
         response = {
             'error': 'Role doesn\'t exist',
@@ -64,7 +64,7 @@ class RoleResource(RoleBaseResource):
 
         return response, status_code
 
-    @token_required
+    @authenticated
     def put(self, role_id: int) -> tuple:
         data = request.get_json()
 
@@ -100,7 +100,7 @@ class RoleResource(RoleBaseResource):
 
         return response_data, response_code
 
-    @token_required
+    @authenticated
     def delete(self, role_id: int) -> tuple:
         response = {
             'error': 'Role doesn\'t exist',
@@ -131,7 +131,7 @@ class RoleResource(RoleBaseResource):
 
 @api.resource('/search')
 class RolesSearchResource(RoleBaseResource):
-    @token_required
+    @authenticated
     def post(self) -> tuple:
         data = request.get_json()
 
