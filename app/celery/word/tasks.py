@@ -4,18 +4,16 @@ import uuid
 from datetime import datetime
 from tempfile import NamedTemporaryFile
 
-import magic
-import xlsxwriter
+import docx
 from celery.utils.log import get_task_logger
 from flask import current_app
-from xlsxwriter import Workbook
-from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
 from app.extensions import celery
+from app.libs.libreoffice import convert_to
 from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
-from app.utils import find_longest_word, pos_to_char, to_readable
+from app.utils import to_readable
 from app.utils.file_storage import FileStorage
 
 logger = get_task_logger(__name__)
@@ -57,54 +55,29 @@ def _format_column_names(rows: list, original_column_names: set) -> None:
     rows.append(formatted_column_names)
 
 
-def _adjust_each_column_width(rows: list, worksheet: Worksheet, excel_longest_word: int) -> None:
-    if rows:
-        for i, v in enumerate(rows[0]):
-            worksheet.set_column(i, i + 1, excel_longest_word + 1)
-
-
-def _table_header_setup(worksheet: Worksheet):
-    total_fields = len(UserModel.get_fields(exclude=['id', 'password'], include=column_display_order)) - 1
-    columns = 'A1:%s10' % pos_to_char(total_fields).upper()
-    worksheet.autofilter(columns)
-
-
 @celery.task(bind=True, base=ContextTask)
-def user_data_export_in_excel(self, created_by: int, user_list: list):
-    def _write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> int:
-        excel_longest_word = ''
+def user_data_export_in_word(self, created_by: int, user_list: list, to_pdf: bool = False):
+    def _write_docx_content(rows: list, document: docx.Document) -> None:
+        header_fields = rows[0]
 
-        for i, row in enumerate(rows, 1):
-            format = None
+        table = document.add_table(rows=len(rows), cols=len(header_fields))
 
-            if i == 1:
-                format = workbook.add_format({
-                    'bold': True,
-                    'bg_color': '#cccccc',
-                })
-            elif i % 2 == 0:
-                format = workbook.add_format({
-                    'bg_color': '#f1f1f1',
-                })
+        for i in range(len(rows)):
+            row = table.rows[i]
+            for j, table_cell in enumerate(rows[i]):
+                row.cells[j].text = str(table_cell)
 
-            range_cells = 'A%s:I10' % i
-
-            row_longest_word = find_longest_word(row)
-            if len(row_longest_word) > len(excel_longest_word):
-                excel_longest_word = row_longest_word
-
-            worksheet.write_row(range_cells, row, format)
             self.update_state(state='PROGRESS', meta={
                 'current': i,
                 'total': self.total_progress,
                 'status': 'In progress...',
             })
 
-        return len(excel_longest_word)
-
-    self.total_progress = len(user_list) + 2  # Excel table rows + 2 (Excel table header and save Excel in database)
-    tempfile = NamedTemporaryFile()
+    self.total_progress = len(user_list) + 2  # Word table rows + 2 (Word table header and save Word in database)
+    tempfile_suffix = '.docx'
+    tempfile = NamedTemporaryFile(suffix=tempfile_suffix)
     excel_rows = []
+    mime_type = 'application/pdf' if to_pdf else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
     self.update_state(state='PROGRESS', meta={
         'current': 0,
@@ -114,37 +87,36 @@ def user_data_export_in_excel(self, created_by: int, user_list: list):
 
     # TODO: insert query for getting users here
 
-    workbook = xlsxwriter.Workbook(tempfile.name)
-    worksheet = workbook.add_worksheet()
-    worksheet.set_zoom(120)
-
     original_column_names = UserModel.get_fields(exclude=['id', 'password'],
                                                  include=column_display_order,
                                                  sort_order=column_display_order)
     _format_column_names(excel_rows, original_column_names)
     _format_user_data(user_list, excel_rows)
-    _table_header_setup(worksheet)
 
-    excel_longest_word = _write_excel_rows(excel_rows, workbook, worksheet)
-    _adjust_each_column_width(excel_rows, worksheet, excel_longest_word)
-    workbook.close()
+    document = docx.Document()
+    _write_docx_content(excel_rows, document)
+    document.save(tempfile.name)
 
-    filepath = ''
+    directory_path = current_app.config.get('STORAGE_DIRECTORY')
+    temp_filename = FileStorage.get_basename(tempfile.name, include_path=False)
+
+    if to_pdf:
+        convert_to(directory_path, tempfile.name)
+    else:
+        dst = f'{directory_path}/{temp_filename}{tempfile_suffix}'
+        FileStorage.copy_file(tempfile.name, dst)
+
+    file_extension = mimetypes.guess_extension(mime_type)
+    internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
+    filepath = '%s/%s' % (directory_path, internal_filename)
+
     try:
-        mime_type = magic.from_file(tempfile.name, mime=True)
-        file_extension = mimetypes.guess_extension(mime_type)
-
-        internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
-        directory_path = current_app.config.get('STORAGE_DIRECTORY')
-        filepath = f'{directory_path}/{internal_filename}'
-
-        data = tempfile.file.read()
-        fs = FileStorage()
-        fs.save_bytes(data, filepath)
-
         file_prefix = datetime.utcnow().strftime('%Y%m%d')
         basename = f'{file_prefix}_users'
-        filename = f'{basename}.{file_extension}'
+        filename = f'{basename}{file_extension}'
+
+        src = '%s/%s%s' % (directory_path, temp_filename, file_extension)
+        FileStorage.rename(src, filepath)
 
         data = {
             'created_by': created_by,
@@ -152,14 +124,15 @@ def user_data_export_in_excel(self, created_by: int, user_list: list):
             'internal_filename': internal_filename,
             'mime_type': mime_type,
             'directory_path': directory_path,
-            'size': fs.get_filesize(filepath),
+            'size': FileStorage.get_filesize(filepath),
         }
 
         document = DocumentModel.create(**data)
-    except Exception:
+    except Exception as e:
         if os.path.exists(filepath):
             os.remove(filepath)
-        raise
+        logger.debug(e)
+        raise e
 
     return {
         'current': self.total_progress,

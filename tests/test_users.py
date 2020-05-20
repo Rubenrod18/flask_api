@@ -1,5 +1,3 @@
-import base64
-import binascii
 import os
 
 from flask.testing import FlaskClient
@@ -128,11 +126,11 @@ def test_delete_user_endpoint(client: FlaskClient, auth_header: any):
 
 def test_search_users_endpoint(client: FlaskClient, auth_header: any):
     user_name = (UserModel.select(UserModel.name)
-               .where(UserModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get()
-               .name)
+                 .where(UserModel.deleted_at.is_null())
+                 .order_by(fn.Random())
+                 .limit(1)
+                 .get()
+                 .name)
     db_wrapper.database.close()
 
     json_body = {
@@ -161,14 +159,19 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
     assert user_data[0]['name'].find(user_name) != -1
 
 
-def test_export_pdf_endpoint(client: FlaskClient, auth_header: any):
-    response = client.post('/users/pdf', headers=auth_header())
+def test_export_word_endpoint(client: FlaskClient, auth_header: any):
+    def _call(uri: str) -> None:
+        response = client.post(uri, headers=auth_header())
 
-    json_response = response.get_json()
+        json_response = response.get_json()
 
-    assert 202 == response.status_code
-    assert json_response.get('task')
-    assert json_response.get('url')
+        assert 202 == response.status_code
+        assert json_response.get('task')
+        assert json_response.get('url')
+
+    _call('/users/word')
+    _call('/users/word?to_pdf=1')
+    _call('/users/word?to_pdf=0')
 
 
 def test_export_excel_endpoint(client: FlaskClient, auth_header: any):
