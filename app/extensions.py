@@ -9,6 +9,7 @@ security = Security()
 mail = Mail()
 celery = Celery()
 
+
 def init_app(app: Flask) -> None:
     from app.models.user import user_datastore
 

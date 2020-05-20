@@ -5,6 +5,10 @@ from flask import Flask
 logger = get_task_logger(__name__)
 
 
+class TaskFailure(Exception):
+    pass
+
+
 class ContextTask(Task):
     abstract = True
 
