@@ -34,14 +34,6 @@ class User(BaseModel, UserMixin):
     deleted_at = TimestampField(default=None, null=True)
 
     def save(self, *args: list, **kwargs: dict) -> int:
-        current_date = datetime.utcnow()
-
-        if self.id is None and self.created_at is None:
-            self.created_at = current_date
-
-        if self.deleted_at is None:
-            self.updated_at = current_date
-
         if self.password:
             self.password = self.ensure_password(self.password)
 

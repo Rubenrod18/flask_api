@@ -3,10 +3,12 @@ from datetime import datetime
 
 from cerberus import Validator
 from flask_login import current_user
-from flask_restful import Api
+from flask_restful import Api, reqparse
 from flask import Blueprint, request, url_for
 
-from app.celery.tasks import create_user_email, export_users_excel, export_users_pdf
+from app.celery.word.tasks import user_data_export_in_word
+from app.celery.excel.tasks import user_data_export_in_excel
+from app.celery.tasks import create_user_email
 from .base import BaseResource
 from ..models.user import User as UserModel
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
@@ -16,7 +18,6 @@ blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)
-
 
 class UserResource(BaseResource):
     db_model = UserModel
@@ -190,7 +191,7 @@ class ExportUsersExcelResource(UserResource):
         for user in query:
             user_list.append(user.serialize())
 
-        task = export_users_excel.delay(created_by=current_user.id, user_list=user_list)
+        task = user_data_export_in_excel.apply_async((current_user.id, user_list), countdown=5)
 
         return {
                    'task': task.id,
@@ -198,11 +199,17 @@ class ExportUsersExcelResource(UserResource):
                }, 202
 
 
-@api.resource('/pdf')
+@api.resource('/word')
 class ExportUsersPdfResource(UserResource):
     @token_required
     def post(self) -> tuple:
+        # TODO: RequestParse will be deprecated in the future. Replace RequestParse to marshmallow
+        # https://flask-restful.readthedocs.io/en/latest/reqparse.html
+        parser = reqparse.RequestParser()
+        parser.add_argument('to_pdf', type=int, location='args')
+
         data = request.get_json()
+        args = parser.parse_args()
 
         page_number, items_per_page, order_by = self.get_request_query_fields()
 
@@ -215,7 +222,8 @@ class ExportUsersPdfResource(UserResource):
         for user in query:
             user_list.append(user.serialize())
 
-        task = export_users_pdf.apply_async(args=[current_user.id, user_list])
+        to_pdf = args.get('to_pdf') or 0
+        task = user_data_export_in_word.apply_async(args=[current_user.id, user_list, to_pdf])
 
         return {
             'task': task.id,

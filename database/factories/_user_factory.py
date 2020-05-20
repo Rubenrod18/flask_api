@@ -58,6 +58,10 @@ class _UserFactory():
 
         if to_dict:
             data['role'] = data.get('role').serialize()
+            data['created_at'] = data.get('created_at').strftime('%Y-%m-%d %H:%m:%S')
+            data['updated_at'] = data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S')
+            if data.get('deleted_at'):
+                data['deleted_at'] = data.get('deleted_at').strftime('%Y-%m-%d %H:%m:%S')
 
         return ignore_keys(data, exclude)
 

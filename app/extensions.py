@@ -1,18 +1,15 @@
-from celery import Celery
 from flask import Flask
 from flask_mail import Mail
 from flask_security import Security
 from playhouse.flask_utils import FlaskDB
 
+from app.celery import MyCelery
+
 db_wrapper = FlaskDB()
 security = Security()
 mail = Mail()
-celery = Celery()
+celery = MyCelery()
 
-TaskBase = celery.Task
-
-class ContextTask(TaskBase):
-    abstract = True
 
 def init_app(app: Flask) -> None:
     from app.models.user import user_datastore
