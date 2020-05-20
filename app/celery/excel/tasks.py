@@ -20,8 +20,9 @@ from app.utils.file_storage import FileStorage
 
 logger = get_task_logger(__name__)
 
-column_display_order = ['name', 'last_name', 'email', 'birth_date', 'role', 'created_at', 'updated_at',
-                        'deleted_at']
+_COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role', 'created_at', 'updated_at',
+                         'deleted_at', ]
+_EXCLUDE_COLUMNS = ['id', 'password', ]
 
 
 def _format_user_data(users_query: list, rows: list) -> None:
@@ -36,10 +37,10 @@ def _format_user_data(users_query: list, rows: list) -> None:
         user_dict.update({
             k: to_readable(v)
             for (k, v) in user.items()
-            if k in column_display_order
+            if k in _COLUMN_DISPLAY_ORDER
         })
 
-        user_dict = dict(sorted(user_dict.items(), key=lambda x: column_display_order.index(x[0])))
+        user_dict = dict(sorted(user_dict.items(), key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0])))
         user_list.append(user_dict)
 
     for user_dict in user_list:
@@ -64,7 +65,7 @@ def _adjust_each_column_width(rows: list, worksheet: Worksheet, excel_longest_wo
 
 
 def _table_header_setup(worksheet: Worksheet):
-    total_fields = len(UserModel.get_fields(exclude=['id', 'password'], include=column_display_order)) - 1
+    total_fields = len(UserModel.get_fields(exclude=_EXCLUDE_COLUMNS, include=_COLUMN_DISPLAY_ORDER)) - 1
     columns = 'A1:%s10' % pos_to_char(total_fields).upper()
     worksheet.autofilter(columns)
 
@@ -118,9 +119,9 @@ def user_data_export_in_excel(self, created_by: int, user_list: list):
     worksheet = workbook.add_worksheet()
     worksheet.set_zoom(120)
 
-    original_column_names = UserModel.get_fields(exclude=['id', 'password'],
-                                                 include=column_display_order,
-                                                 sort_order=column_display_order)
+    original_column_names = UserModel.get_fields(exclude=_EXCLUDE_COLUMNS,
+                                                 include=_COLUMN_DISPLAY_ORDER,
+                                                 sort_order=_COLUMN_DISPLAY_ORDER)
     _format_column_names(excel_rows, original_column_names)
     _format_user_data(user_list, excel_rows)
     _table_header_setup(worksheet)
