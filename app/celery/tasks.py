@@ -5,19 +5,16 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 
 import docx
-import xlsxwriter
 from celery.utils.log import get_task_logger
 from flask import render_template, current_app
 from flask_mail import Message
-from xlsxwriter import Workbook
-from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
 from app.extensions import mail, celery
 from app.libs.libreoffice import convert_to
 from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
-from app.utils import pos_to_char, find_longest_word, to_readable
+from app.utils import to_readable
 from app.utils.file_storage import FileStorage
 
 logger = get_task_logger(__name__)
@@ -91,102 +88,6 @@ def reset_password_email(email_data) -> bool:
     msg.html = render_template('mails/reset_password.html', **email_data)
     mail.send(msg)
     return True
-
-
-@celery.task(bind=True, name='export_users_excel', base=ContextTask)
-def export_users_excel(self, created_by: int, user_list: list):
-    def write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> int:
-        excel_longest_word = ''
-
-        for i, row in enumerate(rows, 1):
-            format = None
-
-            if i == 1:
-                format = workbook.add_format({
-                    'bold': True,
-                    'bg_color': '#cccccc',
-                })
-            elif i % 2 == 0:
-                format = workbook.add_format({
-                    'bg_color': '#f1f1f1',
-                })
-
-            range_cells = 'A%s:I10' % i
-
-            row_longest_word = find_longest_word(row)
-            if len(row_longest_word) > len(excel_longest_word):
-                excel_longest_word = row_longest_word
-
-            worksheet.write_row(range_cells, row, format)
-            self.update_state(state='PROGRESS', meta={
-                'current': i,
-                'total': self.total,
-                'status': 'In progress...',
-            })
-
-        return len(excel_longest_word)
-
-    def adjust_each_column_width(rows: list, worksheet: Worksheet, excel_longest_word: int) -> None:
-        if rows:
-            for i, v in enumerate(rows[0]):
-                worksheet.set_column(i, i + 1, excel_longest_word + 1)
-
-    self.total = len(user_list) + 2
-    tempfile = NamedTemporaryFile()
-    excel_rows = []
-
-    workbook = xlsxwriter.Workbook(tempfile.name)
-    worksheet = workbook.add_worksheet()
-    worksheet.set_zoom(120)
-
-    original_column_names = UserModel.get_fields(exclude=['id', 'password'],
-                                                 include=column_display_order,
-                                                 sort_order=column_display_order)
-    format_column_names(excel_rows, original_column_names)
-    format_user_data(user_list, excel_rows)
-
-    total_fields = len(UserModel.get_fields(exclude=['id', 'password'], include=column_display_order)) - 1
-    columns = 'A1:%s10' % pos_to_char(total_fields).upper()
-    worksheet.autofilter(columns)
-
-    excel_longest_word = write_excel_rows(excel_rows, workbook, worksheet)
-    adjust_each_column_width(excel_rows, worksheet, excel_longest_word)
-
-    workbook.close()
-
-    mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    file_extension = mimetypes.guess_extension(mime_type)
-
-    internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
-    directory_path = current_app.config.get('STORAGE_DIRECTORY')
-    filepath = f'{directory_path}/{internal_filename}'
-
-    try:
-        fs = FileStorage()
-        fs.save_bytes(tempfile.read(), filepath)
-
-        file_prefix = datetime.utcnow().strftime('%Y%m%d')
-        basename = f'{file_prefix}_users'
-        filename = f'{basename}.{file_extension}'
-
-        data = {
-            'created_by': created_by,
-            'name': filename,
-            'internal_filename': internal_filename,
-            'mime_type': mime_type,
-            'directory_path': directory_path,
-            'size': fs.get_filesize(filepath),
-        }
-
-        document = DocumentModel.create(**data)
-        tempfile.close()
-    except Exception as e:
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        logger.debug(e)
-        raise e
-
-    return {'current': self.total, 'total': self.total, 'status': 'Task completed!', 'result': document.url}
 
 
 @celery.task(bind=True, name='export_users_pdf', base=ContextTask)

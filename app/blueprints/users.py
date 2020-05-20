@@ -6,7 +6,8 @@ from flask_login import current_user
 from flask_restful import Api
 from flask import Blueprint, request, url_for
 
-from app.celery.tasks import create_user_email, export_users_excel, export_users_pdf
+from app.celery.excel.tasks import user_data_export_in_excel
+from app.celery.tasks import create_user_email, export_users_pdf
 from .base import BaseResource
 from ..models.user import User as UserModel
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
@@ -190,7 +191,7 @@ class ExportUsersExcelResource(UserResource):
         for user in query:
             user_list.append(user.serialize())
 
-        task = export_users_excel.delay(created_by=current_user.id, user_list=user_list)
+        task = user_data_export_in_excel.apply_async((current_user.id, user_list), countdown=5)
 
         return {
                    'task': task.id,

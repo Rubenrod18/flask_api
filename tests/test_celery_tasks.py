@@ -3,8 +3,8 @@ from urllib.parse import urlparse
 from flask import url_for, Flask
 from peewee import fn
 
-from app.celery.tasks import create_user_email, reset_password_email, export_users_excel, export_users_pdf
-
+from app.celery.tasks import create_user_email, reset_password_email, export_users_pdf
+from app.celery.excel.tasks import user_data_export_in_excel
 from app.models.user import User as UserModel
 
 
@@ -48,7 +48,7 @@ def test_export_excel_task(app: Flask, factory: any):
 
     user_list = factory('User', 10).make(to_dict=True)
 
-    task = export_users_excel.delay(created_by=user.id, user_list=user_list)
+    task = user_data_export_in_excel.delay(created_by=user.id, user_list=user_list)
     result = task.get()
 
     parse_url = urlparse(result.get('result'))

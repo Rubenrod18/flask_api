@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask_restful import Api, Resource
 
-from app.celery.tasks import export_users_excel
+from app.celery.excel.tasks import user_data_export_in_excel
 
 from app.utils.decorators import token_required
 
@@ -15,7 +15,8 @@ class TaskStatusResource(Resource):
     def get(self, task_id: str):
         response, status_code = {}, 404
 
-        task = export_users_excel.AsyncResult(task_id)
+        # TODO: pending to do this endpoint dynamic
+        task = user_data_export_in_excel.AsyncResult(task_id)
 
         if task:
             status_code = 200
