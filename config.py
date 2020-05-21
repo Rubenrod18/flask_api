@@ -54,14 +54,14 @@ class Config(metaclass=Meta):
     # Peewee
     DATABASE = {
         'name': os.getenv('DATABASE_NAME'),
-        'engine': 'peewee.SqliteDatabase',
+        'engine': os.getenv('DATABASE_ENGINE', 'peewee.SqliteDatabase'),
         # Sqlite3 recommended settings
         'pragmas': {
-            'journal_mode': 'wal',
-            'cache_size': -1 * 64000,  # 64MB
-            'foreign_keys': 1,
-            'ignore_check_constraints': 0,
-            'synchronous': 0,
+            'journal_mode': os.getenv('DATABASE_JOURNAL_MODE', 'wal'),
+            'cache_size': os.getenv('DATABASE_CACHE_SIZE', -1 * 64000),  # 64MB
+            'foreign_keys': os.getenv('DATABASE_FOREIGN_KEYS', 1),
+            'ignore_check_constraints': os.getenv('DATABASE_IGNORE_CHECK_CONSTRAINTS', 0),
+            'synchronous': os.getenv('DATABASE_SYNCHRONOUS', 0),
         },
     }
 

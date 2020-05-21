@@ -1,13 +1,11 @@
 import os
 
 from peewee import FixedCharField
-from playhouse.migrate import SqliteMigrator, migrate
+from playhouse.migrate import migrate
 
 from app.extensions import db_wrapper
 from app.models.user import User as UserModel
-from database.migrations import migrate_actions, rollback_actions
-
-migrator = SqliteMigrator(db_wrapper.database)
+from database.migrations import migrate_actions, rollback_actions, migrator
 
 
 class AddGenreColumnOnUserTable():

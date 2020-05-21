@@ -13,6 +13,7 @@ class Role(BaseModel, RoleMixin):
     class Meta:
         table_name = 'roles'
 
+    # TODO: name must be unique field
     name = CharField()
     description = TextField(null=True)
     slug = CharField(unique=True)

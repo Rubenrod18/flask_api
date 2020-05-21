@@ -3,10 +3,12 @@ import os
 import time
 
 from peewee import CompositeKey, CharField
+from playhouse.migrate import SqliteMigrator
 
 from app.extensions import db_wrapper
-from app.models import get_models
 from app.utils import class_for_name
+
+migrator = SqliteMigrator(db_wrapper.database)
 
 
 class Migration(db_wrapper.Model):
@@ -91,6 +93,7 @@ def init_migrations(rollback: bool = False) -> None:
         diff = list(set(db_migration_names) - set(migration_names))
     else:
         diff = list(set(migration_names) - set(db_migration_names))
+    diff.sort()
 
     with db_wrapper.database.atomic():
         if rollback == True:

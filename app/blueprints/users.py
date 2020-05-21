@@ -12,7 +12,7 @@ from app.celery.tasks import create_user_email
 from .base import BaseResource
 from ..models.user import User as UserModel, user_datastore
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
-from ..utils.decorators import token_required, roles_required
+from ..utils.decorators import token_required
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
