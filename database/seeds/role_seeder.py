@@ -14,6 +14,7 @@ class RoleSeeder():
                 'name': 'admin',
                 'description': 'administrator',
                 'slug': 'admin',
+                'deleted_at': None,
             }
             Factory('Role').save(params)
 

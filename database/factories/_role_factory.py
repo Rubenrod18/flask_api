@@ -56,10 +56,12 @@ class _RoleFactory():
 
         return RoleModel.create(**data)
 
-    def bulk_create(self, total: int, params: dict) -> None:
+    def bulk_create(self, total: int, params: dict) -> bool:
         data = []
 
         for item in range(total):
             data.append(self.make(params, False, []))
 
         RoleModel.bulk_create(data)
+
+        return True

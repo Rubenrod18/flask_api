@@ -12,7 +12,7 @@ from app.blueprints.base import BaseResource
 from app.models.document import Document as DocumentModel
 from app.utils.cerberus_schema import MyValidator, document_save_model_schema, document_update_model_schema, \
     search_model_schema
-from app.utils.decorators import authenticated
+from app.utils.decorators import token_required
 from app.utils.file_storage import FileStorage
 
 blueprint = Blueprint('documents', __name__, url_prefix='/documents')
@@ -91,7 +91,7 @@ class DocumentResource(BaseResource):
 
 @api.resource('')
 class NewDocumentResource(DocumentResource):
-    @authenticated
+    @token_required
     def post(self):
         request_data = self.get_request_file()
 
@@ -140,7 +140,7 @@ class NewDocumentResource(DocumentResource):
 
 @api.resource('/<int:document_id>')
 class DocumentResource(DocumentResource):
-    @authenticated
+    @token_required
     def get(self, document_id: int) -> tuple:
         headers = request.headers.get('Content-Type')
 
@@ -151,7 +151,7 @@ class DocumentResource(DocumentResource):
 
         return response
 
-    @authenticated
+    @token_required
     def put(self, document_id: int) -> tuple:
         request_data = self.get_request_file()
         request_data['id'] = document_id
@@ -197,7 +197,7 @@ class DocumentResource(DocumentResource):
                    'data': document_dict,
                }, 200
 
-    @authenticated
+    @token_required
     def delete(self, document_id: int):
         response = {
             'error': 'Document doesn\'t exist',
@@ -228,7 +228,7 @@ class DocumentResource(DocumentResource):
 
 @api.resource('/search')
 class SearchDocumentResource(DocumentResource):
-    @authenticated
+    @token_required
     def post(self):
         data = request.get_json()
 

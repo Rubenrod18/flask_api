@@ -1,19 +1,21 @@
 import logging
 
+import flask_security
 from flask_restful import Api, Resource
 from flask import Blueprint, request, url_for
 from flask_security import verify_password
 from flask_security.passwordless import generate_login_token
+from werkzeug.exceptions import Forbidden, Unauthorized
 
-from app.models.user import User as UserModel
+from app.models.user import User as UserModel, user_datastore
 from app.celery.tasks import reset_password_email
 from app.utils.cerberus_schema import MyValidator, user_login_schema, confirm_reset_password_schema
+from app.utils.decorators import token_required
 
 blueprint = Blueprint('auth', __name__, url_prefix='/auth')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)
-
 
 @api.resource('/login')
 class AuthUserLoginResource(Resource):
@@ -29,18 +31,30 @@ class AuthUserLoginResource(Resource):
                        'fields': v.errors,
                    }, 422
 
-        user = UserModel.get(UserModel.email == data.get('email'))
+        user = user_datastore.find_user(**{'email': data.get('email')})
+
+        if not user.is_active:
+            raise Forbidden('User is not authorized')
 
         if not verify_password(data.get('password'), user.password):
-            return {
-                       'message': 'credentials are invalid',
-                   }, 401
+            raise Unauthorized('Credentials are invalid')
 
         token = generate_login_token(user)
-
+        # TODO: Pending to testing whats happen id add a new field in user model when a user is logged
+        flask_security.login_user(user)
         return {
                    'token': token,
                }, 200
+
+
+# TODO: Pending to implement testing
+@api.resource('/logout')
+class AuthUserLogoutResource(Resource):
+    @token_required
+    def get(self) -> tuple:
+        flask_security.logout_user()
+
+        return {}, 200
 
 
 @api.resource('/reset_password')

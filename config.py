@@ -49,6 +49,7 @@ class Config(metaclass=Meta):
     SECURITY_PASSWORD_HASH = 'pbkdf2_sha512'
     SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authorization'
     SECURITY_TOKEN_MAX_AGE = None
+    SECURITY_PASSWORD_LENGTH_MIN = 8
 
     # Peewee
     DATABASE = {

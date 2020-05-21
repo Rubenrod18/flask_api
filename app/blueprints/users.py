@@ -10,9 +10,9 @@ from app.celery.word.tasks import user_data_export_in_word
 from app.celery.excel.tasks import user_data_export_in_excel
 from app.celery.tasks import create_user_email
 from .base import BaseResource
-from ..models.user import User as UserModel
+from ..models.user import User as UserModel, user_datastore
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
-from ..utils.decorators import authenticated
+from ..utils.decorators import token_required, roles_required
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
@@ -25,7 +25,6 @@ class UserResource(BaseResource):
 
 @api.resource('')
 class NewUserResource(UserResource):
-    @authenticated
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -38,7 +37,9 @@ class NewUserResource(UserResource):
                        'fields': v.errors,
                    }, 422
 
-        user = UserModel.create(**data)
+        # TODO: add role
+        # data['roles'] = [RoleModel.get_by_id(1)]
+        user = user_datastore.create_user(**data)
         user.created_by = current_user.id
         user_dict = user.serialize()
 
@@ -51,7 +52,7 @@ class NewUserResource(UserResource):
 
 @api.resource('/<int:user_id>')
 class UserResource(UserResource):
-    @authenticated
+    @token_required
     def get(self, user_id: int) -> tuple:
         response = {
             'error': 'User doesn\'t exist',
@@ -70,7 +71,7 @@ class UserResource(UserResource):
 
         return response, status_code
 
-    @authenticated
+    @token_required
     def put(self, user_id: int) -> tuple:
         data = request.get_json()
 
@@ -105,7 +106,7 @@ class UserResource(UserResource):
 
         return response_data, response_code
 
-    @authenticated
+    @token_required
     def delete(self, user_id: int) -> tuple:
         response = {
             'error': 'User doesn\'t exist',
@@ -136,7 +137,7 @@ class UserResource(UserResource):
 
 @api.resource('/search')
 class UsersSearchResource(UserResource):
-    @authenticated
+    @token_required
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -176,7 +177,7 @@ class UsersSearchResource(UserResource):
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
-    @authenticated
+    @token_required
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -201,7 +202,7 @@ class ExportUsersExcelResource(UserResource):
 
 @api.resource('/word')
 class ExportUsersPdfResource(UserResource):
-    @authenticated
+    @token_required
     def post(self) -> tuple:
         # TODO: RequestParse will be deprecated in the future. Replace RequestParse to marshmallow
         # https://flask-restful.readthedocs.io/en/latest/reqparse.html

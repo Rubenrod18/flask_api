@@ -10,12 +10,8 @@ from app.models.user import User as UserModel
 def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
     ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by']
     data = factory('User').make(exclude=ignore_fields, to_dict=True)
-    role = data.get('role')
 
-    data['role_id'] = role.get('id')
     data['password'] = os.getenv('TEST_USER_PASSWORD')
-
-    del data['role']
 
     response = client.post('/users', json=data, headers=auth_header())
     json_response = response.get_json()
@@ -30,12 +26,7 @@ def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any)
     assert json_data.get('updated_at') == json_data.get('created_at')
     assert json_data.get('deleted_at') is None
 
-    assert role.get('id') == json_data.get('role').get('id')
-    assert role.get('name') == json_data.get('role').get('name')
-    assert role.get('slug') == json_data.get('role').get('slug')
-    assert role.get('created_at') == json_data.get('role').get('created_at')
-    assert role.get('updated_at') == json_data.get('role').get('updated_at')
-    assert role.get('deleted_at') == json_data.get('role').get('deleted_at')
+    # TODO: pending to implement
 
 
 def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
@@ -48,12 +39,8 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: an
 
     ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by']
     data = factory('User').make(to_dict=True, exclude=ignore_fields)
-    role = data.get('role')
 
-    data['role_id'] = role.get('id')
     data['password'] = os.getenv('TEST_USER_PASSWORD')
-
-    del data['role']
 
     response = client.put('/users/%s' % user_id, json=data, headers=auth_header())
     json_response = response.get_json()
@@ -69,12 +56,7 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: an
     assert json_data.get('updated_at') >= json_data.get('created_at')
     assert json_data.get('deleted_at') is None
 
-    assert role.get('id') == json_data.get('role').get('id')
-    assert role.get('name') == json_data.get('role').get('name')
-    assert role.get('slug') == json_data.get('role').get('slug')
-    assert role.get('created_at') == json_data.get('role').get('created_at')
-    assert role.get('updated_at') == json_data.get('role').get('updated_at')
-    assert role.get('deleted_at') == json_data.get('role').get('deleted_at')
+    # TODO: pending to implement
 
 
 def test_get_user_endpoint(client: FlaskClient, auth_header: any):

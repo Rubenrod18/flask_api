@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime, date
-from typing import TypeVar
 
 from flask import current_app
 from flask_security import UserMixin, PeeweeUserDatastore, hash_password
+from flask_security.utils import verify_hash
 from itsdangerous import URLSafeSerializer, TimestampSigner
-from peewee import CharField, DateField, TimestampField, ForeignKeyField, BooleanField, FixedCharField
+from peewee import CharField, DateField, TimestampField, ForeignKeyField, BooleanField, FixedCharField, ManyToManyField
 
 from .base import Base as BaseModel
 from .role import Role as RoleModel
@@ -13,15 +13,12 @@ from ..extensions import db_wrapper as db
 
 logger = logging.getLogger(__name__)
 
-U = TypeVar('U', bound='User')
-
 
 class User(BaseModel, UserMixin):
     class Meta:
         table_name = 'users'
 
     created_by = ForeignKeyField('self', null=True, backref='children', column_name='created_by')
-    role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
     email = CharField(unique=True)
@@ -32,9 +29,10 @@ class User(BaseModel, UserMixin):
     created_at = TimestampField(default=None)
     updated_at = TimestampField()
     deleted_at = TimestampField(default=None, null=True)
+    roles = ManyToManyField(RoleModel, backref='users')
 
     def save(self, *args: list, **kwargs: dict) -> int:
-        if self.password:
+        if self.password and 'password' in self._dirty:
             self.password = self.ensure_password(self.password)
 
         return super(User, self).save(*args, **kwargs)
@@ -68,7 +66,6 @@ class User(BaseModel, UserMixin):
             'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
             'deleted_at': deleted_at,
             'created_by': data.get('created_by'),
-            'role': self.role.serialize(),
         }
 
         if ignore_fields:
@@ -140,5 +137,6 @@ class User(BaseModel, UserMixin):
 
         return hashed_password
 
+UserRoles = User.roles.through_model
 
-user_datastore = PeeweeUserDatastore(db, User, RoleModel, None)
+user_datastore = PeeweeUserDatastore(db, User, RoleModel, UserRoles)
