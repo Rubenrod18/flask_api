@@ -67,7 +67,7 @@ class CreateUserRolesTable():
             if 'role' in new_user:
                 del new_user['role']
 
-            UserModel.create(**new_user)
+            UserModel.insert(**new_user).execute()
 
         db_wrapper.database.execute_sql('DROP TABLE users;')
 
@@ -97,7 +97,7 @@ class CreateUserRolesTable():
             if 'roles' in old_user:
                 del old_user['roles']
 
-            _OldUser.create(**old_user)
+            _OldUser.insert(**old_user).execute()
 
         db_wrapper.database.execute_sql('DROP TABLE users;')
         db_wrapper.database.execute_sql('DROP TABLE users_roles_through;')
