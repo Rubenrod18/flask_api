@@ -31,10 +31,9 @@ pip-log.txt
 *.xlsx
 *.pdf
 uwsgi.ini
-supervisor.conf
+supervisord.conf
 
 venv
-venv2
 .idea
 coverage_html_report
 node_modules
