@@ -49,10 +49,15 @@ class User(BaseModel, UserMixin):
         active = 1 if data.get('active') else 0
 
         if isinstance(deleted_at, datetime):
-            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%m:%S')
+            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%M:%S')
 
         if isinstance(birth_date, date):
             birth_date = birth_date.strftime('%Y-%m-%d')
+
+        roles = []
+        for item in self.roles:
+            role_data = item.serialize()
+            roles.append(role_data)
 
         data = {
             'id': data.get('id'),
@@ -62,10 +67,11 @@ class User(BaseModel, UserMixin):
             'genre': data.get('genre'),
             'birth_date': birth_date,
             'active': active,
-            'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
-            'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
+            'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%M:%S'),
             'deleted_at': deleted_at,
             'created_by': data.get('created_by'),
+            'roles': roles,
         }
 
         if ignore_fields:

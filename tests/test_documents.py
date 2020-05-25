@@ -39,6 +39,7 @@ def test_update_document(client: FlaskClient, auth_header: any):
                    .order_by(fn.Random())
                    .limit(1)
                    .get())
+    db_wrapper.database.close()
     document_id = document.id
 
     data = {
@@ -57,7 +58,7 @@ def test_update_document(client: FlaskClient, auth_header: any):
     assert document.mime_type == json_data.get('mime_type')
     assert FileStorage.get_filesize(pdf_file) == json_data.get('size')
     assert parse_url.scheme and parse_url.netloc
-    assert document.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('created_at')
+    assert document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
     assert json_data.get('updated_at') > json_data.get('created_at')
     assert json_data.get('deleted_at') is None
 
@@ -68,6 +69,7 @@ def test_get_document_data(client: FlaskClient, auth_header: any):
                    .order_by(fn.Random())
                    .limit(1)
                    .get())
+    db_wrapper.database.close()
     document_id = document.id
 
     headers = auth_header()
@@ -85,8 +87,8 @@ def test_get_document_data(client: FlaskClient, auth_header: any):
     assert document.mime_type == json_data.get('mime_type')
     assert document.size == json_data.get('size')
     assert parse_url.scheme and parse_url.netloc
-    assert document.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('created_at')
-    assert document.updated_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('updated_at')
+    assert document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+    assert document.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
     assert document.deleted_at == json_data.get('deleted_at')
 
 
@@ -96,6 +98,7 @@ def test_get_document_file(client: FlaskClient, auth_header: any):
                 .order_by(fn.Random())
                 .limit(1)
                 .get())
+    db_wrapper.database.close()
     document_id = document.id
 
     response = client.get(f'/documents/{document_id}', headers=auth_header())
@@ -157,4 +160,4 @@ def test_search_document(client: FlaskClient, auth_header: any):
     assert isinstance(document_data, list)
     assert records_total > 0
     assert records_filtered > 0 and records_filtered <= records_total
-    assert document_data[0]['name'].find(document_name) != -1
+    assert document_data[0].get('name').find(document_name) != -1

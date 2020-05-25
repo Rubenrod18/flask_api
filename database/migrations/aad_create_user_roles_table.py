@@ -49,12 +49,10 @@ class CreateUserRolesTable():
 
     def _drop_foreign_key_constraint_users_table(self) -> list:
         """ https://www.sqlite.org/lang_altertable.html """
-
-        UserModel._meta.table_name = 'new_users'
-        db_wrapper.database.create_tables([UserModel])
+        users = []
+        user_roles_relations = []
 
         user_data = _OldUser.select()
-        user_roles_relations = []
 
         for item in user_data:
             new_user = model_to_dict(item, recurse=False)
@@ -67,26 +65,20 @@ class CreateUserRolesTable():
             if 'role' in new_user:
                 del new_user['role']
 
-            UserModel.insert(**new_user).execute()
+            users.append(new_user)
 
         db_wrapper.database.execute_sql('DROP TABLE users;')
 
-        migrate(
-            migrator.rename_table(old_name='new_users', new_name='users')
-        )
+        db_wrapper.database.create_tables([UserModel])
 
-        migrate(
-            migrator.add_index(table='users', columns=['email'], unique=True),
-            migrator.add_index(table='users', columns=['created_by']),
-        )
+        for user in users:
+            UserModel.insert(**user).execute()
 
         return user_roles_relations
 
     def _add_foreign_key_constraint_users_table(self) -> None:
         """ https://www.sqlite.org/lang_altertable.html """
-
-        _OldUser._meta.table_name = 'old_users'
-        db_wrapper.database.create_tables([_OldUser])
+        users = []
 
         user_data = UserModel.select()
 
@@ -97,16 +89,18 @@ class CreateUserRolesTable():
             if 'roles' in old_user:
                 del old_user['roles']
 
-            _OldUser.insert(**old_user).execute()
+            users.append(old_user)
 
         db_wrapper.database.execute_sql('DROP TABLE users;')
         db_wrapper.database.execute_sql('DROP TABLE users_roles_through;')
 
+        _OldUser._meta.table_name = 'users'
+        db_wrapper.database.create_tables([_OldUser])
+
         migrate(
-            migrator.drop_index(table='old_users', index_name='_olduser_email'),
-            migrator.drop_index(table='old_users', index_name='_olduser_created_by'),
-            migrator.drop_index(table='old_users', index_name='_olduser_role_id'),
-            migrator.rename_table(old_name='old_users', new_name='users')
+            migrator.drop_index(table='users', index_name='_olduser_email'),
+            migrator.drop_index(table='users', index_name='_olduser_created_by'),
+            migrator.drop_index(table='users', index_name='_olduser_role_id'),
         )
 
         migrate(
@@ -115,11 +109,14 @@ class CreateUserRolesTable():
             migrator.add_index(table='users', columns=['role_id']),
         )
 
+        for user in users:
+            _OldUser.insert(**user).execute()
+
+
     @migrate_actions
     def up(self):
         if not self._exists_table():
             # TODO: peewee 3.13.3 doesn't have implemented "drop_foreign_key_constraint" method
-            # migrate(migrator.drop_foreign_key_constraint('users', 'user_role_id'))
             user_roles_relations = self._drop_foreign_key_constraint_users_table()
 
             db_wrapper.database.create_tables([UserRolesModel])
@@ -130,5 +127,4 @@ class CreateUserRolesTable():
     def down(self):
         if self._exists_table():
             # TODO: peewee 3.13.3 doesn't have implemented "add_foreign_key_constraint" method
-            # migrate(migrator.add_foreign_key_constraint('users', 'user_role_id'))
             self._add_foreign_key_constraint_users_table()

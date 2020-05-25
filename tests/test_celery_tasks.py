@@ -40,14 +40,18 @@ def test_reset_password_email_task(app: Flask):
     assert True == result
 
 
-def test_export_excel_task(app: Flask, factory: any):
+def test_export_excel_task(app: Flask):
     user = (UserModel.select(UserModel.id)
             .where(UserModel.email == app.config.get('TEST_USER_EMAIL'))
             .order_by(fn.Random())
             .limit(1)
             .get())
 
-    user_list = factory('User', 10).make(to_dict=True)
+    user_list = []
+    for row in UserModel.select().order_by(fn.Random()).limit(10):
+        user_data = row.serialize()
+        user_data['roles'] = [row.roles[0].serialize()]
+        user_list.append(user_data)
 
     task = user_data_export_in_excel.delay(created_by=user.id, user_list=user_list)
     result = task.get()
@@ -69,7 +73,7 @@ def test_export_excel_task(app: Flask, factory: any):
     assert document_data.get('deleted_at') is None
 
 
-def test_export_word_task(app: Flask, factory: any):
+def test_export_word_task(app: Flask):
     def _run_task(created_by: int, user_list: list, to_pdf: int = 0):
         task = user_data_export_in_word.delay(created_by, user_list, to_pdf)
         result = task.get()
@@ -91,12 +95,13 @@ def test_export_word_task(app: Flask, factory: any):
         assert document_data.get('deleted_at') is None
 
 
-    user = (UserModel.select(UserModel.id)
-            .where(UserModel.email == app.config.get('TEST_USER_EMAIL'))
-            .order_by(fn.Random())
-            .limit(1)
-            .get())
-    user_list = factory('User', 10).make(to_dict=True)
+    user = UserModel.get(UserModel.email == app.config.get('TEST_USER_EMAIL'))
+
+    user_list = []
+    for row in UserModel.select().order_by(fn.Random()).limit(10):
+        user_data = row.serialize()
+        user_data['roles'] = [row.roles[0].serialize()]
+        user_list.append(user_data)
 
     _run_task(user.id, user_list)
     _run_task(**{'created_by': user.id, 'user_list': user_list, 'to_pdf': 1})

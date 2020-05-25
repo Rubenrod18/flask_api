@@ -40,6 +40,7 @@ class Config(metaclass=Meta):
     DEBUG = False
     TESTING = False
     SERVER_NAME = os.getenv('SERVER_NAME')
+    LOGIN_DISABLED = False
 
     # Flask-Security-Too
     # generated using: secrets.token_urlsafe()

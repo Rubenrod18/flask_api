@@ -4,6 +4,7 @@ from datetime import datetime
 from cerberus import Validator
 from flask import Blueprint, request
 from flask_restful import Api
+from flask_security import roles_required
 
 from .base import BaseResource
 from app.models.role import Role as RoleModel
@@ -23,6 +24,7 @@ class RoleBaseResource(BaseResource):
 @api.resource('')
 class NewRoleResource(RoleBaseResource):
     @token_required
+    @roles_required('admin')
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -46,6 +48,7 @@ class NewRoleResource(RoleBaseResource):
 @api.resource('/<int:role_id>')
 class RoleResource(RoleBaseResource):
     @token_required
+    @roles_required('admin')
     def get(self, role_id: int) -> tuple:
         response = {
             'error': 'Role doesn\'t exist',
@@ -65,6 +68,7 @@ class RoleResource(RoleBaseResource):
         return response, status_code
 
     @token_required
+    @roles_required('admin')
     def put(self, role_id: int) -> tuple:
         data = request.get_json()
 
@@ -101,6 +105,7 @@ class RoleResource(RoleBaseResource):
         return response_data, response_code
 
     @token_required
+    @roles_required('admin')
     def delete(self, role_id: int) -> tuple:
         response = {
             'error': 'Role doesn\'t exist',
@@ -132,6 +137,7 @@ class RoleResource(RoleBaseResource):
 @api.resource('/search')
 class RolesSearchResource(RoleBaseResource):
     @token_required
+    @roles_required('admin')
     def post(self) -> tuple:
         data = request.get_json()
 

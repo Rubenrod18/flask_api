@@ -54,10 +54,10 @@ class _UserFactory():
         }
 
         if to_dict:
-            data['created_at'] = data.get('created_at').strftime('%Y-%m-%d %H:%m:%S')
-            data['updated_at'] = data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S')
+            data['created_at'] = data.get('created_at').strftime('%Y-%m-%d %H:%M:%S')
+            data['updated_at'] = data.get('updated_at').strftime('%Y-%m-%d %H:%M:%S')
             if data.get('deleted_at'):
-                data['deleted_at'] = data.get('deleted_at').strftime('%Y-%m-%d %H:%m:%S')
+                data['deleted_at'] = data.get('deleted_at').strftime('%Y-%m-%d %H:%M:%S')
 
         return ignore_keys(data, exclude)
 

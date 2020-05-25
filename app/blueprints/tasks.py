@@ -3,6 +3,7 @@ import logging
 from celery.local import PromiseProxy
 from flask import Blueprint
 from flask_restful import Api, Resource
+from flask_security import roles_accepted
 from werkzeug.exceptions import NotFound
 
 from app.extensions import db_wrapper
@@ -42,6 +43,7 @@ class TaskResource(Resource):
 @api.resource('/status/<string:task_id>')
 class TaskStatusResource(TaskResource):
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def get(self, task_id: str):
         task_promise = self.get_task(task_id)
 

@@ -14,18 +14,18 @@ class _RoleFactory():
         updated_at = created_at
         deleted_at = None
 
-        if randint(0, 1):
+        if randint(0, 1) and 'deleted_at' not in params:
             deleted_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
         else:
             updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
 
         role_name = params.get('name') or ' '.join(fake.words(nb=2))
-        role_slug = role_name.lower().replace(' ', '-')
+        role_label = role_name.capitalize().replace('-', ' ')
 
         data = {
             'name': role_name,
             'description': params.get('description') or fake.sentence(),
-            'slug': role_slug,
+            'label': role_label,
             'created_at': created_at,
             'updated_at': updated_at,
             'deleted_at': deleted_at,
@@ -42,7 +42,7 @@ class _RoleFactory():
             role = RoleModel()
             role.name = data.get('name')
             role.description = data.get('description')
-            role.slug = data.get('slug')
+            role.label = data.get('label')
             role.created_at = data.get('created_at')
             role.updated_at = data.get('updated_at')
             role.deleted_at = data.get('deleted_at')

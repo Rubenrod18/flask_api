@@ -12,7 +12,6 @@ from app.celery import ContextTask
 from app.extensions import celery
 from app.libs.libreoffice import convert_to
 from app.models.document import Document as DocumentModel
-from app.models.user import User as UserModel
 from app.utils import to_readable
 from app.utils.file_storage import FileStorage
 
@@ -20,17 +19,16 @@ logger = get_task_logger(__name__)
 
 _COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role', 'created_at', 'updated_at',
                          'deleted_at', ]
-_EXCLUDE_COLUMNS = ['id', 'password', ]
 
 
-def _format_user_data(users_query: list, rows: list) -> None:
+def _add_table_user_data(users_query: list, rows: list) -> None:
     user_list = []
 
     for user in users_query:
         user_dict = {
-            'role': user.get('role').get('name'),
+            'role': user.get('roles')[0].get('name'),
         }
-        del user['role']
+        del user['roles']
 
         user_dict.update({
             k: to_readable(v)
@@ -41,12 +39,12 @@ def _format_user_data(users_query: list, rows: list) -> None:
         user_dict = dict(sorted(user_dict.items(), key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0])))
         user_list.append(user_dict)
 
-    for user_dict in user_list:
+    for i, user_dict in enumerate(user_list):
         user_values = list(user_dict.values())
         rows.append(user_values)
 
 
-def _format_column_names(rows: list, original_column_names: set) -> None:
+def _add_table_column_names(rows: list, original_column_names: set) -> None:
     formatted_column_names = [
         column.title().replace('_', ' ')
         for column in original_column_names
@@ -60,6 +58,7 @@ def _format_column_names(rows: list, original_column_names: set) -> None:
 def user_data_export_in_word(self, created_by: int, user_list: list, to_pdf: bool = False):
     def _write_docx_content(rows: list, document: docx.Document) -> None:
         header_fields = rows[0]
+        assert len(header_fields) == len(_COLUMN_DISPLAY_ORDER)
 
         table = document.add_table(rows=len(rows), cols=len(header_fields))
 
@@ -77,7 +76,7 @@ def user_data_export_in_word(self, created_by: int, user_list: list, to_pdf: boo
     self.total_progress = len(user_list) + 2  # Word table rows + 2 (Word table header and save Word in database)
     tempfile_suffix = '.docx'
     tempfile = NamedTemporaryFile(suffix=tempfile_suffix)
-    excel_rows = []
+    table_data = []
     mime_type = 'application/pdf' if to_pdf else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
     self.update_state(state='PROGRESS', meta={
@@ -88,14 +87,11 @@ def user_data_export_in_word(self, created_by: int, user_list: list, to_pdf: boo
 
     # TODO: insert query for getting users here
 
-    original_column_names = UserModel.get_fields(exclude=_EXCLUDE_COLUMNS,
-                                                 include=_COLUMN_DISPLAY_ORDER,
-                                                 sort_order=_COLUMN_DISPLAY_ORDER)
-    _format_column_names(excel_rows, original_column_names)
-    _format_user_data(user_list, excel_rows)
+    _add_table_column_names(table_data, set(_COLUMN_DISPLAY_ORDER))
+    _add_table_user_data(user_list, table_data)
 
     document = docx.Document()
-    _write_docx_content(excel_rows, document)
+    _write_docx_content(table_data, document)
     document.save(tempfile.name)
 
     directory_path = current_app.config.get('STORAGE_DIRECTORY')
