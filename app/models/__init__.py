@@ -24,4 +24,8 @@ def get_models() -> list:
             model_class = locate(path)
             models.append(model_class)
 
+    path = '{}.{}.{}'.format(__name__, 'user', 'UserRoles')
+    model_class = locate(path)
+    models.append(model_class)
+
     return models

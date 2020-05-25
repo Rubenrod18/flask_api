@@ -146,6 +146,7 @@ def user_model_schema(is_creation: bool = True) -> dict:
                 'module_name': 'app.models.role',
                 'class_name': 'Role',
                 'field_name': 'id',
+                'only_deleted': False,
             },
         },
     }
@@ -216,7 +217,20 @@ def role_model_schema(is_creation: bool = True) -> dict:
     return {
         'name': {
             'type': 'string',
-            'required': True,
+            'required': is_creation,
+            'empty': False,
+            'nullable': False,
+            'maxlength': 255,
+            'no_exists': {
+                'module_name': 'app.models.role',
+                'class_name': 'Role',
+                'field_name': 'name',
+                'only_deleted': False,
+            },
+        },
+        'label': {
+            'type': 'string',
+            'required': is_creation,
             'empty': False,
             'nullable': False,
             'maxlength': 255,
@@ -228,19 +242,6 @@ def role_model_schema(is_creation: bool = True) -> dict:
             'nullable': True,
             'maxlength': 255,
         },
-        'slug': {
-            'type': 'string',
-            'required': is_creation,
-            'empty': False if is_creation else False,
-            'nullable': False if is_creation else False,
-            'maxlength': 255,
-            'no_exists': {
-                'module_name': 'app.models.role',
-                'class_name': 'Role',
-                'field_name': 'slug',
-                'only_deleted': False,
-            },
-        }
     }
 
 

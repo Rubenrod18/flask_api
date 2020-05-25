@@ -5,12 +5,15 @@ from cerberus import Validator
 from flask_login import current_user
 from flask_restful import Api, reqparse
 from flask import Blueprint, request, url_for
+from flask_security import roles_accepted
 
-from app.celery.word.tasks import user_data_export_in_word
-from app.celery.excel.tasks import user_data_export_in_excel
+from app.celery.word.tasks import export_user_data_in_word
+from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email
 from .base import BaseResource
-from ..models.user import User as UserModel
+from ..extensions import db_wrapper
+from ..models.user import User as UserModel, user_datastore
+from ..models.role import Role as RoleModel
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
 from ..utils.decorators import token_required
 
@@ -26,6 +29,7 @@ class UserResource(BaseResource):
 @api.resource('')
 class NewUserResource(UserResource):
     @token_required
+    @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -38,8 +42,13 @@ class NewUserResource(UserResource):
                        'fields': v.errors,
                    }, 422
 
-        user = UserModel.create(**data)
-        user.created_by = current_user.id
+        with db_wrapper.database.atomic():
+            data['created_by'] = current_user.id
+            user = user_datastore.create_user(**data)
+
+            role = RoleModel.get_by_id(data['role_id'])
+            user_datastore.add_role_to_user(user, role)
+
         user_dict = user.serialize()
 
         create_user_email.delay(data)
@@ -52,6 +61,7 @@ class NewUserResource(UserResource):
 @api.resource('/<int:user_id>')
 class UserResource(UserResource):
     @token_required
+    @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
         response = {
             'error': 'User doesn\'t exist',
@@ -71,6 +81,7 @@ class UserResource(UserResource):
         return response, status_code
 
     @token_required
+    @roles_accepted('admin', 'team_leader')
     def put(self, user_id: int) -> tuple:
         data = request.get_json()
 
@@ -86,8 +97,14 @@ class UserResource(UserResource):
         user = (UserModel.get_or_none(UserModel.id == user_id,
                                       UserModel.deleted_at.is_null()))
         if user:
-            data['id'] = user_id
-            UserModel(**data).save()
+            with db_wrapper.database.atomic():
+                data['id'] = user_id
+                UserModel(**data).save()
+
+                user_datastore.remove_role_from_user(user, user.roles[0])
+
+                role = RoleModel.get_by_id(data['role_id'])
+                user_datastore.add_role_to_user(user, role)
 
             user = (UserModel.get_or_none(UserModel.id == user_id,
                                           UserModel.deleted_at.is_null()))
@@ -106,6 +123,7 @@ class UserResource(UserResource):
         return response_data, response_code
 
     @token_required
+    @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
         response = {
             'error': 'User doesn\'t exist',
@@ -137,6 +155,7 @@ class UserResource(UserResource):
 @api.resource('/search')
 class UsersSearchResource(UserResource):
     @token_required
+    @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -177,21 +196,11 @@ class UsersSearchResource(UserResource):
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserResource):
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        data = request.get_json()
+        request_data = request.get_json()
 
-        page_number, items_per_page, order_by = self.get_request_query_fields()
-
-        query = UserModel.select()
-        query = self.create_query(query, data)
-        query = (query.order_by(order_by)
-                 .paginate(page_number, items_per_page))
-
-        user_list = []
-        for user in query:
-            user_list.append(user.serialize())
-
-        task = user_data_export_in_excel.apply_async((current_user.id, user_list), countdown=5)
+        task = export_user_data_in_excel.apply_async((current_user.id, request_data), countdown=5)
 
         return {
                    'task': task.id,
@@ -202,28 +211,19 @@ class ExportUsersExcelResource(UserResource):
 @api.resource('/word')
 class ExportUsersPdfResource(UserResource):
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         # TODO: RequestParse will be deprecated in the future. Replace RequestParse to marshmallow
         # https://flask-restful.readthedocs.io/en/latest/reqparse.html
         parser = reqparse.RequestParser()
         parser.add_argument('to_pdf', type=int, location='args')
 
-        data = request.get_json()
+        request_data = request.get_json()
+
         args = parser.parse_args()
-
-        page_number, items_per_page, order_by = self.get_request_query_fields()
-
-        query = UserModel.select()
-        query = self.create_query(query, data)
-        query = (query.order_by(order_by)
-                 .paginate(page_number, items_per_page))
-
-        user_list = []
-        for user in query:
-            user_list.append(user.serialize())
-
         to_pdf = args.get('to_pdf') or 0
-        task = user_data_export_in_word.apply_async(args=[current_user.id, user_list, to_pdf])
+
+        task = export_user_data_in_word.apply_async(args=[current_user.id, request_data, to_pdf])
 
         return {
             'task': task.id,

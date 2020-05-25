@@ -2,13 +2,11 @@ import os
 
 import pytest
 from flask import Flask
-from flask_security.passwordless import generate_login_token
+from flask.testing import FlaskClient
 
 from app import create_app
-from app.extensions import db_wrapper
-from app.models.user import User as UserModel
+from database import init_database
 from database.factories import Factory
-from database.migrations import init_database
 from database.seeds import init_seed
 
 
@@ -51,18 +49,22 @@ def runner(app: Flask):
 
 
 @pytest.fixture
-def auth_header(app: Flask):
+def auth_header(app: Flask, client: FlaskClient):
     def _create_auth_header(user_email: str = None) -> dict:
         if user_email is None:
             user_email = os.getenv('TEST_USER_EMAIL')
 
-        user = UserModel.get(UserModel.email == user_email)
-        db_wrapper.database.close()
-        with app.app_context():
-            token = generate_login_token(user)
+        data = {
+            'email': user_email,
+            'password': os.getenv('TEST_USER_PASSWORD'),
+        }
+
+        response = client.post('/auth/login', json=data)
+        json_response = response.get_json()
+        token = json_response.get('token')
 
         return {
-            app.config.get('SECURITY_TOKEN_AUTHENTICATION_HEADER'): 'Bearer %s' % token
+            app.config.get('SECURITY_TOKEN_AUTHENTICATION_HEADER'): 'Bearer %s' % token,
         }
 
     return _create_auth_header

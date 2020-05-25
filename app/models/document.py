@@ -40,7 +40,7 @@ class Document(BaseModel):
         deleted_at = data.get('deleted_at')
 
         if isinstance(deleted_at, datetime):
-            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%m:%S')
+            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%M:%S')
 
         data = {
             'id': data.get('id'),
@@ -48,8 +48,8 @@ class Document(BaseModel):
             'mime_type': data.get('mime_type'),
             'size': data.get('size'),
             'url': self.url,
-            'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
-            'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
+            'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%M:%S'),
             'deleted_at': deleted_at,
             'created_by': data.get('created_by'),
         }

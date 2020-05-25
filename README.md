@@ -18,7 +18,7 @@ The project is developed in Python 3.7 and use next main libraries:
 ```
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get update
-sudo apt-get install autoconf build-essential cmake libcap-dev libffi-dev libpcre3-dev librabbitmq-dev libreoffice-writer libtool libxml2-dev libxslt1-dev libxslt1.1 pkg-config nginx python3-distutils python3.7 python3.7-dev python3.7-venv rabbitmq-server uuid-dev uwsgi uwsgi-src
+sudo apt-get install autoconf build-essential cmake libcap-dev libffi-dev libpcre3-dev librabbitmq-dev libreoffice-writer libtool libxml2-dev libxslt1-dev libxslt1.1 pkg-config magic nginx python3-distutils python3.7 python3.7-dev python3.7-venv rabbitmq-server uuid-dev uwsgi uwsgi-src
 sudo reboot
 ```
 

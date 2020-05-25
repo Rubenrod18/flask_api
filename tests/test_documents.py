@@ -15,7 +15,10 @@ def test_save_document(client: FlaskClient, auth_header: any):
         'document': open(pdf_file, 'rb'),
     }
 
-    response = client.post('/documents', data=data, headers=auth_header())
+    headers = auth_header()
+    headers['Content-Type'] = 'multipart/form-data'
+
+    response = client.post('/documents', data=data, headers=headers)
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -35,17 +38,21 @@ def test_save_document(client: FlaskClient, auth_header: any):
 def test_update_document(client: FlaskClient, auth_header: any):
     pdf_file = '%s/example.pdf' % current_app.config.get('STORAGE_DIRECTORY')
     document = (DocumentModel.select()
-                   .where(DocumentModel.deleted_at.is_null())
-                   .order_by(fn.Random())
-                   .limit(1)
-                   .get())
+                .where(DocumentModel.deleted_at.is_null())
+                .order_by(fn.Random())
+                .limit(1)
+                .get())
+    db_wrapper.database.close()
     document_id = document.id
 
     data = {
         'document': open(pdf_file, 'rb'),
     }
 
-    response = client.put(f'/documents/{document_id}', data=data, headers=auth_header())
+    headers = auth_header()
+    headers['Content-Type'] = 'multipart/form-data'
+
+    response = client.put(f'/documents/{document_id}', data=data, headers=headers)
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -57,23 +64,21 @@ def test_update_document(client: FlaskClient, auth_header: any):
     assert document.mime_type == json_data.get('mime_type')
     assert FileStorage.get_filesize(pdf_file) == json_data.get('size')
     assert parse_url.scheme and parse_url.netloc
-    assert document.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('created_at')
+    assert document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
     assert json_data.get('updated_at') > json_data.get('created_at')
     assert json_data.get('deleted_at') is None
 
 
 def test_get_document_data(client: FlaskClient, auth_header: any):
     document = (DocumentModel.select()
-                   .where(DocumentModel.deleted_at.is_null())
-                   .order_by(fn.Random())
-                   .limit(1)
-                   .get())
+                .where(DocumentModel.deleted_at.is_null())
+                .order_by(fn.Random())
+                .limit(1)
+                .get())
+    db_wrapper.database.close()
     document_id = document.id
 
-    headers = auth_header()
-    headers['Content-Type'] = 'application/json'
-
-    response = client.get(f'/documents/{document_id}', headers=headers)
+    response = client.get(f'/documents/{document_id}', json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -85,8 +90,8 @@ def test_get_document_data(client: FlaskClient, auth_header: any):
     assert document.mime_type == json_data.get('mime_type')
     assert document.size == json_data.get('size')
     assert parse_url.scheme and parse_url.netloc
-    assert document.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('created_at')
-    assert document.updated_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('updated_at')
+    assert document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+    assert document.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
     assert document.deleted_at == json_data.get('deleted_at')
 
 
@@ -96,10 +101,15 @@ def test_get_document_file(client: FlaskClient, auth_header: any):
                 .order_by(fn.Random())
                 .limit(1)
                 .get())
+    db_wrapper.database.close()
     document_id = document.id
 
-    response = client.get(f'/documents/{document_id}', headers=auth_header())
+    headers = auth_header()
+    headers['Content-Type'] = 'application/octet-stream'
 
+    response = client.get(f'/documents/{document_id}', headers=headers)
+
+    assert 200 == response.status_code
     assert isinstance(response.get_data(), bytes)
 
 
@@ -112,12 +122,9 @@ def test_delete_document(client: FlaskClient, auth_header: any):
                    .id)
     db_wrapper.database.close()
 
-    response = client.delete('/documents/%s' % document_id, headers=auth_header())
-
+    response = client.delete('/documents/%s' % document_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
-
-    print(json_data)
 
     assert 200 == response.status_code
     assert document_id == json_data.get('id')
@@ -127,11 +134,11 @@ def test_delete_document(client: FlaskClient, auth_header: any):
 
 def test_search_document(client: FlaskClient, auth_header: any):
     document_name = (DocumentModel.select(DocumentModel.name)
-                 .where(DocumentModel.deleted_at.is_null())
-                 .order_by(fn.Random())
-                 .limit(1)
-                 .get()
-                 .name)
+                     .where(DocumentModel.deleted_at.is_null())
+                     .order_by(fn.Random())
+                     .limit(1)
+                     .get()
+                     .name)
     db_wrapper.database.close()
 
     json_body = {
@@ -146,7 +153,6 @@ def test_search_document(client: FlaskClient, auth_header: any):
     }
 
     response = client.post('/documents/search', json=json_body, headers=auth_header())
-
     json_response = response.get_json()
 
     document_data = json_response.get('data')
@@ -157,4 +163,4 @@ def test_search_document(client: FlaskClient, auth_header: any):
     assert isinstance(document_data, list)
     assert records_total > 0
     assert records_filtered > 0 and records_filtered <= records_total
-    assert document_data[0]['name'].find(document_name) != -1
+    assert document_data[0].get('name').find(document_name) != -1

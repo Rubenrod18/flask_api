@@ -13,13 +13,14 @@ class Base(db.Model):
 
     @abstractmethod
     def save(self, *args: list, **kwargs: dict) -> int:
-        current_date = datetime.utcnow()
+        if hasattr(self, 'created_at') and hasattr(self, 'deleted_at'):
+            current_date = datetime.utcnow()
 
-        if self.id is None and self.created_at is None:
-            self.created_at = current_date
+            if self.id is None and self.created_at is None:
+                self.created_at = current_date
 
-        if self.deleted_at is None:
-            self.updated_at = current_date
+            if self.deleted_at is None:
+                self.updated_at = current_date
 
         return super(Base, self).save(*args, **kwargs)
 

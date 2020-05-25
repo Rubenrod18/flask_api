@@ -1,14 +1,18 @@
 from datetime import datetime, timedelta
 from random import randint
+from typing import TypeVar, List
 
 from flask import current_app
 from peewee import fn
+from playhouse.shortcuts import model_to_dict
 
 from app.models.role import Role as RoleModel
-from app.models.user import User as UserModel
+from app.models.user import User as UserModel, user_datastore
 from app.utils import ignore_keys
 from database import fake
 
+T = TypeVar('T', UserModel, dict)
+UserList = List[UserModel]
 
 class _UserFactory():
     def _fill(self, params: dict, to_dict: bool, exclude: list) -> dict:
@@ -24,13 +28,7 @@ class _UserFactory():
         else:
             updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
 
-        role = (RoleModel.select()
-                .where(RoleModel.deleted_at.is_null())
-                .order_by(fn.Random())
-                .limit(1)
-                .get())
-
-        if randint(0, 1) and 'created_by' not in params:
+        if 'created_by' not in params:
             created_by = (UserModel.select()
                           .where(UserModel.created_by.is_null())
                           .order_by(fn.Random())
@@ -42,7 +40,6 @@ class _UserFactory():
 
         data = {
             'created_by': params.get('created_by') or created_by,
-            'role': params.get('role') or role,
             'name': params.get('name') or fake.name(),
             'last_name': params.get('last_name') or fake.last_name(),
             'email': params.get('email') or fake.random_element(
@@ -57,15 +54,14 @@ class _UserFactory():
         }
 
         if to_dict:
-            data['role'] = data.get('role').serialize()
-            data['created_at'] = data.get('created_at').strftime('%Y-%m-%d %H:%m:%S')
-            data['updated_at'] = data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S')
+            data['created_at'] = data.get('created_at').strftime('%Y-%m-%d %H:%M:%S')
+            data['updated_at'] = data.get('updated_at').strftime('%Y-%m-%d %H:%M:%S')
             if data.get('deleted_at'):
-                data['deleted_at'] = data.get('deleted_at').strftime('%Y-%m-%d %H:%m:%S')
+                data['deleted_at'] = data.get('deleted_at').strftime('%Y-%m-%d %H:%M:%S')
 
         return ignore_keys(data, exclude)
 
-    def make(self, params: dict, to_dict: bool, exclude: list) -> UserModel:
+    def make(self, params: dict, to_dict: bool, exclude: list) -> T:
         data = self._fill(params, to_dict, exclude)
 
         if to_dict:
@@ -73,12 +69,11 @@ class _UserFactory():
         else:
             user = UserModel()
             user.created_by = data.get('created_by')
-            user.role = data.get('role')
             user.name = data.get('name')
             user.last_name = data.get('last_name')
             user.email = data.get('email')
             user.genre = data.get('genre')
-            user.password = UserModel.ensure_password(data.get('password'))
+            user.password = data.get('password')
             user.birth_date = data.get('birth_date')
             user.active = data.get('active')
             user.created_at = data.get('created_at')
@@ -88,14 +83,27 @@ class _UserFactory():
         return user
 
     def create(self, params: dict) -> UserModel:
-        data = self._fill(params, to_dict=False, exclude=[])
+        data = model_to_dict(self.make(params, to_dict=False, exclude=[]), recurse=False)
 
-        return UserModel.create(**data)
+        # Roles are required for flask_security.datastore
+        if 'roles' in params:
+            roles = params['roles']
+        else:
+            role = (RoleModel.select()
+                    .where(RoleModel.deleted_at.is_null())
+                    .order_by(fn.Random())
+                    .limit(1)
+                    .get())
+            roles = [role]
+        data['roles'] = roles
 
-    def bulk_create(self, total: int, params: dict) -> None:
+        return user_datastore.create_user(**data)
+
+    def bulk_create(self, total: int, params: dict) -> UserList:
         data = []
 
         for item in range(total):
-            data.append(self.make(params, to_dict=False, exclude=[]))
+            user = self.create(params)
+            data.append(user)
 
-        UserModel.bulk_create(data)
+        return data

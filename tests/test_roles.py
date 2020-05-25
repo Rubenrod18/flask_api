@@ -10,7 +10,6 @@ def test_save_role_endpoint(client: FlaskClient, auth_header: any, factory: any)
     data = factory('Role').make(exclude=ignore_fields, to_dict=True)
 
     response = client.post('/roles', json=data, headers=auth_header())
-
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -42,7 +41,6 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: any, factory: an
     assert 200 == response.status_code
     assert role_id == json_data.get('id')
     assert data.get('name') == json_data.get('name')
-    assert data.get('slug') == json_data.get('slug')
     assert json_data.get('created_at')
     assert json_data.get('updated_at') >= json_data.get('created_at')
     assert json_data.get('deleted_at') is None
@@ -57,11 +55,9 @@ def test_get_role_endpoint(client: FlaskClient, auth_header: any):
                .id)
 
     role = RoleModel.get(RoleModel.id == role_id)
-
     db_wrapper.database.close()
 
-    response = client.get('/roles/%s' % role_id, headers=auth_header())
-
+    response = client.get('/roles/%s' % role_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -69,8 +65,8 @@ def test_get_role_endpoint(client: FlaskClient, auth_header: any):
     assert role_id == json_data.get('id')
     assert role.name == json_data.get('name')
     assert role.name.lower() == json_data.get('name').lower().replace('-', ' ')
-    assert role.created_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('created_at')
-    assert role.updated_at.strftime('%Y-%m-%d %H:%m:%S') == json_data.get('updated_at')
+    assert role.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+    assert role.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
     assert role.deleted_at == json_data.get('deleted_at')
 
 
@@ -83,8 +79,7 @@ def test_delete_role_endpoint(client: FlaskClient, auth_header: any):
                .id)
     db_wrapper.database.close()
 
-    response = client.delete('/roles/%s' % role_id, headers=auth_header())
-
+    response = client.delete('/roles/%s' % role_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -115,7 +110,6 @@ def test_search_roles_endpoint(client: FlaskClient, auth_header: any):
     }
 
     response = client.post('/roles/search', json=json_body, headers=auth_header())
-
     json_response = response.get_json()
 
     role_data = json_response.get('data')

@@ -3,16 +3,15 @@ import os
 from flask import Response
 from dotenv import load_dotenv
 
-from app import create_app, init_logging
+from app import create_app
 from app.extensions import db_wrapper
-from database.migrations import init_database, init_migrations
+from database import init_database
+from database.migrations import init_migrations
 from database.seeds import init_seed
 
 load_dotenv()
 
 app = create_app(os.getenv('FLASK_CONFIG'))
-
-init_logging(app)
 
 
 @app.after_request

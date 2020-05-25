@@ -13,9 +13,9 @@ class Role(BaseModel, RoleMixin):
     class Meta:
         table_name = 'roles'
 
-    name = CharField()
+    name = CharField(unique=True)
     description = TextField(null=True)
-    slug = CharField(unique=True)
+    label = CharField()
     created_at = TimestampField(default=None)
     updated_at = TimestampField()
     deleted_at = TimestampField(default=None, null=True)
@@ -30,15 +30,15 @@ class Role(BaseModel, RoleMixin):
         deleted_at = data.get('deleted_at')
 
         if isinstance(deleted_at, datetime):
-            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%m:%S')
+            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%M:%S')
 
         data = {
             'id': data.get('id'),
             'name': data.get('name'),
             'description': data.get('description'),
-            'slug': data.get('slug'),
-            'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%m:%S'),
-            'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%m:%S'),
+            'label': data.get('label'),
+            'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%M:%S'),
             'deleted_at': deleted_at,
         }
 
