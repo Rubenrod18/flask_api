@@ -6,12 +6,15 @@ from flask import Flask
 
 from app import extensions
 from app.blueprints import blueprints
+from app.middleware import middleware
 
 
 def create_app(env_config: str) -> Flask:
     app = flask.Flask(__name__)
     app.config.from_object(env_config)
+    app.wsgi_app = middleware(app.wsgi_app)
 
+    init_logging(app)
     init_app(app)
     register_blueprints(app)
 

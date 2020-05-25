@@ -14,7 +14,8 @@ from xlsxwriter.worksheet import Worksheet
 from app.celery import ContextTask
 from app.extensions import celery
 from app.models.document import Document as DocumentModel
-from app.utils import find_longest_word, pos_to_char, to_readable
+from app.models.user import User as UserModel
+from app.utils import find_longest_word, pos_to_char, to_readable, get_request_query_fields, create_query
 from app.utils.file_storage import FileStorage
 
 logger = get_task_logger(__name__)
@@ -75,8 +76,23 @@ def _add_excel_autofilter(worksheet: Worksheet):
     worksheet.autofilter(columns)
 
 
+def _get_user_data(request_data: dict) -> list:
+    page_number, items_per_page, order_by = get_request_query_fields(UserModel, request_data)
+
+    query = UserModel.select()
+    query = create_query(UserModel, query, request_data)
+    query = (query.order_by(order_by)
+             .paginate(page_number, items_per_page))
+
+    user_list = []
+    for user in query:
+        user_list.append(user.serialize())
+
+    return user_list
+
+
 @celery.task(bind=True, base=ContextTask)
-def user_data_export_in_excel(self, created_by: int, user_list: list):
+def export_user_data_in_excel(self, created_by: int, request_data: dict):
     def _write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> int:
         excel_longest_word = ''
 
@@ -108,7 +124,9 @@ def user_data_export_in_excel(self, created_by: int, user_list: list):
 
         return len(excel_longest_word)
 
-    self.total_progress = len(user_list) + 2  # Excel table rows + 2 (Excel table header and save Excel in database)
+    user_list = _get_user_data(request_data)
+
+    self.total_progress = len(user_list) + 2  # Excel rows + 2 (Excel header and save Excel in database)
     tempfile = NamedTemporaryFile()
     excel_rows = []
 
@@ -117,8 +135,6 @@ def user_data_export_in_excel(self, created_by: int, user_list: list):
         'total': self.total_progress,
         'status': 'In progress...',
     })
-
-    # TODO: insert query for getting users here
 
     workbook = xlsxwriter.Workbook(tempfile.name)
     worksheet = workbook.add_worksheet()

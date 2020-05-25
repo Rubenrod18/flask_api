@@ -10,10 +10,8 @@ def test_save_role_endpoint(client: FlaskClient, auth_header: any, factory: any)
     data = factory('Role').make(exclude=ignore_fields, to_dict=True)
 
     response = client.post('/roles', json=data, headers=auth_header())
-
     json_response = response.get_json()
     json_data = json_response.get('data')
-    print(json_response)
 
     assert 201 == response.status_code
     assert data.get('name') == json_data.get('name')
@@ -57,11 +55,9 @@ def test_get_role_endpoint(client: FlaskClient, auth_header: any):
                .id)
 
     role = RoleModel.get(RoleModel.id == role_id)
-
     db_wrapper.database.close()
 
-    response = client.get('/roles/%s' % role_id, headers=auth_header())
-
+    response = client.get('/roles/%s' % role_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -83,8 +79,7 @@ def test_delete_role_endpoint(client: FlaskClient, auth_header: any):
                .id)
     db_wrapper.database.close()
 
-    response = client.delete('/roles/%s' % role_id, headers=auth_header())
-
+    response = client.delete('/roles/%s' % role_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -115,7 +110,6 @@ def test_search_roles_endpoint(client: FlaskClient, auth_header: any):
     }
 
     response = client.post('/roles/search', json=json_body, headers=auth_header())
-
     json_response = response.get_json()
 
     role_data = json_response.get('data')

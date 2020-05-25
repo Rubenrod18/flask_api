@@ -7,8 +7,8 @@ from flask_restful import Api, reqparse
 from flask import Blueprint, request, url_for
 from flask_security import roles_accepted
 
-from app.celery.word.tasks import user_data_export_in_word
-from app.celery.excel.tasks import user_data_export_in_excel
+from app.celery.word.tasks import export_user_data_in_word
+from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email
 from .base import BaseResource
 from ..extensions import db_wrapper
@@ -198,20 +198,9 @@ class ExportUsersExcelResource(UserResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        data = request.get_json()
+        request_data = request.get_json()
 
-        page_number, items_per_page, order_by = self.get_request_query_fields()
-
-        query = UserModel.select()
-        query = self.create_query(query, data)
-        query = (query.order_by(order_by)
-                 .paginate(page_number, items_per_page))
-
-        user_list = []
-        for user in query:
-            user_list.append(user.serialize())
-
-        task = user_data_export_in_excel.apply_async((current_user.id, user_list), countdown=5)
+        task = export_user_data_in_excel.apply_async((current_user.id, request_data), countdown=5)
 
         return {
                    'task': task.id,
@@ -229,22 +218,12 @@ class ExportUsersPdfResource(UserResource):
         parser = reqparse.RequestParser()
         parser.add_argument('to_pdf', type=int, location='args')
 
-        data = request.get_json()
+        request_data = request.get_json()
+
         args = parser.parse_args()
-
-        page_number, items_per_page, order_by = self.get_request_query_fields()
-
-        query = UserModel.select()
-        query = self.create_query(query, data)
-        query = (query.order_by(order_by)
-                 .paginate(page_number, items_per_page))
-
-        user_list = []
-        for user in query:
-            user_list.append(user.serialize())
-
         to_pdf = args.get('to_pdf') or 0
-        task = user_data_export_in_word.apply_async(args=[current_user.id, user_list, to_pdf])
+
+        task = export_user_data_in_word.apply_async(args=[current_user.id, request_data, to_pdf])
 
         return {
             'task': task.id,

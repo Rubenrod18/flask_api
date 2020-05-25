@@ -47,11 +47,10 @@ class AuthUserLoginResource(Resource):
                }, 200
 
 
-# TODO: Pending to implement testing
 @api.resource('/logout')
 class AuthUserLogoutResource(Resource):
     @token_required
-    def get(self) -> tuple:
+    def post(self) -> tuple:
         flask_security.logout_user()
 
         return {}, 200

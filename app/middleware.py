@@ -1,5 +1,6 @@
 from flask import Request, Response
 
+
 class middleware():
     '''
     Simple WSGI middleware for checking if the request content type is valid.
@@ -9,12 +10,24 @@ class middleware():
         self.app = app
         self.accept_content_types = {
             'application/json',
-            'application/x-www-form-urlencoded',
+            'multipart/form-data',
+            'application/octet-stream',
         }
+
+    def _parse_content_type(self, request_content_type: any) -> str:
+        parsed_content_type = ''
+
+        if isinstance(request_content_type, str):
+            parsed_content_type = request_content_type.split(';')[0] if request_content_type.find(
+                ';') else request_content_type
+
+        return parsed_content_type
 
     def __call__(self, environ, start_response):
         request = Request(environ)
-        content_type = request.content_type
+        # Content-Type := type "/" subtype *[";" parameter]
+        # https://tools.ietf.org/html/rfc1341
+        content_type = self._parse_content_type(request.content_type)
 
         if content_type in self.accept_content_types:
             return self.app(environ, start_response)

@@ -1,23 +1,19 @@
-import logging
 import os
 
 from flask.testing import FlaskClient
 from peewee import fn
-from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
 from app.models.role import Role as RoleModel
 from app.models.user import User as UserModel
 
-logger = logging.getLogger(__name__)
-
 
 def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
+    role = RoleModel.get_by_id(1)
+
     ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by']
     data = factory('User').make(exclude=ignore_fields, to_dict=True)
-
     data['password'] = os.getenv('TEST_USER_PASSWORD')
-    role = RoleModel.get_by_id(1)
     data['role_id'] = role.id
     db_wrapper.database.close()
 
@@ -35,7 +31,6 @@ def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any)
     assert json_data.get('deleted_at') is None
 
     role_data = json_data.get('roles')[0]
-    print(model_to_dict(role))
 
     assert role.name == role_data.get('name')
     assert role.description == role_data.get('description')
@@ -58,10 +53,10 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: an
 
     data['password'] = os.getenv('TEST_USER_PASSWORD')
     role = (RoleModel.select()
-               .where(RoleModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get())
+            .where(RoleModel.deleted_at.is_null())
+            .order_by(fn.Random())
+            .limit(1)
+            .get())
     data['role_id'] = role.id
     db_wrapper.database.close()
 
@@ -99,11 +94,9 @@ def test_get_user_endpoint(client: FlaskClient, auth_header: any):
 
     user = UserModel.get(UserModel.id == user_id)
     role = user.roles[0]
-
     db_wrapper.database.close()
 
-    response = client.get('/users/%s' % user_id, headers=auth_header())
-
+    response = client.get('/users/%s' % user_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -126,7 +119,6 @@ def test_get_user_endpoint(client: FlaskClient, auth_header: any):
     assert role_data.get('deleted_at') is None
 
 
-
 def test_delete_user_endpoint(client: FlaskClient, auth_header: any):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
@@ -136,8 +128,7 @@ def test_delete_user_endpoint(client: FlaskClient, auth_header: any):
                .id)
     db_wrapper.database.close()
 
-    response = client.delete('/users/%s' % user_id, headers=auth_header())
-
+    response = client.delete('/users/%s' % user_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -168,7 +159,6 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
     }
 
     response = client.post('/users/search', json=json_body, headers=auth_header())
-
     json_response = response.get_json()
 
     user_data = json_response.get('data')
@@ -183,23 +173,25 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
 
 
 def test_export_word_endpoint(client: FlaskClient, auth_header: any):
-    def _request(uri: str) -> None:
-        response = client.post(uri, headers=auth_header())
-
+    def _request(uri: str, headers: str, json: dict) -> None:
+        response = client.post(uri, json=json, headers=headers)
         json_response = response.get_json()
 
         assert 202 == response.status_code
         assert json_response.get('task')
         assert json_response.get('url')
 
-    _request('/users/word')
-    _request('/users/word?to_pdf=1')
-    _request('/users/word?to_pdf=0')
+    data = {}
+
+    _request('/users/word', auth_header(), data)
+    _request('/users/word?to_pdf=1', auth_header(), data)
+    _request('/users/word?to_pdf=0', auth_header(), data)
 
 
 def test_export_excel_endpoint(client: FlaskClient, auth_header: any):
-    response = client.post('/users/xlsx', headers=auth_header())
+    data = {}
 
+    response = client.post('/users/xlsx', json=data, headers=auth_header())
     json_response = response.get_json()
 
     assert 202 == response.status_code

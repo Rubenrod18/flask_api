@@ -7,6 +7,7 @@ from datetime import datetime
 from flask import Blueprint, request, current_app, send_file, make_response
 from flask_login import current_user
 from flask_restful import Api
+from flask_security import roles_accepted
 
 from app.blueprints.base import BaseResource
 from app.models.document import Document as DocumentModel
@@ -92,6 +93,7 @@ class DocumentResource(BaseResource):
 @api.resource('')
 class NewDocumentResource(DocumentResource):
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
         request_data = self.get_request_file()
 
@@ -141,6 +143,7 @@ class NewDocumentResource(DocumentResource):
 @api.resource('/<int:document_id>')
 class DocumentResource(DocumentResource):
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def get(self, document_id: int) -> tuple:
         headers = request.headers.get('Content-Type')
 
@@ -152,6 +155,7 @@ class DocumentResource(DocumentResource):
         return response
 
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def put(self, document_id: int) -> tuple:
         request_data = self.get_request_file()
         request_data['id'] = document_id
@@ -198,6 +202,7 @@ class DocumentResource(DocumentResource):
                }, 200
 
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def delete(self, document_id: int):
         response = {
             'error': 'Document doesn\'t exist',
@@ -229,6 +234,7 @@ class DocumentResource(DocumentResource):
 @api.resource('/search')
 class SearchDocumentResource(DocumentResource):
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
         data = request.get_json()
 

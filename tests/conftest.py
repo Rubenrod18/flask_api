@@ -3,11 +3,8 @@ import os
 import pytest
 from flask import Flask
 from flask.testing import FlaskClient
-from flask_security.passwordless import generate_login_token
 
 from app import create_app
-from app.extensions import db_wrapper
-from app.models.user import User as UserModel
 from database import init_database
 from database.factories import Factory
 from database.seeds import init_seed
@@ -69,6 +66,7 @@ def auth_header(app: Flask, client: FlaskClient):
         return {
             app.config.get('SECURITY_TOKEN_AUTHENTICATION_HEADER'): 'Bearer %s' % token,
         }
+
     return _create_auth_header
 
 

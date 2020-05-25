@@ -12,7 +12,8 @@ from app.celery import ContextTask
 from app.extensions import celery
 from app.libs.libreoffice import convert_to
 from app.models.document import Document as DocumentModel
-from app.utils import to_readable
+from app.models.user import User as UserModel
+from app.utils import to_readable, create_query, get_request_query_fields
 from app.utils.file_storage import FileStorage
 
 logger = get_task_logger(__name__)
@@ -54,8 +55,23 @@ def _add_table_column_names(rows: list, original_column_names: set) -> None:
     rows.append(formatted_column_names)
 
 
+def _get_user_data(request_data: dict) -> list:
+    page_number, items_per_page, order_by = get_request_query_fields(UserModel, request_data)
+
+    query = UserModel.select()
+    query = create_query(UserModel, query, request_data)
+    query = (query.order_by(order_by)
+             .paginate(page_number, items_per_page))
+
+    user_list = []
+    for user in query:
+        user_list.append(user.serialize())
+
+    return user_list
+
+
 @celery.task(bind=True, base=ContextTask)
-def user_data_export_in_word(self, created_by: int, user_list: list, to_pdf: bool = False):
+def export_user_data_in_word(self, created_by: int, request_data: dict, to_pdf: int):
     def _write_docx_content(rows: list, document: docx.Document) -> None:
         header_fields = rows[0]
         assert len(header_fields) == len(_COLUMN_DISPLAY_ORDER)
@@ -73,6 +89,8 @@ def user_data_export_in_word(self, created_by: int, user_list: list, to_pdf: boo
                 'status': 'In progress...',
             })
 
+    user_list = _get_user_data(request_data)
+
     self.total_progress = len(user_list) + 2  # Word table rows + 2 (Word table header and save Word in database)
     tempfile_suffix = '.docx'
     tempfile = NamedTemporaryFile(suffix=tempfile_suffix)
@@ -84,8 +102,6 @@ def user_data_export_in_word(self, created_by: int, user_list: list, to_pdf: boo
         'total': self.total_progress,
         'status': 'In progress...',
     })
-
-    # TODO: insert query for getting users here
 
     _add_table_column_names(table_data, set(_COLUMN_DISPLAY_ORDER))
     _add_table_user_data(user_list, table_data)

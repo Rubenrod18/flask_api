@@ -4,8 +4,8 @@ from flask import url_for, Flask
 from peewee import fn
 
 from app.celery.tasks import create_user_email, reset_password_email
-from app.celery.excel.tasks import user_data_export_in_excel
-from app.celery.word.tasks import user_data_export_in_word
+from app.celery.excel.tasks import export_user_data_in_excel
+from app.celery.word.tasks import export_user_data_in_word
 from app.models.user import User as UserModel
 
 
@@ -47,13 +47,15 @@ def test_export_excel_task(app: Flask):
             .limit(1)
             .get())
 
-    user_list = []
-    for row in UserModel.select().order_by(fn.Random()).limit(10):
-        user_data = row.serialize()
-        user_data['roles'] = [row.roles[0].serialize()]
-        user_list.append(user_data)
+    request_data = {
+        'search': [],
+        'order': 'asc',
+        'sort': 'id',
+        'items_per_page': 100,
+        'page_number': 1,
+    }
 
-    task = user_data_export_in_excel.delay(created_by=user.id, user_list=user_list)
+    task = export_user_data_in_excel.delay(created_by=user.id, request_data=request_data)
     result = task.get()
 
     document_data = result.get('result')
@@ -74,8 +76,8 @@ def test_export_excel_task(app: Flask):
 
 
 def test_export_word_task(app: Flask):
-    def _run_task(created_by: int, user_list: list, to_pdf: int = 0):
-        task = user_data_export_in_word.delay(created_by, user_list, to_pdf)
+    def _run_task(created_by: int, request_data: dict, to_pdf: int = 0):
+        task = export_user_data_in_word.delay(created_by, request_data, to_pdf)
         result = task.get()
 
         document_data = result.get('result')
@@ -94,15 +96,16 @@ def test_export_word_task(app: Flask):
         assert document_data.get('created_at') == document_data.get('updated_at')
         assert document_data.get('deleted_at') is None
 
-
     user = UserModel.get(UserModel.email == app.config.get('TEST_USER_EMAIL'))
 
-    user_list = []
-    for row in UserModel.select().order_by(fn.Random()).limit(10):
-        user_data = row.serialize()
-        user_data['roles'] = [row.roles[0].serialize()]
-        user_list.append(user_data)
+    request_data = {
+        'search': [],
+        'order': 'asc',
+        'sort': 'id',
+        'items_per_page': 100,
+        'page_number': 1,
+    }
 
-    _run_task(user.id, user_list)
-    _run_task(**{'created_by': user.id, 'user_list': user_list, 'to_pdf': 1})
-    _run_task(created_by=user.id, user_list=user_list, to_pdf=0)
+    _run_task(user.id, request_data)
+    _run_task(**{'created_by': user.id, 'request_data': request_data, 'to_pdf': 1})
+    _run_task(created_by=user.id, request_data=request_data, to_pdf=0)
