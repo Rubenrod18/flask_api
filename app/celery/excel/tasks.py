@@ -163,7 +163,7 @@ def export_user_data_in_excel(self, created_by: int, request_data: dict):
 
         file_prefix = datetime.utcnow().strftime('%Y%m%d')
         basename = f'{file_prefix}_users'
-        filename = f'{basename}.{file_extension}'
+        filename = f'{basename}{file_extension}'
 
         data = {
             'created_by': created_by,

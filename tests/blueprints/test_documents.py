@@ -145,8 +145,9 @@ def test_search_document(client: FlaskClient, auth_header: any):
         'search': [
             {
                 'field_name': 'name',
+                'field_operator': 'eq',
                 'field_value': document_name,
-            }
+            },
         ],
         'order': 'desc',
         'sort': 'id',

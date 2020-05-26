@@ -14,6 +14,7 @@ from .base import BaseResource
 from ..extensions import db_wrapper
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
+from ..utils import get_request_query_fields, create_query
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
 from ..utils.decorators import token_required
 
@@ -200,6 +201,15 @@ class ExportUsersExcelResource(UserResource):
     def post(self) -> tuple:
         request_data = request.get_json()
 
+        user_fields = UserModel.get_fields(exclude=['id', 'password'])
+        v = Validator(schema=search_model_schema(user_fields))
+
+        if not v.validate(request_data):
+            return {
+                       'message': 'validation error',
+                       'fields': v.errors,
+                   }, 422
+
         task = export_user_data_in_excel.apply_async((current_user.id, request_data), countdown=5)
 
         return {
@@ -219,6 +229,15 @@ class ExportUsersPdfResource(UserResource):
         parser.add_argument('to_pdf', type=int, location='args')
 
         request_data = request.get_json()
+
+        user_fields = UserModel.get_fields(exclude=['id', 'password'])
+        v = Validator(schema=search_model_schema(user_fields))
+
+        if not v.validate(request_data):
+            return {
+                       'message': 'validation error',
+                       'fields': v.errors,
+                   }, 422
 
         args = parser.parse_args()
         to_pdf = args.get('to_pdf') or 0
