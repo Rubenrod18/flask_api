@@ -6,6 +6,7 @@ from flask_login import current_user
 from flask_restful import Api, reqparse
 from flask import Blueprint, request, url_for
 from flask_security import roles_accepted
+from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 
 from app.celery.word.tasks import export_user_data_in_word
 from app.celery.excel.tasks import export_user_data_in_excel
@@ -14,7 +15,6 @@ from .base import BaseResource
 from ..extensions import db_wrapper
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
-from ..utils import get_request_query_fields, create_search_query
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
 from ..utils.decorators import token_required
 
@@ -22,6 +22,7 @@ blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)
+
 
 class UserResource(BaseResource):
     db_model = UserModel
@@ -38,10 +39,7 @@ class NewUserResource(UserResource):
         v.allow_unknown = False
 
         if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         with db_wrapper.database.atomic():
             data['created_by'] = current_user.id
@@ -64,22 +62,16 @@ class UserResource(UserResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
-        response = {
-            'error': 'User doesn\'t exist',
-        }
-        status_code = 404
-
         user = UserModel.get_or_none(UserModel.id == user_id)
 
         if isinstance(user, UserModel):
             user_dict = user.serialize()
+        else:
+            raise NotFound('User doesn\'t exist')
 
-            response = {
-                'data': user_dict,
-            }
-            status_code = 200
-
-        return response, status_code
+        return {
+                   'data': user_dict,
+               }, 200
 
     @token_required
     @roles_accepted('admin', 'team_leader')
@@ -90,10 +82,7 @@ class UserResource(UserResource):
         v.allow_unknown = False
 
         if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         user = (UserModel.get_or_none(UserModel.id == user_id,
                                       UserModel.deleted_at.is_null()))
@@ -110,27 +99,16 @@ class UserResource(UserResource):
             user = (UserModel.get_or_none(UserModel.id == user_id,
                                           UserModel.deleted_at.is_null()))
             user_dict = user.serialize()
-
-            response_data = {
-                'data': user_dict,
-            }
-            response_code = 200
         else:
-            response_data = {
-                'error': 'User doesn\'t exist',
-            }
-            response_code = 400
+            raise BadRequest('User doesn\'t exist')
 
-        return response_data, response_code
+        return {
+                   'data': user_dict,
+               }, 200
 
     @token_required
     @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
-        response = {
-            'error': 'User doesn\'t exist',
-        }
-        status_code = 404
-
         user = UserModel.get_or_none(UserModel.id == user_id)
 
         if isinstance(user, UserModel):
@@ -139,18 +117,14 @@ class UserResource(UserResource):
                 user.save()
 
                 user_dict = user.serialize()
-
-                response = {
-                    'data': user_dict,
-                }
-                status_code = 200
             else:
-                response = {
-                    'error': 'User already deleted',
-                }
-                status_code = 400
+                raise BadRequest('User already deleted')
+        else:
+            raise NotFound('User doesn\'t exist')
 
-        return response, status_code
+        return {
+                   'data': user_dict,
+               }, 200
 
 
 @api.resource('/search')
@@ -165,10 +139,7 @@ class UsersSearchResource(UserResource):
         v.allow_unknown = False
 
         if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         page_number, items_per_page, order_by = self.get_request_query_fields(data)
 
@@ -205,10 +176,7 @@ class ExportUsersExcelResource(UserResource):
         v = Validator(schema=search_model_schema(user_fields))
 
         if not v.validate(request_data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         task = export_user_data_in_excel.apply_async((current_user.id, request_data), countdown=5)
 
@@ -234,10 +202,7 @@ class ExportUsersPdfResource(UserResource):
         v = Validator(schema=search_model_schema(user_fields))
 
         if not v.validate(request_data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         args = parser.parse_args()
         to_pdf = args.get('to_pdf') or 0
@@ -245,6 +210,6 @@ class ExportUsersPdfResource(UserResource):
         task = export_user_data_in_word.apply_async(args=[current_user.id, request_data, to_pdf])
 
         return {
-            'task': task.id,
-            'url': url_for('tasks.taskstatusresource', task_id=task.id, _external=True),
-        }, 202
+                   'task': task.id,
+                   'url': url_for('tasks.taskstatusresource', task_id=task.id, _external=True),
+               }, 202

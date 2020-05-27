@@ -3,12 +3,12 @@ import mimetypes
 import os
 import uuid
 from datetime import datetime
-from io import FileIO, BytesIO
 
-from flask import Blueprint, request, current_app, send_file, make_response, jsonify
+from flask import Blueprint, request, current_app, send_file
 from flask_login import current_user
-from flask_restful import Api
+from flask_restful import Api, reqparse
 from flask_security import roles_accepted
+from werkzeug.exceptions import NotFound, UnprocessableEntity, InternalServerError, BadRequest
 
 from app.blueprints.base import BaseResource
 from app.models.document import Document as DocumentModel
@@ -44,48 +44,49 @@ class DocumentResource(BaseResource):
         return file
 
     def get_document_data(self, document_id: int) -> tuple:
-        response = {
-            'error': 'Document doesn\'t exist',
-        }
-        status_code = 404
-
         document = DocumentModel.get_or_none(DocumentModel.id == document_id,
                                              DocumentModel.deleted_at.is_null())
 
         if isinstance(document, DocumentModel):
             document_dict = document.serialize()
+        else:
+            raise NotFound('Document doesn\'t exist')
 
-            response = {
-                'data': document_dict,
-            }
-            status_code = 200
-
-        return response, status_code
+        return {
+                   'data': document_dict,
+               }, 200
 
     def get_document_content(self, document_id: int):
-        response = {
-            'error': 'Document doesn\'t exist',
-        }
-        status_code = 404
-
         document = DocumentModel.get_or_none(DocumentModel.id == document_id,
                                              DocumentModel.deleted_at.is_null())
 
         if isinstance(document, DocumentModel):
+            # TODO: RequestParse will be deprecated in the future. Replace RequestParse to marshmallow
+            # https://flask-restful.readthedocs.io/en/latest/reqparse.html
+            parser = reqparse.RequestParser()
+            parser.add_argument('as_attachment', type=int, location='args')
+
+            args = parser.parse_args()
+            as_attachment = args.get('as_attachment') or 0
+
             mime_type = document.mime_type
             file_extension = mimetypes.guess_extension(mime_type)
 
-            as_attachment = int(request.args.get('as_attachment')) if request.args.get('as_attachment') else True
             attachment_filename = document.name if document.name.find(
                 file_extension) else f'{document.name}{file_extension}'
 
             kwargs = {
-                'filename_or_fp': BytesIO(FileIO(document.get_filepath()).readall()),
+                'filename_or_fp': document.get_filepath(),
                 'mimetype': mime_type,
                 'as_attachment': as_attachment,
-                'attachment_filename': attachment_filename,
             }
+
+            if as_attachment:
+                kwargs['attachment_filename'] = attachment_filename
+
             response = send_file(**kwargs)
+        else:
+            raise NotFound('Document doesn\'t exist')
 
         return response
 
@@ -99,10 +100,7 @@ class NewDocumentResource(DocumentResource):
 
         v = MyValidator(schema=document_save_model_schema())
         if not v.validate(request_data):
-            return {
-                       'message': 'validation error',
-                       'error': v.errors,
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         request_file = request_data.get(self.field_name)
         file_extension = mimetypes.guess_extension(request_file.get('mime_type'))
@@ -127,11 +125,8 @@ class NewDocumentResource(DocumentResource):
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
-
             logger.debug(e)
-            return {
-                       'error': 'server error',
-                   }, 500
+            raise InternalServerError()
 
         document_dict = document.serialize()
 
@@ -162,10 +157,7 @@ class DocumentResource(DocumentResource):
 
         v = MyValidator(schema=document_update_model_schema())
         if not v.validate(request_data):
-            return {
-                       'message': 'validation error',
-                       'error': v.errors,
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         document = DocumentModel.get(id=document_id)
 
@@ -187,11 +179,8 @@ class DocumentResource(DocumentResource):
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
-
             logger.debug(e)
-            return {
-                       'error': 'server error',
-                   }, 500
+            raise InternalServerError()
 
         document = (DocumentModel.get_or_none(DocumentModel.id == document_id,
                                               DocumentModel.deleted_at.is_null()))
@@ -204,11 +193,6 @@ class DocumentResource(DocumentResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def delete(self, document_id: int):
-        response = {
-            'error': 'Document doesn\'t exist',
-        }
-        status_code = 404
-
         document = DocumentModel.get_or_none(DocumentModel.id == document_id)
 
         if isinstance(document, DocumentModel):
@@ -217,18 +201,14 @@ class DocumentResource(DocumentResource):
                 document.save()
 
                 document_dict = document.serialize()
-
-                response = {
-                    'data': document_dict,
-                }
-                status_code = 200
             else:
-                response = {
-                    'error': 'Document already deleted',
-                }
-                status_code = 400
+                raise BadRequest('Document already deleted')
+        else:
+            raise NotFound('Document doesn\'t exist')
 
-        return response, status_code
+        return {
+                   'data': document_dict,
+               }, 200
 
 
 @api.resource('/search')
@@ -243,10 +223,7 @@ class SearchDocumentResource(DocumentResource):
         v.allow_unknown = False
 
         if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            return UnprocessableEntity(v.errors)
 
         page_number, items_per_page, order_by = self.get_request_query_fields(data)
 

@@ -35,7 +35,7 @@ class TaskResource(Resource):
                 module_name, class_name = build_task_import(row)
                 task = class_for_name(module_name, class_name)
         except TypeError:
-            raise NotFound(description='Task not found')
+            raise NotFound('Task not found')
 
         return task
 
@@ -45,33 +45,32 @@ class TaskStatusResource(TaskResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def get(self, task_id: str):
-        task_promise = self.get_task(task_id)
+        task = self.get_task(task_id)
 
-        task = task_promise.AsyncResult(task_id)
-        status_code = 200
-        if task.state == 'PENDING':
+        data = task.AsyncResult(task_id)
+        if data.state == 'PENDING':
             response = {
-                'state': task.state,
+                'state': data.state,
                 'current': 0,
                 'total': 1,
                 'status': 'Pending...',
             }
         elif task.state != 'FAILURE':
             response = {
-                'state': task.state,
-                'current': task.info.get('current', 0),
-                'total': task.info.get('total', 1),
-                'status': task.info.get('status', ''),
+                'state': data.state,
+                'current': data.info.get('current', 0),
+                'total': data.info.get('total', 1),
+                'status': data.info.get('status', ''),
             }
 
-            if 'result' in task.info:
-                response['result'] = task.info['result']
+            if 'result' in data.info:
+                response['result'] = data.info['result']
         else:
             response = {
-                'state': task.state,
+                'state': data.state,
                 'current': 1,
                 'total': 1,
-                'status': str(task.info),
+                'status': str(data.info),
             }
 
-        return response, status_code
+        return response, 200
