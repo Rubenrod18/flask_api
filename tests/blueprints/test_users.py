@@ -151,11 +151,13 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
         'search': [
             {
                 'field_name': 'name',
+                'field_operator': 'eq',
                 'field_value': user_name,
-            }
+            },
         ],
-        'order': 'desc',
-        'sort': 'id',
+        'order': [
+            ['name', 'desc'],
+        ],
     }
 
     response = client.post('/users/search', json=json_body, headers=auth_header())
@@ -181,11 +183,16 @@ def test_export_word_endpoint(client: FlaskClient, auth_header: any):
         assert json_response.get('task')
         assert json_response.get('url')
 
-    data = {}
+    json = {
+        'search': [],
+        'order': [
+            ['name', 'desc'],
+        ],
+    }
 
-    _request('/users/word', auth_header(), data)
-    _request('/users/word?to_pdf=1', auth_header(), data)
-    _request('/users/word?to_pdf=0', auth_header(), data)
+    _request('/users/word', auth_header(), json)
+    _request('/users/word?to_pdf=1', auth_header(), json)
+    _request('/users/word?to_pdf=0', auth_header(), json)
 
 
 def test_export_excel_endpoint(client: FlaskClient, auth_header: any):

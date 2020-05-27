@@ -13,7 +13,7 @@ from app.extensions import celery
 from app.libs.libreoffice import convert_to
 from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
-from app.utils import to_readable, create_query, get_request_query_fields
+from app.utils import to_readable, create_search_query, get_request_query_fields
 from app.utils.file_storage import FileStorage
 
 logger = get_task_logger(__name__)
@@ -59,8 +59,8 @@ def _get_user_data(request_data: dict) -> list:
     page_number, items_per_page, order_by = get_request_query_fields(UserModel, request_data)
 
     query = UserModel.select()
-    query = create_query(UserModel, query, request_data)
-    query = (query.order_by(order_by)
+    query = create_search_query(UserModel, query, request_data)
+    query = (query.order_by(*order_by)
              .paginate(page_number, items_per_page))
 
     user_list = []

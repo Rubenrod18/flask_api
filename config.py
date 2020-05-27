@@ -57,6 +57,7 @@ class Config(metaclass=Meta):
         'name': os.getenv('DATABASE_NAME'),
         'engine': os.getenv('DATABASE_ENGINE', 'peewee.SqliteDatabase'),
         # Sqlite3 recommended settings
+        # http://docs.peewee-orm.com/en/latest/peewee/database.html?highlight=%22recommended%20settings%22#recommended-settings
         'pragmas': {
             'journal_mode': os.getenv('DATABASE_JOURNAL_MODE', 'wal'),
             'cache_size': os.getenv('DATABASE_CACHE_SIZE', -1 * 64000),  # 64MB
@@ -103,10 +104,15 @@ class Config(metaclass=Meta):
 
     RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
 
-    ALLOWED_MIME_TYPES = [
+    ALLOWED_CONTENT_TYPES = {
+        'application/json',
+        'multipart/form-data',
+        'application/octet-stream',
+    }
+    ALLOWED_MIME_TYPES = {
         'application/pdf',
         'application/vnd.ms-excel',
-    ]
+    }
 
 
 class ProdConfig(Config):

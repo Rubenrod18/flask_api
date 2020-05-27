@@ -28,7 +28,7 @@ class UserSeeder():
             Factory('User').save(params)
 
     @seed_actions
-    def __init__(self, rows: int = 10):
+    def __init__(self, rows: int = 30):
         # save user with user_datastore and method "create_user" -> look flask_security -> datastore.py
         with db_wrapper.database.atomic():
             self._create_admin_user()

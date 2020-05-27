@@ -15,7 +15,7 @@ from app.celery import ContextTask
 from app.extensions import celery
 from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
-from app.utils import find_longest_word, pos_to_char, to_readable, get_request_query_fields, create_query
+from app.utils import find_longest_word, pos_to_char, to_readable, get_request_query_fields, create_search_query
 from app.utils.file_storage import FileStorage
 
 logger = get_task_logger(__name__)
@@ -80,8 +80,8 @@ def _get_user_data(request_data: dict) -> list:
     page_number, items_per_page, order_by = get_request_query_fields(UserModel, request_data)
 
     query = UserModel.select()
-    query = create_query(UserModel, query, request_data)
-    query = (query.order_by(order_by)
+    query = create_search_query(UserModel, query, request_data)
+    query = (query.order_by(*order_by)
              .paginate(page_number, items_per_page))
 
     user_list = []
@@ -163,7 +163,7 @@ def export_user_data_in_excel(self, created_by: int, request_data: dict):
 
         file_prefix = datetime.utcnow().strftime('%Y%m%d')
         basename = f'{file_prefix}_users'
-        filename = f'{basename}.{file_extension}'
+        filename = f'{basename}{file_extension}'
 
         data = {
             'created_by': created_by,
