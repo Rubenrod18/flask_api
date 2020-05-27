@@ -5,6 +5,7 @@ from cerberus import Validator
 from flask import Blueprint, request
 from flask_restful import Api
 from flask_security import roles_required
+from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 
 from .base import BaseResource
 from app.models.role import Role as RoleModel
@@ -32,10 +33,7 @@ class NewRoleResource(RoleBaseResource):
         v.allow_unknown = False
 
         if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         role = RoleModel.create(**data)
         role_dict = role.serialize()
@@ -50,22 +48,16 @@ class RoleResource(RoleBaseResource):
     @token_required
     @roles_required('admin')
     def get(self, role_id: int) -> tuple:
-        response = {
-            'error': 'Role doesn\'t exist',
-        }
-        status_code = 404
-
         role = RoleModel.get_or_none(RoleModel.id == role_id)
 
         if isinstance(role, RoleModel):
             role_dict = role.serialize()
+        else:
+            raise NotFound('Role doesn\'t exist')
 
-            response = {
-                'data': role_dict,
-            }
-            status_code = 200
-
-        return response, status_code
+        return {
+                   'data': role_dict,
+               }, 200
 
     @token_required
     @roles_required('admin')
@@ -76,10 +68,7 @@ class RoleResource(RoleBaseResource):
         v.allow_unknown = False
 
         if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         role = (RoleModel.get_or_none(RoleModel.id == role_id,
                                       RoleModel.deleted_at.is_null()))
@@ -91,27 +80,16 @@ class RoleResource(RoleBaseResource):
             role = (RoleModel.get_or_none(RoleModel.id == role_id,
                                           RoleModel.deleted_at.is_null()))
             role_dict = role.serialize()
-
-            response_data = {
-                'data': role_dict,
-            }
-            response_code = 200
         else:
-            response_data = {
-                'error': 'Role doesn\'t exist',
-            }
-            response_code = 400
+            raise BadRequest('Role doesn\'t exist')
 
-        return response_data, response_code
+        return {
+                   'data': role_dict,
+               }, 200
 
     @token_required
     @roles_required('admin')
     def delete(self, role_id: int) -> tuple:
-        response = {
-            'error': 'Role doesn\'t exist',
-        }
-        status_code = 404
-
         role = RoleModel.get_or_none(RoleModel.id == role_id)
 
         if isinstance(role, RoleModel):
@@ -120,18 +98,14 @@ class RoleResource(RoleBaseResource):
                 role.save()
 
                 role_dict = role.serialize()
-
-                response = {
-                    'data': role_dict,
-                }
-                status_code = 200
             else:
-                response = {
-                    'error': 'Role already deleted',
-                }
-                status_code = 400
+                raise BadRequest('Role already deleted')
+        else:
+            raise NotFound('Role doesn\'t exist')
 
-        return response, status_code
+        return {
+                   'data': role_dict,
+               }, 200
 
 
 @api.resource('/search')
@@ -146,10 +120,7 @@ class RolesSearchResource(RoleBaseResource):
         v.allow_unknown = False
 
         if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            return UnprocessableEntity(v.errors), 422
 
         page_number, items_per_page, order_by = self.get_request_query_fields(data)
 

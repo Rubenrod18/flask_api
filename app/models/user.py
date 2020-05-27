@@ -3,7 +3,6 @@ from datetime import datetime, date
 
 from flask import current_app
 from flask_security import UserMixin, PeeweeUserDatastore, hash_password
-from flask_security.utils import verify_hash
 from itsdangerous import URLSafeSerializer, TimestampSigner
 from peewee import CharField, DateField, TimestampField, ForeignKeyField, BooleanField, FixedCharField, ManyToManyField
 

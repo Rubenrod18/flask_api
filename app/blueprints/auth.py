@@ -5,7 +5,7 @@ from flask_restful import Api, Resource
 from flask import Blueprint, request, url_for
 from flask_security import verify_password
 from flask_security.passwordless import generate_login_token
-from werkzeug.exceptions import Forbidden, Unauthorized
+from werkzeug.exceptions import Forbidden, Unauthorized, UnprocessableEntity
 
 from app.models.user import User as UserModel, user_datastore
 from app.celery.tasks import reset_password_email
@@ -17,6 +17,7 @@ api = Api(blueprint)
 
 logger = logging.getLogger(__name__)
 
+
 @api.resource('/login')
 class AuthUserLoginResource(Resource):
     def post(self) -> tuple:
@@ -26,10 +27,7 @@ class AuthUserLoginResource(Resource):
         v.allow_unknown = False
 
         if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            raise UnprocessableEntity(v.errors)
 
         user = user_datastore.find_user(**{'email': data.get('email')})
 
@@ -83,9 +81,7 @@ class ResetPasswordResource(Resource):
         user = UserModel.verify_reset_token(token)
 
         if not user:
-            return {
-                       'message': 'That is an invalid or expired token',
-                   }, 403
+            raise Forbidden('That is an invalid or expired token')
 
         return {}, 200
 
@@ -96,17 +92,15 @@ class ResetPasswordResource(Resource):
         v.allow_unknown = False
 
         if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
+            raise UnprocessableEntity({
+                'message': 'validation error',
+                'fields': v.errors,
+            })
 
         user = UserModel.verify_reset_token(token)
 
         if not user:
-            return {
-                       'message': 'That is an invalid or expired token',
-                   }, 403
+            raise Forbidden('That is an invalid or expired token')
 
         user.password = data.get('password')
         user.save()

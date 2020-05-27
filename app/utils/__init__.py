@@ -4,7 +4,6 @@ from datetime import date, datetime
 from functools import reduce
 from typing import Type
 
-from flask import current_app
 from peewee import CharField, ModelSelect, TextField, FixedCharField, UUIDField, Model, Field
 
 BIRTH_DATE_REGEX = (r'^(19[0-9]{2}|2[0-9]{3})'  # Year
@@ -106,7 +105,7 @@ def get_request_query_fields(db_model: Type[Model], request_data=None) -> tuple:
     return (page_number, items_per_page, order_by,)
 
 
-def _build_string_clause(field: Field, field_operator: str, field_value):
+def _build_string_clause(field: Field, field_operator: str, field_value) -> tuple:
     sql_clause = ()
 
     if field_value.find(REQUEST_QUERY_DELIMITER) != -1:
@@ -134,7 +133,7 @@ def _build_string_clause(field: Field, field_operator: str, field_value):
     return sql_clause
 
 
-def _build_clause_operators(field: Field, field_operator: str, field_value):
+def _build_clause_operators(field: Field, field_operator: str, field_value) -> tuple:
     sql_clause = ()
 
     if isinstance(field_value, str) and field_value.find(REQUEST_QUERY_DELIMITER) != -1:
