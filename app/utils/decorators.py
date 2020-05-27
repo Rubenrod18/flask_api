@@ -25,11 +25,10 @@ def token_required(fnc):
             if user.active:
                 return fnc(*args, **kwargs)
             else:
-                raise Forbidden('User not authorized')
+                raise Forbidden('User is not active')
+        elif invalid:
+            raise BadRequest('Token is invalid')
         else:
-            if invalid:
-                BadRequest('Token is invalid')
-            else:
-                BadRequest('Token has expired')
+            raise BadRequest('Token has expired')
 
     return decorator

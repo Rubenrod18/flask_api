@@ -23,7 +23,7 @@ api = Api(blueprint)
 logger = logging.getLogger(__name__)
 
 
-class DocumentResource(BaseResource):
+class DocumentBaseResource(BaseResource):
     db_model = DocumentModel
     field_name = 'document'
 
@@ -92,7 +92,7 @@ class DocumentResource(BaseResource):
 
 
 @api.resource('')
-class NewDocumentResource(DocumentResource):
+class NewDocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
@@ -136,7 +136,7 @@ class NewDocumentResource(DocumentResource):
 
 
 @api.resource('/<int:document_id>')
-class DocumentResource(DocumentResource):
+class DocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def get(self, document_id: int) -> tuple:
@@ -212,7 +212,7 @@ class DocumentResource(DocumentResource):
 
 
 @api.resource('/search')
-class SearchDocumentResource(DocumentResource):
+class SearchDocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):

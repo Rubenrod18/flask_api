@@ -24,12 +24,12 @@ api = Api(blueprint)
 logger = logging.getLogger(__name__)
 
 
-class UserResource(BaseResource):
+class UserBaseResource(BaseResource):
     db_model = UserModel
 
 
 @api.resource('')
-class NewUserResource(UserResource):
+class NewUserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
@@ -58,7 +58,7 @@ class NewUserResource(UserResource):
 
 
 @api.resource('/<int:user_id>')
-class UserResource(UserResource):
+class UserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
@@ -128,7 +128,7 @@ class UserResource(UserResource):
 
 
 @api.resource('/search')
-class UsersSearchResource(UserResource):
+class UsersSearchResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
@@ -166,7 +166,7 @@ class UsersSearchResource(UserResource):
 
 
 @api.resource('/xlsx')
-class ExportUsersExcelResource(UserResource):
+class ExportUsersExcelResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
@@ -187,7 +187,7 @@ class ExportUsersExcelResource(UserResource):
 
 
 @api.resource('/word')
-class ExportUsersPdfResource(UserResource):
+class ExportUsersPdfResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
