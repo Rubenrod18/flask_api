@@ -101,8 +101,8 @@ def test_get_document_file(client: FlaskClient, auth_header: any):
                 .order_by(fn.Random())
                 .limit(1)
                 .get())
-    db_wrapper.database.close()
     document_id = document.id
+    db_wrapper.database.close()
 
     headers = auth_header()
     headers['Content-Type'] = 'application/octet-stream'
@@ -149,8 +149,9 @@ def test_search_document(client: FlaskClient, auth_header: any):
                 'field_value': document_name,
             },
         ],
-        'order': 'desc',
-        'sort': 'id',
+        'order': [
+            ['name', 'desc'],
+        ],
     }
 
     response = client.post('/documents/search', json=json_body, headers=auth_header())

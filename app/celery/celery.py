@@ -7,6 +7,7 @@ from app.celery import init_celery
 
 load_dotenv()
 
+print(os.getenv('FLASK_CONFIG'))
 flask_app = create_app(os.getenv('FLASK_CONFIG'))
 celery = init_celery(flask_app)
 

@@ -52,7 +52,8 @@ def client(app: Flask):
     def _request_log_after(response: Response):
         logger.info(f'response status code: {response.status_code}')
         logger.info(f'response mime type: {response.mimetype}')
-        logger.info(f'response json: {response.get_json(force=True)}')
+        if response.mimetype == 'application/json':
+            logger.info(f'response json: {response.get_json()}')
         logger.info('=================')
 
     def _get(self, *args, **kwargs):

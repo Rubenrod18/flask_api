@@ -106,8 +106,9 @@ def test_search_roles_endpoint(client: FlaskClient, auth_header: any):
                 'field_value': role_name,
             },
         ],
-        'order': 'desc',
-        'sort': 'id',
+        'order': [
+            ['name', 'desc'],
+        ],
     }
 
     response = client.post('/roles/search', json=json_body, headers=auth_header())

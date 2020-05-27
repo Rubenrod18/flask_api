@@ -156,9 +156,9 @@ class RolesSearchResource(RoleBaseResource):
         query = RoleModel.select()
         records_total = query.count()
 
-        query = self.create_query(query, data)
+        query = self.create_search_query(query, data)
 
-        query = (query.order_by(order_by)
+        query = (query.order_by(*order_by)
                  .paginate(page_number, items_per_page))
 
         records_filtered = query.count()

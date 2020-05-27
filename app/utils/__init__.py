@@ -80,25 +80,28 @@ def ignore_keys(data: dict, exclude: list) -> dict:
     })
 
 
+def _build_order_by(db_model: Type[Model], request_data: dict) -> list:
+    order_by_values = []
+    request_order = request_data.get('order', [['id', 'asc']])
+
+    for item in request_order:
+        field_name, sort = item
+        field = db_model._meta.fields[field_name]
+        order_by = getattr(field, sort)()
+
+        order_by_values.append(order_by)
+
+    return order_by_values
+
+
 def get_request_query_fields(db_model: Type[Model], request_data=None) -> tuple:
-    if request_data is None:
-        request_data = {}
+    irequest_data = request_data or {}
 
     # Page numbers are 1-based, so the first page of results will be page 1.
     # http://docs.peewee-orm.com/en/latest/peewee/querying.html#paginating-records
-    tmp = int(request_data.get('page_number', 1))
-    page_number = 1 if tmp < 1 else tmp
-
-    tmp = int(request_data.get('items_per_page', 10))
-    items_per_page = 10 if tmp < 1 else tmp
-
-    sort = request_data.get('sort', 'id')
-    order = request_data.get('order', 'asc')
-
-    order_by = db_model._meta.fields[sort]
-
-    if order == 'desc':
-        order_by = order_by.desc()
+    page_number = int(request_data.get('page_number', 1))
+    items_per_page = int(request_data.get('items_per_page', 10))
+    order_by = _build_order_by(db_model, request_data)
 
     return (page_number, items_per_page, order_by,)
 
@@ -182,7 +185,7 @@ def _build_query_clause(field: Field, field_operator: str, field_value):
     return sql_clause
 
 
-def create_query(db_model: Type[Model], query: ModelSelect, data: dict = None) -> ModelSelect:
+def create_search_query(db_model: Type[Model], query: ModelSelect, data: dict = None) -> ModelSelect:
     if data is None:
         data = {}
 

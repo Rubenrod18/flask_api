@@ -3,8 +3,9 @@ import mimetypes
 import os
 import uuid
 from datetime import datetime
+from io import FileIO, BytesIO
 
-from flask import Blueprint, request, current_app, send_file, make_response
+from flask import Blueprint, request, current_app, send_file, make_response, jsonify
 from flask_login import current_user
 from flask_restful import Api
 from flask_security import roles_accepted
@@ -79,15 +80,14 @@ class DocumentResource(BaseResource):
                 file_extension) else f'{document.name}{file_extension}'
 
             kwargs = {
-                'filename_or_fp': document.get_filepath(),
+                'filename_or_fp': BytesIO(FileIO(document.get_filepath()).readall()),
                 'mimetype': mime_type,
                 'as_attachment': as_attachment,
                 'attachment_filename': attachment_filename,
             }
             response = send_file(**kwargs)
-            status_code = 200
 
-        return make_response(response, status_code)
+        return response
 
 
 @api.resource('')
@@ -238,7 +238,7 @@ class SearchDocumentResource(DocumentResource):
     def post(self):
         data = request.get_json()
 
-        document_fields = DocumentModel.get_fields(['id', 'password'])
+        document_fields = DocumentModel.get_fields(['password'])
         v = MyValidator(schema=search_model_schema(document_fields))
         v.allow_unknown = False
 
@@ -253,9 +253,9 @@ class SearchDocumentResource(DocumentResource):
         query = DocumentModel.select()
         records_total = query.count()
 
-        query = self.create_query(query, data)
+        query = self.create_search_query(query, data)
 
-        query = (query.order_by(order_by)
+        query = (query.order_by(*order_by)
                  .paginate(page_number, items_per_page))
 
         records_filtered = query.count()

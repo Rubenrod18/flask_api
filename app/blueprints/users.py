@@ -14,7 +14,7 @@ from .base import BaseResource
 from ..extensions import db_wrapper
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
-from ..utils import get_request_query_fields, create_query
+from ..utils import get_request_query_fields, create_search_query
 from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
 from ..utils.decorators import token_required
 
@@ -175,9 +175,9 @@ class UsersSearchResource(UserResource):
         query = UserModel.select()
         records_total = query.count()
 
-        query = self.create_query(query, data)
+        query = self.create_search_query(query, data)
 
-        query = (query.order_by(order_by)
+        query = (query.order_by(*order_by)
                  .paginate(page_number, items_per_page))
 
         records_filtered = query.count()

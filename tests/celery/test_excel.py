@@ -16,8 +16,9 @@ def test_export_excel_task(app: Flask):
 
     request_data = {
         'search': [],
-        'order': 'asc',
-        'sort': 'id',
+        'order': [
+            ['name', 'asc'],
+        ],
         'items_per_page': 100,
         'page_number': 1,
     }

@@ -47,5 +47,3 @@ class RoleSeeder():
         self._create_admin_role()
         self._create_team_leader()
         self._create_worker_role()
-
-        Factory('Role', 5).save()

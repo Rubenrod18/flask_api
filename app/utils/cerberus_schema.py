@@ -197,32 +197,43 @@ def search_model_schema(allowed_fields: set) -> dict:
             },
         },
         'order': {
-            'type': 'string',
+            'type': 'list',
             'required': False,
-            'empty': False,
+            'empty': True,
             'nullable': False,
             'maxlength': 255,
-            'allowed': ['asc', 'desc'],
-        },
-        'sort': {
-            'type': 'string',
-            'required': False,
-            'empty': False,
-            'nullable': False,
-            'maxlength': 255,
-            'allowed': UserModel.get_fields(['password']),
+            'schema': {
+                'type': 'list',
+                'required': True,
+                'items': [
+                    {
+                        'type': 'string',
+                        'required': True,
+                        'empty': False,
+                        'nullable': False,
+                        'allowed': allowed_fields,
+                    },
+                    {
+                        'type': 'string',
+                        'required': True,
+                        'empty': False,
+                        'nullable': False,
+                        'allowed': ['asc', 'desc'],
+                    }
+                ]
+            }
         },
         'items_per_page': {
             'type': 'integer',
             'required': False,
-            'empty': False,
+            'empty': True,
             'nullable': False,
             'min': 1,
         },
         'page_number': {
             'type': 'integer',
             'required': False,
-            'empty': False,
+            'empty': True,
             'nullable': False,
             'min': 1,
         },
