@@ -10,6 +10,7 @@ bcrypt
 cerberus
 coverage
 librabbitmq
+marshmallow
 peewee
 pip-tools
 pytest
