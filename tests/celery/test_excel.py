@@ -34,7 +34,7 @@ def test_export_excel_task(app: Flask):
     assert result.get('current') == result.get('total')
     assert result.get('status') == 'Task completed!'
 
-    assert user.id == document_data.get('created_by')
+    assert user.id == document_data.get('created_by').get('id')
     assert document_data.get('name')
     assert mime_type == document_data.get('mime_type')
     assert document_data.get('size') > 0

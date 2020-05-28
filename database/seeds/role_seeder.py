@@ -6,7 +6,7 @@ from database.factories import Factory
 class RoleSeeder():
     name = 'RoleSeeder'
 
-    def _create_admin_role(self):
+    def _create_admin_role(self) -> None:
         admin_role = RoleModel.get_or_none(name='admin')
 
         if admin_role is None:
@@ -18,7 +18,7 @@ class RoleSeeder():
             }
             Factory('Role').save(params)
 
-    def _create_team_leader(self):
+    def _create_team_leader(self) -> None:
         team_leader_role = RoleModel.get_or_none(name='team_leader')
 
         if team_leader_role is None:
@@ -30,7 +30,7 @@ class RoleSeeder():
             }
             Factory('Role').save(params)
 
-    def _create_worker_role(self):
+    def _create_worker_role(self) -> None:
         worker_role = RoleModel.get_or_none(name='worker')
 
         if worker_role is None:

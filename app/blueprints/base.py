@@ -5,9 +5,11 @@ from operator import itemgetter
 from flask_restful import Api, Resource
 from flask import Blueprint, current_app
 from peewee import ModelSelect
+from werkzeug.exceptions import UnprocessableEntity
 
 from ..extensions import db_wrapper as db
 from ..utils import get_request_query_fields, create_search_query
+from ..utils.cerberus_schema import MyValidator
 
 blueprint = Blueprint('base', __name__, url_prefix='/')
 api = Api(blueprint)
@@ -17,6 +19,13 @@ logger = logging.getLogger(__name__)
 
 class BaseResource(Resource):
     db_model: db.Model
+    request_validation_schema = {}
+
+    def request_validation(self, request_data: dict) -> None:
+        v = MyValidator(schema=self.request_validation_schema)
+
+        if not v.validate(request_data):
+            raise UnprocessableEntity(v.errors)
 
     def get_request_query_fields(self, request_data: dict) -> tuple:
         return get_request_query_fields(self.db_model, request_data)

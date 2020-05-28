@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime, date
 
 from flask import current_app
 from flask_security import UserMixin, PeeweeUserDatastore, hash_password
@@ -36,54 +35,6 @@ class User(BaseModel, UserMixin):
 
         return super(User, self).save(*args, **kwargs)
 
-    def serialize(self, ignore_fields: list = None) -> dict:
-        if ignore_fields is None:
-            ignore_fields = []
-
-        data = self.__dict__.get('__data__')
-        logger.debug(data)
-
-        birth_date = data.get('birth_date')
-        deleted_at = data.get('deleted_at')
-        active = 1 if data.get('active') else 0
-
-        if isinstance(deleted_at, datetime):
-            deleted_at = deleted_at.strftime('%Y-%m-%d %H:%M:%S')
-
-        if isinstance(birth_date, date):
-            birth_date = birth_date.strftime('%Y-%m-%d')
-
-        roles = []
-        for item in self.roles:
-            role_data = item.serialize()
-            roles.append(role_data)
-
-        data = {
-            'id': data.get('id'),
-            'name': data.get('name'),
-            'last_name': data.get('last_name'),
-            'email': data.get('email'),
-            'genre': data.get('genre'),
-            'birth_date': birth_date,
-            'active': active,
-            'created_at': data.get('created_at').strftime('%Y-%m-%d %H:%M:%S'),
-            'updated_at': data.get('updated_at').strftime('%Y-%m-%d %H:%M:%S'),
-            'deleted_at': deleted_at,
-            'created_by': data.get('created_by'),
-            'roles': roles,
-        }
-
-        if ignore_fields:
-            match_fields = set(data.keys()) & set(ignore_fields)
-
-            data = {
-                k: v
-                for (k, v) in data.items()
-                if k not in match_fields
-            }
-
-        return data
-
     def get_reset_token(self) -> str:
         secret_key = current_app.config.get('SECRET_KEY')
         expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
@@ -94,28 +45,6 @@ class User(BaseModel, UserMixin):
 
         data = url_safe_serializer.dumps({'user_id': self.id})
         return timestamp_signer.sign(data).decode('utf-8')
-
-    @classmethod
-    def get_fields(cls, exclude: list = None, include: list = None, sort_order: list = None) -> set:
-        exclude = exclude or []
-        include = include or []
-        sort_order = sort_order or []
-
-        fields = set(filter(
-            lambda x: x not in exclude,
-            list(cls._meta.fields)
-        ))
-
-        if include:
-            fields = set(filter(
-                lambda x: x in include,
-                list(cls._meta.fields)
-            ))
-
-        if sort_order and len(fields) == len(sort_order):
-            fields = sorted(fields, key=lambda x: sort_order.index(x))
-
-        return fields
 
     @staticmethod
     def verify_reset_token(token: str) -> any:

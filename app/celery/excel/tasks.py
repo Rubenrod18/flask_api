@@ -17,6 +17,7 @@ from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
 from app.utils import find_longest_word, pos_to_char, to_readable, get_request_query_fields, create_search_query
 from app.utils.file_storage import FileStorage
+from app.utils.marshmallow_schema import UserSchema as UserSerializer, DocumentSchema as DocumentSerializer
 
 logger = get_task_logger(__name__)
 
@@ -84,9 +85,8 @@ def _get_user_data(request_data: dict) -> list:
     query = (query.order_by(*order_by)
              .paginate(page_number, items_per_page))
 
-    user_list = []
-    for user in query:
-        user_list.append(user.serialize())
+    user_serializer = UserSerializer(many=True)
+    user_list = user_serializer.dump(list(query))
 
     return user_list
 
@@ -180,9 +180,12 @@ def export_user_data_in_excel(self, created_by: int, request_data: dict):
             os.remove(filepath)
         raise
 
+    document_serializer = DocumentSerializer()
+    document_data = document_serializer.dump(document)
+
     return {
         'current': self.total_progress,
         'total': self.total_progress,
         'status': 'Task completed!',
-        'result': document.serialize(),
+        'result': document_data,
     }

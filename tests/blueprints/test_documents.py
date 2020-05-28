@@ -25,7 +25,7 @@ def test_save_document(client: FlaskClient, auth_header: any):
     parse_url = urlparse(json_data.get('url'))
 
     assert 200 == response.status_code
-    assert 1 == json_data.get('created_by')
+    assert 1 == json_data.get('created_by').get('id')
     assert pdf_file == json_data.get('name')
     assert 'application/pdf' == json_data.get('mime_type')
     assert FileStorage.get_filesize(pdf_file) == json_data.get('size')
@@ -59,7 +59,7 @@ def test_update_document(client: FlaskClient, auth_header: any):
     parse_url = urlparse(json_data.get('url'))
 
     assert 200 == response.status_code
-    assert isinstance(json_data.get('created_by'), int)
+    assert isinstance(json_data.get('created_by').get('id'), int)
     assert pdf_file == json_data.get('name')
     assert document.mime_type == json_data.get('mime_type')
     assert FileStorage.get_filesize(pdf_file) == json_data.get('size')
@@ -85,7 +85,7 @@ def test_get_document_data(client: FlaskClient, auth_header: any):
     parse_url = urlparse(json_data.get('url'))
 
     assert 200 == response.status_code
-    assert document.created_by.id == json_data.get('created_by')
+    assert document.created_by.id == json_data.get('created_by').get('id')
     assert document.name == json_data.get('name')
     assert document.mime_type == json_data.get('mime_type')
     assert document.size == json_data.get('size')

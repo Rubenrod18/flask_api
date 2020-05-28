@@ -9,8 +9,8 @@ XlsxWriter
 bcrypt
 cerberus
 coverage
+flask-marshmallow
 librabbitmq
-marshmallow
 peewee
 pip-tools
 pytest
