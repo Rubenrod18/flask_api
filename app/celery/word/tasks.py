@@ -10,11 +10,11 @@ from flask import current_app
 
 from app.celery import ContextTask
 from app.extensions import celery
-from app.libs.libreoffice import convert_to
 from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
 from app.utils import to_readable, create_search_query, get_request_query_fields
 from app.utils.file_storage import FileStorage
+from app.utils.libreoffice import convert_to
 
 logger = get_task_logger(__name__)
 
