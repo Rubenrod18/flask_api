@@ -11,7 +11,7 @@ from app.utils import class_for_name
 
 from app.utils.decorators import token_required
 
-blueprint = Blueprint('tasks', __name__, url_prefix='/tasks')
+blueprint = Blueprint('tasks', __name__, url_prefix='/api/tasks')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)

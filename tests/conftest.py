@@ -124,7 +124,7 @@ def auth_header(app: Flask, client: FlaskClient):
             'password': os.getenv('TEST_USER_PASSWORD'),
         }
 
-        response = client.post('/auth/login', json=data)
+        response = client.post('/api/auth/login', json=data)
         json_response = response.get_json()
         token = json_response.get('token')
 

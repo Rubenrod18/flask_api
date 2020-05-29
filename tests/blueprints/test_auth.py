@@ -15,7 +15,7 @@ def test_user_login(client: FlaskClient):
             'password': '12345678',
         }
 
-        response = client.post('/auth/login', json=data)
+        response = client.post('/api/auth/login', json=data)
         json_response = response.get_json()
 
         assert json_response.get('message')
@@ -32,7 +32,7 @@ def test_user_login(client: FlaskClient):
         }
         db_wrapper.database.close()
 
-        response = client.post('/auth/login', json=data)
+        response = client.post('/api/auth/login', json=data)
         json_response = response.get_json()
 
         assert 403 == response.status_code
@@ -44,7 +44,7 @@ def test_user_login(client: FlaskClient):
             'password': '12345678',
         }
 
-        response = client.post('/auth/login', json=data)
+        response = client.post('/api/auth/login', json=data)
         json_response = response.get_json()
 
         assert 401 == response.status_code
@@ -57,7 +57,7 @@ def test_user_login(client: FlaskClient):
                 'password': os.getenv('TEST_USER_PASSWORD'),
             }
 
-            response = client.post('/auth/login', json=data)
+            response = client.post('/api/auth/login', json=data)
             json_response = response.get_json()
             token = json_response.get('token')
 
@@ -74,7 +74,7 @@ def test_user_login(client: FlaskClient):
 
 def test_user_logout(client: FlaskClient, auth_header: any):
     with client:
-        response = client.post('/auth/logout', json={}, headers=auth_header())
+        response = client.post('/api/auth/logout', json={}, headers=auth_header())
 
         assert 200 == response.status_code
         assert current_user.is_authenticated == False
@@ -85,7 +85,7 @@ def test_request_reset_password(client: FlaskClient):
         'email': os.getenv('TEST_USER_EMAIL'),
     }
 
-    response = client.post('/auth/reset_password', json=data)
+    response = client.post('/api/auth/reset_password', json=data)
 
     assert 200 == response.status_code
 
@@ -99,7 +99,7 @@ def test_validate_reset_password(client: FlaskClient, app: Flask):
         token = user.get_reset_token()
         db_wrapper.database.close()
 
-    response = client.get(f'/auth/reset_password/{token}', json={})
+    response = client.get(f'/api/auth/reset_password/{token}', json={})
 
     assert 200 == response.status_code
 
@@ -115,7 +115,7 @@ def test_reset_password(client: FlaskClient):
         'password': os.getenv('TEST_USER_PASSWORD'),
     }
 
-    response = client.post(f'/auth/reset_password/{token}', json=data)
+    response = client.post(f'/api/auth/reset_password/{token}', json=data)
     json_response = response.get_json()
     token = json_response.get('token')
 

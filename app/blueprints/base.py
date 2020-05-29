@@ -9,7 +9,7 @@ from ..extensions import db_wrapper as db
 from ..utils import get_request_query_fields, create_search_query
 from ..utils.cerberus_schema import MyValidator
 
-blueprint = Blueprint('base', __name__, url_prefix='/')
+blueprint = Blueprint('base', __name__, url_prefix='/api')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)

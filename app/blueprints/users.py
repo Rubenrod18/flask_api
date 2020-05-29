@@ -19,7 +19,7 @@ from ..utils.cerberus_schema import user_model_schema, search_model_schema
 from ..utils.decorators import token_required
 from ..utils.marshmallow_schema import UserSchema as UserSerializer, ExportWordInputSchema as ExportWordInputSerializer
 
-blueprint = Blueprint('users', __name__, url_prefix='/users')
+blueprint = Blueprint('users', __name__, url_prefix='/api/users')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)

@@ -12,7 +12,7 @@ from app.celery.tasks import reset_password_email
 from app.utils.cerberus_schema import MyValidator, user_login_schema, confirm_reset_password_schema
 from app.utils.decorators import token_required
 
-blueprint = Blueprint('auth', __name__, url_prefix='/auth')
+blueprint = Blueprint('auth', __name__, url_prefix='/api/auth')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)

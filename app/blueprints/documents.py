@@ -19,7 +19,7 @@ from app.utils.file_storage import FileStorage
 from app.utils.marshmallow_schema import DocumentSchema as DocumentSerializer, \
     GetDocumentDataInputSchema as GetDocumentDataInputSerializer
 
-blueprint = Blueprint('documents', __name__, url_prefix='/documents')
+blueprint = Blueprint('documents', __name__, url_prefix='/api/documents')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)

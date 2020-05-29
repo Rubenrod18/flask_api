@@ -96,6 +96,9 @@ class Config(metaclass=Meta):
     SWAGGER_URL = os.getenv('SWAGGER_URL', '/docs')
     SWAGGER_API_URL = os.getenv('SWAGGER_API_URL', f'http://{SERVER_NAME}/static/swagger.json')
 
+    # Flask Restful
+    FLASK_RESTFUL_PREFIX = '/api'
+
     # Mr Developer
     HOME = os.getenv('HOME')
 

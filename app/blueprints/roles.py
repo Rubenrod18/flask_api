@@ -13,7 +13,7 @@ from app.utils.cerberus_schema import role_model_schema, search_model_schema
 from app.utils.marshmallow_schema import RoleSchema as RoleSerializer
 from ..utils.decorators import token_required
 
-blueprint = Blueprint('roles', __name__, url_prefix='/roles')
+blueprint = Blueprint('roles', __name__, url_prefix='/api/roles')
 api = Api(blueprint)
 
 logger = logging.getLogger(__name__)
