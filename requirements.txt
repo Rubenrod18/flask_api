@@ -17,16 +17,17 @@ cffi==1.14.0              # via bcrypt
 click==7.1.2              # via flask, pip-tools
 coverage==5.1             # via -r requirements.in
 dnspython==1.16.0         # via email-validator
-email-validator==1.1.0    # via flask-security-too
+email-validator==1.1.1    # via flask-security-too
 faker==4.1.0              # via -r requirements.in
 flask-babelex==0.9.4      # via flask-security-too
 flask-login==0.5.0        # via flask-security-too
 flask-mail==0.9.1         # via flask-security-too
+flask-marshmallow==0.12.0  # via -r requirements.in
 flask-principal==0.4.0    # via flask-security-too
 flask-restful==0.3.8      # via -r requirements.in
 flask-security-too==3.4.2  # via -r requirements.in
 flask-wtf==0.14.3         # via flask-security-too
-flask==1.1.2              # via -r requirements.in, flask-babelex, flask-login, flask-mail, flask-principal, flask-restful, flask-security-too, flask-wtf
+flask==1.1.2              # via -r requirements.in, flask-babelex, flask-login, flask-mail, flask-marshmallow, flask-principal, flask-restful, flask-security-too, flask-wtf
 flower==0.9.4             # via -r requirements.in
 humanize==0.5.1           # via flower
 idna==2.9                 # via email-validator
@@ -35,13 +36,14 @@ itsdangerous==1.1.0       # via flask, flask-security-too, flask-wtf
 jinja2==2.11.2            # via flask, flask-babelex
 kombu==4.6.8              # via celery
 librabbitmq==2.0.0        # via -r requirements.in
-lxml==4.5.0               # via python-docx
+lxml==4.5.1               # via python-docx
 markupsafe==1.1.1         # via jinja2, wtforms
-more-itertools==8.2.0     # via pytest
-packaging==20.3           # via pytest
+marshmallow==3.6.0        # via flask-marshmallow
+more-itertools==8.3.0     # via pytest
+packaging==20.4           # via pytest
 passlib==1.7.2            # via flask-security-too
 peewee==3.13.3            # via -r requirements.in
-pip-tools==5.1.2          # via -r requirements.in
+pip-tools==5.2.0          # via -r requirements.in
 pluggy==0.13.1            # via pytest
 py==1.8.1                 # via pytest
 pycparser==2.20           # via cffi
@@ -52,9 +54,9 @@ python-docx==0.8.10       # via -r requirements.in
 python-dotenv==0.13.0     # via -r requirements.in
 python-magic==0.4.18      # via -r requirements.in
 pytz==2020.1              # via babel, celery, flask-restful, flower
-six==1.14.0               # via bcrypt, flask-restful, librabbitmq, packaging, pip-tools, python-dateutil
+six==1.15.0               # via bcrypt, flask-marshmallow, flask-restful, librabbitmq, packaging, pip-tools, python-dateutil
 speaklater==1.3           # via flask-babelex
-sqlalchemy==1.3.16        # via -r requirements.in
+sqlalchemy==1.3.17        # via -r requirements.in
 supervisor==4.2.0         # via -r requirements.in, supervisord-dependent-startup
 supervisord-dependent-startup==1.4.0  # via -r requirements.in
 text-unidecode==1.3       # via faker

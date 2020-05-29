@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
 
-from cerberus import Validator
 from flask_login import current_user
-from flask_restful import Api, reqparse
+from flask_restful import Api
 from flask import Blueprint, request, url_for
 from flask_security import roles_accepted
+from marshmallow import ValidationError, INCLUDE, EXCLUDE
 from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 
 from app.celery.word.tasks import export_user_data_in_word
@@ -15,8 +15,9 @@ from .base import BaseResource
 from ..extensions import db_wrapper
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
-from ..utils.cerberus_schema import user_model_schema, search_model_schema, MyValidator
+from ..utils.cerberus_schema import user_model_schema, search_model_schema
 from ..utils.decorators import token_required
+from ..utils.marshmallow_schema import UserSchema as UserSerializer, ExportWordInputSchema as ExportWordInputSerializer
 
 blueprint = Blueprint('users', __name__, url_prefix='/users')
 api = Api(blueprint)
@@ -26,6 +27,14 @@ logger = logging.getLogger(__name__)
 
 class UserBaseResource(BaseResource):
     db_model = UserModel
+    request_validation_schema = user_model_schema()
+    user_serializer = UserSerializer()
+
+    def deserialize_request_data(self, **kwargs: dict) -> dict:
+        try:
+            return self.user_serializer.load(**kwargs)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
 
 @api.resource('')
@@ -33,27 +42,22 @@ class NewUserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
-        data = request.get_json()
-
-        v = MyValidator(schema=user_model_schema())
-        v.allow_unknown = False
-
-        if not v.validate(data):
-            raise UnprocessableEntity(v.errors)
+        request_data = request.get_json()
+        self.request_validation(request_data)
+        data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
 
         with db_wrapper.database.atomic():
+            role = RoleModel.get_by_id(data['role_id'])
+
             data['created_by'] = current_user.id
+            data['roles'] = [role]
             user = user_datastore.create_user(**data)
 
-            role = RoleModel.get_by_id(data['role_id'])
-            user_datastore.add_role_to_user(user, role)
-
-        user_dict = user.serialize()
-
-        create_user_email.delay(data)
+        user_data = self.user_serializer.dump(user)
+        create_user_email.delay(user_data)
 
         return {
-                   'data': user_dict,
+                   'data': user_data,
                }, 201
 
 
@@ -63,103 +67,90 @@ class UserResource(UserBaseResource):
     @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
         user = UserModel.get_or_none(UserModel.id == user_id)
-
-        if isinstance(user, UserModel):
-            user_dict = user.serialize()
-        else:
+        if user is None:
             raise NotFound('User doesn\'t exist')
 
+        user_data = self.user_serializer.dump(user)
+
         return {
-                   'data': user_dict,
+                   'data': user_data,
                }, 200
 
     @token_required
     @roles_accepted('admin', 'team_leader')
     def put(self, user_id: int) -> tuple:
-        data = request.get_json()
+        user = (UserModel.get_or_none(UserModel.id == user_id,
+                                      UserModel.deleted_at.is_null()))
+        if user is None:
+            raise BadRequest('User doesn\'t exist')
 
-        v = MyValidator(schema=user_model_schema(False))
-        v.allow_unknown = False
+        request_data = request.get_json()
+        self.request_validation_schema = user_model_schema(False)
+        self.request_validation(request_data)
 
-        if not v.validate(data):
-            raise UnprocessableEntity(v.errors)
+        data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
+
+        with db_wrapper.database.atomic():
+            data['id'] = user_id
+            UserModel(**data).save()
+
+            user_datastore.remove_role_from_user(user, user.roles[0])
+            role = RoleModel.get_by_id(data['role_id'])
+            user_datastore.add_role_to_user(user, role)
 
         user = (UserModel.get_or_none(UserModel.id == user_id,
                                       UserModel.deleted_at.is_null()))
-        if user:
-            with db_wrapper.database.atomic():
-                data['id'] = user_id
-                UserModel(**data).save()
-
-                user_datastore.remove_role_from_user(user, user.roles[0])
-
-                role = RoleModel.get_by_id(data['role_id'])
-                user_datastore.add_role_to_user(user, role)
-
-            user = (UserModel.get_or_none(UserModel.id == user_id,
-                                          UserModel.deleted_at.is_null()))
-            user_dict = user.serialize()
-        else:
-            raise BadRequest('User doesn\'t exist')
+        user_data = self.user_serializer.dump(user)
 
         return {
-                   'data': user_dict,
+                   'data': user_data,
                }, 200
 
     @token_required
     @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
         user = UserModel.get_or_none(UserModel.id == user_id)
-
-        if isinstance(user, UserModel):
-            if user.deleted_at is None:
-                user.deleted_at = datetime.utcnow()
-                user.save()
-
-                user_dict = user.serialize()
-            else:
-                raise BadRequest('User already deleted')
-        else:
+        if user is None:
             raise NotFound('User doesn\'t exist')
 
+        if user.deleted_at is not None:
+            raise BadRequest('User already deleted')
+
+        user.deleted_at = datetime.utcnow()
+        user.save()
+        user_data = self.user_serializer.dump(user)
+
         return {
-                   'data': user_dict,
+                   'data': user_data,
                }, 200
 
 
 @api.resource('/search')
 class UsersSearchResource(UserBaseResource):
+    user_fields = UserModel.get_fields(exclude=['id', 'password'])
+    request_validation_schema = search_model_schema(user_fields)
+
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
-        data = request.get_json()
+        request_data = request.get_json()
+        self.request_validation(request_data)
 
-        user_fields = UserModel.get_fields(exclude=['id', 'password'])
-        v = Validator(schema=search_model_schema(user_fields))
-        v.allow_unknown = False
-
-        if not v.validate(data):
-            raise UnprocessableEntity(v.errors)
-
-        page_number, items_per_page, order_by = self.get_request_query_fields(data)
+        page_number, items_per_page, order_by = self.get_request_query_fields(request_data)
 
         query = UserModel.select()
         records_total = query.count()
 
-        query = self.create_search_query(query, data)
-
+        query = self.create_search_query(query, request_data)
         query = (query.order_by(*order_by)
                  .paginate(page_number, items_per_page))
 
         records_filtered = query.count()
-        user_list = []
-
-        for user in query:
-            user_dict = user.serialize()
-            user_list.append(user_dict)
+        self.user_serializer = UserSerializer(many=True)
+        user_data = self.user_serializer.dump(list(query))
 
         return {
-                   'data': user_list,
+                   'data': user_data,
                    'records_total': records_total,
                    'records_filtered': records_filtered,
                }, 200
@@ -167,16 +158,14 @@ class UsersSearchResource(UserBaseResource):
 
 @api.resource('/xlsx')
 class ExportUsersExcelResource(UserBaseResource):
+    user_fields = UserModel.get_fields(exclude=['id', 'password'])
+    request_validation_schema = search_model_schema(user_fields)
+
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         request_data = request.get_json()
-
-        user_fields = UserModel.get_fields(exclude=['id', 'password'])
-        v = Validator(schema=search_model_schema(user_fields))
-
-        if not v.validate(request_data):
-            raise UnprocessableEntity(v.errors)
+        self.request_validation(request_data)
 
         task = export_user_data_in_excel.apply_async((current_user.id, request_data), countdown=5)
 
@@ -187,25 +176,22 @@ class ExportUsersExcelResource(UserBaseResource):
 
 
 @api.resource('/word')
-class ExportUsersPdfResource(UserBaseResource):
+class ExportUsersWordResource(UserBaseResource):
+    user_fields = UserModel.get_fields(exclude=['id', 'password'])
+    request_validation_schema = search_model_schema(user_fields)
+
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        # TODO: RequestParse will be deprecated in the future. Replace RequestParse to marshmallow
-        # https://flask-restful.readthedocs.io/en/latest/reqparse.html
-        parser = reqparse.RequestParser()
-        parser.add_argument('to_pdf', type=int, location='args')
-
         request_data = request.get_json()
+        self.request_validation(request_data)
 
-        user_fields = UserModel.get_fields(exclude=['id', 'password'])
-        v = Validator(schema=search_model_schema(user_fields))
-
-        if not v.validate(request_data):
-            raise UnprocessableEntity(v.errors)
-
-        args = parser.parse_args()
-        to_pdf = args.get('to_pdf') or 0
+        try:
+            serializer = ExportWordInputSerializer()
+            request_args = serializer.load(request.args.to_dict(), unknown=EXCLUDE)
+            to_pdf = request_args.get('to_pdf', 0)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
         task = export_user_data_in_word.apply_async(args=[current_user.id, request_data, to_pdf])
 

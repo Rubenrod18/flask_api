@@ -10,11 +10,12 @@ from flask import current_app
 
 from app.celery import ContextTask
 from app.extensions import celery
-from app.libs.libreoffice import convert_to
 from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
 from app.utils import to_readable, create_search_query, get_request_query_fields
 from app.utils.file_storage import FileStorage
+from app.utils.libreoffice import convert_to
+from app.utils.marshmallow_schema import UserSchema as UserSerializer, DocumentSchema as DocumentSerializer
 
 logger = get_task_logger(__name__)
 
@@ -63,9 +64,8 @@ def _get_user_data(request_data: dict) -> list:
     query = (query.order_by(*order_by)
              .paginate(page_number, items_per_page))
 
-    user_list = []
-    for user in query:
-        user_list.append(user.serialize())
+    user_serializer = UserSerializer(many=True)
+    user_list = user_serializer.dump(list(query))
 
     return user_list
 
@@ -147,9 +147,12 @@ def export_user_data_in_word(self, created_by: int, request_data: dict, to_pdf: 
         logger.debug(e)
         raise e
 
+    document_serializer = DocumentSerializer()
+    document_data = document_serializer.dump(document)
+
     return {
         'current': self.total_progress,
         'total': self.total_progress,
         'status': 'Task completed!',
-        'result': document.serialize(),
+        'result': document_data,
     }

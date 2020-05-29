@@ -1,15 +1,16 @@
 import logging
 from datetime import datetime
 
-from cerberus import Validator
 from flask import Blueprint, request
 from flask_restful import Api
 from flask_security import roles_required
+from marshmallow import INCLUDE, ValidationError
 from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 
 from .base import BaseResource
 from app.models.role import Role as RoleModel
-from app.utils.cerberus_schema import role_model_schema, search_model_schema, MyValidator
+from app.utils.cerberus_schema import role_model_schema, search_model_schema
+from app.utils.marshmallow_schema import RoleSchema as RoleSerializer
 from ..utils.decorators import token_required
 
 blueprint = Blueprint('roles', __name__, url_prefix='/roles')
@@ -20,6 +21,14 @@ logger = logging.getLogger(__name__)
 
 class RoleBaseResource(BaseResource):
     db_model = RoleModel
+    request_validation_schema = role_model_schema()
+    role_serializer = RoleSerializer()
+
+    def deserialize_request_data(self, **kwargs: dict) -> dict:
+        try:
+            return self.role_serializer.load(**kwargs)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
 
 @api.resource('')
@@ -27,19 +36,15 @@ class NewRoleResource(RoleBaseResource):
     @token_required
     @roles_required('admin')
     def post(self) -> tuple:
-        data = request.get_json()
-
-        v = MyValidator(schema=role_model_schema())
-        v.allow_unknown = False
-
-        if not v.validate(data):
-            raise UnprocessableEntity(v.errors)
+        request_data = request.get_json()
+        self.request_validation(request_data)
+        data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
 
         role = RoleModel.create(**data)
-        role_dict = role.serialize()
+        role_data = self.role_serializer.dump(role)
 
         return {
-                   'data': role_dict
+                   'data': role_data
                }, 201
 
 
@@ -49,98 +54,85 @@ class RoleResource(RoleBaseResource):
     @roles_required('admin')
     def get(self, role_id: int) -> tuple:
         role = RoleModel.get_or_none(RoleModel.id == role_id)
-
-        if isinstance(role, RoleModel):
-            role_dict = role.serialize()
-        else:
+        if role is None:
             raise NotFound('Role doesn\'t exist')
 
+        role_data = self.role_serializer.dump(role)
+
         return {
-                   'data': role_dict,
+                   'data': role_data,
                }, 200
 
     @token_required
     @roles_required('admin')
     def put(self, role_id: int) -> tuple:
-        data = request.get_json()
+        role = (RoleModel.get_or_none(RoleModel.id == role_id,
+                                      RoleModel.deleted_at.is_null()))
+        if role is None:
+            raise BadRequest('Role doesn\'t exist')
 
-        v = MyValidator(schema=role_model_schema(False))
-        v.allow_unknown = False
+        request_data = request.get_json()
+        self.request_validation_schema = role_model_schema(False)
+        self.request_validation(request_data)
 
-        if not v.validate(data):
-            raise UnprocessableEntity(v.errors)
+        data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
+
+        data['id'] = role_id
+        RoleModel(**data).save()
 
         role = (RoleModel.get_or_none(RoleModel.id == role_id,
                                       RoleModel.deleted_at.is_null()))
-
-        if role:
-            data['id'] = role_id
-            RoleModel(**data).save()
-
-            role = (RoleModel.get_or_none(RoleModel.id == role_id,
-                                          RoleModel.deleted_at.is_null()))
-            role_dict = role.serialize()
-        else:
-            raise BadRequest('Role doesn\'t exist')
+        role_data = self.role_serializer.dump(role)
 
         return {
-                   'data': role_dict,
+                   'data': role_data,
                }, 200
 
     @token_required
     @roles_required('admin')
     def delete(self, role_id: int) -> tuple:
         role = RoleModel.get_or_none(RoleModel.id == role_id)
-
-        if isinstance(role, RoleModel):
-            if role.deleted_at is None:
-                role.deleted_at = datetime.utcnow()
-                role.save()
-
-                role_dict = role.serialize()
-            else:
-                raise BadRequest('Role already deleted')
-        else:
+        if role is None:
             raise NotFound('Role doesn\'t exist')
 
+        if role.deleted_at is not None:
+            raise BadRequest('Role already deleted')
+
+        role.deleted_at = datetime.utcnow()
+        role.save()
+
+        role_data = self.role_serializer.dump(role)
+
         return {
-                   'data': role_dict,
+                   'data': role_data,
                }, 200
 
 
 @api.resource('/search')
 class RolesSearchResource(RoleBaseResource):
+    role_fields = RoleModel.get_fields(['id'])
+    request_validation_schema = search_model_schema(role_fields)
+
     @token_required
     @roles_required('admin')
     def post(self) -> tuple:
-        data = request.get_json()
+        request_data = request.get_json()
 
-        role_fields = RoleModel.get_fields(['id'])
-        v = Validator(schema=search_model_schema(role_fields))
-        v.allow_unknown = False
-
-        if not v.validate(data):
-            return UnprocessableEntity(v.errors), 422
-
-        page_number, items_per_page, order_by = self.get_request_query_fields(data)
+        page_number, items_per_page, order_by = self.get_request_query_fields(request_data)
 
         query = RoleModel.select()
         records_total = query.count()
 
-        query = self.create_search_query(query, data)
-
+        query = self.create_search_query(query, request_data)
         query = (query.order_by(*order_by)
                  .paginate(page_number, items_per_page))
 
         records_filtered = query.count()
-        user_list = []
-
-        for user in query:
-            user_dict = user.serialize()
-            user_list.append(user_dict)
+        self.role_serializer = RoleSerializer(many=True)
+        role_data = self.role_serializer.dump(list(query))
 
         return {
-                   'data': user_list,
+                   'data': role_data,
                    'records_total': records_total,
                    'records_filtered': records_filtered,
                }, 200

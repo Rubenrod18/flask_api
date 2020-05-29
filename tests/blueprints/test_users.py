@@ -33,11 +33,7 @@ def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any)
     role_data = json_data.get('roles')[0]
 
     assert role.name == role_data.get('name')
-    assert role.description == role_data.get('description')
     assert role.label == role_data.get('label')
-    assert role_data.get('created_at')
-    assert role_data.get('updated_at') >= role_data.get('created_at')
-    assert role_data.get('deleted_at') is None
 
 
 def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
@@ -77,11 +73,7 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: an
     role_data = json_data.get('roles')[0]
 
     assert role.name == role_data.get('name')
-    assert role.description == role_data.get('description')
     assert role.label == role_data.get('label')
-    assert role.created_at.strftime('%Y-%m-%d %H:%M:%S') == role_data.get('created_at')
-    assert role.updated_at.strftime('%Y-%m-%d %H:%M:%S') == role_data.get('updated_at')
-    assert role_data.get('deleted_at') is None
 
 
 def test_get_user_endpoint(client: FlaskClient, auth_header: any):
@@ -112,11 +104,7 @@ def test_get_user_endpoint(client: FlaskClient, auth_header: any):
     role_data = json_data.get('roles')[0]
 
     assert role.name == role_data.get('name')
-    assert role.description == role_data.get('description')
     assert role.label == role_data.get('label')
-    assert role.created_at.strftime('%Y-%m-%d %H:%M:%S') == role_data.get('created_at')
-    assert role.updated_at.strftime('%Y-%m-%d %H:%M:%S') == role_data.get('updated_at')
-    assert role_data.get('deleted_at') is None
 
 
 def test_delete_user_endpoint(client: FlaskClient, auth_header: any):

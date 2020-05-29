@@ -2,7 +2,6 @@ import magic
 from cerberus import Validator
 from flask import current_app
 
-from app.models.user import User as UserModel
 from app.utils import BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name, QUERY_OPERATORS, STRING_QUERY_OPERATORS
 
 
@@ -305,54 +304,8 @@ def confirm_reset_password_schema() -> dict:
     return get_password_schema()
 
 
-def document_save_model_schema() -> dict:
+def document_model_schema() -> dict:
     return {
-        'document': {
-            'type': 'dict',
-            'required': True,
-            'empty': False,
-            'nullable': False,
-            'schema': {
-                'mime_type': {
-                    'type': 'string',
-                    'required': True,
-                    'empty': False,
-                    'nullable': False,
-                    'allowed': list(current_app.config.get('ALLOWED_MIME_TYPES')),
-                },
-                'filename': {
-                    'type': 'string',
-                    'required': True,
-                    'empty': False,
-                    'nullable': False,
-                },
-                'file': {
-                    'type': 'binary',
-                    'required': True,
-                    'empty': False,
-                    'nullable': False,
-                    'valid_mime_type': list(current_app.config.get('ALLOWED_MIME_TYPES')),
-                },
-            },
-        },
-    }
-
-
-def document_update_model_schema() -> dict:
-    return {
-        'id': {
-            'type': 'integer',
-            'required': True,
-            'empty': False,
-            'nullable': False,
-            'no_exists': {
-                'module_name': 'app.models.document',
-                'class_name': 'Document',
-                'field_name': 'id',
-                'only_deleted': True,
-                'message': 'Already deleted',
-            },
-        },
         'document': {
             'type': 'dict',
             'required': True,

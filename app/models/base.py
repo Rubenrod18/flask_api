@@ -24,19 +24,24 @@ class Base(db.Model):
 
         return super(Base, self).save(*args, **kwargs)
 
-    @abstractmethod
-    def serialize(self, ignore_fields: list = None) -> dict:
-        return {}
-
     @classmethod
-    @abstractmethod
-    def get_fields(self, ignore_fields: list = None) -> set:
-        if ignore_fields is None:
-            ignore_fields = []
+    def get_fields(cls, exclude: list = None, include: list = None, sort_order: list = None) -> set:
+        exclude = exclude or []
+        include = include or []
+        sort_order = sort_order or []
 
-        return set(
-            filter(
-                lambda x: x not in ignore_fields,
-                list(self._meta.fields)
-            )
-        )
+        fields = set(filter(
+            lambda x: x not in exclude,
+            list(cls._meta.fields)
+        ))
+
+        if include:
+            fields = set(filter(
+                lambda x: x in include,
+                list(cls._meta.fields)
+            ))
+
+        if sort_order and len(fields) == len(sort_order):
+            fields = sorted(fields, key=lambda x: sort_order.index(x))
+
+        return fields
