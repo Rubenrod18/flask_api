@@ -9,7 +9,6 @@ XlsxWriter
 bcrypt
 cerberus
 coverage
-flask-cors
 flask-marshmallow
 flask-swagger-ui
 librabbitmq

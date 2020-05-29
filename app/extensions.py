@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_cors import CORS
 from flask_mail import Mail
 from flask_marshmallow import Marshmallow
 from flask_security import Security
@@ -13,7 +12,6 @@ security = Security()
 mail = Mail()
 celery = MyCelery()
 ma = Marshmallow()
-cors = CORS()
 
 
 def init_app(app: Flask) -> None:
@@ -23,13 +21,12 @@ def init_app(app: Flask) -> None:
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
     mail.init_app(app)
     ma.init_app(app)
-    cors.init_app(app)
 
     swagger_blueprint = get_swaggerui_blueprint(
         app.config.get('SWAGGER_URL'),  # Swagger UI static files will be mapped to '{SWAGGER_URL}/dist/'
         app.config.get('SWAGGER_API_URL'),
         config={  # Swagger UI config overrides
-            'app_name': "Test application"
+            'app_name': 'Flask-api application'
         },
         # oauth_config={  # OAuth config. See https://github.com/swagger-api/swagger-ui#oauth2-configuration .
         #    'clientId': "your-client-id",
