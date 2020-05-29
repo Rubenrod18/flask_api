@@ -10,7 +10,7 @@ bcrypt
 cerberus
 coverage
 flask-marshmallow
-flask-swagger-ui
+flask-restx
 librabbitmq
 peewee
 pip-tools
