@@ -8,6 +8,10 @@ server {
         uwsgi_pass unix:/path/flask_api.sock;
     }
 
+    location /static/ {
+        autoindex off;
+    }
+
     location /flower/ {
         proxy_pass http://127.0.0.1:5555/;
         proxy_http_version 1.1;

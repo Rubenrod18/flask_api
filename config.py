@@ -92,6 +92,10 @@ class Config(metaclass=Meta):
     CELERY_RESULT_EXTENDED = True
     CELERY_TASK_DEFAULT_RATE_LIMIT = 3
 
+    # Flask Swagger UI
+    SWAGGER_URL = '/docs'
+    SWAGGER_API_URL = f'{SERVER_NAME}/static/swagger.json'
+
     # Mr Developer
     HOME = os.getenv('HOME')
 

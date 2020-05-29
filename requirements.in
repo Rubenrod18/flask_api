@@ -9,12 +9,13 @@ XlsxWriter
 bcrypt
 cerberus
 coverage
+flask-cors
 flask-marshmallow
+flask-swagger-ui
 librabbitmq
 peewee
 pip-tools
 pytest
-python-dateutil
 python-docx
 python-dotenv
 uwsgi
