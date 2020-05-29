@@ -9,6 +9,7 @@ server {
     }
 
     location /static/ {
+        root /path/flask_api;
         autoindex off;
     }
 
