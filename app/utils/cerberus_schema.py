@@ -29,7 +29,7 @@ class MyValidator(Validator):
         class_name = exists.get('class_name')
         model_field = exists.get('field_name')
         only_deleted = exists.get('only_deleted', False)
-        message = exists.get('message', 'Doesn\'t exists in database')
+        message = exists.get('message', f'{value} doesn\'t exists in database')
 
         model = class_for_name(module_name, class_name)
         query_field = getattr(model, model_field)
@@ -55,7 +55,7 @@ class MyValidator(Validator):
         class_name = exists.get('class_name')
         model_field = exists.get('field_name')
         only_deleted = exists.get('only_deleted', False)
-        message = exists.get('message', 'Already exists')
+        message = exists.get('message', f'{value} already exists')
 
         model = class_for_name(module_name, class_name)
         query_field = getattr(model, model_field)

@@ -1,18 +1,22 @@
 import logging
 
-from flask_restful import Api, Resource
+from flask_restx import Resource, fields
 from flask import Blueprint
 from peewee import ModelSelect
 from werkzeug.exceptions import UnprocessableEntity
 
-from ..extensions import db_wrapper as db
+from ..extensions import db_wrapper as db, api as root_api
 from ..utils import get_request_query_fields, create_search_query
 from ..utils.cerberus_schema import MyValidator
 
-blueprint = Blueprint('base', __name__, url_prefix='/api')
-api = Api(blueprint)
+blueprint = Blueprint('base', __name__)
+api = root_api.namespace('', description='Base endpoints')
 
 logger = logging.getLogger(__name__)
+
+parser = api.parser()
+parser.add_argument('Content-Type', location='headers', required=True, default='application/json')
+
 
 class BaseResource(Resource):
     db_model: db.Model
@@ -31,7 +35,9 @@ class BaseResource(Resource):
         return create_search_query(self.db_model, query, request_data)
 
 
-@api.resource('')
+@api.route('/welcome')
+@api.expect(parser)
 class WelcomeResource(Resource):
+    @api.doc(responses={200: 'Welcome to flask_api!'})
     def get(self) -> tuple:
         return 'Welcome to flask_api!', 200

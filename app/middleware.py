@@ -8,7 +8,8 @@ class middleware():
 
     def __init__(self, app: Flask):
         self.app = app.wsgi_app
-        self.accept_content_types = app.config.get('ALLOWED_CONTENT_TYPES')
+        self.content_types = app.config.get('ALLOWED_CONTENT_TYPES')
+        self.accept = ('application/json')
 
     def _parse_content_type(self, request_content_type: any) -> str:
         """
@@ -29,8 +30,9 @@ class middleware():
 
         if is_api_request:
             content_type = self._parse_content_type(request.content_type)
+            accept_mimetypes = request.accept_mimetypes.accept_json
 
-            if content_type in self.accept_content_types:
+            if content_type in self.content_types or accept_mimetypes:
                 return self.app(environ, start_response)
 
             response = Response('{"message": "Content type no valid"}', mimetype='aplication/json',

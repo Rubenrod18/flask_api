@@ -117,7 +117,6 @@ def test_reset_password(client: FlaskClient):
 
     response = client.post(f'/api/auth/reset_password/{token}', json=data)
     json_response = response.get_json()
-    token = json_response.get('token')
 
     assert 200 == response.status_code
-    assert token
+    assert json_response.get('token')

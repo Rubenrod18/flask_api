@@ -2,19 +2,19 @@ import logging
 from datetime import datetime
 
 from flask import Blueprint, request
-from flask_restful import Api
 from flask_security import roles_required
 from marshmallow import INCLUDE, ValidationError
 from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 
 from .base import BaseResource
+from app.extensions import api as root_api
 from app.models.role import Role as RoleModel
 from app.utils.cerberus_schema import role_model_schema, search_model_schema
 from app.utils.marshmallow_schema import RoleSchema as RoleSerializer
 from ..utils.decorators import token_required
 
-blueprint = Blueprint('roles', __name__, url_prefix='/api/roles')
-api = Api(blueprint)
+blueprint = Blueprint('roles', __name__)
+api = root_api.namespace('roles', description='Roles endpoints')
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class RoleBaseResource(BaseResource):
             raise UnprocessableEntity(e.messages)
 
 
-@api.resource('')
+@api.route('')
 class NewRoleResource(RoleBaseResource):
     @token_required
     @roles_required('admin')
@@ -48,7 +48,7 @@ class NewRoleResource(RoleBaseResource):
                }, 201
 
 
-@api.resource('/<int:role_id>')
+@api.route('/<int:role_id>')
 class RoleResource(RoleBaseResource):
     @token_required
     @roles_required('admin')
@@ -108,7 +108,7 @@ class RoleResource(RoleBaseResource):
                }, 200
 
 
-@api.resource('/search')
+@api.route('/search')
 class RolesSearchResource(RoleBaseResource):
     role_fields = RoleModel.get_fields(['id'])
     request_validation_schema = search_model_schema(role_fields)

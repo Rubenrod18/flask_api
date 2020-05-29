@@ -6,12 +6,12 @@ from datetime import datetime
 
 from flask import Blueprint, request, current_app, send_file
 from flask_login import current_user
-from flask_restful import Api
 from flask_security import roles_accepted
 from marshmallow import EXCLUDE, ValidationError
 from werkzeug.exceptions import NotFound, UnprocessableEntity, InternalServerError, BadRequest
 
 from app.blueprints.base import BaseResource
+from app.extensions import api as root_api
 from app.models.document import Document as DocumentModel
 from app.utils.cerberus_schema import document_model_schema, search_model_schema
 from app.utils.decorators import token_required
@@ -19,8 +19,8 @@ from app.utils.file_storage import FileStorage
 from app.utils.marshmallow_schema import DocumentSchema as DocumentSerializer, \
     GetDocumentDataInputSchema as GetDocumentDataInputSerializer
 
-blueprint = Blueprint('documents', __name__, url_prefix='/api/documents')
-api = Api(blueprint)
+blueprint = Blueprint('documents', __name__)
+api = root_api.namespace('documents', description='Documents endpoints')
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ class DocumentBaseResource(BaseResource):
         return response
 
 
-@api.resource('')
+@api.route('')
 class NewDocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
@@ -133,7 +133,7 @@ class NewDocumentResource(DocumentBaseResource):
                }, 200
 
 
-@api.resource('/<int:document_id>')
+@api.route('/<int:document_id>')
 class DocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
@@ -208,7 +208,7 @@ class DocumentResource(DocumentBaseResource):
                }, 200
 
 
-@api.resource('/search')
+@api.route('/search')
 class SearchDocumentResource(DocumentBaseResource):
     document_fields = DocumentModel.get_fields()
     request_validation_schema = search_model_schema(document_fields)

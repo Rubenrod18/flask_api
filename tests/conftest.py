@@ -126,9 +126,9 @@ def auth_header(app: Flask, client: FlaskClient):
 
         response = client.post('/api/auth/login', json=data)
         json_response = response.get_json()
-        token = json_response.get('token')
 
         assert 200 == response.status_code
+        token = json_response.get('token')
 
         return {
             app.config.get('SECURITY_TOKEN_AUTHENTICATION_HEADER'): 'Bearer %s' % token,

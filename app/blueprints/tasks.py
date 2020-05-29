@@ -2,17 +2,17 @@ import logging
 
 from celery.local import PromiseProxy
 from flask import Blueprint
-from flask_restful import Api, Resource
+from flask_restx import Resource
 from flask_security import roles_accepted
 from werkzeug.exceptions import NotFound
 
-from app.extensions import db_wrapper
+from app.extensions import db_wrapper, api as root_api
 from app.utils import class_for_name
 
 from app.utils.decorators import token_required
 
 blueprint = Blueprint('tasks', __name__, url_prefix='/api/tasks')
-api = Api(blueprint)
+api = root_api.namespace('tasks', description='Tasks endpoints')
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class TaskResource(Resource):
         return task
 
 
-@api.resource('/status/<string:task_id>')
+@api.route('/status/<string:task_id>')
 class TaskStatusResource(TaskResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')

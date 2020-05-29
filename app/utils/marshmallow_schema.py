@@ -61,7 +61,7 @@ class UserSchema(ma.Schema):
         )
 
     id = fields.Int()
-    created_by = fields.Nested('self', only=('id',))
+    created_by = fields.Nested(lambda: UserSchema(only=('id',)))
     name = fields.Str()
     last_name = fields.Str()
     email = fields.Email()
@@ -89,5 +89,5 @@ class DocumentSchema(ma.Schema):
 
     @post_dump()
     def make_url(self, data, **kwargs):
-        data['url'] = url_for('documents.documentresource', document_id=data['id'], _external=True)
+        data['url'] = url_for('documents_document_resource', document_id=data['id'], _external=True)
         return data

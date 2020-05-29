@@ -2,7 +2,6 @@ import logging
 from datetime import datetime
 
 from flask_login import current_user
-from flask_restful import Api
 from flask import Blueprint, request, url_for
 from flask_security import roles_accepted
 from marshmallow import ValidationError, INCLUDE, EXCLUDE
@@ -12,15 +11,15 @@ from app.celery.word.tasks import export_user_data_in_word
 from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email
 from .base import BaseResource
-from ..extensions import db_wrapper
+from ..extensions import db_wrapper, api as root_api
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
 from ..utils.cerberus_schema import user_model_schema, search_model_schema
 from ..utils.decorators import token_required
 from ..utils.marshmallow_schema import UserSchema as UserSerializer, ExportWordInputSchema as ExportWordInputSerializer
 
-blueprint = Blueprint('users', __name__, url_prefix='/api/users')
-api = Api(blueprint)
+blueprint = Blueprint('users', __name__,)
+api = root_api.namespace('users', description='Users endpoints')
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ class UserBaseResource(BaseResource):
             raise UnprocessableEntity(e.messages)
 
 
-@api.resource('')
+@api.route('')
 class NewUserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
@@ -61,7 +60,7 @@ class NewUserResource(UserBaseResource):
                }, 201
 
 
-@api.resource('/<int:user_id>')
+@api.route('/<int:user_id>')
 class UserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
@@ -125,7 +124,7 @@ class UserResource(UserBaseResource):
                }, 200
 
 
-@api.resource('/search')
+@api.route('/search')
 class UsersSearchResource(UserBaseResource):
     user_fields = UserModel.get_fields(exclude=['id', 'password'])
     request_validation_schema = search_model_schema(user_fields)
@@ -156,7 +155,7 @@ class UsersSearchResource(UserBaseResource):
                }, 200
 
 
-@api.resource('/xlsx')
+@api.route('/xlsx')
 class ExportUsersExcelResource(UserBaseResource):
     user_fields = UserModel.get_fields(exclude=['id', 'password'])
     request_validation_schema = search_model_schema(user_fields)
@@ -171,11 +170,11 @@ class ExportUsersExcelResource(UserBaseResource):
 
         return {
                    'task': task.id,
-                   'url': url_for('tasks.taskstatusresource', task_id=task.id, _external=True),
+                   'url': url_for('tasks_task_status_resource', task_id=task.id, _external=True),
                }, 202
 
 
-@api.resource('/word')
+@api.route('/word')
 class ExportUsersWordResource(UserBaseResource):
     user_fields = UserModel.get_fields(exclude=['id', 'password'])
     request_validation_schema = search_model_schema(user_fields)
@@ -197,5 +196,5 @@ class ExportUsersWordResource(UserBaseResource):
 
         return {
                    'task': task.id,
-                   'url': url_for('tasks.taskstatusresource', task_id=task.id, _external=True),
+                   'url': url_for('tasks_task_status_resource', task_id=task.id, _external=True),
                }, 202
