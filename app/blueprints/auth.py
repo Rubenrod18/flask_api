@@ -15,7 +15,7 @@ from app.utils.decorators import token_required
 from config import Config
 
 blueprint = Blueprint('auth', __name__)
-api = root_api.namespace('auth', description='Autenthication endpoints')
+api = root_api.namespace('auth', description='Authentication endpoints')
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +26,13 @@ class AuthUserLoginResource(Resource):
     _parser.add_argument('email', type=str, location='json')
     _parser.add_argument('password', type=str, location='json')
 
-    @api.expect(_parser)
     @api.doc(responses={
-        200: ('Success', str),
+        200: 'Success',
         401: 'Unauthorized',
         403: 'Forbidden',
         422: 'Unprocessable Entity',
     })
+    @api.expect(_parser)
     def post(self) -> tuple:
         data = request.get_json()
 
@@ -64,6 +64,10 @@ class AuthUserLogoutResource(Resource):
     _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
                         default='Bearer token')
 
+    @api.doc(responses={
+        200: 'Success',
+        401: 'Unauthorized',
+    })
     @api.expect(_parser)
     @token_required
     def post(self) -> tuple:
@@ -78,12 +82,12 @@ class RequestResetPasswordResource(Resource):
     _parser = api.parser()
     _parser.add_argument('email', type=str, location='json')
 
-    @api.expect(_parser)
     @api.doc(responses={
         200: 'Success',  # TODO: change status code to 202
         403: 'Forbidden',
         404: 'Not Found',
     })
+    @api.expect(_parser)
     def post(self) -> tuple:
         data = request.get_json()
         email = data.get('email')
@@ -116,9 +120,6 @@ class RequestResetPasswordResource(Resource):
 @api.route('/reset_password/<token>')
 @api.doc(params={'token': 'A password reset token created previously'})
 class ResetPasswordResource(Resource):
-    _parser = api.parser()
-    _parser.add_argument('email', type=str, location='json')
-
     @api.doc(responses={
         200: 'Success',
         403: 'Forbidden',
@@ -137,8 +138,11 @@ class ResetPasswordResource(Resource):
 
         return {}, 200
 
+    _parser = api.parser()
+    _parser.add_argument('password', type=str, location='json')
+
     @api.doc(responses={
-        200: ('Success', str),
+        200: 'Success',
         403: 'Forbidden',
         422: 'Unprocessable Entity',
     })

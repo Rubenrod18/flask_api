@@ -25,8 +25,7 @@ from config import Config
 
 blueprint = Blueprint('documents', __name__)
 api = root_api.namespace('documents',
-                         description='Documents endpoints. Only users with role admin, team_leader or worker'
-                                     'can manage these endpoints.')
+                         description='Documents endpoints. Users with role admin, team_leader or worker can manage these endpoints.')
 logger = logging.getLogger(__name__)
 
 document_sw_model = api.model('Document', {
@@ -120,7 +119,7 @@ class NewDocumentResource(DocumentBaseResource):
                          required=True, help='You only can upload Excel and PDF files.')
 
     @api.doc(responses={
-        200: ('Success', document_sw_model),
+        201: ('Success', document_sw_model),
         401: 'Unauthorized',
         403: 'Forbidden',
         422: 'Unprocessable Entity',
@@ -213,10 +212,12 @@ class DocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def put(self, document_id: int) -> tuple:
-        document = DocumentModel.get_or_none(DocumentModel.id == document_id,
-                                             DocumentModel.deleted_at.is_null())
+        document = DocumentModel.get_or_none(DocumentModel.id == document_id)
         if document is None:
             raise BadRequest('Document doesn\'t exist')
+
+        if document.deleted_at is not None:
+            raise BadRequest('Document already deleted')
 
         request_data = self.get_request_file()
         self.request_validation_schema = document_model_schema()
@@ -297,7 +298,7 @@ class SearchDocumentResource(DocumentBaseResource):
     _parser.add_argument('page_number', type=int, location='json')
 
     @api.doc(responses={
-        200: ('Success'),
+        200: 'Success',
         401: 'Unauthorized',
         403: 'Forbidden',
         422: 'Unprocessable Entity',

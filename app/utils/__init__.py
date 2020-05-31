@@ -83,18 +83,19 @@ def _build_order_by(db_model: Type[Model], request_data: dict) -> list:
     order_by_values = []
     request_order = request_data.get('order', [['id', 'asc']])
 
-    for item in request_order:
-        field_name, sort = item
-        field = db_model._meta.fields[field_name]
-        order_by = getattr(field, sort)()
+    if isinstance(request_order, list):
+        for item in request_order:
+            field_name, sort = item
+            field = db_model._meta.fields[field_name]
+            order_by = getattr(field, sort)()
 
-        order_by_values.append(order_by)
+            order_by_values.append(order_by)
 
     return order_by_values
 
 
 def get_request_query_fields(db_model: Type[Model], request_data=None) -> tuple:
-    irequest_data = request_data or {}
+    request_data = request_data or {}
 
     # Page numbers are 1-based, so the first page of results will be page 1.
     # http://docs.peewee-orm.com/en/latest/peewee/querying.html#paginating-records

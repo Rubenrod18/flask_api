@@ -10,6 +10,7 @@ from app.extensions import db_wrapper, api as root_api
 from app.utils import class_for_name
 
 from app.utils.decorators import token_required
+from config import Config
 
 blueprint = Blueprint('tasks', __name__, url_prefix='/api/tasks')
 api = root_api.namespace('tasks', description='Tasks endpoints')
@@ -42,35 +43,47 @@ class TaskResource(Resource):
 
 @api.route('/status/<string:task_id>')
 class TaskStatusResource(TaskResource):
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+
+    @api.doc(responses={
+        200: 'Success',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        404: 'Not found',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def get(self, task_id: str):
         task = self.get_task(task_id)
 
-        data = task.AsyncResult(task_id)
-        if data.state == 'PENDING':
+        task_data = task.AsyncResult(task_id)
+        if task_data.state == 'PENDING':
             response = {
-                'state': data.state,
+                'state': task_data.state,
                 'current': 0,
                 'total': 1,
                 'status': 'Pending...',
             }
-        elif task.state != 'FAILURE':
+        elif task_data.state != 'FAILURE':
             response = {
-                'state': data.state,
-                'current': data.info.get('current', 0),
-                'total': data.info.get('total', 1),
-                'status': data.info.get('status', ''),
+                'state': task_data.state,
+                'current': task_data.info.get('current', 0),
+                'total': task_data.info.get('total', 1),
+                'status': task_data.info.get('status', ''),
             }
 
-            if 'result' in data.info:
-                response['result'] = data.info['result']
+            if 'result' in task_data.info:
+                response['result'] = task_data.info['result']
         else:
             response = {
-                'state': data.state,
+                'state': task_data.state,
                 'current': 1,
                 'total': 1,
-                'status': str(data.info),
+                'status': str(task_data.info),
             }
 
         return response, 200
