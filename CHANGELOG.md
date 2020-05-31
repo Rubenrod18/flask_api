@@ -12,6 +12,17 @@ All notable changes to this project will be documented in this file. See [standa
 * add marshmallow package integration ([a8b647e](https://github.com/rubenrod18/flask-api/commit/a8b647e409e246407f04482020395b873ac5547f))
 * add Swagger integration ([dc6ace4](https://github.com/rubenrod18/flask-api/commit/dc6ace43c9dfde3358ec4775fff8fca4ff02248a))
 
+
+### Refactor
+
+* replace HTTP exceptions to Werkzeug HTTP Exceptions ([31e5606](https://github.com/rubenrod18/flask-api/commit/31e5606116f32a10137c9d16d5bec47b886739f1))
+* move Word and Excel celery tasks to them own modules ([00e42e5](https://github.com/rubenrod18/flask-api/commit/00e42e59dba6508119fb69507a1e004975adc939))
+
+
+### Docs
+
+* docs: add installation project guide ([b915d31](https://github.com/rubenrod18/flask-api/commit/b915d3124c717f727441e555e42b7cd483e26410))
+
 ## [1.0.0](https://github.com/rubenrod18/flask-api/compare/v0.8.0...v1.0.0) (2020-05-17)
 
 
