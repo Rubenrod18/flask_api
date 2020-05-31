@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from flask import Blueprint, request
+from flask_restx import fields
 from flask_security import roles_required
 from marshmallow import INCLUDE, ValidationError
 from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
@@ -14,9 +15,18 @@ from app.utils.marshmallow_schema import RoleSchema as RoleSerializer
 from ..utils.decorators import token_required
 
 blueprint = Blueprint('roles', __name__)
-api = root_api.namespace('roles', description='Roles endpoints')
-
+api = root_api.namespace('roles', description='Roles endpoints. Only user with role admin can manage these endpoints.')
 logger = logging.getLogger(__name__)
+
+role_sw_model = api.model('Role', {
+    'id': fields.Integer,
+    'name': fields.String,
+    'description': fields.String,
+    'label': fields.String,
+    'created_at': fields.String,
+    'updated_at': fields.String,
+    'deleted_at': fields.String,
+})
 
 
 class RoleBaseResource(BaseResource):

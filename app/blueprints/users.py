@@ -3,6 +3,7 @@ from datetime import datetime
 
 from flask_login import current_user
 from flask import Blueprint, request, url_for
+from flask_restx import fields
 from flask_security import roles_accepted
 from marshmallow import ValidationError, INCLUDE, EXCLUDE
 from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
@@ -11,6 +12,7 @@ from app.celery.word.tasks import export_user_data_in_word
 from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email
 from .base import BaseResource
+from .roles import role_sw_model
 from ..extensions import db_wrapper, api as root_api
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
@@ -18,10 +20,29 @@ from ..utils.cerberus_schema import user_model_schema, search_model_schema
 from ..utils.decorators import token_required
 from ..utils.marshmallow_schema import UserSchema as UserSerializer, ExportWordInputSchema as ExportWordInputSerializer
 
-blueprint = Blueprint('users', __name__,)
+blueprint = Blueprint('users', __name__, )
 api = root_api.namespace('users', description='Users endpoints')
 
 logger = logging.getLogger(__name__)
+
+creator_sw_model = api.model('Creator', {
+    'id': fields.Integer,
+})
+
+user_sw_model = api.model('User', {
+    'id': fields.Integer,
+    'name': fields.String,
+    'last_name': fields.String,
+    'email': fields.String,
+    'genre': fields.String(enum=('m', 'f')),
+    'birth_date': fields.String,
+    'active': fields.Boolean,
+    'created_at': fields.String,
+    'updated_at': fields.String,
+    'deleted_at': fields.String,
+    'created_by': fields.Nested(creator_sw_model),
+    'roles': fields.List(fields.Nested(role_sw_model))
+})
 
 
 class UserBaseResource(BaseResource):

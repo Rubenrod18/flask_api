@@ -14,10 +14,6 @@ api = root_api.namespace('', description='Base endpoints')
 
 logger = logging.getLogger(__name__)
 
-parser = api.parser()
-parser.add_argument('Content-Type', location='headers', required=True, default='application/json')
-
-
 class BaseResource(Resource):
     db_model: db.Model
     request_validation_schema = {}
@@ -36,7 +32,6 @@ class BaseResource(Resource):
 
 
 @api.route('/welcome')
-@api.expect(parser)
 class WelcomeResource(Resource):
     @api.doc(responses={200: 'Welcome to flask_api!'})
     def get(self) -> tuple:

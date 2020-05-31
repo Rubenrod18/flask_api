@@ -2,7 +2,7 @@ import logging
 
 import flask_security
 from flask import Blueprint, request, url_for
-from flask_restx import Resource, fields
+from flask_restx import Resource
 from flask_security import verify_password
 from flask_security.passwordless import generate_login_token
 from werkzeug.exceptions import Forbidden, Unauthorized, UnprocessableEntity, NotFound
@@ -22,18 +22,13 @@ logger = logging.getLogger(__name__)
 
 @api.route('/login')
 class AuthUserLoginResource(Resource):
-    request_fields = api.model('RequestFields', {
-        'email': fields.String,
-        'password': fields.String,
-    })
+    _parser = api.parser()
+    _parser.add_argument('email', type=str, location='json')
+    _parser.add_argument('password', type=str, location='json')
 
-    token_response = api.model('TokenModel', {
-        'token': fields.String,
-    })
-
-    @api.expect(request_fields)
+    @api.expect(_parser)
     @api.doc(responses={
-        200: ('Success', token_response),
+        200: ('Success', str),
         401: 'Unauthorized',
         403: 'Forbidden',
         422: 'Unprocessable Entity',
@@ -63,14 +58,13 @@ class AuthUserLoginResource(Resource):
                }, 200
 
 
-parser = api.parser()
-parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                    default='Bearer token')
-
-
 @api.route('/logout')
-@api.expect(parser)
 class AuthUserLogoutResource(Resource):
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                        default='Bearer token')
+
+    @api.expect(_parser)
     @token_required
     def post(self) -> tuple:
         flask_security.logout_user()
@@ -81,13 +75,12 @@ class AuthUserLogoutResource(Resource):
 # TODO: update endpoint name
 @api.route('/reset_password')
 class RequestResetPasswordResource(Resource):
-    reset_password_request_fields = api.model('ResetPasswordRequestFields', {
-        'email': fields.String,
-    })
+    _parser = api.parser()
+    _parser.add_argument('email', type=str, location='json')
 
-    @api.expect(reset_password_request_fields)
+    @api.expect(_parser)
     @api.doc(responses={
-        200: 'Success', # TODO: change status code to 202
+        200: 'Success',  # TODO: change status code to 202
         403: 'Forbidden',
         404: 'Not Found',
     })
@@ -118,10 +111,14 @@ class RequestResetPasswordResource(Resource):
 
         return {}, 200
 
+
 # TODO: update endpoint name
 @api.route('/reset_password/<token>')
 @api.doc(params={'token': 'A password reset token created previously'})
 class ResetPasswordResource(Resource):
+    _parser = api.parser()
+    _parser.add_argument('email', type=str, location='json')
+
     @api.doc(responses={
         200: 'Success',
         403: 'Forbidden',
@@ -140,15 +137,12 @@ class ResetPasswordResource(Resource):
 
         return {}, 200
 
-    reset_password_fields = api.model('ResetPasswordFields', {
-        'password': fields.String,
-    })
     @api.doc(responses={
-        200: 'Success',
+        200: ('Success', str),
         403: 'Forbidden',
         422: 'Unprocessable Entity',
     })
-    @api.expect(reset_password_fields)
+    @api.expect(_parser)
     def post(self, token: str) -> tuple:
         data = request.get_json()
 

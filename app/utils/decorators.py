@@ -3,7 +3,7 @@ import re
 
 from flask import current_app, request
 from flask_security.passwordless import login_token_status
-from werkzeug.exceptions import NotFound, Forbidden, BadRequest
+from werkzeug.exceptions import NotFound, Forbidden, BadRequest, Unauthorized
 
 from app.utils import TOKEN_REGEX
 
@@ -17,7 +17,7 @@ def token_required(fnc):
         match_data = re.match(TOKEN_REGEX, token)
 
         if not token or not match_data:
-            raise NotFound('Token is missing')
+            raise Unauthorized('User is not authorized')
 
         expired, invalid, user = login_token_status(match_data[1])
 

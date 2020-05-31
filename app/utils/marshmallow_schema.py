@@ -76,6 +76,10 @@ class UserSchema(ma.Schema):
 
 
 class DocumentSchema(ma.Schema):
+    class Meta:
+        ordered = True
+        fields = ('id', 'name', 'mime_type', 'size', 'url', 'created_at', 'updated_at', 'deleted_at', 'created_by')
+
     id = fields.Int()
     created_by = fields.Nested('UserSchema', only=('id',))
     name = fields.Str()
