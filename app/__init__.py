@@ -6,12 +6,15 @@ from flask import Flask
 
 from app import extensions
 from app.blueprints import blueprints
+from app.middleware import middleware
 
 
 def create_app(env_config: str) -> Flask:
     app = flask.Flask(__name__)
     app.config.from_object(env_config)
+    app.wsgi_app = middleware(app)
 
+    init_logging(app)
     init_app(app)
     register_blueprints(app)
 
@@ -19,23 +22,11 @@ def create_app(env_config: str) -> Flask:
 
 
 def init_app(app: Flask) -> None:
-    """Call the method 'init_app' to register the extensions in the flask.Flask
-    object passed as parameter.
-
-    :app: flask.Flask object
-    :returns: None
-
-    """
+    """Call the method 'init_app' to register the extensions in the flask.Flask object passed as parameter."""
     extensions.init_app(app)
 
 
 def register_blueprints(app: Flask) -> None:
-    """Register all blueprints.
-
-    :app: flask.Flask object
-    :returns: None
-
-    """
     for blueprint in blueprints:
         app.register_blueprint(blueprint)
 

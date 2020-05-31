@@ -28,7 +28,7 @@ chmod-socket    = 664
 uid             = username
 gid             = www-data
 ; www-data group must be added to username user because uwsgi.
-chown-socket    = user-name:www-data
+chown-socket    = username:www-data
 
 ; clear environment on exit
 vacuum          = true

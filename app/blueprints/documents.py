@@ -4,35 +4,57 @@ import os
 import uuid
 from datetime import datetime
 
-from flask import Blueprint, request, current_app, send_file, make_response
+from flask import Blueprint, request, current_app, send_file
 from flask_login import current_user
-from flask_restful import Api
+from flask_restx import fields
+from flask_security import roles_accepted
+from marshmallow import EXCLUDE, ValidationError
+from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
+from werkzeug.exceptions import NotFound, UnprocessableEntity, InternalServerError, BadRequest
 
 from app.blueprints.base import BaseResource
+from app.blueprints.users import creator_sw_model
+from app.extensions import api as root_api
 from app.models.document import Document as DocumentModel
-from app.utils.cerberus_schema import MyValidator, document_save_model_schema, document_update_model_schema, \
-    search_model_schema
+from app.utils.cerberus_schema import document_model_schema, search_model_schema
 from app.utils.decorators import token_required
 from app.utils.file_storage import FileStorage
+from app.utils.marshmallow_schema import DocumentSchema as DocumentSerializer, \
+    GetDocumentDataInputSchema as GetDocumentDataInputSerializer
+from config import Config
 
-blueprint = Blueprint('documents', __name__, url_prefix='/documents')
-api = Api(blueprint)
-
+blueprint = Blueprint('documents', __name__)
+api = root_api.namespace('documents',
+                         description='Documents endpoints. Users with role admin, team_leader or worker can manage these endpoints.')
 logger = logging.getLogger(__name__)
 
+document_sw_model = api.model('Document', {
+    'id': fields.Integer,
+    'name': fields.String,
+    'internal_name': fields.String,
+    'mime_type': fields.String,
+    'size': fields.Integer,
+    'url': fields.String,
+    'created_at': fields.String,
+    'updated_at': fields.String,
+    'deleted_at': fields.String,
+    'created_by': fields.Nested(creator_sw_model),
+})
 
-class DocumentResource(BaseResource):
+
+class DocumentBaseResource(BaseResource):
     db_model = DocumentModel
-    field_name = 'document'
+    request_field_name = 'document'
+    document_serializer = DocumentSerializer()
 
     def get_request_file(self) -> dict:
         file = {}
         files = request.files.to_dict()
-        request_file = files.get(self.field_name)
+        request_file = files.get(self.request_field_name)
 
         if files and request_file:
             file = {
-                self.field_name: {
+                self.request_field_name: {
                     'mime_type': request_file.mimetype,
                     'filename': request_file.filename,
                     'file': request_file.read(),
@@ -42,67 +64,75 @@ class DocumentResource(BaseResource):
         return file
 
     def get_document_data(self, document_id: int) -> tuple:
-        response = {
-            'error': 'Document doesn\'t exist',
-        }
-        status_code = 404
-
         document = DocumentModel.get_or_none(DocumentModel.id == document_id,
                                              DocumentModel.deleted_at.is_null())
+        if document is None:
+            raise NotFound('Document doesn\'t exist')
 
-        if isinstance(document, DocumentModel):
-            document_dict = document.serialize()
+        document_data = self.document_serializer.dump(document)
 
-            response = {
-                'data': document_dict,
-            }
-            status_code = 200
-
-        return response, status_code
+        return {
+                   'data': document_data,
+               }, 200
 
     def get_document_content(self, document_id: int):
-        response = {
-            'error': 'Document doesn\'t exist',
-        }
-        status_code = 404
-
         document = DocumentModel.get_or_none(DocumentModel.id == document_id,
                                              DocumentModel.deleted_at.is_null())
+        if document is None:
+            raise NotFound('Document doesn\'t exist')
 
-        if isinstance(document, DocumentModel):
-            mime_type = document.mime_type
-            file_extension = mimetypes.guess_extension(mime_type)
+        try:
+            serializer = GetDocumentDataInputSerializer()
+            request_args = serializer.load(request.args.to_dict(), unknown=EXCLUDE)
+            as_attachment = request_args.get('as_attachment', 0)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
-            as_attachment = int(request.args.get('as_attachment')) if request.args.get('as_attachment') else True
-            attachment_filename = document.name if document.name.find(
-                file_extension) else f'{document.name}{file_extension}'
+        mime_type = document.mime_type
+        file_extension = mimetypes.guess_extension(mime_type)
 
-            kwargs = {
-                'filename_or_fp': document.get_filepath(),
-                'mimetype': mime_type,
-                'as_attachment': as_attachment,
-                'attachment_filename': attachment_filename,
-            }
-            response = send_file(**kwargs)
-            status_code = 200
+        attachment_filename = document.name if document.name.find(
+            file_extension) else f'{document.name}{file_extension}'
 
-        return make_response(response, status_code)
+        kwargs = {
+            'filename_or_fp': document.get_filepath(),
+            'mimetype': mime_type,
+            'as_attachment': as_attachment,
+        }
+
+        if as_attachment:
+            kwargs['attachment_filename'] = attachment_filename
+
+        response = send_file(**kwargs)
+
+        return response
 
 
-@api.resource('')
-class NewDocumentResource(DocumentResource):
+@api.route('')
+class NewDocumentResource(DocumentBaseResource):
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+    _parser.add_argument('Content-Type', type=str, location='headers', required=True,
+                         choices=('multipart/form-data',))
+    _parser.add_argument(DocumentBaseResource.request_field_name, type=WerkzeugFileStorage, location='files',
+                         required=True, help='You only can upload Excel and PDF files.')
+
+    @api.doc(responses={
+        201: ('Success', document_sw_model),
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
         request_data = self.get_request_file()
+        self.request_validation_schema = document_model_schema()
+        self.request_validation(request_data)
 
-        v = MyValidator(schema=document_save_model_schema())
-        if not v.validate(request_data):
-            return {
-                       'message': 'validation error',
-                       'error': v.errors,
-                   }, 422
-
-        request_file = request_data.get(self.field_name)
+        request_file = request_data.get(self.request_field_name)
         file_extension = mimetypes.guess_extension(request_file.get('mime_type'))
 
         internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
@@ -125,22 +155,34 @@ class NewDocumentResource(DocumentResource):
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
-
             logger.debug(e)
-            return {
-                       'error': 'server error',
-                   }, 500
+            raise InternalServerError()
 
-        document_dict = document.serialize()
+        document_data = self.document_serializer.dump(document)
 
         return {
-                   'data': document_dict,
+                   'data': document_data,
                }, 200
 
 
-@api.resource('/<int:document_id>')
-class DocumentResource(DocumentResource):
+@api.route('/<int:document_id>')
+class DocumentResource(DocumentBaseResource):
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+    _parser.add_argument('Content-Type', type=str, location='headers', required=True,
+                         choices=('application/json', 'application/octet-stream',))
+
+    @api.doc(responses={
+        200: ('Success', document_sw_model),
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        404: 'Not Found',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def get(self, document_id: int) -> tuple:
         headers = request.headers.get('Content-Type')
 
@@ -151,21 +193,37 @@ class DocumentResource(DocumentResource):
 
         return response
 
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+    _parser.add_argument('Content-Type', type=str, location='headers', required=True,
+                         choices=('multipart/form-data',))
+    _parser.add_argument(DocumentBaseResource.request_field_name, type=WerkzeugFileStorage, location='files',
+                         required=True, help='You only can upload Excel and PDF files.')
+
+    @api.doc(responses={
+        200: ('Success', document_sw_model),
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        404: 'Not Found',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def put(self, document_id: int) -> tuple:
+        document = DocumentModel.get_or_none(DocumentModel.id == document_id)
+        if document is None:
+            raise BadRequest('Document doesn\'t exist')
+
+        if document.deleted_at is not None:
+            raise BadRequest('Document already deleted')
+
         request_data = self.get_request_file()
-        request_data['id'] = document_id
+        self.request_validation_schema = document_model_schema()
+        self.request_validation(request_data)
 
-        v = MyValidator(schema=document_update_model_schema())
-        if not v.validate(request_data):
-            return {
-                       'message': 'validation error',
-                       'error': v.errors,
-                   }, 422
-
-        document = DocumentModel.get(id=document_id)
-
-        request_file = request_data.get(self.field_name)
+        request_file = request_data.get(self.request_field_name)
         filepath = f'{document.directory_path}/{document.internal_filename}'
 
         try:
@@ -183,84 +241,90 @@ class DocumentResource(DocumentResource):
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
-
             logger.debug(e)
-            return {
-                       'error': 'server error',
-                   }, 500
+            raise InternalServerError()
 
         document = (DocumentModel.get_or_none(DocumentModel.id == document_id,
                                               DocumentModel.deleted_at.is_null()))
-        document_dict = document.serialize()
+        document_data = self.document_serializer.dump(document)
 
         return {
-                   'data': document_dict,
+                   'data': document_data,
                }, 200
 
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+
+    @api.doc(responses={
+        200: ('Success', document_sw_model),
+        400: 'Bad Request',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        404: 'Not Found',
+    })
+    @api.expect(_parser)
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def delete(self, document_id: int):
-        response = {
-            'error': 'Document doesn\'t exist',
-        }
-        status_code = 404
-
         document = DocumentModel.get_or_none(DocumentModel.id == document_id)
+        if document is None:
+            raise NotFound('Document doesn\'t exist')
 
-        if isinstance(document, DocumentModel):
-            if document.deleted_at is None:
-                document.deleted_at = datetime.utcnow()
-                document.save()
+        if document.deleted_at is not None:
+            raise BadRequest('Document already deleted')
 
-                document_dict = document.serialize()
+        document.deleted_at = datetime.utcnow()
+        document.save()
 
-                response = {
-                    'data': document_dict,
-                }
-                status_code = 200
-            else:
-                response = {
-                    'error': 'Document already deleted',
-                }
-                status_code = 400
+        document_data = self.document_serializer.dump(document)
 
-        return response, status_code
+        return {
+                   'data': document_data,
+               }, 200
 
 
-@api.resource('/search')
-class SearchDocumentResource(DocumentResource):
+@api.route('/search')
+class SearchDocumentResource(DocumentBaseResource):
+    document_fields = DocumentModel.get_fields()
+    request_validation_schema = search_model_schema(document_fields)
+
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+    _parser.add_argument('search', type=list, location='json')
+    _parser.add_argument('order', type=list, location='json')
+    _parser.add_argument('items_per_page', type=int, location='json')
+    _parser.add_argument('page_number', type=int, location='json')
+
+    @api.doc(responses={
+        200: 'Success',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
-        data = request.get_json()
+        request_data = request.get_json()
+        self.request_validation(request_data)
 
-        document_fields = DocumentModel.get_fields(['id', 'password'])
-        v = MyValidator(schema=search_model_schema(document_fields))
-        v.allow_unknown = False
-
-        if not v.validate(data):
-            return {
-                       'message': 'validation error',
-                       'fields': v.errors,
-                   }, 422
-
-        page_number, items_per_page, order_by = self.get_request_query_fields(data)
+        page_number, items_per_page, order_by = self.get_request_query_fields(request_data)
 
         query = DocumentModel.select()
         records_total = query.count()
 
-        query = self.create_query(query, data)
-
-        query = (query.order_by(order_by)
+        query = self.create_search_query(query, request_data)
+        query = (query.order_by(*order_by)
                  .paginate(page_number, items_per_page))
 
         records_filtered = query.count()
-        document_list = []
-
-        for document in query:
-            document_dict = document.serialize()
-            document_list.append(document_dict)
+        self.document_serializer = DocumentSerializer(many=True)
+        document_data = self.document_serializer.dump(list(query))
 
         return {
-                   'data': document_list,
+                   'data': document_data,
                    'records_total': records_total,
                    'records_filtered': records_filtered,
                }, 200

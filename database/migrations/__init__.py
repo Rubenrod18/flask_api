@@ -3,13 +3,15 @@ import os
 import time
 
 from peewee import CompositeKey, CharField
+from playhouse.migrate import SqliteMigrator
 
 from app.extensions import db_wrapper
-from app.models import get_models
 from app.utils import class_for_name
 
+migrator = SqliteMigrator(db_wrapper.database)
 
-class _Migration(db_wrapper.Model):
+
+class Migration(db_wrapper.Model):
     class Meta:
         table_name = 'migrations'
         primary_key = CompositeKey('name')
@@ -29,7 +31,7 @@ def migrate_actions(fnc):
             res = fnc(*args, **kwargs)
 
             with db_wrapper.database.atomic():
-                _Migration.create(name=migration.name)
+                Migration.create(name=migration.name)
 
             exec_time = round((time.time() - start), 2)
         finally:
@@ -51,7 +53,7 @@ def rollback_actions(fnc):
             res = fnc(*args, **kwargs)
 
             with db_wrapper.database.atomic():
-                query = _Migration.delete().where(_Migration.name == migration.name)
+                query = Migration.delete().where(Migration.name == migration.name)
                 query.execute()
 
             exec_time = round((time.time() - start), 2)
@@ -60,22 +62,6 @@ def rollback_actions(fnc):
         return res
 
     return message
-
-
-def init_database() -> None:
-    print(' Creating tables...')
-    table_names = db_wrapper.database.get_tables()
-
-    if not table_names:
-        models = get_models()
-        db_wrapper.database.create_tables(models)
-
-    table_name = _Migration._meta.table_name
-    exists = db_wrapper.database.table_exists(table_name)
-
-    if not exists:
-        db_wrapper.database.create_tables([_Migration])
-    print(' Tables created!')
 
 
 def get_migration_names() -> list:
@@ -100,13 +86,14 @@ def get_migration_names() -> list:
 def init_migrations(rollback: bool = False) -> None:
     migration_names = get_migration_names()
 
-    rows = _Migration.select()
+    rows = Migration.select()
     db_migration_names = [item.name for item in rows]
 
     if db_migration_names > migration_names:
         diff = list(set(db_migration_names) - set(migration_names))
     else:
         diff = list(set(migration_names) - set(db_migration_names))
+    diff.sort()
 
     with db_wrapper.database.atomic():
         if rollback == True:
@@ -128,7 +115,7 @@ def init_migrations(rollback: bool = False) -> None:
                     module_path = '{}.{}'.format(__name__, migration_filename)
                     migration = class_for_name(module_path, class_name)()
 
-                    exists = _Migration.get_or_none(name=migration.name)
+                    exists = Migration.get_or_none(name=migration.name)
 
                     if not exists:
                         migration.up()

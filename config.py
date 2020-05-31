@@ -40,6 +40,7 @@ class Config(metaclass=Meta):
     DEBUG = False
     TESTING = False
     SERVER_NAME = os.getenv('SERVER_NAME')
+    LOGIN_DISABLED = False
 
     # Flask-Security-Too
     # generated using: secrets.token_urlsafe()
@@ -49,18 +50,20 @@ class Config(metaclass=Meta):
     SECURITY_PASSWORD_HASH = 'pbkdf2_sha512'
     SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authorization'
     SECURITY_TOKEN_MAX_AGE = None
+    SECURITY_PASSWORD_LENGTH_MIN = 8
 
     # Peewee
     DATABASE = {
         'name': os.getenv('DATABASE_NAME'),
-        'engine': 'peewee.SqliteDatabase',
+        'engine': os.getenv('DATABASE_ENGINE', 'peewee.SqliteDatabase'),
         # Sqlite3 recommended settings
+        # http://docs.peewee-orm.com/en/latest/peewee/database.html?highlight=%22recommended%20settings%22#recommended-settings
         'pragmas': {
-            'journal_mode': 'wal',
-            'cache_size': -1 * 64000,  # 64MB
-            'foreign_keys': 1,
-            'ignore_check_constraints': 0,
-            'synchronous': 0,
+            'journal_mode': os.getenv('DATABASE_JOURNAL_MODE', 'wal'),
+            'cache_size': os.getenv('DATABASE_CACHE_SIZE', -1 * 64000),  # 64MB
+            'foreign_keys': os.getenv('DATABASE_FOREIGN_KEYS', 1),
+            'ignore_check_constraints': os.getenv('DATABASE_IGNORE_CHECK_CONSTRAINTS', 0),
+            'synchronous': os.getenv('DATABASE_SYNCHRONOUS', 0),
         },
     }
 
@@ -78,7 +81,7 @@ class Config(metaclass=Meta):
     CELERY_TASK_SERIALIZER = 'json'
     CELERY_RESULT_SERIALIZER = 'json'
     CELERY_ACCEPT_CONTENT = ['json']
-    CELERY_TIMEZONE = os.getenv('CELERY_TIMEZONE', 'Etc/Greenwich')
+    CELERY_TIMEZONE = os.getenv('CELERY_TIMEZONE', 'UTC')
     CELERY_ENABLE_UTC = True
     CELERY_INCLUDE = ['app.celery.tasks']
     CELERY_TASK_TRACK_STARTED = True
@@ -88,6 +91,13 @@ class Config(metaclass=Meta):
                                     'task_name)s - %(task_id)s - %(message)s'
     CELERY_RESULT_EXTENDED = True
     CELERY_TASK_DEFAULT_RATE_LIMIT = 3
+
+    # Flask Swagger UI
+    SWAGGER_URL = os.getenv('SWAGGER_URL', '/docs')
+    SWAGGER_API_URL = os.getenv('SWAGGER_API_URL', f'http://{SERVER_NAME}/static/swagger.yaml')
+
+    # Flask Restful
+    FLASK_RESTFUL_PREFIX = '/api'
 
     # Mr Developer
     HOME = os.getenv('HOME')
@@ -101,10 +111,15 @@ class Config(metaclass=Meta):
 
     RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
 
-    ALLOWED_MIME_TYPES = [
+    ALLOWED_CONTENT_TYPES = {
+        'application/json',
+        'multipart/form-data',
+        'application/octet-stream',
+    }
+    ALLOWED_MIME_TYPES = {
         'application/pdf',
         'application/vnd.ms-excel',
-    ]
+    }
 
 
 class ProdConfig(Config):

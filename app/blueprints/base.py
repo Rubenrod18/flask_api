@@ -1,78 +1,38 @@
 import logging
 
-from flask_restful import Api, Resource
-from flask import Blueprint, request
-from peewee import ModelSelect, IntegerField, CharField, DateField, DateTimeField
+from flask_restx import Resource, fields
+from flask import Blueprint
+from peewee import ModelSelect
+from werkzeug.exceptions import UnprocessableEntity
 
-from ..extensions import db_wrapper as db
+from ..extensions import db_wrapper as db, api as root_api
+from ..utils import get_request_query_fields, create_search_query
+from ..utils.cerberus_schema import MyValidator
 
-blueprint = Blueprint('base', __name__, url_prefix='/')
-api = Api(blueprint)
+blueprint = Blueprint('base', __name__)
+api = root_api.namespace('', description='Base endpoints')
 
 logger = logging.getLogger(__name__)
 
-
 class BaseResource(Resource):
     db_model: db.Model
+    request_validation_schema = {}
 
-    def get_request_query_fields(self, request_data=None) -> tuple:
-        if request_data is None:
-            request_data = request.get_json() or {}
+    def request_validation(self, request_data: dict) -> None:
+        v = MyValidator(schema=self.request_validation_schema)
 
-        # Page numbers are 1-based, so the first page of results will be page 1.
-        # http://docs.peewee-orm.com/en/latest/peewee/querying.html#paginating-records
-        tmp = int(request_data.get('page_number', 1))
-        page_number = 1 if tmp < 1 else tmp
+        if not v.validate(request_data):
+            raise UnprocessableEntity(v.errors)
 
-        tmp = int(request_data.get('items_per_page', 10))
-        items_per_page = 10 if tmp < 1 else tmp
+    def get_request_query_fields(self, request_data: dict) -> tuple:
+        return get_request_query_fields(self.db_model, request_data)
 
-        sort = request_data.get('sort', 'id')
-        order = request_data.get('order', 'asc')
-
-        order_by = self.db_model._meta.fields[sort]
-
-        if order == 'desc':
-            order_by = order_by.desc()
-
-        return page_number, items_per_page, order_by
-
-    def create_query(self, query: ModelSelect = ModelSelect, data: dict = None) -> ModelSelect:
-        if data is None:
-            data = {}
-
-        search_data = data.get('search', {})
-
-        filters = [
-            item for item in search_data
-            if 'field_value' in item and item.get('field_value') != ''
-        ]
-
-        for filter in filters:
-            field_name = filter['field_name']
-            field = self.db_model._meta.fields[field_name]
-
-            field_value = filter['field_value']
-
-            if isinstance(field, IntegerField):
-                query = query.where(field == field_value)
-            elif isinstance(field, CharField):
-                field_value = field_value.__str__()
-                value = '%{0}%'.format(field_value)
-                # OR use the exponent operator.
-                # Note: you must include wildcards here:
-                query = query.where(field ** value)
-            elif isinstance(field, DateField):
-                # TODO: WIP -> add field_operator
-                pass
-            elif isinstance(field, DateTimeField):
-                # TODO: add field_operator
-                pass
-
-        return query
+    def create_search_query(self, query: ModelSelect, request_data: dict) -> ModelSelect:
+        return create_search_query(self.db_model, query, request_data)
 
 
-@api.resource('')
+@api.route('/welcome')
 class WelcomeResource(Resource):
+    @api.doc(responses={200: 'Welcome to flask_api!'})
     def get(self) -> tuple:
         return 'Welcome to flask_api!', 200

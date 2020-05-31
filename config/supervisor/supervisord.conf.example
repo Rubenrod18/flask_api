@@ -36,10 +36,10 @@ file=/tmp/supervisor.sock   ; the path to the socket file
 ;  by default (see the username= and password= options to add authentication).
 ;  Never expose the inet HTTP server to the public internet.
 
-;[inet_http_server]         ; inet (TCP) server disabled by default
-;port=127.0.0.1:9001        ; ip_address:port specifier, *:port for all iface
-;username=user              ; default is no username (open server)
-;password=123               ; default is no password (open server)
+[inet_http_server]         ; inet (TCP) server disabled by default
+port=127.0.0.1:9001        ; ip_address:port specifier, *:port for all iface
+username=user              ; default is no username (open server)
+password=123               ; default is no password (open server)
 
 [supervisord]
 logfile=/tmp/supervisord.log ; main log file; default $CWD/supervisord.log
@@ -178,4 +178,4 @@ exitcodes=0,3
 events=PROCESS_STATE
 
 [include]
-files = relative/directory/*.conf
+files = config/supervisor/*.conf

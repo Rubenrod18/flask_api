@@ -2,19 +2,20 @@ import magic
 from cerberus import Validator
 from flask import current_app
 
-from app.models.user import User as UserModel
-from app.utils import BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name
+from app.utils import BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name, QUERY_OPERATORS, STRING_QUERY_OPERATORS
 
-PASSWORD_SCHEMA = {
-    'password': {
-        'type': 'string',
-        'required': True,
-        'empty': False,
-        'nullable': False,
-        'minlength': 5,
-        'maxlength': 50,
-    },
-}
+
+def get_password_schema() -> dict:
+    return {
+        'password': {
+            'type': 'string',
+            'required': True,
+            'empty': False,
+            'nullable': False,
+            'minlength': current_app.config.get('SECURITY_PASSWORD_LENGTH_MIN'),
+            'maxlength': 50,
+        },
+    }
 
 
 class MyValidator(Validator):
@@ -28,7 +29,7 @@ class MyValidator(Validator):
         class_name = exists.get('class_name')
         model_field = exists.get('field_name')
         only_deleted = exists.get('only_deleted', False)
-        message = exists.get('message', 'Doesn\'t exists in database')
+        message = exists.get('message', f'{value} doesn\'t exists in database')
 
         model = class_for_name(module_name, class_name)
         query_field = getattr(model, model_field)
@@ -54,7 +55,7 @@ class MyValidator(Validator):
         class_name = exists.get('class_name')
         model_field = exists.get('field_name')
         only_deleted = exists.get('only_deleted', False)
-        message = exists.get('message', 'Already exists')
+        message = exists.get('message', f'{value} already exists')
 
         model = class_for_name(module_name, class_name)
         query_field = getattr(model, model_field)
@@ -80,6 +81,7 @@ class MyValidator(Validator):
 
         if not file_content_type in mime_types:
             self._error(field, 'file invalid')
+
 
 def user_model_schema(is_creation: bool = True) -> dict:
     """Cerberus schema for validating user fields.
@@ -146,6 +148,7 @@ def user_model_schema(is_creation: bool = True) -> dict:
                 'module_name': 'app.models.role',
                 'class_name': 'Role',
                 'field_name': 'id',
+                'only_deleted': False,
             },
         },
     }
@@ -156,7 +159,6 @@ def search_model_schema(allowed_fields: set) -> dict:
 
     :return: dict
     """
-
     return {
         'search': {
             'type': 'list',
@@ -169,39 +171,68 @@ def search_model_schema(allowed_fields: set) -> dict:
                 'schema': {
                     'field_name': {
                         'type': 'string',
+                        'required': True,
+                        'empty': False,
+                        'nullable': False,
+                        'maxlength': 255,
                         'allowed': allowed_fields,
+                    },
+                    'field_operator': {
+                        'type': 'string',
+                        'required': True,
+                        'empty': False,
+                        'nullable': False,
+                        'maxlength': 255,
+                        'allowed': QUERY_OPERATORS + STRING_QUERY_OPERATORS,
                     },
                     'field_value': {
                         'type': ['string', 'integer'],
-                    }
+                        'required': True,
+                        'empty': True,
+                        'maxlength': 255,
+                        'nullable': False,
+                    },
                 },
             },
         },
         'order': {
-            'type': 'string',
+            'type': 'list',
             'required': False,
-            'empty': False,
+            'empty': True,
             'nullable': False,
-            'allowed': ['asc', 'desc'],
-        },
-        'sort': {
-            'type': 'string',
-            'required': False,
-            'empty': False,
-            'nullable': False,
-            'allowed': UserModel.get_fields(['password']),
+            'maxlength': 255,
+            'schema': {
+                'type': 'list',
+                'required': True,
+                'items': [
+                    {
+                        'type': 'string',
+                        'required': True,
+                        'empty': False,
+                        'nullable': False,
+                        'allowed': allowed_fields,
+                    },
+                    {
+                        'type': 'string',
+                        'required': True,
+                        'empty': False,
+                        'nullable': False,
+                        'allowed': ['asc', 'desc'],
+                    }
+                ]
+            }
         },
         'items_per_page': {
             'type': 'integer',
             'required': False,
-            'empty': False,
+            'empty': True,
             'nullable': False,
             'min': 1,
         },
         'page_number': {
             'type': 'integer',
             'required': False,
-            'empty': False,
+            'empty': True,
             'nullable': False,
             'min': 1,
         },
@@ -216,7 +247,20 @@ def role_model_schema(is_creation: bool = True) -> dict:
     return {
         'name': {
             'type': 'string',
-            'required': True,
+            'required': is_creation,
+            'empty': False,
+            'nullable': False,
+            'maxlength': 255,
+            'no_exists': {
+                'module_name': 'app.models.role',
+                'class_name': 'Role',
+                'field_name': 'name',
+                'only_deleted': False,
+            },
+        },
+        'label': {
+            'type': 'string',
+            'required': is_creation,
             'empty': False,
             'nullable': False,
             'maxlength': 255,
@@ -228,19 +272,6 @@ def role_model_schema(is_creation: bool = True) -> dict:
             'nullable': True,
             'maxlength': 255,
         },
-        'slug': {
-            'type': 'string',
-            'required': is_creation,
-            'empty': False if is_creation else False,
-            'nullable': False if is_creation else False,
-            'maxlength': 255,
-            'no_exists': {
-                'module_name': 'app.models.role',
-                'class_name': 'Role',
-                'field_name': 'slug',
-                'only_deleted': False,
-            },
-        }
     }
 
 
@@ -264,16 +295,16 @@ def user_login_schema() -> dict:
         },
     }
 
-    schema.update(PASSWORD_SCHEMA)
+    schema.update(get_password_schema())
 
     return schema
 
 
 def confirm_reset_password_schema() -> dict:
-    return PASSWORD_SCHEMA
+    return get_password_schema()
 
 
-def document_save_model_schema() -> dict:
+def document_model_schema() -> dict:
     return {
         'document': {
             'type': 'dict',
@@ -286,7 +317,7 @@ def document_save_model_schema() -> dict:
                     'required': True,
                     'empty': False,
                     'nullable': False,
-                    'allowed': current_app.config.get('ALLOWED_MIME_TYPES'),
+                    'allowed': list(current_app.config.get('ALLOWED_MIME_TYPES')),
                 },
                 'filename': {
                     'type': 'string',
@@ -299,53 +330,7 @@ def document_save_model_schema() -> dict:
                     'required': True,
                     'empty': False,
                     'nullable': False,
-                    'valid_mime_type': current_app.config.get('ALLOWED_MIME_TYPES'),
-                },
-            },
-        },
-    }
-
-
-def document_update_model_schema() -> dict:
-    return {
-        'id': {
-            'type': 'integer',
-            'required': True,
-            'empty': False,
-            'nullable': False,
-            'no_exists': {
-                'module_name': 'app.models.document',
-                'class_name': 'Document',
-                'field_name': 'id',
-                'only_deleted': True,
-                'message': 'Already deleted',
-            },
-        },
-        'document': {
-            'type': 'dict',
-            'required': True,
-            'empty': False,
-            'nullable': False,
-            'schema': {
-                'mime_type': {
-                    'type': 'string',
-                    'required': True,
-                    'empty': False,
-                    'nullable': False,
-                    'allowed': current_app.config.get('ALLOWED_MIME_TYPES'),
-                },
-                'filename': {
-                    'type': 'string',
-                    'required': True,
-                    'empty': False,
-                    'nullable': False,
-                },
-                'file': {
-                    'type': 'binary',
-                    'required': True,
-                    'empty': False,
-                    'nullable': False,
-                    'valid_mime_type': current_app.config.get('ALLOWED_MIME_TYPES'),
+                    'valid_mime_type': list(current_app.config.get('ALLOWED_MIME_TYPES')),
                 },
             },
         },

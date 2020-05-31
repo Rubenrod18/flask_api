@@ -1,26 +1,28 @@
+import logging
 import os
 
 import pytest
-from flask import Flask
-from flask_security.passwordless import generate_login_token
+from flask import Flask, Response
+from flask.testing import FlaskClient
 
 from app import create_app
-from app.extensions import db_wrapper
-from app.models.user import User as UserModel
+from database import init_database
 from database.factories import Factory
-from database.migrations import init_database
 from database.seeds import init_seed
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def _remove_test_files(storage_path: str) -> None:
-    print(' Deleting test files...')
+    logger.info(' Deleting test files...')
     dirs = os.listdir(storage_path)
     dirs.remove(os.path.basename('example.pdf'))
 
     for filename in dirs:
         abs_path = f'{storage_path}/{filename}'
         os.remove(abs_path)
-    print(' Deleted test files!')
+    logger.info(' Deleted test files!')
 
 
 @pytest.fixture
@@ -32,16 +34,79 @@ def app():
         init_seed()
         yield app
 
+    """
+    TODO: add these code before/after all tests are executed
     storage_path = app.config.get('STORAGE_DIRECTORY')
     _remove_test_files(storage_path)
 
-    print(' Deleting test database...')
+    logger.info(' Deleting test database...')
     os.remove(app.config.get('DATABASE').get('name'))
-    print(' Deleted test database!')
-
+    logger.info(' Deleted test database!')
+    """
 
 @pytest.fixture
 def client(app: Flask):
+    def _request_log_before(*args, **kwargs):
+        logger.info('=================')
+        logger.info(f'args: {args}')
+        logger.info(f'kwargs: {kwargs}')
+
+    def _request_log_after(response: Response):
+        logger.info(f'response status code: {response.status_code}')
+        logger.info(f'response mime type: {response.mimetype}')
+        if response.mimetype == 'application/json':
+            logger.info(f'response json: {response.get_json()}')
+        logger.info('=================')
+
+    def _get(self, *args, **kwargs):
+        """Like open but method is enforced to GET."""
+        _request_log_before(*args, **kwargs)
+
+        kwargs['method'] = 'GET'
+        response = self.open(*args, **kwargs)
+
+        _request_log_after(response)
+
+        return response
+
+    def _post(self, *args, **kwargs):
+        """Like open but method is enforced to POST."""
+        _request_log_before(*args, **kwargs)
+
+        kwargs['method'] = 'POST'
+        response = self.open(*args, **kwargs)
+
+        _request_log_after(response)
+
+        return response
+
+    def _put(self, *args, **kwargs):
+        """Like open but method is enforced to PUT."""
+        _request_log_before(*args, **kwargs)
+
+        kwargs['method'] = 'PUT'
+        response = self.open(*args, **kwargs)
+
+        _request_log_after(response)
+
+        return response
+
+    def _delete(self, *args, **kwargs):
+        """Like open but method is enforced to DELETE."""
+        _request_log_before(*args, **kwargs)
+
+        kwargs['method'] = 'DELETE'
+        response = self.open(*args, **kwargs)
+
+        _request_log_after(response)
+
+        return response
+
+    FlaskClient.get = _get
+    FlaskClient.post = _post
+    FlaskClient.put = _put
+    FlaskClient.delete = _delete
+
     return app.test_client()
 
 
@@ -51,18 +116,24 @@ def runner(app: Flask):
 
 
 @pytest.fixture
-def auth_header(app: Flask):
+def auth_header(app: Flask, client: FlaskClient):
     def _create_auth_header(user_email: str = None) -> dict:
         if user_email is None:
             user_email = os.getenv('TEST_USER_EMAIL')
 
-        user = UserModel.get(UserModel.email == user_email)
-        db_wrapper.database.close()
-        with app.app_context():
-            token = generate_login_token(user)
+        data = {
+            'email': user_email,
+            'password': os.getenv('TEST_USER_PASSWORD'),
+        }
+
+        response = client.post('/api/auth/login', json=data)
+        json_response = response.get_json()
+
+        assert 200 == response.status_code
+        token = json_response.get('token')
 
         return {
-            app.config.get('SECURITY_TOKEN_AUTHENTICATION_HEADER'): 'Bearer %s' % token
+            app.config.get('SECURITY_TOKEN_AUTHENTICATION_HEADER'): 'Bearer %s' % token,
         }
 
     return _create_auth_header

@@ -1,11 +1,16 @@
 server {
     listen 80;
-    # Remember add "flask-api.dev" to your "hosts" file
-    server_name flask-api.dev;
+    # Remember add "flask-api.prod" to your "hosts" file
+    server_name flask-api.prod;
 
     location / {
         include uwsgi_params;
         uwsgi_pass unix:/path/flask_api.sock;
+    }
+
+    location /static/ {
+        root /path/flask_api;
+        autoindex off;
     }
 
     location /flower/ {

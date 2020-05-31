@@ -1,10 +1,12 @@
 import logging
 import os
 from pathlib import Path
+from shutil import copyfile
 
 from app.utils import FileEmptyError
 
 logger = logging.getLogger(__name__)
+
 
 class FileStorage():
     def save_bytes(self, file_content: bytes, filename: str, override: bool = False):
@@ -28,8 +30,8 @@ class FileStorage():
             raise e
 
     @staticmethod
-    def rename(src: str, dst: str) -> None:
-        os.rename(src, dst)
+    def copy_file(src: str, dst: str) -> None:
+        copyfile(src, dst)
 
     @staticmethod
     def get_filesize(filename: str) -> int:
@@ -44,3 +46,7 @@ class FileStorage():
             basename = os.path.splitext(os.path.basename(filename))[0]
 
         return basename
+
+    @staticmethod
+    def rename(src: str, dst: str) -> None:
+        os.rename(src, dst)

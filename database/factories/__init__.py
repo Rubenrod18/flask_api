@@ -1,6 +1,5 @@
 from app.utils import class_for_name
 
-
 class Factory():
     models: list = None
 
@@ -36,7 +35,6 @@ class Factory():
             data = self.models[0].create(params)
         else:
             model = self.models[0]
-            model.bulk_create(len(self.models), params)
-            data = True
+            data = model.bulk_create(len(self.models), params)
 
         return data
