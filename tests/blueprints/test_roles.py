@@ -9,7 +9,7 @@ def test_save_role_endpoint(client: FlaskClient, auth_header: any, factory: any)
     ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at']
     data = factory('Role').make(exclude=ignore_fields, to_dict=True)
 
-    response = client.post('/roles', json=data, headers=auth_header())
+    response = client.post('/api/roles', json=data, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -33,7 +33,7 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: any, factory: an
     ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at']
     data = factory('Role').make(exclude=ignore_fields, to_dict=True)
 
-    response = client.put('/roles/%s' % role_id, json=data, headers=auth_header())
+    response = client.put('/api/roles/%s' % role_id, json=data, headers=auth_header())
 
     json_response = response.get_json()
     json_data = json_response.get('data')
@@ -57,7 +57,7 @@ def test_get_role_endpoint(client: FlaskClient, auth_header: any):
     role = RoleModel.get(RoleModel.id == role_id)
     db_wrapper.database.close()
 
-    response = client.get('/roles/%s' % role_id, json={}, headers=auth_header())
+    response = client.get('/api/roles/%s' % role_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -79,7 +79,7 @@ def test_delete_role_endpoint(client: FlaskClient, auth_header: any):
                .id)
     db_wrapper.database.close()
 
-    response = client.delete('/roles/%s' % role_id, json={}, headers=auth_header())
+    response = client.delete('/api/roles/%s' % role_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -111,7 +111,7 @@ def test_search_roles_endpoint(client: FlaskClient, auth_header: any):
         ],
     }
 
-    response = client.post('/roles/search', json=json_body, headers=auth_header())
+    response = client.post('/api/roles/search', json=json_body, headers=auth_header())
     json_response = response.get_json()
 
     role_data = json_response.get('data')

@@ -25,7 +25,7 @@ class Document(BaseModel):
 
     @property
     def url(self):
-        return url_for('documents.documentresource', document_id=self.id, _external=True)
+        return url_for('documents_document_resource', document_id=self.id, _external=True)
 
     def get_filepath(self):
         return '%s/%s' % (self.directory_path, self.internal_filename)

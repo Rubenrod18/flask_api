@@ -18,7 +18,7 @@ def test_save_document(client: FlaskClient, auth_header: any):
     headers = auth_header()
     headers['Content-Type'] = 'multipart/form-data'
 
-    response = client.post('/documents', data=data, headers=headers)
+    response = client.post('/api/documents', data=data, headers=headers)
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -52,7 +52,7 @@ def test_update_document(client: FlaskClient, auth_header: any):
     headers = auth_header()
     headers['Content-Type'] = 'multipart/form-data'
 
-    response = client.put(f'/documents/{document_id}', data=data, headers=headers)
+    response = client.put(f'/api/documents/{document_id}', data=data, headers=headers)
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -78,7 +78,7 @@ def test_get_document_data(client: FlaskClient, auth_header: any):
     db_wrapper.database.close()
     document_id = document.id
 
-    response = client.get(f'/documents/{document_id}', json={}, headers=auth_header())
+    response = client.get(f'/api/documents/{document_id}', json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -107,7 +107,7 @@ def test_get_document_file(client: FlaskClient, auth_header: any):
     headers = auth_header()
     headers['Content-Type'] = 'application/octet-stream'
 
-    response = client.get(f'/documents/{document_id}', headers=headers)
+    response = client.get(f'/api/documents/{document_id}', headers=headers)
 
     assert 200 == response.status_code
     assert isinstance(response.get_data(), bytes)
@@ -122,7 +122,7 @@ def test_delete_document(client: FlaskClient, auth_header: any):
                    .id)
     db_wrapper.database.close()
 
-    response = client.delete('/documents/%s' % document_id, json={}, headers=auth_header())
+    response = client.delete('/api/documents/%s' % document_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -154,7 +154,7 @@ def test_search_document(client: FlaskClient, auth_header: any):
         ],
     }
 
-    response = client.post('/documents/search', json=json_body, headers=auth_header())
+    response = client.post('/api/documents/search', json=json_body, headers=auth_header())
     json_response = response.get_json()
 
     document_data = json_response.get('data')

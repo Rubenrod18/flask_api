@@ -2,8 +2,8 @@ import logging
 from datetime import datetime
 
 from flask_login import current_user
-from flask_restful import Api
 from flask import Blueprint, request, url_for
+from flask_restx import fields
 from flask_security import roles_accepted
 from marshmallow import ValidationError, INCLUDE, EXCLUDE
 from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
@@ -11,18 +11,39 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 from app.celery.word.tasks import export_user_data_in_word
 from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email
+from config import Config
 from .base import BaseResource
-from ..extensions import db_wrapper
+from .roles import role_sw_model
+from ..extensions import db_wrapper, api as root_api
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
 from ..utils.cerberus_schema import user_model_schema, search_model_schema
 from ..utils.decorators import token_required
 from ..utils.marshmallow_schema import UserSchema as UserSerializer, ExportWordInputSchema as ExportWordInputSerializer
 
-blueprint = Blueprint('users', __name__, url_prefix='/users')
-api = Api(blueprint)
+blueprint = Blueprint('users', __name__, )
+api = root_api.namespace('users', description='Users endpoints. Users with role admin or team_leader can manage these endpoints.')
 
 logger = logging.getLogger(__name__)
+
+creator_sw_model = api.model('Creator', {
+    'id': fields.Integer,
+})
+
+user_sw_model = api.model('User', {
+    'id': fields.Integer,
+    'name': fields.String,
+    'last_name': fields.String,
+    'email': fields.String,
+    'genre': fields.String(enum=('m', 'f')),
+    'birth_date': fields.String,
+    'active': fields.Boolean,
+    'created_at': fields.String,
+    'updated_at': fields.String,
+    'deleted_at': fields.String,
+    'created_by': fields.Nested(creator_sw_model),
+    'roles': fields.List(fields.Nested(role_sw_model))
+})
 
 
 class UserBaseResource(BaseResource):
@@ -37,8 +58,26 @@ class UserBaseResource(BaseResource):
             raise UnprocessableEntity(e.messages)
 
 
-@api.resource('')
+@api.route('')
 class NewUserResource(UserBaseResource):
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+    _parser.add_argument('name', type=str, location='json', required=True)
+    _parser.add_argument('last_name', type=str, location='json', required=True)
+    _parser.add_argument('email', type=str, location='json', required=True)
+    _parser.add_argument('genre', type=str, location='json', required=True)
+    _parser.add_argument('password', type=str, location='json', required=True)
+    _parser.add_argument('birth_date', type=str, location='json', required=True)
+    _parser.add_argument('role_id', type=int, location='json', required=True)
+
+    @api.doc(responses={
+        201: ('Success', user_sw_model),
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
@@ -61,8 +100,19 @@ class NewUserResource(UserBaseResource):
                }, 201
 
 
-@api.resource('/<int:user_id>')
+@api.route('/<int:user_id>')
 class UserResource(UserBaseResource):
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+
+    @api.doc(responses={
+        200: ('Success', user_sw_model),
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
@@ -76,13 +126,34 @@ class UserResource(UserBaseResource):
                    'data': user_data,
                }, 200
 
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+    _parser.add_argument('name', type=str, location='json')
+    _parser.add_argument('last_name', type=str, location='json')
+    _parser.add_argument('email', type=str, location='json')
+    _parser.add_argument('genre', type=str, location='json')
+    _parser.add_argument('password', type=str, location='json')
+    _parser.add_argument('birth_date', type=str, location='json')
+    _parser.add_argument('role_id', type=int, location='json')
+
+    @api.doc(responses={
+        200: ('Success', user_sw_model),
+        400: 'Bad Request',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def put(self, user_id: int) -> tuple:
-        user = (UserModel.get_or_none(UserModel.id == user_id,
-                                      UserModel.deleted_at.is_null()))
+        user = UserModel.get_or_none(UserModel.id == user_id)
         if user is None:
             raise BadRequest('User doesn\'t exist')
+
+        if user.deleted_at is not None:
+            raise BadRequest('User already deleted')
 
         request_data = request.get_json()
         self.request_validation_schema = user_model_schema(False)
@@ -94,9 +165,10 @@ class UserResource(UserBaseResource):
             data['id'] = user_id
             UserModel(**data).save()
 
-            user_datastore.remove_role_from_user(user, user.roles[0])
-            role = RoleModel.get_by_id(data['role_id'])
-            user_datastore.add_role_to_user(user, role)
+            if 'role_id' in data:
+                user_datastore.remove_role_from_user(user, user.roles[0])
+                role = RoleModel.get_by_id(data['role_id'])
+                user_datastore.add_role_to_user(user, role)
 
         user = (UserModel.get_or_none(UserModel.id == user_id,
                                       UserModel.deleted_at.is_null()))
@@ -106,6 +178,18 @@ class UserResource(UserBaseResource):
                    'data': user_data,
                }, 200
 
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+
+    @api.doc(responses={
+        200: ('Success', role_sw_model),
+        400: 'Bad Request',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
@@ -125,11 +209,26 @@ class UserResource(UserBaseResource):
                }, 200
 
 
-@api.resource('/search')
+@api.route('/search')
 class UsersSearchResource(UserBaseResource):
     user_fields = UserModel.get_fields(exclude=['id', 'password'])
     request_validation_schema = search_model_schema(user_fields)
 
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+    _parser.add_argument('search', type=list, location='json')
+    _parser.add_argument('order', type=list, location='json')
+    _parser.add_argument('items_per_page', type=int, location='json')
+    _parser.add_argument('page_number', type=int, location='json')
+
+    @api.doc(responses={
+        200: 'Success',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
@@ -156,11 +255,26 @@ class UsersSearchResource(UserBaseResource):
                }, 200
 
 
-@api.resource('/xlsx')
+@api.route('/xlsx')
 class ExportUsersExcelResource(UserBaseResource):
     user_fields = UserModel.get_fields(exclude=['id', 'password'])
     request_validation_schema = search_model_schema(user_fields)
 
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+    _parser.add_argument('search', type=list, location='json')
+    _parser.add_argument('order', type=list, location='json')
+    _parser.add_argument('items_per_page', type=int, location='json')
+    _parser.add_argument('page_number', type=int, location='json')
+
+    @api.doc(responses={
+        202: 'Accepted',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
@@ -171,15 +285,30 @@ class ExportUsersExcelResource(UserBaseResource):
 
         return {
                    'task': task.id,
-                   'url': url_for('tasks.taskstatusresource', task_id=task.id, _external=True),
+                   'url': url_for('tasks_task_status_resource', task_id=task.id, _external=True),
                }, 202
 
 
-@api.resource('/word')
+@api.route('/word')
 class ExportUsersWordResource(UserBaseResource):
     user_fields = UserModel.get_fields(exclude=['id', 'password'])
     request_validation_schema = search_model_schema(user_fields)
 
+    _parser = api.parser()
+    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
+                         default='Bearer token')
+    _parser.add_argument('search', type=list, location='json')
+    _parser.add_argument('order', type=list, location='json')
+    _parser.add_argument('items_per_page', type=int, location='json')
+    _parser.add_argument('page_number', type=int, location='json')
+
+    @api.doc(responses={
+        202: 'Accepted',
+        401: 'Unauthorized',
+        403: 'Forbidden',
+        422: 'Unprocessable Entity',
+    })
+    @api.expect(_parser)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
@@ -197,5 +326,5 @@ class ExportUsersWordResource(UserBaseResource):
 
         return {
                    'task': task.id,
-                   'url': url_for('tasks.taskstatusresource', task_id=task.id, _external=True),
+                   'url': url_for('tasks_task_status_resource', task_id=task.id, _external=True),
                }, 202

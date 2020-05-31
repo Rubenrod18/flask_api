@@ -24,7 +24,7 @@ def test_reset_password_email_task(app: Flask):
 
     token = user.get_reset_token()
 
-    reset_password_url = url_for('auth.resetpasswordresource', token=token, _external=True)
+    reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
     email_data = {
         'email': user.email,
         'reset_password_url': reset_password_url,

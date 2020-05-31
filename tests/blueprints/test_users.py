@@ -17,7 +17,7 @@ def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any)
     data['role_id'] = role.id
     db_wrapper.database.close()
 
-    response = client.post('/users', json=data, headers=auth_header())
+    response = client.post('/api/users', json=data, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -56,7 +56,7 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: an
     data['role_id'] = role.id
     db_wrapper.database.close()
 
-    response = client.put('/users/%s' % user_id, json=data, headers=auth_header())
+    response = client.put('/api/users/%s' % user_id, json=data, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -88,7 +88,7 @@ def test_get_user_endpoint(client: FlaskClient, auth_header: any):
     role = user.roles[0]
     db_wrapper.database.close()
 
-    response = client.get('/users/%s' % user_id, json={}, headers=auth_header())
+    response = client.get('/api/users/%s' % user_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -116,7 +116,7 @@ def test_delete_user_endpoint(client: FlaskClient, auth_header: any):
                .id)
     db_wrapper.database.close()
 
-    response = client.delete('/users/%s' % user_id, json={}, headers=auth_header())
+    response = client.delete('/api/users/%s' % user_id, json={}, headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -148,7 +148,7 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
         ],
     }
 
-    response = client.post('/users/search', json=json_body, headers=auth_header())
+    response = client.post('/api/users/search', json=json_body, headers=auth_header())
     json_response = response.get_json()
 
     user_data = json_response.get('data')
@@ -178,15 +178,15 @@ def test_export_word_endpoint(client: FlaskClient, auth_header: any):
         ],
     }
 
-    _request('/users/word', auth_header(), json)
-    _request('/users/word?to_pdf=1', auth_header(), json)
-    _request('/users/word?to_pdf=0', auth_header(), json)
+    _request('/api/users/word', auth_header(), json)
+    _request('/api/users/word?to_pdf=1', auth_header(), json)
+    _request('/api/users/word?to_pdf=0', auth_header(), json)
 
 
 def test_export_excel_endpoint(client: FlaskClient, auth_header: any):
     data = {}
 
-    response = client.post('/users/xlsx', json=data, headers=auth_header())
+    response = client.post('/api/users/xlsx', json=data, headers=auth_header())
     json_response = response.get_json()
 
     assert 202 == response.status_code

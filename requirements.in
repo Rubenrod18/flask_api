@@ -10,11 +10,11 @@ bcrypt
 cerberus
 coverage
 flask-marshmallow
+flask-restx
 librabbitmq
 peewee
 pip-tools
 pytest
-python-dateutil
 python-docx
 python-dotenv
 uwsgi
