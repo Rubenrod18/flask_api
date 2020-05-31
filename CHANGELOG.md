@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/rubenrod18/flask-api/compare/v1.0.0...v1.1.0) (2020-05-31)
+
+
+### Features
+
+* **security:** add role-based authorization ([345b57e](https://github.com/rubenrod18/flask-api/commit/345b57e2168f0139e9670f8a8b7fccb4072d7b36))
+* add advanced search in documents, roles and users ([8fce3e3](https://github.com/rubenrod18/flask-api/commit/8fce3e36c3231357f49e663706b30b0af8938c8e))
+* add blueprint for returning a list of all endpoints created ([e765c0b](https://github.com/rubenrod18/flask-api/commit/e765c0b741edd83dc545c39245e374671b305a37))
+* add marshmallow package integration ([a8b647e](https://github.com/rubenrod18/flask-api/commit/a8b647e409e246407f04482020395b873ac5547f))
+* add Swagger integration ([dc6ace4](https://github.com/rubenrod18/flask-api/commit/dc6ace43c9dfde3358ec4775fff8fca4ff02248a))
+
 ## [1.0.0](https://github.com/rubenrod18/flask-api/compare/v0.8.0...v1.0.0) (2020-05-17)
 
 
