@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/rubenrod18/flask-api/compare/v1.1.0...v1.2.0) (2020-09-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* install/update Node.js and Python libraries
+
+### build
+
+* update Node.js and Python packages ([b7416cc](https://github.com/rubenrod18/flask-api/commit/b7416ccae2e6f2ddcf903417a2ffe54f73891604))
+
 ## [1.1.0](https://github.com/rubenrod18/flask-api/compare/v1.0.0...v1.1.0) (2020-05-31)
 
 
