@@ -3,7 +3,7 @@ import re
 
 from flask import current_app, request
 from flask_security.passwordless import login_token_status
-from werkzeug.exceptions import NotFound, Forbidden, BadRequest, Unauthorized
+from werkzeug.exceptions import Forbidden, Unauthorized
 
 from app.utils import TOKEN_REGEX
 
@@ -26,9 +26,9 @@ def token_required(fnc):
                 return fnc(*args, **kwargs)
             else:
                 raise Forbidden('User is not active')
-        elif invalid:
-            raise BadRequest('Token is invalid')
+        elif expired:
+            raise Unauthorized('Token has expired')
         else:
-            raise BadRequest('Token has expired')
+            raise Unauthorized('Unauthorized')
 
     return decorator

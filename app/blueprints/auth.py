@@ -5,40 +5,36 @@ from flask import Blueprint, request, url_for
 from flask_restx import Resource
 from flask_security import verify_password
 from flask_security.passwordless import generate_login_token
-from werkzeug.exceptions import Forbidden, Unauthorized, UnprocessableEntity, NotFound
+from werkzeug.exceptions import (Forbidden, Unauthorized, UnprocessableEntity,
+                                 NotFound)
 
 from app.extensions import api as root_api
 from app.models.user import User as UserModel, user_datastore
 from app.celery.tasks import reset_password_email
-from app.utils.cerberus_schema import MyValidator, user_login_schema, confirm_reset_password_schema
+from app.utils.cerberus_schema import (MyValidator, user_login_schema,
+                                       confirm_reset_password_schema)
 from app.utils.decorators import token_required
-from config import Config
+from app.utils.swagger_models.auth import (AUTH_LOGIN_SW_MODEL,
+                                           AUTH_TOKEN_SW_MODEL,
+                                           AUTH_REQUEST_RESET_PASSWORD_SW_MODEL,
+                                           AUTH_RESET_PASSWORD_SW_MODEL)
 
 blueprint = Blueprint('auth', __name__)
 api = root_api.namespace('auth', description='Authentication endpoints')
-
 logger = logging.getLogger(__name__)
 
 
 @api.route('/login')
 class AuthUserLoginResource(Resource):
-    _parser = api.parser()
-    _parser.add_argument('email', type=str, location='json')
-    _parser.add_argument('password', type=str, location='json')
-
-    @api.doc(responses={
-        200: 'Success',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'})
+    @api.expect(AUTH_LOGIN_SW_MODEL)
+    @api.marshal_with(AUTH_TOKEN_SW_MODEL)
     def post(self) -> tuple:
         data = request.get_json()
 
         v = MyValidator(schema=user_login_schema())
         v.allow_unknown = False
-
         if not v.validate(data):
             raise UnprocessableEntity(v.errors)
 
@@ -53,41 +49,23 @@ class AuthUserLoginResource(Resource):
         token = generate_login_token(user)
         # TODO: Pending to testing whats happen id add a new field in user model when a user is logged
         flask_security.login_user(user)
-        return {
-                   'token': token,
-               }, 200
+        return {'token': f'Bearer {token}'}, 200
 
 
 @api.route('/logout')
 class AuthUserLogoutResource(Resource):
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                        default='Bearer token')
-
-    @api.doc(responses={
-        200: 'Success',
-        401: 'Unauthorized',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={200: 'Success', 401: 'Unauthorized'},
+             security='auth_token')
     @token_required
     def post(self) -> tuple:
         flask_security.logout_user()
-
         return {}, 200
 
 
-# TODO: update endpoint name
 @api.route('/reset_password')
 class RequestResetPasswordResource(Resource):
-    _parser = api.parser()
-    _parser.add_argument('email', type=str, location='json')
-
-    @api.doc(responses={
-        200: 'Success',  # TODO: change status code to 202
-        403: 'Forbidden',
-        404: 'Not Found',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={202: 'Success', 403: 'Forbidden', 404: 'Not Found'})
+    @api.expect(AUTH_REQUEST_RESET_PASSWORD_SW_MODEL)
     def post(self) -> tuple:
         data = request.get_json()
         email = data.get('email')
@@ -103,27 +81,22 @@ class RequestResetPasswordResource(Resource):
             raise Forbidden('User is not active')
 
         token = user.get_reset_token()
-
-        reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
+        reset_password_url = url_for('auth_reset_password_resource',
+                                     token=token,
+                                     _external=True)
 
         email_data = {
             'email': user.email,
             'reset_password_url': reset_password_url,
         }
-
         reset_password_email.delay(email_data)
+        return {}, 202
 
-        return {}, 200
 
-
-# TODO: update endpoint name
 @api.route('/reset_password/<token>')
 @api.doc(params={'token': 'A password reset token created previously'})
 class ResetPasswordResource(Resource):
-    @api.doc(responses={
-        200: 'Success',
-        403: 'Forbidden',
-    })
+    @api.doc(responses={200: 'Success', 403: 'Forbidden'})
     def get(self, token: str) -> tuple:
         user = UserModel.verify_reset_token(token)
 
@@ -138,15 +111,10 @@ class ResetPasswordResource(Resource):
 
         return {}, 200
 
-    _parser = api.parser()
-    _parser.add_argument('password', type=str, location='json')
-
-    @api.doc(responses={
-        200: 'Success',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={200: 'Success', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'})
+    @api.expect(AUTH_RESET_PASSWORD_SW_MODEL)
+    @api.marshal_with(AUTH_TOKEN_SW_MODEL)
     def post(self, token: str) -> tuple:
         data = request.get_json()
 
@@ -164,6 +132,4 @@ class ResetPasswordResource(Resource):
 
         token = generate_login_token(user)
 
-        return {
-                   'token': token,
-               }, 200
+        return {'token': f'Bearer {token}'}, 200

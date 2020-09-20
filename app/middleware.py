@@ -1,17 +1,16 @@
 from flask import Request, Response, Flask
 
 
-class middleware():
-    """
-    Simple WSGI middleware for checking if the request to the API has a valid content type.
-    """
+class Middleware:
+    """Simple WSGI middleware for checking if the request has a valid content type."""
 
     def __init__(self, app: Flask):
         self.app = app.wsgi_app
         self.content_types = app.config.get('ALLOWED_CONTENT_TYPES')
         self.accept = ('application/json')
 
-    def _parse_content_type(self, request_content_type: any) -> str:
+    @staticmethod
+    def _parse_content_type(request_content_type: any) -> str:
         """
             Content-Type := type "/" subtype *[";" parameter]
             https://tools.ietf.org/html/rfc1341
@@ -19,8 +18,8 @@ class middleware():
         parsed_content_type = ''
 
         if isinstance(request_content_type, str):
-            parsed_content_type = request_content_type.split(';')[0] if request_content_type.find(
-                ';') else request_content_type
+            parsed_content_type = request_content_type.split(';')[0] \
+                if request_content_type.find(';') else request_content_type
 
         return parsed_content_type
 
@@ -35,7 +34,8 @@ class middleware():
             if content_type in self.content_types or accept_mimetypes:
                 return self.app(environ, start_response)
 
-            response = Response('{"message": "Content type no valid"}', mimetype='aplication/json',
+            response = Response('{"message": "Content type no valid"}',
+                                mimetype='aplication/json',
                                 status=400)
             return response(environ, start_response)
         return self.app(environ, start_response)

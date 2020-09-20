@@ -3,7 +3,6 @@ from datetime import datetime
 
 from flask_login import current_user
 from flask import Blueprint, request, url_for
-from flask_restx import fields
 from flask_security import roles_accepted
 from marshmallow import ValidationError, INCLUDE, EXCLUDE
 from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
@@ -11,39 +10,26 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 from app.celery.word.tasks import export_user_data_in_word
 from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email
-from config import Config
 from .base import BaseResource
-from .roles import role_sw_model
 from ..extensions import db_wrapper, api as root_api
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
 from ..utils.cerberus_schema import user_model_schema, search_model_schema
 from ..utils.decorators import token_required
-from ..utils.marshmallow_schema import UserSchema as UserSerializer, ExportWordInputSchema as ExportWordInputSerializer
+from ..utils.marshmallow_schema import (UserSchema as UserSerializer,
+                                        ExportWordInputSchema as
+                                        ExportWordInputSerializer)
+from ..utils.swagger_models import SEARCH_INPUT_SW_MODEL
+from ..utils.swagger_models.user import (USER_INPUT_SW_MODEL,
+                                         USER_OUTPUT_SW_MODEL,
+                                         USER_SEARCH_OUTPUT_SW_MODEL)
+
+_API_DESCRIPTION = ('Users with role admin or team_leader can manage '
+                    'these endpoints.')
 
 blueprint = Blueprint('users', __name__, )
-api = root_api.namespace('users', description='Users endpoints. Users with role admin or team_leader can manage these endpoints.')
-
+api = root_api.namespace('users', description=_API_DESCRIPTION)
 logger = logging.getLogger(__name__)
-
-creator_sw_model = api.model('Creator', {
-    'id': fields.Integer,
-})
-
-user_sw_model = api.model('User', {
-    'id': fields.Integer,
-    'name': fields.String,
-    'last_name': fields.String,
-    'email': fields.String,
-    'genre': fields.String(enum=('m', 'f')),
-    'birth_date': fields.String,
-    'active': fields.Boolean,
-    'created_at': fields.String,
-    'updated_at': fields.String,
-    'deleted_at': fields.String,
-    'created_by': fields.Nested(creator_sw_model),
-    'roles': fields.List(fields.Nested(role_sw_model))
-})
 
 
 class UserBaseResource(BaseResource):
@@ -60,24 +46,11 @@ class UserBaseResource(BaseResource):
 
 @api.route('')
 class NewUserResource(UserBaseResource):
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('name', type=str, location='json', required=True)
-    _parser.add_argument('last_name', type=str, location='json', required=True)
-    _parser.add_argument('email', type=str, location='json', required=True)
-    _parser.add_argument('genre', type=str, location='json', required=True)
-    _parser.add_argument('password', type=str, location='json', required=True)
-    _parser.add_argument('birth_date', type=str, location='json', required=True)
-    _parser.add_argument('role_id', type=int, location='json', required=True)
-
-    @api.doc(responses={
-        201: ('Success', user_sw_model),
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(USER_INPUT_SW_MODEL)
+    @api.marshal_with(USER_OUTPUT_SW_MODEL, code=201)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
@@ -94,25 +67,17 @@ class NewUserResource(UserBaseResource):
 
         user_data = self.user_serializer.dump(user)
         create_user_email.delay(user_data)
+        logger.debug(user_data)
 
-        return {
-                   'data': user_data,
-               }, 201
+        return {'data': user_data}, 201
 
 
 @api.route('/<int:user_id>')
 class UserResource(UserBaseResource):
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-
-    @api.doc(responses={
-        200: ('Success', user_sw_model),
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.marshal_with(USER_OUTPUT_SW_MODEL)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
@@ -122,29 +87,13 @@ class UserResource(UserBaseResource):
 
         user_data = self.user_serializer.dump(user)
 
-        return {
-                   'data': user_data,
-               }, 200
+        return {'data': user_data}, 200
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('name', type=str, location='json')
-    _parser.add_argument('last_name', type=str, location='json')
-    _parser.add_argument('email', type=str, location='json')
-    _parser.add_argument('genre', type=str, location='json')
-    _parser.add_argument('password', type=str, location='json')
-    _parser.add_argument('birth_date', type=str, location='json')
-    _parser.add_argument('role_id', type=int, location='json')
-
-    @api.doc(responses={
-        200: ('Success', user_sw_model),
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
+                        403: 'Forbidden', 422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(USER_INPUT_SW_MODEL)
+    @api.marshal_with(USER_OUTPUT_SW_MODEL)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def put(self, user_id: int) -> tuple:
@@ -174,22 +123,12 @@ class UserResource(UserBaseResource):
                                       UserModel.deleted_at.is_null()))
         user_data = self.user_serializer.dump(user)
 
-        return {
-                   'data': user_data,
-               }, 200
+        return {'data': user_data}, 200
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-
-    @api.doc(responses={
-        200: ('Success', role_sw_model),
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
+                        403: 'Forbidden', 422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.marshal_with(USER_OUTPUT_SW_MODEL)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
@@ -204,9 +143,7 @@ class UserResource(UserBaseResource):
         user.save()
         user_data = self.user_serializer.dump(user)
 
-        return {
-                   'data': user_data,
-               }, 200
+        return {'data': user_data}, 200
 
 
 @api.route('/search')
@@ -214,21 +151,11 @@ class UsersSearchResource(UserBaseResource):
     user_fields = UserModel.get_fields(exclude=['id', 'password'])
     request_validation_schema = search_model_schema(user_fields)
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('search', type=list, location='json')
-    _parser.add_argument('order', type=list, location='json')
-    _parser.add_argument('items_per_page', type=int, location='json')
-    _parser.add_argument('page_number', type=int, location='json')
-
-    @api.doc(responses={
-        200: 'Success',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(SEARCH_INPUT_SW_MODEL)
+    @api.marshal_with(USER_SEARCH_OUTPUT_SW_MODEL)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
@@ -260,32 +187,25 @@ class ExportUsersExcelResource(UserBaseResource):
     user_fields = UserModel.get_fields(exclude=['id', 'password'])
     request_validation_schema = search_model_schema(user_fields)
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('search', type=list, location='json')
-    _parser.add_argument('order', type=list, location='json')
-    _parser.add_argument('items_per_page', type=int, location='json')
-    _parser.add_argument('page_number', type=int, location='json')
-
-    @api.doc(responses={
-        202: 'Accepted',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(SEARCH_INPUT_SW_MODEL)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         request_data = request.get_json()
         self.request_validation(request_data)
 
-        task = export_user_data_in_excel.apply_async((current_user.id, request_data), countdown=5)
+        task = export_user_data_in_excel.apply_async(
+            (current_user.id, request_data),
+            countdown=5
+        )
 
         return {
                    'task': task.id,
-                   'url': url_for('tasks_task_status_resource', task_id=task.id, _external=True),
+                   'url': url_for('tasks_task_status_resource', task_id=task.id,
+                                  _external=True),
                }, 202
 
 
@@ -294,21 +214,10 @@ class ExportUsersWordResource(UserBaseResource):
     user_fields = UserModel.get_fields(exclude=['id', 'password'])
     request_validation_schema = search_model_schema(user_fields)
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('search', type=list, location='json')
-    _parser.add_argument('order', type=list, location='json')
-    _parser.add_argument('items_per_page', type=int, location='json')
-    _parser.add_argument('page_number', type=int, location='json')
-
-    @api.doc(responses={
-        202: 'Accepted',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(SEARCH_INPUT_SW_MODEL)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
@@ -317,14 +226,18 @@ class ExportUsersWordResource(UserBaseResource):
 
         try:
             serializer = ExportWordInputSerializer()
-            request_args = serializer.load(request.args.to_dict(), unknown=EXCLUDE)
+            request_args = serializer.load(request.args.to_dict(),
+                                           unknown=EXCLUDE)
             to_pdf = request_args.get('to_pdf', 0)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
-        task = export_user_data_in_word.apply_async(args=[current_user.id, request_data, to_pdf])
+        task = export_user_data_in_word.apply_async(
+            args=[current_user.id, request_data, to_pdf]
+        )
 
         return {
                    'task': task.id,
-                   'url': url_for('tasks_task_status_resource', task_id=task.id, _external=True),
+                   'url': url_for('tasks_task_status_resource', task_id=task.id,
+                                  _external=True),
                }, 202

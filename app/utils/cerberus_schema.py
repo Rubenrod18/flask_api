@@ -258,18 +258,18 @@ def role_model_schema(is_creation: bool = True) -> dict:
                 'only_deleted': False,
             },
         },
-        'label': {
-            'type': 'string',
-            'required': is_creation,
-            'empty': False,
-            'nullable': False,
-            'maxlength': 255,
-        },
         'description': {
             'type': 'string',
             'required': False,
             'empty': True,
             'nullable': True,
+            'maxlength': 255,
+        },
+        'label': {
+            'type': 'string',
+            'required': is_creation,
+            'empty': False,
+            'nullable': False,
             'maxlength': 255,
         },
     }
