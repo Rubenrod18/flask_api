@@ -38,6 +38,7 @@ STRING_QUERY_OPERATORS = [
 """
 REQUEST_QUERY_DELIMITER = ';'
 
+
 class FileEmptyError(OSError):
     pass
 
@@ -103,7 +104,7 @@ def get_request_query_fields(db_model: Type[Model], request_data=None) -> tuple:
     items_per_page = int(request_data.get('items_per_page', 10))
     order_by = _build_order_by(db_model, request_data)
 
-    return (page_number, items_per_page, order_by,)
+    return page_number, items_per_page, order_by
 
 
 def _build_string_clause(field: Field, field_operator: str, field_value) -> tuple:

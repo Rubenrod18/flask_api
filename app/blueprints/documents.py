@@ -6,40 +6,30 @@ from datetime import datetime
 
 from flask import Blueprint, request, current_app, send_file
 from flask_login import current_user
-from flask_restx import fields
 from flask_security import roles_accepted
 from marshmallow import EXCLUDE, ValidationError
 from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
-from werkzeug.exceptions import NotFound, UnprocessableEntity, InternalServerError, BadRequest
+from werkzeug.exceptions import (NotFound, UnprocessableEntity,
+                                 InternalServerError, BadRequest)
 
 from app.blueprints.base import BaseResource
-from app.blueprints.users import creator_sw_model
 from app.extensions import api as root_api
 from app.models.document import Document as DocumentModel
 from app.utils.cerberus_schema import document_model_schema, search_model_schema
 from app.utils.decorators import token_required
 from app.utils.file_storage import FileStorage
-from app.utils.marshmallow_schema import DocumentSchema as DocumentSerializer, \
-    GetDocumentDataInputSchema as GetDocumentDataInputSerializer
-from config import Config
+from app.utils.marshmallow_schema import (DocumentSchema as DocumentSerializer,
+                                          GetDocumentDataInputSchema as GetDocumentDataInputSerializer)
+from app.utils.swagger_models import SEARCH_INPUT_SW_MODEL
+from app.utils.swagger_models.document import (DOCUMENT_OUTPUT_SW_MODEL,
+                                               DOCUMENT_SEARCH_OUTPUT_SW_MODEL)
+
+_API_DESCRIPTION = ('Users with role admin, team_leader or worker can '
+                    'manage these endpoints.')
 
 blueprint = Blueprint('documents', __name__)
-api = root_api.namespace('documents',
-                         description='Documents endpoints. Users with role admin, team_leader or worker can manage these endpoints.')
+api = root_api.namespace('documents', description=_API_DESCRIPTION)
 logger = logging.getLogger(__name__)
-
-document_sw_model = api.model('Document', {
-    'id': fields.Integer,
-    'name': fields.String,
-    'internal_name': fields.String,
-    'mime_type': fields.String,
-    'size': fields.Integer,
-    'url': fields.String,
-    'created_at': fields.String,
-    'updated_at': fields.String,
-    'deleted_at': fields.String,
-    'created_by': fields.Nested(creator_sw_model),
-})
 
 
 class DocumentBaseResource(BaseResource):
@@ -71,11 +61,10 @@ class DocumentBaseResource(BaseResource):
 
         document_data = self.document_serializer.dump(document)
 
-        return {
-                   'data': document_data,
-               }, 200
+        return {'data': document_data}, 200
 
-    def get_document_content(self, document_id: int):
+    @staticmethod
+    def get_document_content(document_id: int):
         document = DocumentModel.get_or_none(DocumentModel.id == document_id,
                                              DocumentModel.deleted_at.is_null())
         if document is None:
@@ -110,21 +99,19 @@ class DocumentBaseResource(BaseResource):
 
 @api.route('')
 class NewDocumentResource(DocumentBaseResource):
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('Content-Type', type=str, location='headers', required=True,
-                         choices=('multipart/form-data',))
-    _parser.add_argument(DocumentBaseResource.request_field_name, type=WerkzeugFileStorage, location='files',
-                         required=True, help='You only can upload Excel and PDF files.')
+    parser = api.parser()
+    parser.add_argument('Content-Type', type=str, location='headers',
+                        required=True, choices=('multipart/form-data',))
+    parser.add_argument(DocumentBaseResource.request_field_name,
+                        type=WerkzeugFileStorage, location='files',
+                        required=True, help='You only can upload Excel and '
+                                            'PDF files.')
 
-    @api.doc(responses={
-        201: ('Success', document_sw_model),
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(parser)
+    @api.marshal_with(DOCUMENT_OUTPUT_SW_MODEL, code=201)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
@@ -133,10 +120,14 @@ class NewDocumentResource(DocumentBaseResource):
         self.request_validation(request_data)
 
         request_file = request_data.get(self.request_field_name)
-        file_extension = mimetypes.guess_extension(request_file.get('mime_type'))
+        file_extension = mimetypes.guess_extension(
+            request_file.get('mime_type')
+        )
 
         internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
-        filepath = '%s/%s' % (current_app.config.get('STORAGE_DIRECTORY'), internal_filename)
+        filepath = '%s/%s' % (
+            current_app.config.get('STORAGE_DIRECTORY'), internal_filename
+        )
 
         try:
             fs = FileStorage()
@@ -160,26 +151,20 @@ class NewDocumentResource(DocumentBaseResource):
 
         document_data = self.document_serializer.dump(document)
 
-        return {
-                   'data': document_data,
-               }, 200
+        return {'data': document_data}, 201
 
 
 @api.route('/<int:document_id>')
 class DocumentResource(DocumentBaseResource):
     _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('Content-Type', type=str, location='headers', required=True,
-                         choices=('application/json', 'application/octet-stream',))
+    _parser.add_argument('Content-Type', type=str, location='headers',
+                         required=True, choices=('application/json',
+                                                 'application/octet-stream',))
 
-    @api.doc(responses={
-        200: ('Success', document_sw_model),
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        404: 'Not Found',
-        422: 'Unprocessable Entity',
-    })
+    @api.doc(responses={200: ('Success', DOCUMENT_OUTPUT_SW_MODEL),
+                        401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
     @api.expect(_parser)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
@@ -193,22 +178,11 @@ class DocumentResource(DocumentBaseResource):
 
         return response
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('Content-Type', type=str, location='headers', required=True,
-                         choices=('multipart/form-data',))
-    _parser.add_argument(DocumentBaseResource.request_field_name, type=WerkzeugFileStorage, location='files',
-                         required=True, help='You only can upload Excel and PDF files.')
-
-    @api.doc(responses={
-        200: ('Success', document_sw_model),
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        404: 'Not Found',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(NewDocumentResource.parser)
+    @api.marshal_with(DOCUMENT_OUTPUT_SW_MODEL)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def put(self, document_id: int) -> tuple:
@@ -248,22 +222,12 @@ class DocumentResource(DocumentBaseResource):
                                               DocumentModel.deleted_at.is_null()))
         document_data = self.document_serializer.dump(document)
 
-        return {
-                   'data': document_data,
-               }, 200
+        return {'data': document_data}, 200
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-
-    @api.doc(responses={
-        200: ('Success', document_sw_model),
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        404: 'Not Found',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
+                        403: 'Forbidden', 404: 'Not Found'},
+             security='auth_token')
+    @api.marshal_with(DOCUMENT_OUTPUT_SW_MODEL)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def delete(self, document_id: int):
@@ -279,9 +243,7 @@ class DocumentResource(DocumentBaseResource):
 
         document_data = self.document_serializer.dump(document)
 
-        return {
-                   'data': document_data,
-               }, 200
+        return {'data': document_data}, 200
 
 
 @api.route('/search')
@@ -289,21 +251,11 @@ class SearchDocumentResource(DocumentBaseResource):
     document_fields = DocumentModel.get_fields()
     request_validation_schema = search_model_schema(document_fields)
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('search', type=list, location='json')
-    _parser.add_argument('order', type=list, location='json')
-    _parser.add_argument('items_per_page', type=int, location='json')
-    _parser.add_argument('page_number', type=int, location='json')
-
-    @api.doc(responses={
-        200: 'Success',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(SEARCH_INPUT_SW_MODEL)
+    @api.marshal_with(DOCUMENT_SEARCH_OUTPUT_SW_MODEL)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):

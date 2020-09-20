@@ -2,32 +2,26 @@ import logging
 from datetime import datetime
 
 from flask import Blueprint, request
-from flask_restx import fields
 from flask_security import roles_required
 from marshmallow import INCLUDE, ValidationError
 from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 
-from config import Config
 from .base import BaseResource
 from app.extensions import api as root_api
 from app.models.role import Role as RoleModel
 from app.utils.cerberus_schema import role_model_schema, search_model_schema
 from app.utils.marshmallow_schema import RoleSchema as RoleSerializer
 from ..utils.decorators import token_required
+from ..utils.swagger_models import SEARCH_INPUT_SW_MODEL
+from ..utils.swagger_models.role import (ROLE_INPUT_SW_MODEL,
+                                         ROLE_SEARCH_OUTPUT_SW_MODEL,
+                                         ROLE_OUTPUT_SW_MODEL)
+
+_API_DESCRIPTION = 'Users with role admin can manage these endpoints.'
 
 blueprint = Blueprint('roles', __name__)
-api = root_api.namespace('roles', description='Roles endpoints. Users with role admin can manage these endpoints.')
+api = root_api.namespace('roles', description=_API_DESCRIPTION)
 logger = logging.getLogger(__name__)
-
-role_sw_model = api.model('Role', {
-    'id': fields.Integer,
-    'name': fields.String,
-    'description': fields.String,
-    'label': fields.String,
-    'created_at': fields.String,
-    'updated_at': fields.String,
-    'deleted_at': fields.String,
-})
 
 
 class RoleBaseResource(BaseResource):
@@ -44,20 +38,11 @@ class RoleBaseResource(BaseResource):
 
 @api.route('')
 class NewRoleResource(RoleBaseResource):
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('name', type=str, location='json', required=True)
-    _parser.add_argument('label', type=str, location='json', required=True)
-    _parser.add_argument('description', type=str, location='json', required=True)
-
-    @api.doc(responses={
-        201: ('Success', role_sw_model),
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(ROLE_INPUT_SW_MODEL)
+    @api.marshal_with(ROLE_OUTPUT_SW_MODEL, code=201)
     @token_required
     @roles_required('admin')
     def post(self) -> tuple:
@@ -68,24 +53,14 @@ class NewRoleResource(RoleBaseResource):
         role = RoleModel.create(**data)
         role_data = self.role_serializer.dump(role)
 
-        return {
-                   'data': role_data
-               }, 201
+        return {'data': role_data}, 201
 
 
 @api.route('/<int:role_id>')
 class RoleResource(RoleBaseResource):
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-
-    @api.doc(responses={
-        200: ('Success', role_sw_model),
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found'},
+             security='auth_token')
+    @api.marshal_with(ROLE_OUTPUT_SW_MODEL)
     @token_required
     @roles_required('admin')
     def get(self, role_id: int) -> tuple:
@@ -94,26 +69,13 @@ class RoleResource(RoleBaseResource):
             raise NotFound('Role doesn\'t exist')
 
         role_data = self.role_serializer.dump(role)
+        return {'data': role_data}, 200
 
-        return {
-                   'data': role_data,
-               }, 200
-
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('name', type=str, location='json')
-    _parser.add_argument('label', type=str, location='json')
-    _parser.add_argument('description', type=str, location='json')
-
-    @api.doc(responses={
-        200: ('Success', role_sw_model),
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
+                        403: 'Forbidden', 422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(ROLE_INPUT_SW_MODEL)
+    @api.marshal_with(ROLE_OUTPUT_SW_MODEL)
     @token_required
     @roles_required('admin')
     def put(self, role_id: int) -> tuple:
@@ -137,22 +99,12 @@ class RoleResource(RoleBaseResource):
                                       RoleModel.deleted_at.is_null()))
         role_data = self.role_serializer.dump(role)
 
-        return {
-                   'data': role_data,
-               }, 200
+        return {'data': role_data}, 200
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-
-    @api.doc(responses={
-        200: ('Success', role_sw_model),
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
+                        403: 'Forbidden'},
+             security='auth_token')
+    @api.marshal_with(ROLE_OUTPUT_SW_MODEL)
     @token_required
     @roles_required('admin')
     def delete(self, role_id: int) -> tuple:
@@ -168,9 +120,7 @@ class RoleResource(RoleBaseResource):
 
         role_data = self.role_serializer.dump(role)
 
-        return {
-                   'data': role_data,
-               }, 200
+        return {'data': role_data}, 200
 
 
 @api.route('/search')
@@ -178,21 +128,11 @@ class RolesSearchResource(RoleBaseResource):
     role_fields = RoleModel.get_fields(['id'])
     request_validation_schema = search_model_schema(role_fields)
 
-    _parser = api.parser()
-    _parser.add_argument(Config.SECURITY_TOKEN_AUTHENTICATION_HEADER, location='headers', required=True,
-                         default='Bearer token')
-    _parser.add_argument('search', type=list, location='json')
-    _parser.add_argument('order', type=list, location='json')
-    _parser.add_argument('items_per_page', type=int, location='json')
-    _parser.add_argument('page_number', type=int, location='json')
-
-    @api.doc(responses={
-        200: 'Success',
-        401: 'Unauthorized',
-        403: 'Forbidden',
-        422: 'Unprocessable Entity',
-    })
-    @api.expect(_parser)
+    @api.doc(responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(SEARCH_INPUT_SW_MODEL)
+    @api.marshal_with(ROLE_SEARCH_OUTPUT_SW_MODEL)
     @token_required
     @roles_required('admin')
     def post(self) -> tuple:

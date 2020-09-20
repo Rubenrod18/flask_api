@@ -34,15 +34,13 @@ def app():
         init_seed()
         yield app
 
-    """
-    TODO: add these code before/after all tests are executed
     storage_path = app.config.get('STORAGE_DIRECTORY')
     _remove_test_files(storage_path)
 
     logger.info(' Deleting test database...')
     os.remove(app.config.get('DATABASE').get('name'))
     logger.info(' Deleted test database!')
-    """
+
 
 @pytest.fixture
 def client(app: Flask):
@@ -133,7 +131,7 @@ def auth_header(app: Flask, client: FlaskClient):
         token = json_response.get('token')
 
         return {
-            app.config.get('SECURITY_TOKEN_AUTHENTICATION_HEADER'): 'Bearer %s' % token,
+            app.config.get('SECURITY_TOKEN_AUTHENTICATION_HEADER'): token,
         }
 
     return _create_auth_header

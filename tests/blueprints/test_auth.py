@@ -71,7 +71,6 @@ def test_user_login(client: FlaskClient):
     _test_login()
 
 
-
 def test_user_logout(client: FlaskClient, auth_header: any):
     with client:
         response = client.post('/api/auth/logout', json={}, headers=auth_header())
@@ -87,7 +86,7 @@ def test_request_reset_password(client: FlaskClient):
 
     response = client.post('/api/auth/reset_password', json=data)
 
-    assert 200 == response.status_code
+    assert 202 == response.status_code
 
 
 def test_validate_reset_password(client: FlaskClient, app: Flask):

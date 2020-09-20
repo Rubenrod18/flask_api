@@ -24,7 +24,7 @@ def test_save_document(client: FlaskClient, auth_header: any):
 
     parse_url = urlparse(json_data.get('url'))
 
-    assert 200 == response.status_code
+    assert 201 == response.status_code
     assert 1 == json_data.get('created_by').get('id')
     assert pdf_file == json_data.get('name')
     assert 'application/pdf' == json_data.get('mime_type')
