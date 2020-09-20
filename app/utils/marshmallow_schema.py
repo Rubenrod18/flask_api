@@ -41,7 +41,10 @@ class GetDocumentDataInputSchema(ma.Schema):
 class RoleSchema(ma.Schema):
     class Meta:
         ordered = True
-        fields = ('id', 'name', 'description', 'label', 'created_at', 'updated_at', 'deleted_at')
+        fields = (
+            'id', 'name', 'description', 'label', 'created_at', 'updated_at',
+            'deleted_at',
+        )
 
     id = fields.Int()
     name = fields.Str()
@@ -56,8 +59,8 @@ class UserSchema(ma.Schema):
     class Meta:
         ordered = True
         fields = (
-            'id', 'name', 'last_name', 'email', 'genre', 'birth_date', 'active', 'created_at', 'updated_at',
-            'deleted_at', 'created_by', 'roles',
+            'id', 'name', 'last_name', 'email', 'genre', 'birth_date', 'active',
+            'created_at', 'updated_at', 'deleted_at', 'created_by', 'roles',
         )
 
     id = fields.Int()
@@ -78,7 +81,10 @@ class UserSchema(ma.Schema):
 class DocumentSchema(ma.Schema):
     class Meta:
         ordered = True
-        fields = ('id', 'name', 'mime_type', 'size', 'url', 'created_at', 'updated_at', 'deleted_at', 'created_by')
+        fields = (
+            'id', 'name', 'mime_type', 'size', 'url', 'created_at',
+            'updated_at', 'deleted_at', 'created_by'
+        )
 
     id = fields.Int()
     created_by = fields.Nested('UserSchema', only=('id',))
@@ -93,5 +99,7 @@ class DocumentSchema(ma.Schema):
 
     @post_dump()
     def make_url(self, data, **kwargs):
-        data['url'] = url_for('documents_document_resource', document_id=data['id'], _external=True)
+        data['url'] = url_for('documents_document_resource',
+                              document_id=data['id'],
+                              _external=True)
         return data

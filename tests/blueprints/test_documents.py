@@ -164,5 +164,5 @@ def test_search_document(client: FlaskClient, auth_header: any):
     assert 200 == response.status_code
     assert isinstance(document_data, list)
     assert records_total > 0
-    assert records_filtered > 0 and records_filtered <= records_total
+    assert 0 < records_filtered <= records_total
     assert document_data[0].get('name').find(document_name) != -1

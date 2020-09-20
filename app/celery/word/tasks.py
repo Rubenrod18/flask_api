@@ -12,15 +12,17 @@ from app.celery import ContextTask
 from app.extensions import celery
 from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
-from app.utils import to_readable, create_search_query, get_request_query_fields
+from app.utils import (to_readable, create_search_query, get_request_query_fields,
+                       PDF_MIME_TYPE, MS_WORD_MIME_TYPE)
 from app.utils.file_storage import FileStorage
 from app.utils.libreoffice import convert_to
-from app.utils.marshmallow_schema import UserSchema as UserSerializer, DocumentSchema as DocumentSerializer
+from app.utils.marshmallow_schema import (UserSchema as UserSerializer,
+                                          DocumentSchema as DocumentSerializer)
 
 logger = get_task_logger(__name__)
 
-_COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role', 'created_at', 'updated_at',
-                         'deleted_at', ]
+_COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role',
+                         'created_at', 'updated_at', 'deleted_at']
 
 
 def _add_table_user_data(users_query: list, rows: list) -> None:
@@ -38,7 +40,10 @@ def _add_table_user_data(users_query: list, rows: list) -> None:
             if k in _COLUMN_DISPLAY_ORDER
         })
 
-        user_dict = dict(sorted(user_dict.items(), key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0])))
+        user_dict = dict(
+            sorted(user_dict.items(),
+                   key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0]))
+        )
         user_list.append(user_dict)
 
     for i, user_dict in enumerate(user_list):
@@ -57,7 +62,8 @@ def _add_table_column_names(rows: list, original_column_names: set) -> None:
 
 
 def _get_user_data(request_data: dict) -> list:
-    page_number, items_per_page, order_by = get_request_query_fields(UserModel, request_data)
+    page_number, items_per_page, order_by = get_request_query_fields(UserModel,
+                                                                     request_data)
 
     query = UserModel.select()
     query = create_search_query(UserModel, query, request_data)
@@ -91,11 +97,12 @@ def export_user_data_in_word(self, created_by: int, request_data: dict, to_pdf: 
 
     user_list = _get_user_data(request_data)
 
-    self.total_progress = len(user_list) + 2  # Word table rows + 2 (Word table header and save Word in database)
+    # Word table rows + 2 (Word table header and save data in database)
+    self.total_progress = len(user_list) + 2
     tempfile_suffix = '.docx'
     tempfile = NamedTemporaryFile(suffix=tempfile_suffix)
     table_data = []
-    mime_type = 'application/pdf' if to_pdf else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    mime_type = PDF_MIME_TYPE if to_pdf else MS_WORD_MIME_TYPE
 
     self.update_state(state='PROGRESS', meta={
         'current': 0,

@@ -53,7 +53,8 @@ def rollback_actions(fnc):
             res = fnc(*args, **kwargs)
 
             with db_wrapper.database.atomic():
-                query = Migration.delete().where(Migration.name == migration.name)
+                query = (Migration.delete()
+                         .where(Migration.name == migration.name))
                 query.execute()
 
             exec_time = round((time.time() - start), 2)
@@ -96,7 +97,7 @@ def init_migrations(rollback: bool = False) -> None:
     diff.sort()
 
     with db_wrapper.database.atomic():
-        if rollback == True:
+        if rollback:
             if rows:
                 migration_filename = rows[-1].name
                 class_name = migration_filename[4:].title().replace('_', '')

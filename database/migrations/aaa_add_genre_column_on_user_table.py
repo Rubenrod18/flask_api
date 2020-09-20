@@ -8,13 +8,15 @@ from app.models.user import User as UserModel
 from database.migrations import migrate_actions, rollback_actions, migrator
 
 
-class AddGenreColumnOnUserTable():
+class AddGenreColumnOnUserTable:
 
     def __init__(self):
         self.name = os.path.basename(__file__)[:-3]
         self.table = 'users'
         self.column_name = 'genre'
-        self.field = FixedCharField(max_length=1, choices=(('m', 'male',), ('f', 'female')), null=True)
+        self.field = FixedCharField(max_length=1,
+                                    choices=(('m', 'male',), ('f', 'female')),
+                                    null=True)
         self.columns = UserModel.get_fields()
 
     def _exists_column(self) -> bool:

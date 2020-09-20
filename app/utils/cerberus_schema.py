@@ -2,7 +2,8 @@ import magic
 from cerberus import Validator
 from flask import current_app
 
-from app.utils import BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name, QUERY_OPERATORS, STRING_QUERY_OPERATORS
+from app.utils import (BIRTH_DATE_REGEX, EMAIL_REGEX, class_for_name,
+                       QUERY_OPERATORS, STRING_QUERY_OPERATORS)
 
 
 def get_password_schema() -> dict:
@@ -36,7 +37,8 @@ class MyValidator(Validator):
         query = model.select()
 
         if only_deleted:
-            query = query.where(query_field == value, model.deleted_at.is_null(False))
+            query = query.where(query_field == value,
+                                model.deleted_at.is_null(False))
         else:
             query = query.where(query_field == value)
 
@@ -62,7 +64,8 @@ class MyValidator(Validator):
         query = model.select()
 
         if only_deleted:
-            query = query.where(query_field == value, model.deleted_at.is_null(False))
+            query = query.where(query_field == value,
+                                model.deleted_at.is_null(False))
         else:
             query = query.where(query_field == value)
 
@@ -88,7 +91,6 @@ def user_model_schema(is_creation: bool = True) -> dict:
 
     :return: dict
     """
-
     return {
         'name': {
             'type': 'string',

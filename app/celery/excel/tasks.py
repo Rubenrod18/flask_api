@@ -15,15 +15,17 @@ from app.celery import ContextTask
 from app.extensions import celery
 from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
-from app.utils import find_longest_word, pos_to_char, to_readable, get_request_query_fields, create_search_query
+from app.utils import (find_longest_word, pos_to_char, to_readable,
+                       get_request_query_fields, create_search_query)
 from app.utils.file_storage import FileStorage
-from app.utils.marshmallow_schema import UserSchema as UserSerializer, DocumentSchema as DocumentSerializer
+from app.utils.marshmallow_schema import (UserSchema as UserSerializer,
+                                          DocumentSchema as DocumentSerializer)
 
 logger = get_task_logger(__name__)
 
-_COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role', 'created_at', 'updated_at',
-                         'deleted_at', ]
-_EXCLUDE_COLUMNS = ['id', 'password', ]
+_COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role',
+                         'created_at', 'updated_at', 'deleted_at']
+_EXCLUDE_COLUMNS = ['id', 'password']
 
 
 def _parse_user_data(users: list):
@@ -97,15 +99,15 @@ def export_user_data_in_excel(self, created_by: int, request_data: dict):
         excel_longest_word = ''
 
         for i, row in enumerate(rows, 1):
-            format = None
+            row_format = None
 
             if i == 1:
-                format = workbook.add_format({
+                row_format = workbook.add_format({
                     'bold': True,
                     'bg_color': '#cccccc',
                 })
             elif i % 2 == 0:
-                format = workbook.add_format({
+                row_format = workbook.add_format({
                     'bg_color': '#f1f1f1',
                 })
 
@@ -115,7 +117,7 @@ def export_user_data_in_excel(self, created_by: int, request_data: dict):
             if len(row_longest_word) > len(excel_longest_word):
                 excel_longest_word = row_longest_word
 
-            worksheet.write_row(range_cells, row, format)
+            worksheet.write_row(range_cells, row, row_format)
             self.update_state(state='PROGRESS', meta={
                 'current': i,
                 'total': self.total_progress,
@@ -126,7 +128,8 @@ def export_user_data_in_excel(self, created_by: int, request_data: dict):
 
     user_list = _get_user_data(request_data)
 
-    self.total_progress = len(user_list) + 2  # Excel rows + 2 (Excel header and save Excel in database)
+    # Excel rows + 2 (Excel header row and save data in database)
+    self.total_progress = len(user_list) + 2
     tempfile = NamedTemporaryFile()
     excel_rows = []
 

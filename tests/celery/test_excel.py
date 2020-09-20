@@ -5,6 +5,7 @@ from peewee import fn
 
 from app.celery.excel.tasks import export_user_data_in_excel
 from app.models.user import User as UserModel
+from app.utils import MS_EXCEL_MIME_TYPE
 
 
 def test_export_excel_task(app: Flask):
@@ -23,13 +24,14 @@ def test_export_excel_task(app: Flask):
         'page_number': 1,
     }
 
-    task = export_user_data_in_excel.delay(created_by=user.id, request_data=request_data)
+    task = export_user_data_in_excel.delay(created_by=user.id,
+                                           request_data=request_data)
     result = task.get()
 
     document_data = result.get('result')
     parse_url = urlparse(document_data.get('url'))
 
-    mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    mime_type = MS_EXCEL_MIME_TYPE
 
     assert result.get('current') == result.get('total')
     assert result.get('status') == 'Task completed!'

@@ -72,7 +72,8 @@ class DocumentBaseResource(BaseResource):
 
         try:
             serializer = GetDocumentDataInputSerializer()
-            request_args = serializer.load(request.args.to_dict(), unknown=EXCLUDE)
+            request_args = serializer.load(request.args.to_dict(),
+                                           unknown=EXCLUDE)
             as_attachment = request_args.get('as_attachment', 0)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)

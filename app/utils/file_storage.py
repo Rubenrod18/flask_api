@@ -8,8 +8,9 @@ from app.utils import FileEmptyError
 logger = logging.getLogger(__name__)
 
 
-class FileStorage():
-    def save_bytes(self, file_content: bytes, filename: str, override: bool = False):
+class FileStorage:
+    def save_bytes(self, file_content: bytes, filename: str,
+                   override: bool = False):
         try:
             if not override and os.path.exists(filename):
                 raise FileExistsError(f'The file {filename} already exists!')
@@ -19,7 +20,9 @@ class FileStorage():
 
                 filesize = self.get_filesize(filename)
                 if filesize == 0:
-                    raise FileEmptyError(f'The file {filename} was created empty')
+                    raise FileEmptyError(
+                        f'The file {filename} was created empty'
+                    )
 
                 return True
         except Exception as e:
