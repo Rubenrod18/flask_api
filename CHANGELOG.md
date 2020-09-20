@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/rubenrod18/flask-api/compare/v1.2.0...v1.3.0) (2020-09-20)
+
+
+### Features
+
+* **swagger:** add Swagger full integration ([1eaf8d8](https://github.com/rubenrod18/flask-api/commit/1eaf8d8fda1af6efdaae7430ef042081f0c924b0))
+
 ## [1.2.0](https://github.com/rubenrod18/flask-api/compare/v1.1.0...v1.2.0) (2020-09-18)
 
 
