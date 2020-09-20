@@ -3,7 +3,8 @@ import logging
 from flask import current_app
 from flask_security import UserMixin, PeeweeUserDatastore, hash_password
 from itsdangerous import URLSafeSerializer, TimestampSigner
-from peewee import CharField, DateField, TimestampField, ForeignKeyField, BooleanField, FixedCharField, ManyToManyField
+from peewee import (CharField, DateField, TimestampField, ForeignKeyField,
+                    BooleanField, FixedCharField, ManyToManyField)
 
 from .base import Base as BaseModel
 from .role import Role as RoleModel
@@ -16,12 +17,14 @@ class User(BaseModel, UserMixin):
     class Meta:
         table_name = 'users'
 
-    created_by = ForeignKeyField('self', null=True, backref='children', column_name='created_by')
+    created_by = ForeignKeyField('self', null=True, backref='children',
+                                 column_name='created_by')
     name = CharField()
     last_name = CharField()
     email = CharField(unique=True)
     password = CharField(null=False)
-    genre = FixedCharField(max_length=1, choices=(('m', 'male',), ('f', 'female')), null=True)
+    genre = FixedCharField(max_length=1,
+                           choices=(('m', 'male',), ('f', 'female')), null=True)
     birth_date = DateField()
     active = BooleanField(default=True)
     created_at = TimestampField(default=None)
@@ -70,6 +73,7 @@ class User(BaseModel, UserMixin):
             hashed_password = hash_password(plain_text)
 
         return hashed_password
+
 
 UserRoles = User.roles.through_model
 

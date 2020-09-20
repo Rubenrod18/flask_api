@@ -4,12 +4,13 @@ from datetime import date, datetime
 from functools import reduce
 from typing import Type
 
-from peewee import CharField, ModelSelect, TextField, FixedCharField, UUIDField, Model, Field
+from peewee import (CharField, ModelSelect, TextField, FixedCharField,
+                    UUIDField, Model, Field)
 
 BIRTH_DATE_REGEX = (r'^(19[0-9]{2}|2[0-9]{3})'  # Year
                     r'-(0[1-9]|1[012])'  # Month
                     r'-([123]0|[012][1-9]|31)$')  # Day
-EMAIL_REGEX = (r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+EMAIL_REGEX = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
 TOKEN_REGEX = r'^Bearer\s(\S+)$'
 
 # http://docs.peewee-orm.com/en/latest/peewee/query_operators.html
@@ -28,7 +29,8 @@ STRING_QUERY_OPERATORS = [
 ]
 
 """
-    REQUEST_QUERY_DELIMITER is used for converting requests field values to a list, for example:
+    REQUEST_QUERY_DELIMITER is used for converting requests field values to
+    a list, for example:
         Request send these values:
             field_operator: contains
             field_values: valueA;valueB;valueC
@@ -37,6 +39,11 @@ STRING_QUERY_OPERATORS = [
             field_values: [valueA, valueB, valueC]
 """
 REQUEST_QUERY_DELIMITER = ';'
+PDF_MIME_TYPE = 'application/pdf'
+MS_WORD_MIME_TYPE = ('application/vnd.openxmlformats-'
+                     'officedocument.wordprocessingml.document')
+MS_EXCEL_MIME_TYPE = ('application/vnd.openxmlformats-'
+                      'officedocument.spreadsheetml.sheet')
 
 
 class FileEmptyError(OSError):
@@ -186,7 +193,8 @@ def _build_query_clause(field: Field, field_operator: str, field_value):
     return sql_clause
 
 
-def create_search_query(db_model: Type[Model], query: ModelSelect, data: dict = None) -> ModelSelect:
+def create_search_query(db_model: Type[Model], query: ModelSelect,
+                        data: dict = None) -> ModelSelect:
     if data is None:
         data = {}
 

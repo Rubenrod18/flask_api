@@ -5,7 +5,7 @@ from app.models.document import Document as DocumentModel
 from database.migrations import migrate_actions, rollback_actions
 
 
-class CreateDocumentsTable():
+class CreateDocumentsTable:
 
     def __init__(self):
         self.name = os.path.basename(__file__)[:-3]

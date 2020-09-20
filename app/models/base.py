@@ -25,7 +25,8 @@ class Base(db.Model):
         return super(Base, self).save(*args, **kwargs)
 
     @classmethod
-    def get_fields(cls, exclude: list = None, include: list = None, sort_order: list = None) -> set:
+    def get_fields(cls, exclude: list = None, include: list = None,
+                   sort_order: list = None) -> set:
         exclude = exclude or []
         include = include or []
         sort_order = sort_order or []

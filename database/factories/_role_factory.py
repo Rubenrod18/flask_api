@@ -10,14 +10,17 @@ class _RoleFactory():
     def _fill(self, params: dict, exclude: list) -> dict:
         current_date = datetime.utcnow()
 
-        created_at = current_date - timedelta(days=randint(31, 100), minutes=randint(0, 60))
+        created_at = current_date - timedelta(days=randint(31, 100),
+                                              minutes=randint(0, 60))
         updated_at = created_at
         deleted_at = None
 
         if randint(0, 1) and 'deleted_at' not in params:
-            deleted_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
+            deleted_at = created_at + timedelta(days=randint(1, 30),
+                                                minutes=randint(0, 60))
         else:
-            updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
+            updated_at = created_at + timedelta(days=randint(1, 30),
+                                                minutes=randint(0, 60))
 
         role_name = params.get('name') or ' '.join(fake.words(nb=2))
         role_label = role_name.capitalize().replace('-', ' ')

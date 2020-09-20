@@ -4,8 +4,10 @@ from flask import Flask
 
 logger = get_task_logger(__name__)
 
+
 class TaskFailure(Exception):
     pass
+
 
 class MyCelery(Celery):
     def gen_task_name(self, name, module):
@@ -39,6 +41,7 @@ class MyCelery(Celery):
         if module.endswith('.tasks'):
             module = module[:-6]
         return super(MyCelery, self).gen_task_name(name, module)
+
 
 class ContextTask(Task):
     abstract = True

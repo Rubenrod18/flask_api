@@ -3,10 +3,11 @@ from database import seed_actions
 from database.factories import Factory
 
 
-class RoleSeeder():
+class RoleSeeder:
     name = 'RoleSeeder'
 
-    def _create_admin_role(self) -> None:
+    @staticmethod
+    def _create_admin_role() -> None:
         admin_role = RoleModel.get_or_none(name='admin')
 
         if admin_role is None:
@@ -18,7 +19,8 @@ class RoleSeeder():
             }
             Factory('Role').save(params)
 
-    def _create_team_leader(self) -> None:
+    @staticmethod
+    def _create_team_leader() -> None:
         team_leader_role = RoleModel.get_or_none(name='team_leader')
 
         if team_leader_role is None:
@@ -30,7 +32,8 @@ class RoleSeeder():
             }
             Factory('Role').save(params)
 
-    def _create_worker_role(self) -> None:
+    @staticmethod
+    def _create_worker_role() -> None:
         worker_role = RoleModel.get_or_none(name='worker')
 
         if worker_role is None:

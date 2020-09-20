@@ -2,7 +2,7 @@ from database import seed_actions
 from database.factories import Factory
 
 
-class DocumentSeeder():
+class DocumentSeeder:
     name = 'DocumentSeeder'
 
     @seed_actions

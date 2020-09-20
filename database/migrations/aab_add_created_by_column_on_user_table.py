@@ -8,13 +8,14 @@ from app.models.user import User as UserModel
 from database.migrations import migrate_actions, rollback_actions, migrator
 
 
-class AddCreatedByColumnOnUserTable():
+class AddCreatedByColumnOnUserTable:
 
     def __init__(self):
         self.name = os.path.basename(__file__)[:-3]
         self.table = 'users'
         self.column_name = 'created_by'
-        self.field = ForeignKeyField(UserModel, field=UserModel.id, null=True, backref='children',
+        self.field = ForeignKeyField(UserModel, field=UserModel.id, null=True,
+                                     backref='children',
                                      column_name=self.column_name)
         self.columns = UserModel.get_fields()
 

@@ -9,22 +9,26 @@ from peewee import fn
 
 from app.models.document import Document as DocumentModel
 from app.models.user import User as UserModel
-from app.utils import ignore_keys
+from app.utils import ignore_keys, PDF_MIME_TYPE
 from database import fake
 
 
-class _DocumentFactory():
-    def _fill(self, params: dict, exclude: list) -> dict:
+class _DocumentFactory:
+    @staticmethod
+    def _fill(params: dict, exclude: list) -> dict:
         current_date = datetime.utcnow()
 
-        created_at = current_date - timedelta(days=randint(31, 100), minutes=randint(0, 60))
+        created_at = current_date - timedelta(days=randint(31, 100),
+                                              minutes=randint(0, 60))
         updated_at = created_at
         deleted_at = None
 
         if randint(0, 1) and 'deleted_at' not in params:
-            deleted_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
+            deleted_at = created_at + timedelta(days=randint(1, 30),
+                                                minutes=randint(0, 60))
         else:
-            updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
+            updated_at = created_at + timedelta(days=randint(1, 30),
+                                                minutes=randint(0, 60))
 
         created_by = (UserModel.select()
                       .order_by(fn.Random())
@@ -33,23 +37,27 @@ class _DocumentFactory():
                       .id)
 
         mime_type = fake.random_element([
-            'application/pdf',
+            PDF_MIME_TYPE,
             # TODO: add more MIME types
         ])
         file_extension = mimetypes.guess_extension(mime_type).replace('.', '')
         internal_filename = '%s.%s' % (uuid.uuid1().hex, file_extension)
 
-        pdf_file = '%s/storage/test/example.pdf' % current_app.config.get('ROOT_DIRECTORY')
-        abs_file = '%s/%s' % (current_app.config.get('STORAGE_DIRECTORY'), internal_filename)
+        root_directory = current_app.config.get('ROOT_DIRECTORY')
+        pdf_file = '%s/storage/test/example.pdf' % root_directory
+        abs_file = '%s/%s' % (current_app.config.get('STORAGE_DIRECTORY'),
+                              internal_filename)
         copyfile(pdf_file, abs_file)
 
         data = {
             'created_by': params.get('created_by') or created_by,
-            'name': params.get('name') or fake.file_name(category='office', extension=file_extension),
+            'name': params.get('name') or fake.file_name(category='office',
+                                                         extension=file_extension),
             'internal_filename': params.get('internal_filename') or internal_filename,
             'mime_type': params.get('mime_type') or mime_type,
             'directory_path': current_app.config.get('STORAGE_DIRECTORY'),
-            'size': params.get('size', fake.random_int(2000000, 10000000)), # Between 2MB to 10MB
+            # Between 2MB to 10MB
+            'size': params.get('size', fake.random_int(2000000, 10000000)),
             'created_at': created_at,
             'updated_at': updated_at,
             'deleted_at': deleted_at,

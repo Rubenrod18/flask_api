@@ -1,6 +1,7 @@
 from app.utils import class_for_name
 
-class Factory():
+
+class Factory:
     models: list = None
 
     def __init__(self, class_name, num: int = 1):
@@ -14,7 +15,8 @@ class Factory():
             factory = factory_class()
             self.models.append(factory)
 
-    def make(self, params: dict = None, to_dict: bool = False, exclude: list = None) -> any:
+    def make(self, params: dict = None, to_dict: bool = False,
+             exclude: list = None) -> any:
         params = params or {}
         exclude = exclude or []
 

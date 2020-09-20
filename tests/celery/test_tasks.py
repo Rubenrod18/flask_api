@@ -12,7 +12,7 @@ def test_create_user_email_task(factory: any):
     task = create_user_email.delay(data)
     result = task.get()
 
-    assert True == result
+    assert result
 
 
 def test_reset_password_email_task(app: Flask):
@@ -22,9 +22,10 @@ def test_reset_password_email_task(app: Flask):
             .limit(1)
             .get())
 
-    token = user.get_reset_token()
-
-    reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
+    with app.app_context():
+        token = user.get_reset_token()
+        reset_password_url = url_for('auth_reset_password_resource', token=token,
+                                     _external=True)
     email_data = {
         'email': user.email,
         'reset_password_url': reset_password_url,
@@ -33,4 +34,4 @@ def test_reset_password_email_task(app: Flask):
     task = reset_password_email.delay(email_data)
     result = task.get()
 
-    assert True == result
+    assert result

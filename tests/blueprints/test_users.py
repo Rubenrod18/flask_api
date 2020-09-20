@@ -158,7 +158,7 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
     assert 200 == response.status_code
     assert isinstance(user_data, list)
     assert records_total > 0
-    assert records_filtered > 0 and records_filtered <= records_total
+    assert 0 < records_filtered <= records_total
     assert user_data[0]['name'].find(user_name) != -1
 
 

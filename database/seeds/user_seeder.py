@@ -7,10 +7,11 @@ from database import seed_actions
 from database.factories import Factory
 
 
-class UserSeeder():
+class UserSeeder:
     name = 'UserSeeder'
 
-    def _create_admin_user(self):
+    @staticmethod
+    def _create_admin_user():
         test_user_email = os.getenv('TEST_USER_EMAIL')
         test_user = UserModel.get_or_none(email=test_user_email)
 

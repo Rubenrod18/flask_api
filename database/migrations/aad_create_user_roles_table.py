@@ -1,8 +1,9 @@
 import os
 
 from flask_login import UserMixin
-from playhouse.migrate import migrate, ForeignKeyField, CharField, FixedCharField, DateField, BooleanField, \
-    TimestampField
+from playhouse.migrate import (migrate, ForeignKeyField, CharField,
+                               FixedCharField, DateField, BooleanField,
+                               TimestampField)
 from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
@@ -16,13 +17,15 @@ class _OldUser(BaseModel, UserMixin):
     class Meta:
         table_name = 'users'
 
-    created_by = ForeignKeyField('self', null=True, backref='children', column_name='created_by')
+    created_by = ForeignKeyField('self', null=True, backref='children',
+                                 column_name='created_by')
     role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
     email = CharField(unique=True)
     password = CharField(null=False)
-    genre = FixedCharField(max_length=1, choices=(('m', 'male',), ('f', 'female')), null=True)
+    genre = FixedCharField(max_length=1,
+                           choices=(('m', 'male',), ('f', 'female')), null=True)
     birth_date = DateField()
     active = BooleanField(default=True)
     created_at = TimestampField(default=None)
@@ -30,7 +33,7 @@ class _OldUser(BaseModel, UserMixin):
     deleted_at = TimestampField(default=None, null=True)
 
 
-class CreateUserRolesTable():
+class CreateUserRolesTable:
 
     def __init__(self):
         self.name = os.path.basename(__file__)[:-3]
@@ -47,7 +50,8 @@ class CreateUserRolesTable():
 
         return exists
 
-    def _drop_foreign_key_constraint_users_table(self) -> list:
+    @staticmethod
+    def _drop_foreign_key_constraint_users_table() -> list:
         """ https://www.sqlite.org/lang_altertable.html """
         users = []
         user_roles_relations = []
@@ -76,7 +80,8 @@ class CreateUserRolesTable():
 
         return user_roles_relations
 
-    def _add_foreign_key_constraint_users_table(self) -> None:
+    @staticmethod
+    def _add_foreign_key_constraint_users_table() -> None:
         """ https://www.sqlite.org/lang_altertable.html """
         users = []
 
@@ -111,7 +116,6 @@ class CreateUserRolesTable():
 
         for user in users:
             _OldUser.insert(**user).execute()
-
 
     @migrate_actions
     def up(self):

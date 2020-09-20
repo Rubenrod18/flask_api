@@ -19,14 +19,17 @@ class _UserFactory():
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 
-        created_at = current_date - timedelta(days=randint(31, 100), minutes=randint(0, 60))
+        created_at = current_date - timedelta(days=randint(31, 100),
+                                              minutes=randint(0, 60))
         updated_at = created_at
         deleted_at = None
 
         if randint(0, 1) and 'deleted_at' not in params:
-            deleted_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
+            deleted_at = created_at + timedelta(days=randint(1, 30),
+                                                minutes=randint(0, 60))
         else:
-            updated_at = created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
+            updated_at = created_at + timedelta(days=randint(1, 30),
+                                                minutes=randint(0, 60))
 
         if 'created_by' not in params:
             created_by = (UserModel.select()
@@ -43,7 +46,8 @@ class _UserFactory():
             'name': params.get('name') or fake.name(),
             'last_name': params.get('last_name') or fake.last_name(),
             'email': params.get('email') or fake.random_element(
-                [fake.email(), fake.safe_email(), fake.free_email(), fake.company_email()]),
+                [fake.email(), fake.safe_email(), fake.free_email(),
+                 fake.company_email()]),
             'genre': params.get('genre') or fake.random_element(['m', 'f']),
             'password': params.get('password') or current_app.config.get('TEST_USER_PASSWORD'),
             'birth_date': params.get('birth_date') or birth_date.strftime('%Y-%m-%d'),
@@ -83,7 +87,8 @@ class _UserFactory():
         return user
 
     def create(self, params: dict) -> UserModel:
-        data = model_to_dict(self.make(params, to_dict=False, exclude=[]), recurse=False)
+        data = model_to_dict(self.make(params, to_dict=False, exclude=[]),
+                             recurse=False)
 
         # Roles are required for flask_security.datastore
         if 'roles' in params:

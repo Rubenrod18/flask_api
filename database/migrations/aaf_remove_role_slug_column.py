@@ -22,7 +22,7 @@ class _OldRole(BaseModel, RoleMixin):
     deleted_at = TimestampField(default=None, null=True)
 
 
-class RemoveRoleSlugColumn():
+class RemoveRoleSlugColumn:
 
     def __init__(self):
         self.name = os.path.basename(__file__)[:-3]
@@ -41,7 +41,8 @@ class RemoveRoleSlugColumn():
 
         return exists
 
-    def _drop_unique_constraint_roles_table(self) -> None:
+    @staticmethod
+    def _drop_unique_constraint_roles_table() -> None:
         """ https://www.sqlite.org/lang_altertable.html """
         roles = []
 
@@ -62,7 +63,8 @@ class RemoveRoleSlugColumn():
         for role in roles:
             RoleModel.insert(**role).execute()
 
-    def _add_unique_constraint_roles_table(self) -> None:
+    @staticmethod
+    def _add_unique_constraint_roles_table() -> None:
         """ https://www.sqlite.org/lang_altertable.html """
         roles = []
 

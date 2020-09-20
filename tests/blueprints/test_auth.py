@@ -76,7 +76,7 @@ def test_user_logout(client: FlaskClient, auth_header: any):
         response = client.post('/api/auth/logout', json={}, headers=auth_header())
 
         assert 200 == response.status_code
-        assert current_user.is_authenticated == False
+        assert not current_user.is_authenticated
 
 
 def test_request_reset_password(client: FlaskClient):

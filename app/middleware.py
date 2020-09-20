@@ -2,7 +2,7 @@ from flask import Request, Response, Flask
 
 
 class Middleware:
-    """Simple WSGI middleware for checking if the request has a valid content type."""
+    """WSGI middleware for checking if the request has a valid content type."""
 
     def __init__(self, app: Flask):
         self.app = app.wsgi_app
