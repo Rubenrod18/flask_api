@@ -14,7 +14,8 @@ class MyCelery(Celery):
         """New task default automatic naming.
 
 
-        The default gen_task_name method builds task names based on absolute imports, for example:
+        The default gen_task_name method builds task names based on absolute
+        imports, for example:
 
         project /
                 /__init__.py
@@ -25,16 +26,17 @@ class MyCelery(Celery):
                         /__init.py
                         /tasks.py
 
-        The default automatic naming is "project.moduleA.tasks.taskA", "project.moduleA.tasks.taskB", etc.
-        This new default automatic naming forget "tasks" in all task names:
+        The default automatic naming is "project.moduleA.tasks.taskA",
+        "project.moduleA.tasks.taskB", etc. This new default automatic naming
+        forget "tasks" in all task names:
 
         DEFAULT WAY                         NEW WAY
         project.moduleA.tasks.taskA         project.moduleA.taskA
         project.moduleA.tasks.taskA         project.moduleA.taskB
         project.moduleB.tasks.taskA         project.moduleB.taskA
 
-        This method is only used when the tasks don't have a name attribute defined, otherwise, the task name will be
-        respect.
+        This method is only used when the tasks don't have a name attribute
+        defined, otherwise, the task name will be respect.
 
         https://docs.celeryproject.org/en/stable/userguide/tasks.html?highlight=gen_task_name#changing-the-automatic-naming-behavior
         """

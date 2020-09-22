@@ -9,7 +9,7 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 
 from app.celery.word.tasks import export_user_data_in_word
 from app.celery.excel.tasks import export_user_data_in_excel
-from app.celery.tasks import create_user_email
+from app.celery.tasks import create_user_email, create_word_and_excel_documents
 from .base import BaseResource
 from ..extensions import db_wrapper, api as root_api
 from ..models.user import User as UserModel, user_datastore
@@ -241,3 +241,33 @@ class ExportUsersWordResource(UserBaseResource):
                    'url': url_for('tasks_task_status_resource', task_id=task.id,
                                   _external=True),
                }, 202
+
+
+@api.route('/word_and_xlsx')
+class ExportUsersExcelAndWordResource(UserBaseResource):
+    user_fields = UserModel.get_fields(exclude=['id', 'password'])
+    request_validation_schema = search_model_schema(user_fields)
+
+    @api.doc(responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden',
+                        422: 'Unprocessable Entity'},
+             security='auth_token')
+    @api.expect(SEARCH_INPUT_SW_MODEL)
+    @token_required
+    @roles_accepted('admin', 'team_leader', 'worker')
+    def post(self) -> tuple:
+        request_data = request.get_json()
+        self.request_validation(request_data)
+
+        try:
+            serializer = ExportWordInputSerializer()
+            request_args = serializer.load(request.args.to_dict(),
+                                           unknown=EXCLUDE)
+            to_pdf = request_args.get('to_pdf', 0)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
+
+        create_word_and_excel_documents.apply_async(
+            args=[current_user.id, request_data, to_pdf]
+        )
+
+        return {}, 202

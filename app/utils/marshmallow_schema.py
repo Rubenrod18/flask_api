@@ -83,11 +83,12 @@ class DocumentSchema(ma.Schema):
         ordered = True
         fields = (
             'id', 'name', 'mime_type', 'size', 'url', 'created_at',
-            'updated_at', 'deleted_at', 'created_by'
+            'updated_at', 'deleted_at', 'created_by', 'internal_filename'
         )
 
     id = fields.Int()
-    created_by = fields.Nested('UserSchema', only=('id',))
+    created_by = fields.Nested('UserSchema', only=('id', 'name', 'last_name',
+                                                   'email'))
     name = fields.Str()
     internal_filename = fields.Str()
     mime_type = fields.Str()
