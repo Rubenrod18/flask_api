@@ -128,7 +128,7 @@ def _build_string_clause(field: Field, field_operator: str, field_value) -> tupl
     elif field_operator in STRING_QUERY_OPERATORS:
         if field_operator == 'eq':
             sql_clause = (field == field_value)
-        elif field_operator == 'neq':
+        elif field_operator == 'ne':
             sql_clause = (~(field == field_value))
         elif field_operator == 'contains':
             sql_clause = (field.contains(field_value))
