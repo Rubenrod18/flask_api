@@ -78,7 +78,7 @@ def send_email_with_attachments(task_data: list) -> bool:
 
 @celery.task(base=ContextTask)
 def create_word_and_excel_documents(created_by: int, request_data: dict,
-                                    to_pdf: int) -> None:
+                                    to_pdf: int) -> bool:
     group_tasks = [
         export_user_data_in_word.s(created_by, request_data, to_pdf),
         export_user_data_in_excel.s(created_by, request_data),
@@ -86,3 +86,5 @@ def create_word_and_excel_documents(created_by: int, request_data: dict,
     callback_task = send_email_with_attachments.s()
 
     chord(group_tasks, callback_task)()
+
+    return True
