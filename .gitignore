@@ -33,7 +33,10 @@ pip-log.txt
 uwsgi.ini
 supervisord.conf
 
-venv
 .idea
 coverage_html_report
 node_modules
+source/_autosummary
+source/_static
+source/templates
+venv
