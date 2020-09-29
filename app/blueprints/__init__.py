@@ -1,3 +1,4 @@
+"""Registers Flask blueprints."""
 from .base import blueprint as blueprint_base
 from .auth import blueprint as blueprint_auth
 from .users import blueprint as blueprint_users

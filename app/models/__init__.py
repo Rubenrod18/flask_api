@@ -1,3 +1,4 @@
+"""Registers database models."""
 import logging
 import os
 import os.path

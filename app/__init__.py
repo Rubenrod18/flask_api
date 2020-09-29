@@ -1,3 +1,9 @@
+"""Package for building a Flask application.
+
+The app package loads application configuration and registers middleware,
+blueprints, database models, etc.
+
+"""
 import logging
 import os
 
@@ -10,6 +16,23 @@ from app.middleware import Middleware
 
 
 def create_app(env_config: str) -> Flask:
+    """Builds an application based on environment configuration.
+
+    Parameters
+    ----------
+    env_config : str
+        Environment configuration values.
+
+            config.ProdConfig: production
+            config.DevConfig: development
+            config.TestConfig: test
+
+    Returns
+    -------
+    Flask
+        A `flask.flask` instance.
+
+    """
     app = flask.Flask(__name__)
     app.config.from_object(env_config)
     app.wsgi_app = Middleware(app)
