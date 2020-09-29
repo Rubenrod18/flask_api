@@ -34,6 +34,7 @@ extensions = [
     'sphinx.ext.autodoc',  # Core library for html generation from docstrings
     'sphinx.ext.autosummary',  # Create neat summary tables
     'sphinx.ext.napoleon',
+    # 'celery.contrib.sphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -63,3 +64,18 @@ source_suffix = {
     '.rst': 'restructuredtext',
     '.md': 'markdown',
 }
+
+""" TODO: usage for showing private elements
+def hide_non_private(app, what, name, obj, skip, options):
+    # if private-members is set, show only private members
+    if 'private-members' in options and not name.startswith('_'):
+        # skip public methods
+        return True
+    else:
+        # do not modify skip - private methods will be shown
+        return None
+
+
+def setup(app):
+    app.connect('autodoc-skip-member', hide_non_private)
+"""
