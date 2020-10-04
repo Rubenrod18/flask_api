@@ -102,7 +102,7 @@ You can management the Celery tasks status here: http://flask-api.prod/flower.
 Optional installation
 ---------------------
 
-This project use `logrotate <https://linux.die.net/man/8/logrotate>`_ for logging configuration. The config file is already defined you only need to do these steps:
+This project use |logrotate| for logging configuration. The config file is already defined you only need to do these steps:
 
 1. Create new **flask_api.logrotate** file based on *config/flask_api.logrotate.example* file.
 2. Update "path", "username" and "usergroup" variables with appropiate values.
@@ -119,3 +119,8 @@ This project use `logrotate <https://linux.die.net/man/8/logrotate>`_ for loggin
     sudo service log rotate restart
 
 Now a new log file will be created every day.
+
+
+.. |logrotate| raw:: html
+
+   <a href="https://linux.die.net/man/8/logrotate" target="_blank">logrotate</a>
