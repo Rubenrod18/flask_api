@@ -5,24 +5,21 @@
 
 Welcome to flask_api's documentation!
 =====================================
+.. mdinclude:: ../README.md
 
-.. autosummary::
-   :caption: Skeleton app structure
-   :recursive:
-   :toctree: _autosummary
+.. toctree::
+   :maxdepth: 2
+   :glob:
+   :hidden:
 
-   app
-   database
-   tests
-   config
-   manage
+   installation
+   skeleton_app_structure
 
 .. toctree::
    :caption: Documentation
    :hidden:
 
    changelog
-   readme
 
 Note
 ====
