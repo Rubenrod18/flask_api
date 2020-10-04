@@ -40,3 +40,4 @@ source/_autosummary
 source/_static
 source/templates
 venv
+docs/_autosummary
