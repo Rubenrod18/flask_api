@@ -1,3 +1,4 @@
+"""WSGI middleware for validating requests content type."""
 from flask import Request, Response, Flask
 
 

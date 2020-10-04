@@ -34,12 +34,17 @@ def app():
         init_seed()
         yield app
 
+    """FIXME: add these code before/after all tests are executed.
+    
+    If files are deleted then there are problems with Celery tasks.
+    
     storage_path = app.config.get('STORAGE_DIRECTORY')
     _remove_test_files(storage_path)
 
     logger.info(' Deleting test database...')
     os.remove(app.config.get('DATABASE').get('name'))
     logger.info(' Deleted test database!')
+    """
 
 
 @pytest.fixture

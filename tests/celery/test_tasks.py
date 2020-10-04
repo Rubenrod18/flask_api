@@ -1,7 +1,7 @@
 from flask import url_for, Flask
 from peewee import fn
 
-from app.celery.tasks import create_user_email, reset_password_email
+from app.celery.tasks import create_user_email, reset_password_email, create_word_and_excel_documents
 from app.models.user import User as UserModel
 
 
@@ -32,6 +32,26 @@ def test_reset_password_email_task(app: Flask):
     }
 
     task = reset_password_email.delay(email_data)
+    result = task.get()
+
+    assert result
+
+
+def test_create_word_and_excel_documents(app: Flask):
+    user = UserModel.get(UserModel.email == app.config.get('TEST_USER_EMAIL'))
+
+    request_data = {
+        'search': [],
+        'order': [
+            ['name', 'asc'],
+        ],
+        'items_per_page': 100,
+        'page_number': 1,
+    }
+
+    task = create_word_and_excel_documents.delay(**{'created_by': user.id,
+                                                    'request_data': request_data,
+                                                    'to_pdf': 1})
     result = task.get()
 
     assert result

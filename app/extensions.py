@@ -1,3 +1,4 @@
+"""Registers third party extensions."""
 from flask import Flask
 from flask_mail import Mail
 from flask_marshmallow import Marshmallow
