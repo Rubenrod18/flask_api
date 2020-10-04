@@ -1,5 +1,4 @@
 from celery import chord
-from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from flask import render_template, current_app
 from flask_mail import Message
