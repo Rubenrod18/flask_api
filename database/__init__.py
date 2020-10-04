@@ -1,3 +1,9 @@
+"""Package for managing the database.
+
+The database package can creates and migrates tables and it can fills them
+with fake data.
+
+"""
 import functools
 import time
 

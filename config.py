@@ -1,3 +1,8 @@
+"""Module loads the application's configuration.
+
+The extension and custom configurations are defined here.
+
+"""
 import os
 from typing import TypeVar
 
@@ -9,6 +14,7 @@ M = TypeVar('M', bound='Meta')
 
 
 class Meta(type):
+    """Metaclass for updating Config options."""
     def __new__(cls, name: str, bases: tuple, dict: dict):
         config = super().__new__(cls, name, bases, dict)
         cls._add_celery_new_lowercase_settings(config)
