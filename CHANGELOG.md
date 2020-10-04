@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/rubenrod18/flask-api/compare/v1.3.0...v1.4.0) (2020-10-04)
+
+
+### Features
+
+* **celery:** add task for exporting several files ([ca8355f](https://github.com/rubenrod18/flask-api/commit/ca8355fce92085d581b3b52c4431afb797004172))
+* **documentation:** add sphinx integration ([8c313fd](https://github.com/rubenrod18/flask-api/commit/8c313fd66e1503a7a95593226343a3033fdffa7b))
+
 ## [1.3.0](https://github.com/rubenrod18/flask-api/compare/v1.2.0...v1.3.0) (2020-09-20)
 
 
