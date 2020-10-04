@@ -6,7 +6,7 @@ from .roles import blueprint as blueprint_roles
 from .documents import blueprint as blueprint_documents
 from .tasks import blueprint as blueprint_tasks
 
-blueprints = [
+BLUEPRINTS = [
     blueprint_base,
     blueprint_users,
     blueprint_roles,

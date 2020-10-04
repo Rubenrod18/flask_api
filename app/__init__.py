@@ -11,7 +11,7 @@ import flask
 from flask import Flask
 
 from app import extensions
-from app.blueprints import blueprints
+from app.blueprints import BLUEPRINTS
 from app.middleware import Middleware
 
 
@@ -51,7 +51,7 @@ def init_app(app: Flask) -> None:
 
 
 def register_blueprints(app: Flask) -> None:
-    for blueprint in blueprints:
+    for blueprint in BLUEPRINTS:
         app.register_blueprint(blueprint)
 
 
