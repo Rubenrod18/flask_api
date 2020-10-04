@@ -3,6 +3,7 @@
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
+    :private-members:
     :undoc-members:
     :show-inheritance:
 

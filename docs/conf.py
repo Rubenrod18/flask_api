@@ -34,7 +34,7 @@ extensions = [
     'sphinx.ext.autodoc',  # Core library for html generation from docstrings
     'sphinx.ext.autosummary',  # Create neat summary tables
     'sphinx.ext.napoleon',
-    # 'celery.contrib.sphinx',
+    'celery.contrib.sphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

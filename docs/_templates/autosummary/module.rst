@@ -8,17 +8,39 @@
 .. rubric:: Description
 
 .. automodule:: {{ fullname }}
+    :members:
+    :private-members:
+    :inherited-members:
+    :undoc-members:
 
-    {% block attributes %}
-    {% if attributes %}
-    .. rubric:: Attributes
+
+    {% block modules %}
+    {% if modules %}
+    .. rubric:: Modules
 
     .. autosummary::
        :toctree:
+       :recursive:
 
-       {% for item in attributes %}
+       {% for item in modules %}
        {{ item }}
        {% endfor %}
+
+    {% endif %}
+    {% endblock %}
+
+
+    {% block classes %}
+    {% if classes %}
+    .. rubric:: Classes
+
+    .. autosummary::
+        :toctree:
+
+        {% for item in classes %}
+        {{ item }}
+        {% endfor %}
+
     {% endif %}
     {% endblock %}
 
@@ -37,17 +59,17 @@
     {% endif %}
     {% endblock %}
 
-    {% block classes %}
-    {% if classes %}
-    .. rubric:: Classes
+
+    {% block attributes %}
+    {% if attributes %}
+    .. rubric:: Attributes
 
     .. autosummary::
-        :toctree:
+       :toctree:
 
-        {% for item in classes %}
-        {{ item }}
-        {% endfor %}
-
+       {% for item in attributes %}
+       {{ item }}
+       {% endfor %}
     {% endif %}
     {% endblock %}
 
@@ -65,19 +87,3 @@
 
     {% endif %}
     {% endblock %}
-
-
-{% block modules %}
-{% if modules %}
-.. rubric:: Modules
-
-.. autosummary::
-   :toctree:
-   :recursive:
-
-   {% for item in modules %}
-   {{ item }}
-   {% endfor %}
-
-{% endif %}
-{% endblock %}
