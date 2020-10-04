@@ -20,17 +20,21 @@ def create_app(env_config: str) -> Flask:
 
     Parameters
     ----------
-    env_config : str
-        Environment configuration values.
-
-            config.ProdConfig: production
-            config.DevConfig: development
-            config.TestConfig: test
+    env_config
+        Environment configuration.
 
     Returns
     -------
     Flask
         A `flask.flask` instance.
+
+    Notes
+    -----
+    Environment configuration values could be::
+
+            config.ProdConfig
+            config.DevConfig
+            config.TestConfig
 
     """
     app = flask.Flask(__name__)
@@ -45,7 +49,7 @@ def create_app(env_config: str) -> Flask:
 
 
 def init_app(app: Flask) -> None:
-    """Call the method 'init_app' to register the extensions in the flask.Flask
+    """Call the method 'init_app' to register the extensions in the Flask
     object passed as parameter."""
     extensions.init_app(app)
 

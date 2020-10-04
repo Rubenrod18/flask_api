@@ -45,7 +45,7 @@ def after_request(response: Response) -> Response:
 
     Parameters
     ----------
-    response
+    response : Response
         A `flask.Response` instance.
 
     Returns
