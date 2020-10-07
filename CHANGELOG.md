@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.1](https://github.com/rubenrod18/flask-api/compare/v1.4.0...v1.4.1) (2020-10-07)
+
+
+### Bug Fixes
+
+* **celery:** correct problem when start Celery ([52ad2fb](https://github.com/rubenrod18/flask-api/commit/52ad2fb572de31950dea3cad7ff88ddf209a187f)), closes [#3](https://github.com/rubenrod18/flask-api/issues/3)
+
 ## [1.4.0](https://github.com/rubenrod18/flask-api/compare/v1.3.0...v1.4.0) (2020-10-04)
 
 
