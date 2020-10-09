@@ -138,8 +138,8 @@ def celery(env: str) -> None:
         flask celery --env config.DevConfig
 
     """
-    os.environ['FLASK_CONFIG'] = 'config.TestConfig' if env == 'test' else env
-    os.system('source venv/bin/activate && celery -A app.celery worker -l info')
+    os.environ['FLASK_CONFIG'] = env
+    os.system('celery -A app.celery worker -l info')
 
 
 @app.shell_context_processor
