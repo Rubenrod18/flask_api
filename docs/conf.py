@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.autosummary',  # Create neat summary tables
     'sphinx.ext.napoleon',
     'celery.contrib.sphinx',
+    'sphinx_click',  # Support documentation from a click-based application
 ]
 
 # Add any paths that contain templates here, relative to this directory.

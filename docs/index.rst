@@ -28,6 +28,7 @@ The project is developed in Python 3.7 and use next main libraries:
 
    installation
    skeleton_app_structure
+   scripts
 
 .. toctree::
    :caption: Documentation
