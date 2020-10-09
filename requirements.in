@@ -10,6 +10,7 @@ flower
 # Documentation
 m2r2
 sphinx
+sphinx-click
 sphinx_rtd_theme
 
 # Framework and extensions
