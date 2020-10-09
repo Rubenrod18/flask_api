@@ -13,8 +13,9 @@ How to run the server::
     source ven/bin/activate
     python manage.py
 
-.. note:: You can open a web browser and go to server name http://flask-api.prod:5000
-    or the server name added to SERVER_NAME environment variable.
+.. note:: You can open a web browser and go to server name
+    http://flask-api.prod:5000 or the server name added to SERVER_NAME
+    environment variable.
 
 How to run a command::
 
@@ -61,29 +62,82 @@ def after_request(response: Response) -> Response:
     return response
 
 
-@app.cli.command('init-db', help='Create database tables')
+@app.cli.command('init-db', help='Create database tables.')
 def db() -> None:
+    """Command line script for creating database tables."""
     init_database()
 
 
-@app.cli.command('migrate', help='Update database schema')
+@app.cli.command('migrate', help='Update database schema.')
 def migrations() -> None:
+    """Command line script for updating database schema."""
     init_migrations(False)
 
 
-@app.cli.command('migrate-rollback', help='Revert last migration saved in database')
-def migrations() -> None:
+@app.cli.command('migrate-rollback', help='Revert last migration saved in '
+                                          'database.')
+def migration_rollback() -> None:
+    """Command line script for reverting last database schema."""
     init_migrations(True)
 
 
-@app.cli.command('seed', help='Fill database with fake data')
+@app.cli.command('seed', help='Fill database with fake data.')
 def seeds() -> None:
+    """Command line script for filling database with fake data."""
     init_seed()
 
 
-@app.cli.command('celery', help='Run celery with test configuration by default or another expecified')
-@click.option('--env', default='test')
+# TODO: sphinx-click only shows Click documentation in Sphinx.
+@app.cli.command('celery',
+                 help='Run Celery with an environment configuration.')
+@click.option('--env', type=click.Choice(['config.DevConfig',
+                                          'config.TestConfig',
+                                          'config.ProdConfig'],
+                                         case_sensitive=False),
+              default='config.TestConfig',
+              show_default=True,
+              help='Environment configuration.')
 def celery(env: str) -> None:
+    """Command line script for executing Celery based on FLASK_CONFIG
+    environment value.
+
+    The command line script purpose is executing Celery in testing mode because
+    we don't want to do operations such as: send emails, communicate with
+    other API's, etc. You can choose another environment if you wish.
+
+    Parameters
+    ----------
+    env : str
+        Environment configuration.
+
+    Notes
+    -----
+    First you must to starting a broker such as: RabbitMQ, Redis, etc.
+
+    Environment configuration values could be::
+
+            config.ProdConfig
+            config.DevConfig
+            config.TestConfig
+
+    Examples
+    --------
+    Testing environment is used by default::
+
+        source venv/bin/activate
+        flask celery
+
+    You can use production environment::
+
+        source venv/bin/activate
+        flask celery --env config.ProdConfig
+
+    Or development environment::
+
+        source venv/bin/activate
+        flask celery --env config.DevConfig
+
+    """
     os.environ['FLASK_CONFIG'] = 'config.TestConfig' if env == 'test' else env
     os.system('source venv/bin/activate && celery -A app.celery worker -l info')
 
