@@ -1,3 +1,4 @@
+"""Module for testing task module."""
 from flask import url_for, Flask
 from peewee import fn
 

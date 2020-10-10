@@ -1,3 +1,4 @@
+"""Module for testing documents blueprint."""
 from urllib.parse import urlparse
 
 from flask import current_app

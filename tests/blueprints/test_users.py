@@ -1,3 +1,4 @@
+"""Module for testing users blueprint."""
 import os
 
 from flask.testing import FlaskClient

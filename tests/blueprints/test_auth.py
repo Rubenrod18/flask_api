@@ -1,3 +1,4 @@
+"""Module for testing auth blueprint."""
 import os
 
 from flask import Flask

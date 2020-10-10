@@ -1,3 +1,4 @@
+"""Module for testing roles blueprint."""
 from flask.testing import FlaskClient
 from peewee import fn
 
