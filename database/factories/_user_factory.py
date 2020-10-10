@@ -14,8 +14,10 @@ from database import fake
 T = TypeVar('T', UserModel, dict)
 UserList = List[UserModel]
 
-class _UserFactory():
-    def _fill(self, params: dict, to_dict: bool, exclude: list) -> dict:
+
+class _UserFactory:
+    @staticmethod
+    def _fill(params: dict, to_dict: bool, exclude: list) -> dict:
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 

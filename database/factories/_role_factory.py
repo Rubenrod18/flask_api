@@ -6,8 +6,9 @@ from app.utils import ignore_keys
 from database import fake
 
 
-class _RoleFactory():
-    def _fill(self, params: dict, exclude: list) -> dict:
+class _RoleFactory:
+    @staticmethod
+    def _fill(params: dict, exclude: list) -> dict:
         current_date = datetime.utcnow()
 
         created_at = current_date - timedelta(days=randint(31, 100),
