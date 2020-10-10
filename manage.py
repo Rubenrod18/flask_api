@@ -32,6 +32,7 @@ from dotenv import load_dotenv
 from app import create_app
 from app.extensions import db_wrapper
 from database import init_database
+from database.factories import Factory
 from database.migrations import init_migrations
 from database.seeds import init_seed
 
@@ -165,7 +166,7 @@ def make_shell_context() -> dict:
         Imports available in Python shell.
 
     """
-    return {'app': app, 'db_wrapper': db_wrapper}
+    return {'app': app, 'db_wrapper': db_wrapper, 'Factory': Factory}
 
 
 if __name__ == '__main__':
