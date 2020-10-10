@@ -50,6 +50,11 @@ How to usage::
     source venv/bin/activate
     pytest
 
+How to call a specific test::
+
+    source venv/bin/activate
+    pytest -k test_welcome_api
+
 You can use coverage package for running tests as well::
 
     source venv/bin/activate

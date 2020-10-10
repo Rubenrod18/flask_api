@@ -1,14 +1,102 @@
+"""Package contains factories modules.
+
+A factory is a database model filled with fake data. The factory purposes is
+creating records in a simple way.
+
+The module is used in testing and seeds.
+
+References
+----------
+The factory concept is based on `Laravel factories
+<https://laravel.com/docs/8.x/database-testing#using-factories>`_
+
+"""
 import os
 
 from app.utils import class_for_name
 
 
 class Factory:
+    """Class for managing factories based on database models.
+
+    Create and save instances of database models or dicts based on
+    database models registered in the application.
+
+    Methods
+    -------
+    make(self, params: dict = None, to_dict: bool = False, exclude: list = None)
+        Create instances of database models with fake data.
+    save(self, params: dict = None)
+        Save instances of database models in the database.
+
+    Examples
+    --------
+    How to create a fake user without save in database from command line::
+
+        source venv/bin/activate
+        flask shell
+        >>> user_factory = Factory('User')
+        >>> user = user_factory.make()  # An instance of database model
+        <User: None>
+        >>> user.__data__  # You can see user data on this way
+
+    Oh, Wait!
+
+    >>> from pprint import pprint
+    >>> pprint(user.__data__)  # Even better!
+
+    You can save the user in the database.
+
+    >>> user.save()
+    1
+
+    Factory can create a dictionary instead of an instance of database model.
+
+    >>> user = user_factory.make(to_dict=True)
+    >>> pprint(user)
+
+    Also can set params too.
+
+    >>> user_factory = Factory('User')
+    >>> user = user_factory.make({'name': 'Ruben', 'last_name': 'Rodriguez'})
+    >>> user.name
+    'Ruben'
+    >>> user.last_name
+    'Rodriguez'
+
+    Factory allow to make many users in once time.
+
+    >>> user_factory = Factory('User', 3)
+    >>> users = user_factory.make()
+    [<User: None>, <User: None>, <User: None>]
+
+    If you want to fill some params later then you can pass a fieldnames list
+    to the factory of thats fields that you don't want to fill yet.
+
+    >>> user_factory = Factory('User')
+    >>> user = user_factory.make(exclude=['name', 'birth_date'])
+    >>> user.name
+    None
+    >>> user.birth_date
+    None
+
+    If you only need to save data you can do it.
+
+    >>> Factory('User', 3).save()
+    [<User: 1>, <User: 2>, <User: 3>]
+
+    And you can set params for all users.
+
+    >>> Factory('User', 3).save({'name': 'Ruben'})
+    [<User: 4>, <User: 5>, <User: 6>]
+
+    """
     __models: list = None
     # FIXME: it's not the best way
     __current_module = 'database.factories'
 
     def __init__(self, model_name: str, records: int = 1):
+        """Register as many factories as given records."""
         self.__models = []
 
         factory_classname = '_%sFactory' % model_name
@@ -24,6 +112,24 @@ class Factory:
 
     def make(self, params: dict = None, to_dict: bool = False,
              exclude: list = None) -> any:
+        """Create instances of database model with fake data.
+
+        Parameters
+        ----------
+        params : dict
+            Params to set when an instance of database model is created.
+        to_dict : bool
+            If is True returns a dict otherwise is an instance of database model.
+            By default is False.
+        exclude: list
+            Params are not going to be filled. These fields are equals to None.
+
+        Returns
+        -------
+        any
+            Could be a dict, a list or an instance of database model.
+
+        """
         params = params or {}
         exclude = exclude or []
 
@@ -38,6 +144,19 @@ class Factory:
         return data
 
     def save(self, params: dict = None) -> any:
+        """Save instances of database model in the database.
+
+        Parameters
+        ----------
+        params : dict
+            Params to set when an instance of database model is created.
+
+        Returns
+        -------
+        any
+            Could be a list or an instance of database model.
+
+        """
         params = params or {}
 
         if len(self.__models) == 1:
