@@ -1,7 +1,6 @@
 {
   "name": "flask_api",
   "version": "1.4.1",
-  "description": "application developed with flask for creating an APIRestful. It can be configurated for using differents databases ( Sqlite, MariaDB, PostgreSQL, MongoDB, etc. )",
   "scripts": {
     "first-release": "npm run release -- --first-release",
     "patch": "npm run release -- --release-as patch",
@@ -12,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rubenrod18/flask-api.git"
+    "url": "git+https://github.com/rubenrod18/flask_api.git"
   },
-  "author": "Rubenrod_18",
+  "author": "Rubén Rodríguez Ramírez",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/rubenrod18/flask-api/issues"
+    "url": "https://github.com/rubenrod18/flask_api/issues"
   },
-  "homepage": "https://github.com/rubenrod18/flask-api#readme",
+  "homepage": "https://github.com/rubenrod18/flask_api#readme",
   "engines": {
     "node": ">=10.16.3"
   },
