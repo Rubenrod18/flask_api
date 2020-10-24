@@ -34,7 +34,6 @@ coverage
 pytest
 
 # Web packages
-cerberus
 python-docx
 python-dotenv
 python-magic
