@@ -108,7 +108,10 @@ def test_search_roles_endpoint(client: FlaskClient, auth_header: any):
             },
         ],
         'order': [
-            ['name', 'desc'],
+            {
+                'field_name': 'name',
+                'sorting': 'desc',
+            },
         ],
     }
 

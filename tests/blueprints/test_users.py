@@ -145,7 +145,10 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
             },
         ],
         'order': [
-            ['name', 'desc'],
+            {
+                'field_name': 'name',
+                'sorting': 'desc',
+            },
         ],
     }
 
@@ -175,7 +178,10 @@ def test_export_word_endpoint(client: FlaskClient, auth_header: any):
     json = {
         'search': [],
         'order': [
-            ['name', 'desc'],
+            {
+                'field_name': 'name',
+                'sorting': 'desc',
+            },
         ],
     }
 
