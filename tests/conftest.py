@@ -31,23 +31,17 @@ def _remove_test_files(storage_path: str) -> None:
 def app():
     """Create an app with testing environment."""
     app = create_app('config.TestConfig')
+    test_db = app.config.get('DATABASE').get('name')
+
+    if os.path.exists(test_db):
+        logger.info(' Deleting test database...')
+        os.remove(test_db)
+        logger.info(' Deleted test database!')
 
     with app.app_context():
         init_database()
         init_seed()
         yield app
-
-    """FIXME: add these code before/after all tests are executed.
-    
-    If files are deleted then there are problems with Celery tasks.
-    
-    storage_path = app.config.get('STORAGE_DIRECTORY')
-    _remove_test_files(storage_path)
-
-    logger.info(' Deleting test database...')
-    os.remove(app.config.get('DATABASE').get('name'))
-    logger.info(' Deleted test database!')
-    """
 
 
 @pytest.fixture

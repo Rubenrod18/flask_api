@@ -91,13 +91,14 @@ def ignore_keys(data: dict, exclude: list) -> dict:
 
 def _build_order_by(db_model: Type[Model], request_data: dict) -> list:
     order_by_values = []
-    request_order = request_data.get('order', [['id', 'asc']])
+    request_order = request_data.get('order', [{'field_name': 'id',
+                                                'sorting': 'asc'}])
 
     if isinstance(request_order, list):
         for item in request_order:
-            field_name, sort = item
+            field_name, sorting = item.get('field_name'), item.get('sorting')
             field = db_model._meta.fields[field_name]
-            order_by = getattr(field, sort)()
+            order_by = getattr(field, sorting)()
 
             order_by_values.append(order_by)
 

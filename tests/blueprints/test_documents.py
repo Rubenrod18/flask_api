@@ -151,7 +151,10 @@ def test_search_document(client: FlaskClient, auth_header: any):
             },
         ],
         'order': [
-            ['name', 'desc'],
+            {
+                'field_name': 'name',
+                'sorting': 'desc',
+            },
         ],
     }
 

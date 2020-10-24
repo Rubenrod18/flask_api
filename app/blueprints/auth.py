@@ -3,17 +3,15 @@ import logging
 import flask_security
 from flask import Blueprint, request, url_for
 from flask_restx import Resource
-from flask_security import verify_password
 from flask_security.passwordless import generate_login_token
-from werkzeug.exceptions import (Forbidden, Unauthorized, UnprocessableEntity,
-                                 NotFound)
+from marshmallow import ValidationError
+from werkzeug.exceptions import (Forbidden, UnprocessableEntity)
 
 from app.extensions import api as root_api
 from app.models.user import User as UserModel, user_datastore
 from app.celery.tasks import reset_password_email
-from app.utils.cerberus_schema import (MyValidator, user_login_schema,
-                                       confirm_reset_password_schema)
 from app.utils.decorators import token_required
+from app.utils.marshmallow_schema import UserSchema
 from app.utils.swagger_models.auth import (AUTH_LOGIN_SW_MODEL,
                                            AUTH_TOKEN_SW_MODEL,
                                            AUTH_REQUEST_RESET_PASSWORD_SW_MODEL,
@@ -27,28 +25,20 @@ logger = logging.getLogger(__name__)
 @api.route('/login')
 class AuthUserLoginResource(Resource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
-                        422: 'Unprocessable Entity'})
+                        404: 'Not found', 422: 'Unprocessable Entity'})
     @api.expect(AUTH_LOGIN_SW_MODEL)
     @api.marshal_with(AUTH_TOKEN_SW_MODEL)
     def post(self) -> tuple:
-        data = request.get_json()
-
-        v = MyValidator(schema=user_login_schema())
-        v.allow_unknown = False
-        if not v.validate(data):
-            raise UnprocessableEntity(v.errors)
+        try:
+            data = UserSchema().validate_credentials(request.get_json())
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
         user = user_datastore.find_user(**{'email': data.get('email')})
-
-        if not user.is_active:
-            raise Forbidden('User is not authorized')
-
-        if not verify_password(data.get('password'), user.password):
-            raise Unauthorized('Credentials are invalid')
-
         token = generate_login_token(user)
         # TODO: Pending to testing whats happen id add a new field in user model when a user is logged
         flask_security.login_user(user)
+
         return {'token': f'Bearer {token}'}, 200
 
 
@@ -58,28 +48,23 @@ class AuthUserLogoutResource(Resource):
              security='auth_token')
     @token_required
     def post(self) -> tuple:
+        # TODO: check if the user is logged
         flask_security.logout_user()
         return {}, 200
 
 
 @api.route('/reset_password')
 class RequestResetPasswordResource(Resource):
-    @api.doc(responses={202: 'Success', 403: 'Forbidden', 404: 'Not Found'})
+    @api.doc(responses={202: 'Success', 403: 'Forbidden', 404: 'Not Found',
+                        422: 'Unprocessable Entity'})
     @api.expect(AUTH_REQUEST_RESET_PASSWORD_SW_MODEL)
     def post(self) -> tuple:
-        data = request.get_json()
-        email = data.get('email')
+        try:
+            data = UserSchema().validate_email(request.get_json())
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
-        user = UserModel.get_or_none(email=email)
-        if user is None:
-            raise NotFound('User doesn\'t exists')
-
-        if user.deleted_at is not None:
-            raise Forbidden('User already deleted')
-
-        if not user.active:
-            raise Forbidden('User is not active')
-
+        user = UserModel.get(email=data['email'])
         token = user.get_reset_token()
         reset_password_url = url_for('auth_reset_password_resource',
                                      token=token,
@@ -98,6 +83,7 @@ class RequestResetPasswordResource(Resource):
 class ResetPasswordResource(Resource):
     @api.doc(responses={200: 'Success', 403: 'Forbidden'})
     def get(self, token: str) -> tuple:
+        # TODO: move this logic to another place
         user = UserModel.verify_reset_token(token)
 
         if not user:
@@ -116,18 +102,18 @@ class ResetPasswordResource(Resource):
     @api.expect(AUTH_RESET_PASSWORD_SW_MODEL)
     @api.marshal_with(AUTH_TOKEN_SW_MODEL)
     def post(self, token: str) -> tuple:
-        data = request.get_json()
-
-        v = MyValidator(schema=confirm_reset_password_schema())
-        if not v.validate(data):
-            raise UnprocessableEntity(v.errors)
+        try:
+            password = request.get_json().get('password')
+            UserSchema().validate_password(password)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
         user = UserModel.verify_reset_token(token)
 
         if not user:
             raise Forbidden('Invalid token')
 
-        user.password = data.get('password')
+        user.password = password
         user.save()
 
         token = generate_login_token(user)

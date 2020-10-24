@@ -14,11 +14,10 @@ from .base import BaseResource
 from ..extensions import db_wrapper, api as root_api
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
-from ..utils.cerberus_schema import user_model_schema, search_model_schema
 from ..utils.decorators import token_required
 from ..utils.marshmallow_schema import (UserSchema as UserSerializer,
                                         ExportWordInputSchema as
-                                        ExportWordInputSerializer)
+                                        ExportWordInputSerializer, SearchSchema)
 from ..utils.swagger_models import SEARCH_INPUT_SW_MODEL
 from ..utils.swagger_models.user import (USER_INPUT_SW_MODEL,
                                          USER_OUTPUT_SW_MODEL,
@@ -34,7 +33,6 @@ logger = logging.getLogger(__name__)
 
 class UserBaseResource(BaseResource):
     db_model = UserModel
-    request_validation_schema = user_model_schema()
     user_serializer = UserSerializer()
 
     def deserialize_request_data(self, **kwargs: dict) -> dict:
@@ -54,8 +52,7 @@ class NewUserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
-        request_data = request.get_json()
-        self.request_validation(request_data)
+        request_data = self.user_serializer.valid_request_user(request.get_json())
         data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
 
         with db_wrapper.database.atomic():
@@ -104,10 +101,7 @@ class UserResource(UserBaseResource):
         if user.deleted_at is not None:
             raise BadRequest('User already deleted')
 
-        request_data = request.get_json()
-        self.request_validation_schema = user_model_schema(False)
-        self.request_validation(request_data)
-
+        request_data = self.user_serializer.valid_request_user(request.get_json())
         data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
 
         with db_wrapper.database.atomic():
@@ -148,9 +142,6 @@ class UserResource(UserBaseResource):
 
 @api.route('/search')
 class UsersSearchResource(UserBaseResource):
-    user_fields = UserModel.get_fields(exclude=['id', 'password'])
-    request_validation_schema = search_model_schema(user_fields)
-
     @api.doc(responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
@@ -160,7 +151,10 @@ class UsersSearchResource(UserBaseResource):
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
         request_data = request.get_json()
-        self.request_validation(request_data)
+        try:
+            data = SearchSchema().load(request_data)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
         page_number, items_per_page, order_by = self.get_request_query_fields(request_data)
 
@@ -184,9 +178,6 @@ class UsersSearchResource(UserBaseResource):
 
 @api.route('/xlsx')
 class ExportUsersExcelResource(UserBaseResource):
-    user_fields = UserModel.get_fields(exclude=['id', 'password'])
-    request_validation_schema = search_model_schema(user_fields)
-
     @api.doc(responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
@@ -194,8 +185,10 @@ class ExportUsersExcelResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        request_data = request.get_json()
-        self.request_validation(request_data)
+        try:
+            request_data = SearchSchema().load(request.get_json())
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
         task = export_user_data_in_excel.apply_async(
             (current_user.id, request_data),
@@ -211,9 +204,6 @@ class ExportUsersExcelResource(UserBaseResource):
 
 @api.route('/word')
 class ExportUsersWordResource(UserBaseResource):
-    user_fields = UserModel.get_fields(exclude=['id', 'password'])
-    request_validation_schema = search_model_schema(user_fields)
-
     @api.doc(responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
@@ -221,8 +211,10 @@ class ExportUsersWordResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        request_data = request.get_json()
-        self.request_validation(request_data)
+        try:
+            request_data = SearchSchema().load(request.get_json())
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
         try:
             serializer = ExportWordInputSerializer()
@@ -245,9 +237,6 @@ class ExportUsersWordResource(UserBaseResource):
 
 @api.route('/word_and_xlsx')
 class ExportUsersExcelAndWordResource(UserBaseResource):
-    user_fields = UserModel.get_fields(exclude=['id', 'password'])
-    request_validation_schema = search_model_schema(user_fields)
-
     @api.doc(responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
@@ -255,8 +244,10 @@ class ExportUsersExcelAndWordResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        request_data = request.get_json()
-        self.request_validation(request_data)
+        try:
+            request_data = SearchSchema().load(request.get_json())
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
         try:
             serializer = ExportWordInputSerializer()
