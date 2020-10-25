@@ -7,20 +7,11 @@ sqlalchemy # required by celery
 celery
 flower
 
-# Documentation
-m2r2
-sphinx
-sphinx-click
-sphinx_rtd_theme
-
 # Framework and extensions
 flask
 flask-marshmallow
 flask-restx
 flask-security-too
-
-# Manage python packages
-pip-tools
 
 # Process control system
 supervisor
@@ -28,10 +19,6 @@ supervisord-dependent-startup
 
 # Security
 bcrypt
-
-# Test
-coverage
-pytest
 
 # Web packages
 python-docx
