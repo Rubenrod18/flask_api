@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/rubenrod18/flask_api/compare/v1.4.1...v2.0.0) (2020-10-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* order field in search requests is a list of dicts.
+
+### Features
+
+* **factories:** add prevent code for checking if a given model is registered as factory ([1605a01](https://github.com/rubenrod18/flask_api/commit/1605a019833cec770e2b99e1ed05e92d4d65e32d))
+* **shell:** import Factory class to Flask interactive shell ([8cf9c8e](https://github.com/rubenrod18/flask_api/commit/8cf9c8ef6a60b3ed24a30ec91ec6a6cfe3f5cf30))
+
+
+### Code Refactoring
+
+* replace cerberus to flask-mashmallow validation ([7552d5c](https://github.com/rubenrod18/flask_api/commit/7552d5c6ab11d8c32c8f5f29729981154e680b82))
+* **celery:** replace old Celery setting names with new ones ([15e0c03](https://github.com/rubenrod18/flask_api/commit/15e0c0359f07521c4d73c9cb7a3bf0c41240cd63))
+* **celery:** update way to set FLASK_CONFIG value on Flask command ([a865548](https://github.com/rubenrod18/flask_api/commit/a86554852a20a2bc625e5f289e20c5cf624178ec))
+
+
+### Build System
+
+* add .versionrc that shows build/perf/refactor/revert ([0017d66](https://github.com/rubenrod18/flask_api/commit/0017d661d0e8861e40690ef50e454af55aafd785))
+* add sphinx-click configuration to Sphinx and create new file for showing Click documentation ([bb41b7b](https://github.com/rubenrod18/flask_api/commit/bb41b7b587e9919d731cd78fa5ad1e6afac9f91a))
+* add sphinx-click for showing Click documentation in Sphinx ([c0a8f55](https://github.com/rubenrod18/flask_api/commit/c0a8f5501ec2604885b30b9b336c55d4584ff5b8))
+* **pip:** remove cerberus package ([4a4fe72](https://github.com/rubenrod18/flask_api/commit/4a4fe7265b84857581480b4c0ddd464d852bf6b2))
+* **pip:** split python packages in two requirements local and production ([f39a2a5](https://github.com/rubenrod18/flask_api/commit/f39a2a5f8c89aa9f0ff1f25150d0315274d527ba))
+
 ### [1.4.1](https://github.com/rubenrod18/flask-api/compare/v1.4.0...v1.4.1) (2020-10-07)
 
 
