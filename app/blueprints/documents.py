@@ -15,11 +15,11 @@ from werkzeug.exceptions import (NotFound, UnprocessableEntity,
 from app.blueprints.base import BaseResource
 from app.extensions import api as root_api
 from app.models.document import Document as DocumentModel
-from app.utils.cerberus_schema import document_model_schema, search_model_schema
 from app.utils.decorators import token_required
 from app.utils.file_storage import FileStorage
 from app.utils.marshmallow_schema import (DocumentSchema as DocumentSerializer,
-                                          GetDocumentDataInputSchema as GetDocumentDataInputSerializer)
+                                          GetDocumentDataInputSchema as GetDocumentDataInputSerializer,
+                                          SearchSchema)
 from app.utils.swagger_models import SEARCH_INPUT_SW_MODEL
 from app.utils.swagger_models.document import (DOCUMENT_OUTPUT_SW_MODEL,
                                                DOCUMENT_SEARCH_OUTPUT_SW_MODEL)
@@ -44,11 +44,9 @@ class DocumentBaseResource(BaseResource):
 
         if files and request_file:
             file = {
-                self.request_field_name: {
-                    'mime_type': request_file.mimetype,
-                    'filename': request_file.filename,
-                    'file': request_file.read(),
-                },
+                'mime_type': request_file.mimetype,
+                'filename': request_file.filename,
+                'file_data': request_file.read(),
             }
 
         return file
@@ -117,14 +115,13 @@ class NewDocumentResource(DocumentBaseResource):
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
         request_data = self.get_request_file()
-        self.request_validation_schema = document_model_schema()
-        self.request_validation(request_data)
 
-        request_file = request_data.get(self.request_field_name)
-        file_extension = mimetypes.guess_extension(
-            request_file.get('mime_type')
-        )
+        try:
+            data = self.document_serializer.valid_request_file(request_data)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
+        file_extension = mimetypes.guess_extension(data.get('mime_type'))
         internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
         filepath = '%s/%s' % (
             current_app.config.get('STORAGE_DIRECTORY'), internal_filename
@@ -132,13 +129,13 @@ class NewDocumentResource(DocumentBaseResource):
 
         try:
             fs = FileStorage()
-            fs.save_bytes(request_file.get('file'), filepath)
+            fs.save_bytes(data.get('file_data'), filepath)
 
             data = {
                 'created_by': current_user.id,
-                'name': request_file.get('filename'),
+                'name': data.get('filename'),
                 'internal_filename': internal_filename,
-                'mime_type': request_file.get('mime_type'),
+                'mime_type': data.get('mime_type'),
                 'directory_path': filepath,
                 'size': fs.get_filesize(filepath),
             }
@@ -195,19 +192,20 @@ class DocumentResource(DocumentBaseResource):
             raise BadRequest('Document already deleted')
 
         request_data = self.get_request_file()
-        self.request_validation_schema = document_model_schema()
-        self.request_validation(request_data)
+        try:
+            data = self.document_serializer.valid_request_file(request_data)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
-        request_file = request_data.get(self.request_field_name)
         filepath = f'{document.directory_path}/{document.internal_filename}'
 
         try:
             fs = FileStorage()
-            fs.save_bytes(request_file.get('file'), filepath, override=True)
+            fs.save_bytes(data.get('file_data'), filepath, override=True)
 
             data = {
-                'name': request_file.get('filename'),
-                'mime_type': request_file.get('mime_type'),
+                'name': data.get('filename'),
+                'mime_type': data.get('mime_type'),
                 'size': fs.get_filesize(filepath),
                 'id': document_id,
             }
@@ -249,9 +247,6 @@ class DocumentResource(DocumentBaseResource):
 
 @api.route('/search')
 class SearchDocumentResource(DocumentBaseResource):
-    document_fields = DocumentModel.get_fields()
-    request_validation_schema = search_model_schema(document_fields)
-
     @api.doc(responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
@@ -261,9 +256,12 @@ class SearchDocumentResource(DocumentBaseResource):
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
         request_data = request.get_json()
-        self.request_validation(request_data)
+        try:
+            data = SearchSchema().load(request_data)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
-        page_number, items_per_page, order_by = self.get_request_query_fields(request_data)
+        page_number, items_per_page, order_by = self.get_request_query_fields(data)
 
         query = DocumentModel.select()
         records_total = query.count()

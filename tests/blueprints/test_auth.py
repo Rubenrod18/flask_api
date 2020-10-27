@@ -1,3 +1,4 @@
+"""Module for testing auth blueprint."""
 import os
 
 from flask import Flask
@@ -19,7 +20,7 @@ def test_user_login(client: FlaskClient):
         json_response = response.get_json()
 
         assert json_response.get('message')
-        assert 422 == response.status_code
+        assert 404 == response.status_code
 
     def _test_inactive_user():
         user = (UserModel.select()
@@ -36,7 +37,7 @@ def test_user_login(client: FlaskClient):
         json_response = response.get_json()
 
         assert 403 == response.status_code
-        assert json_response.get('message') == 'User is not authorized'
+        assert json_response.get('message') == 'User not actived'
 
     def _test_invalid_password():
         data = {
@@ -48,7 +49,7 @@ def test_user_login(client: FlaskClient):
         json_response = response.get_json()
 
         assert 401 == response.status_code
-        assert json_response.get('message') == 'Credentials are invalid'
+        assert json_response.get('message') == 'Credentials invalid'
 
     def _test_login():
         with client:

@@ -1,3 +1,4 @@
+"""Module for testing task module."""
 from flask import url_for, Flask
 from peewee import fn
 
@@ -43,7 +44,7 @@ def test_create_word_and_excel_documents(app: Flask):
     request_data = {
         'search': [],
         'order': [
-            ['name', 'asc'],
+            {'field_name': 'name', 'sorting': 'asc'},
         ],
         'items_per_page': 100,
         'page_number': 1,

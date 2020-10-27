@@ -35,9 +35,10 @@ supervisord.conf
 
 .idea
 coverage_html_report
+docs/_autosummary
 node_modules
 source/_autosummary
 source/_static
 source/templates
+supervisor
 venv
-docs/_autosummary

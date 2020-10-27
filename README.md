@@ -16,7 +16,7 @@ The project is developed in Python 3.7 and use next main libraries:
 
 ## Learning more
 
-Check the [documentation][documentation] for more details.
+See the [documentation][documentation] for more details.
 
 
 [flask]: https://flask.palletsprojects.com

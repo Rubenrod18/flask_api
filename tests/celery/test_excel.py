@@ -1,3 +1,4 @@
+"""Module for testing excel module."""
 from urllib.parse import urlparse
 
 from flask import Flask
@@ -18,7 +19,7 @@ def test_export_excel_task(app: Flask):
     request_data = {
         'search': [],
         'order': [
-            ['name', 'asc'],
+            {'field_name': 'name', 'sorting': 'asc'},
         ],
         'items_per_page': 100,
         'page_number': 1,

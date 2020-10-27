@@ -1,7 +1,16 @@
+"""Module for testing mail."""
 from app.extensions import mail
 
 
 def test_mail_record_messages(app):
+    """Check if a email is sent.
+
+    References
+    ----------
+    `Unit tests and suppressing emails
+    <https://pythonhosted.org/Flask-Mail/#unit-tests-and-suppressing-emails>`_
+
+    """
     with mail.record_messages() as outbox:
         mail.send_message(subject='testing',
                           body='test',

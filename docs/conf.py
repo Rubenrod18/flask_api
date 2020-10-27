@@ -10,18 +10,23 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import json
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
 
+with open('../package.json') as fd:
+    json_data = json.load(fd)
+    PROJECT_NAME = json_data['name']
+    PROJECT_VERSION = json_data['version']
 
 # -- Project information -----------------------------------------------------
 
-project = 'flask_api'
+project = PROJECT_NAME
 copyright = '2020, Rubén Rodríguez Ramírez'
 author = 'Rubén Rodríguez Ramírez'
-version = '1.3.0'
+version = PROJECT_VERSION
 
 # -- General configuration ---------------------------------------------------
 
@@ -35,6 +40,7 @@ extensions = [
     'sphinx.ext.autosummary',  # Create neat summary tables
     'sphinx.ext.napoleon',
     'celery.contrib.sphinx',
+    'sphinx_click',  # Support documentation from a click-based application
 ]
 
 # Add any paths that contain templates here, relative to this directory.

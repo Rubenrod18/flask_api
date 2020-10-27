@@ -1,5 +1,8 @@
 {{ fullname | escape | underline}}
 
+.. Don't use :members: in autoclass because it shows information of
+   classes based on classes and show a lot of information.
+
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}

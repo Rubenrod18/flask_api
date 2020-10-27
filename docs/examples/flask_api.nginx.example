@@ -5,6 +5,7 @@ server {
 
     location / {
         include uwsgi_params;
+        # IMPORTANT: file socket MUST to be equals on uwsgi.ini
         uwsgi_pass unix:/path/flask_api.sock;
     }
 

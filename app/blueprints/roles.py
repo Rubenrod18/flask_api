@@ -9,8 +9,7 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 from .base import BaseResource
 from app.extensions import api as root_api
 from app.models.role import Role as RoleModel
-from app.utils.cerberus_schema import role_model_schema, search_model_schema
-from app.utils.marshmallow_schema import RoleSchema as RoleSerializer
+from app.utils.marshmallow_schema import RoleSchema as RoleSerializer, SearchSchema
 from ..utils.decorators import token_required
 from ..utils.swagger_models import SEARCH_INPUT_SW_MODEL
 from ..utils.swagger_models.role import (ROLE_INPUT_SW_MODEL,
@@ -26,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 class RoleBaseResource(BaseResource):
     db_model = RoleModel
-    request_validation_schema = role_model_schema()
     role_serializer = RoleSerializer()
 
     def deserialize_request_data(self, **kwargs: dict) -> dict:
@@ -46,9 +44,14 @@ class NewRoleResource(RoleBaseResource):
     @token_required
     @roles_required('admin')
     def post(self) -> tuple:
-        request_data = request.get_json()
-        self.request_validation(request_data)
-        data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
+        request_data = self.role_serializer.valid_request_role(
+            request.get_json()
+        )
+
+        try:
+            data = self.role_serializer.load(data=request_data, unknown=INCLUDE)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
         role = RoleModel.create(**data)
         role_data = self.role_serializer.dump(role)
@@ -87,9 +90,6 @@ class RoleResource(RoleBaseResource):
             raise BadRequest('Role already deleted')
 
         request_data = request.get_json()
-        self.request_validation_schema = role_model_schema(False)
-        self.request_validation(request_data)
-
         data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
 
         data['id'] = role_id
@@ -125,9 +125,6 @@ class RoleResource(RoleBaseResource):
 
 @api.route('/search')
 class RolesSearchResource(RoleBaseResource):
-    role_fields = RoleModel.get_fields(['id'])
-    request_validation_schema = search_model_schema(role_fields)
-
     @api.doc(responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
@@ -137,9 +134,12 @@ class RolesSearchResource(RoleBaseResource):
     @roles_required('admin')
     def post(self) -> tuple:
         request_data = request.get_json()
-        self.request_validation(request_data)
+        try:
+            data = SearchSchema().load(request_data)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
 
-        page_number, items_per_page, order_by = self.get_request_query_fields(request_data)
+        page_number, items_per_page, order_by = self.get_request_query_fields(data)
 
         query = RoleModel.select()
         records_total = query.count()

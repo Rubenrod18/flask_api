@@ -1,3 +1,4 @@
+"""Module for configuring Pytest."""
 import logging
 import os
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def _remove_test_files(storage_path: str) -> None:
+    """Remove test files created in storage path."""
     logger.info(' Deleting test files...')
     dirs = os.listdir(storage_path)
     dirs.remove(os.path.basename('example.pdf'))
@@ -27,28 +29,24 @@ def _remove_test_files(storage_path: str) -> None:
 
 @pytest.fixture
 def app():
+    """Create an app with testing environment."""
     app = create_app('config.TestConfig')
+    test_db = app.config.get('DATABASE').get('name')
+
+    if os.path.exists(test_db):
+        logger.info(' Deleting test database...')
+        os.remove(test_db)
+        logger.info(' Deleted test database!')
 
     with app.app_context():
         init_database()
         init_seed()
         yield app
 
-    """FIXME: add these code before/after all tests are executed.
-    
-    If files are deleted then there are problems with Celery tasks.
-    
-    storage_path = app.config.get('STORAGE_DIRECTORY')
-    _remove_test_files(storage_path)
-
-    logger.info(' Deleting test database...')
-    os.remove(app.config.get('DATABASE').get('name'))
-    logger.info(' Deleted test database!')
-    """
-
 
 @pytest.fixture
 def client(app: Flask):
+    """Create a test client for making http requests."""
     def _request_log_before(*args, **kwargs):
         logger.info('=================')
         logger.info(f'args: {args}')
@@ -115,11 +113,14 @@ def client(app: Flask):
 
 @pytest.fixture
 def runner(app: Flask):
+    """Create a CLI runner for testing CLI commands."""
     return app.test_cli_runner()
 
 
 @pytest.fixture
 def auth_header(app: Flask, client: FlaskClient):
+    """Create an auth header from a given user that can be added to
+    an http requests."""
     def _create_auth_header(user_email: str = None) -> dict:
         if user_email is None:
             user_email = os.getenv('TEST_USER_EMAIL')
@@ -144,6 +145,7 @@ def auth_header(app: Flask, client: FlaskClient):
 
 @pytest.fixture
 def factory(app: Flask):
+    """Create a Factory from a database model."""
     def _create_factory(model_name: str, num: int = 1):
         return Factory(model_name, num)
 

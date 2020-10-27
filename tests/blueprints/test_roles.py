@@ -1,3 +1,4 @@
+"""Module for testing roles blueprint."""
 from flask.testing import FlaskClient
 from peewee import fn
 
@@ -107,7 +108,10 @@ def test_search_roles_endpoint(client: FlaskClient, auth_header: any):
             },
         ],
         'order': [
-            ['name', 'desc'],
+            {
+                'field_name': 'name',
+                'sorting': 'desc',
+            },
         ],
     }
 
