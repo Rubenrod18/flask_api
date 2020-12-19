@@ -14,14 +14,13 @@ from .base import BaseResource
 from ..extensions import db_wrapper, api as root_api
 from ..models.user import User as UserModel, user_datastore
 from ..models.role import Role as RoleModel
+from ..swagger import (user_input_sw_model, user_output_sw_model,
+                       search_input_sw_model)
+from ..swagger.user import user_search_output_sw_model
 from ..utils.decorators import token_required
 from ..utils.marshmallow_schema import (UserSchema as UserSerializer,
                                         ExportWordInputSchema as
                                         ExportWordInputSerializer, SearchSchema)
-from ..utils.swagger_models import SEARCH_INPUT_SW_MODEL
-from ..utils.swagger_models.user import (USER_INPUT_SW_MODEL,
-                                         USER_OUTPUT_SW_MODEL,
-                                         USER_SEARCH_OUTPUT_SW_MODEL)
 
 _API_DESCRIPTION = ('Users with role admin or team_leader can manage '
                     'these endpoints.')
@@ -47,8 +46,8 @@ class NewUserResource(UserBaseResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(USER_INPUT_SW_MODEL)
-    @api.marshal_with(USER_OUTPUT_SW_MODEL, code=201)
+    @api.expect(user_input_sw_model)
+    @api.marshal_with(user_output_sw_model, code=201)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
@@ -74,7 +73,7 @@ class UserResource(UserBaseResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.marshal_with(USER_OUTPUT_SW_MODEL)
+    @api.marshal_with(user_output_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
@@ -89,8 +88,8 @@ class UserResource(UserBaseResource):
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden', 422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(USER_INPUT_SW_MODEL)
-    @api.marshal_with(USER_OUTPUT_SW_MODEL)
+    @api.expect(user_input_sw_model)
+    @api.marshal_with(user_output_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def put(self, user_id: int) -> tuple:
@@ -122,7 +121,7 @@ class UserResource(UserBaseResource):
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden', 422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.marshal_with(USER_OUTPUT_SW_MODEL)
+    @api.marshal_with(user_output_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
@@ -145,8 +144,8 @@ class UsersSearchResource(UserBaseResource):
     @api.doc(responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(SEARCH_INPUT_SW_MODEL)
-    @api.marshal_with(USER_SEARCH_OUTPUT_SW_MODEL)
+    @api.expect(search_input_sw_model)
+    @api.marshal_with(user_search_output_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
@@ -156,7 +155,7 @@ class UsersSearchResource(UserBaseResource):
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
-        page_number, items_per_page, order_by = self.get_request_query_fields(request_data)
+        page_number, items_per_page, order_by = self.get_request_query_fields(data)
 
         query = UserModel.select()
         records_total = query.count()
@@ -181,7 +180,7 @@ class ExportUsersExcelResource(UserBaseResource):
     @api.doc(responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(SEARCH_INPUT_SW_MODEL)
+    @api.expect(search_input_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
@@ -207,7 +206,7 @@ class ExportUsersWordResource(UserBaseResource):
     @api.doc(responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(SEARCH_INPUT_SW_MODEL)
+    @api.expect(search_input_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
@@ -240,7 +239,7 @@ class ExportUsersExcelAndWordResource(UserBaseResource):
     @api.doc(responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(SEARCH_INPUT_SW_MODEL)
+    @api.expect(search_input_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:

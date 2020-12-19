@@ -9,12 +9,11 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 from .base import BaseResource
 from app.extensions import api as root_api
 from app.models.role import Role as RoleModel
-from app.utils.marshmallow_schema import RoleSchema as RoleSerializer, SearchSchema
+from app.utils.marshmallow_schema import (RoleSchema as RoleSerializer,
+                                          SearchSchema)
+from ..swagger import (role_input_sw_model, role_output_sw_model,
+                       search_input_sw_model, role_search_output_sw_model)
 from ..utils.decorators import token_required
-from ..utils.swagger_models import SEARCH_INPUT_SW_MODEL
-from ..utils.swagger_models.role import (ROLE_INPUT_SW_MODEL,
-                                         ROLE_SEARCH_OUTPUT_SW_MODEL,
-                                         ROLE_OUTPUT_SW_MODEL)
 
 _API_DESCRIPTION = 'Users with role admin can manage these endpoints.'
 
@@ -39,8 +38,8 @@ class NewRoleResource(RoleBaseResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(ROLE_INPUT_SW_MODEL)
-    @api.marshal_with(ROLE_OUTPUT_SW_MODEL, code=201)
+    @api.expect(role_input_sw_model)
+    @api.marshal_with(role_output_sw_model, code=201)
     @token_required
     @roles_required('admin')
     def post(self) -> tuple:
@@ -63,7 +62,7 @@ class NewRoleResource(RoleBaseResource):
 class RoleResource(RoleBaseResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found'},
              security='auth_token')
-    @api.marshal_with(ROLE_OUTPUT_SW_MODEL)
+    @api.marshal_with(role_output_sw_model)
     @token_required
     @roles_required('admin')
     def get(self, role_id: int) -> tuple:
@@ -77,8 +76,8 @@ class RoleResource(RoleBaseResource):
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden', 422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(ROLE_INPUT_SW_MODEL)
-    @api.marshal_with(ROLE_OUTPUT_SW_MODEL)
+    @api.expect(role_input_sw_model)
+    @api.marshal_with(role_output_sw_model)
     @token_required
     @roles_required('admin')
     def put(self, role_id: int) -> tuple:
@@ -104,7 +103,7 @@ class RoleResource(RoleBaseResource):
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden'},
              security='auth_token')
-    @api.marshal_with(ROLE_OUTPUT_SW_MODEL)
+    @api.marshal_with(role_output_sw_model)
     @token_required
     @roles_required('admin')
     def delete(self, role_id: int) -> tuple:
@@ -128,8 +127,8 @@ class RolesSearchResource(RoleBaseResource):
     @api.doc(responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(SEARCH_INPUT_SW_MODEL)
-    @api.marshal_with(ROLE_SEARCH_OUTPUT_SW_MODEL)
+    @api.expect(search_input_sw_model)
+    @api.marshal_with(role_search_output_sw_model)
     @token_required
     @roles_required('admin')
     def post(self) -> tuple:

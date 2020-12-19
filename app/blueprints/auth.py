@@ -10,12 +10,11 @@ from werkzeug.exceptions import (Forbidden, UnprocessableEntity)
 from app.extensions import api as root_api
 from app.models.user import User as UserModel, user_datastore
 from app.celery.tasks import reset_password_email
+from app.swagger import (auth_login_sw_model, auth_token_sw_model,
+                         auth_user_reset_password_sw_model,
+                         auth_user_reset_password_token_sw_model)
 from app.utils.decorators import token_required
 from app.utils.marshmallow_schema import UserSchema
-from app.utils.swagger_models.auth import (AUTH_LOGIN_SW_MODEL,
-                                           AUTH_TOKEN_SW_MODEL,
-                                           AUTH_REQUEST_RESET_PASSWORD_SW_MODEL,
-                                           AUTH_RESET_PASSWORD_SW_MODEL)
 
 blueprint = Blueprint('auth', __name__)
 api = root_api.namespace('auth', description='Authentication endpoints')
@@ -26,8 +25,8 @@ logger = logging.getLogger(__name__)
 class AuthUserLoginResource(Resource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
                         404: 'Not found', 422: 'Unprocessable Entity'})
-    @api.expect(AUTH_LOGIN_SW_MODEL)
-    @api.marshal_with(AUTH_TOKEN_SW_MODEL)
+    @api.expect(auth_login_sw_model)
+    @api.marshal_with(auth_token_sw_model)
     def post(self) -> tuple:
         try:
             data = UserSchema().validate_credentials(request.get_json())
@@ -57,7 +56,7 @@ class AuthUserLogoutResource(Resource):
 class RequestResetPasswordResource(Resource):
     @api.doc(responses={202: 'Success', 403: 'Forbidden', 404: 'Not Found',
                         422: 'Unprocessable Entity'})
-    @api.expect(AUTH_REQUEST_RESET_PASSWORD_SW_MODEL)
+    @api.expect(auth_user_reset_password_sw_model)
     def post(self) -> tuple:
         try:
             data = UserSchema().validate_email(request.get_json())
@@ -99,8 +98,8 @@ class ResetPasswordResource(Resource):
 
     @api.doc(responses={200: 'Success', 403: 'Forbidden',
                         422: 'Unprocessable Entity'})
-    @api.expect(AUTH_RESET_PASSWORD_SW_MODEL)
-    @api.marshal_with(AUTH_TOKEN_SW_MODEL)
+    @api.expect(auth_user_reset_password_token_sw_model)
+    @api.marshal_with(auth_token_sw_model)
     def post(self, token: str) -> tuple:
         try:
             password = request.get_json().get('password')

@@ -15,14 +15,13 @@ from werkzeug.exceptions import (NotFound, UnprocessableEntity,
 from app.blueprints.base import BaseResource
 from app.extensions import api as root_api
 from app.models.document import Document as DocumentModel
+from app.swagger import (document_output_sw_model,
+                         document_search_output_sw_model, search_input_sw_model)
 from app.utils.decorators import token_required
 from app.utils.file_storage import FileStorage
 from app.utils.marshmallow_schema import (DocumentSchema as DocumentSerializer,
                                           GetDocumentDataInputSchema as GetDocumentDataInputSerializer,
                                           SearchSchema)
-from app.utils.swagger_models import SEARCH_INPUT_SW_MODEL
-from app.utils.swagger_models.document import (DOCUMENT_OUTPUT_SW_MODEL,
-                                               DOCUMENT_SEARCH_OUTPUT_SW_MODEL)
 
 _API_DESCRIPTION = ('Users with role admin, team_leader or worker can '
                     'manage these endpoints.')
@@ -110,7 +109,7 @@ class NewDocumentResource(DocumentBaseResource):
                         422: 'Unprocessable Entity'},
              security='auth_token')
     @api.expect(parser)
-    @api.marshal_with(DOCUMENT_OUTPUT_SW_MODEL, code=201)
+    @api.marshal_with(document_output_sw_model, code=201)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
@@ -159,7 +158,7 @@ class DocumentResource(DocumentBaseResource):
                          required=True, choices=('application/json',
                                                  'application/octet-stream',))
 
-    @api.doc(responses={200: ('Success', DOCUMENT_OUTPUT_SW_MODEL),
+    @api.doc(responses={200: ('Success', document_output_sw_model),
                         401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
                         422: 'Unprocessable Entity'},
              security='auth_token')
@@ -180,7 +179,7 @@ class DocumentResource(DocumentBaseResource):
                         422: 'Unprocessable Entity'},
              security='auth_token')
     @api.expect(NewDocumentResource.parser)
-    @api.marshal_with(DOCUMENT_OUTPUT_SW_MODEL)
+    @api.marshal_with(document_output_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def put(self, document_id: int) -> tuple:
@@ -226,7 +225,7 @@ class DocumentResource(DocumentBaseResource):
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden', 404: 'Not Found'},
              security='auth_token')
-    @api.marshal_with(DOCUMENT_OUTPUT_SW_MODEL)
+    @api.marshal_with(document_output_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def delete(self, document_id: int):
@@ -250,8 +249,8 @@ class SearchDocumentResource(DocumentBaseResource):
     @api.doc(responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.expect(SEARCH_INPUT_SW_MODEL)
-    @api.marshal_with(DOCUMENT_SEARCH_OUTPUT_SW_MODEL)
+    @api.expect(search_input_sw_model)
+    @api.marshal_with(document_search_output_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
