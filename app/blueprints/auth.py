@@ -10,11 +10,11 @@ from werkzeug.exceptions import (Forbidden, UnprocessableEntity)
 from app.extensions import api as root_api
 from app.models.user import User as UserModel, user_datastore
 from app.celery.tasks import reset_password_email
+from app.serializers import UserSchema
 from app.swagger import (auth_login_sw_model, auth_token_sw_model,
                          auth_user_reset_password_sw_model,
                          auth_user_reset_password_token_sw_model)
 from app.utils.decorators import token_required
-from app.utils.marshmallow_schema import UserSchema
 
 blueprint = Blueprint('auth', __name__)
 api = root_api.namespace('auth', description='Authentication endpoints')

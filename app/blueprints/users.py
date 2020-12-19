@@ -10,17 +10,16 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 from app.celery.word.tasks import export_user_data_in_word
 from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email, create_word_and_excel_documents
-from .base import BaseResource
-from ..extensions import db_wrapper, api as root_api
-from ..models.user import User as UserModel, user_datastore
-from ..models.role import Role as RoleModel
-from ..swagger import (user_input_sw_model, user_output_sw_model,
-                       search_input_sw_model)
-from ..swagger.user import user_search_output_sw_model
-from ..utils.decorators import token_required
-from ..utils.marshmallow_schema import (UserSchema as UserSerializer,
-                                        ExportWordInputSchema as
-                                        ExportWordInputSerializer, SearchSchema)
+from app.blueprints.base import BaseResource
+from app.extensions import db_wrapper, api as root_api
+from app.models.user import User as UserModel, user_datastore
+from app.models.role import Role as RoleModel
+from app.serializers import (UserSchema as UserSerializer,
+                             ExportWordInputSchema as ExportWordInputSerializer,
+                             SearchSchema)
+from app.swagger import (user_input_sw_model, user_output_sw_model,
+                         user_search_output_sw_model, search_input_sw_model)
+from app.utils.decorators import token_required
 
 _API_DESCRIPTION = ('Users with role admin or team_leader can manage '
                     'these endpoints.')

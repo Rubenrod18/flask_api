@@ -15,13 +15,13 @@ from werkzeug.exceptions import (NotFound, UnprocessableEntity,
 from app.blueprints.base import BaseResource
 from app.extensions import api as root_api
 from app.models.document import Document as DocumentModel
+from app.serializers import (DocumentSchema as DocumentSerializer,
+                             GetDocumentDataInputSchema as GetDocumentDataInputSerializer,
+                             SearchSchema)
 from app.swagger import (document_output_sw_model,
                          document_search_output_sw_model, search_input_sw_model)
 from app.utils.decorators import token_required
 from app.utils.file_storage import FileStorage
-from app.utils.marshmallow_schema import (DocumentSchema as DocumentSerializer,
-                                          GetDocumentDataInputSchema as GetDocumentDataInputSerializer,
-                                          SearchSchema)
 
 _API_DESCRIPTION = ('Users with role admin, team_leader or worker can '
                     'manage these endpoints.')

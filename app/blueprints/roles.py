@@ -9,11 +9,10 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 from .base import BaseResource
 from app.extensions import api as root_api
 from app.models.role import Role as RoleModel
-from app.utils.marshmallow_schema import (RoleSchema as RoleSerializer,
-                                          SearchSchema)
-from ..swagger import (role_input_sw_model, role_output_sw_model,
-                       search_input_sw_model, role_search_output_sw_model)
-from ..utils.decorators import token_required
+from app.serializers import (RoleSchema as RoleSerializer, SearchSchema)
+from app.swagger import (role_input_sw_model, role_output_sw_model,
+                         search_input_sw_model, role_search_output_sw_model)
+from app.utils.decorators import token_required
 
 _API_DESCRIPTION = 'Users with role admin can manage these endpoints.'
 
