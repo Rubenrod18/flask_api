@@ -1,14 +1,13 @@
 import logging
 
 from flask import current_app
-from flask_security import UserMixin, PeeweeUserDatastore, hash_password
+from flask_security import UserMixin, hash_password
 from itsdangerous import URLSafeSerializer, TimestampSigner
 from peewee import (CharField, DateField, TimestampField, ForeignKeyField,
                     BooleanField, FixedCharField, ManyToManyField)
 
 from .base import Base as BaseModel
 from .role import Role as RoleModel
-from ..extensions import db_wrapper as db
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +72,3 @@ class User(BaseModel, UserMixin):
             hashed_password = hash_password(plain_text)
 
         return hashed_password
-
-
-UserRoles = User.roles.through_model
-
-user_datastore = PeeweeUserDatastore(db, User, RoleModel, UserRoles)

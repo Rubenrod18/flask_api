@@ -7,7 +7,8 @@ from peewee import fn
 from playhouse.shortcuts import model_to_dict
 
 from app.models.role import Role as RoleModel
-from app.models.user import User as UserModel, user_datastore
+from app.models.user import User as UserModel
+from app.models.user_roles import user_datastore
 from app.utils import ignore_keys
 from database import fake
 

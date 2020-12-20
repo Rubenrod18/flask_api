@@ -8,8 +8,9 @@ from marshmallow import ValidationError
 from werkzeug.exceptions import (Forbidden, UnprocessableEntity)
 
 from app.extensions import api as root_api
-from app.models.user import User as UserModel, user_datastore
+from app.models.user import User as UserModel
 from app.celery.tasks import reset_password_email
+from app.models.user_roles import user_datastore
 from app.serializers import UserSerializer
 from app.swagger import (auth_login_sw_model, auth_token_sw_model,
                          auth_user_reset_password_sw_model,

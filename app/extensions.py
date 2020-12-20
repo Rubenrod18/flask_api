@@ -27,7 +27,7 @@ api = Api(prefix='/api', title='Flask Api', description='A simple TodoMVC API',
 
 
 def init_app(app: Flask) -> None:
-    from app.models.user import user_datastore
+    from app.models.user_roles import user_datastore
 
     db_wrapper.init_app(app)
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
