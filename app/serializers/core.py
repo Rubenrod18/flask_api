@@ -20,7 +20,7 @@ class TimestampField(fields.Field):
         return datetime.timestamp(value)
 
 
-class _SearchValueSchema(ma.Schema):
+class _SearchValueSerializer(ma.Schema):
     field_name = fields.Str()
     field_operator = fields.Str(
         validate=validate.OneOf(set(QUERY_OPERATORS + STRING_QUERY_OPERATORS))
@@ -28,13 +28,13 @@ class _SearchValueSchema(ma.Schema):
     field_value = fields.Raw()
 
 
-class _SearchOrderSchema(ma.Schema):
+class _SearchOrderSerializer(ma.Schema):
     field_name = fields.Str()
     sorting = fields.Str(validate=validate.OneOf(['asc', 'desc']))
 
 
-class SearchSchema(ma.Schema):
-    search = fields.List(fields.Nested(_SearchValueSchema))
-    order = fields.List(fields.Nested(_SearchOrderSchema))
+class SearchSerializer(ma.Schema):
+    search = fields.List(fields.Nested(_SearchValueSerializer))
+    order = fields.List(fields.Nested(_SearchOrderSerializer))
     items_per_page = fields.Integer()
     page_number = fields.Integer()

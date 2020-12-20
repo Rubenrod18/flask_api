@@ -16,8 +16,7 @@ from app.utils import (to_readable, create_search_query, get_request_query_field
                        PDF_MIME_TYPE, MS_WORD_MIME_TYPE)
 from app.utils.file_storage import FileStorage
 from app.utils.libreoffice import convert_to
-from app.serializers import (UserSchema as UserSerializer,
-                             DocumentSchema as DocumentSerializer)
+from app.serializers import DocumentSerializer, UserSerializer
 
 logger = get_task_logger(__name__)
 

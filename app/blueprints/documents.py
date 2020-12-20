@@ -15,9 +15,8 @@ from werkzeug.exceptions import (NotFound, UnprocessableEntity,
 from app.blueprints.base import BaseResource
 from app.extensions import api as root_api
 from app.models.document import Document as DocumentModel
-from app.serializers import (DocumentSchema as DocumentSerializer,
-                             GetDocumentDataInputSchema as GetDocumentDataInputSerializer,
-                             SearchSchema)
+from app.serializers import (DocumentSerializer, DocumentAttachmentSerializer,
+                             SearchSerializer)
 from app.swagger import (document_output_sw_model,
                          document_search_output_sw_model, search_input_sw_model)
 from app.utils.decorators import token_required
@@ -68,7 +67,7 @@ class DocumentBaseResource(BaseResource):
             raise NotFound('Document doesn\'t exist')
 
         try:
-            serializer = GetDocumentDataInputSerializer()
+            serializer = DocumentAttachmentSerializer()
             request_args = serializer.load(request.args.to_dict(),
                                            unknown=EXCLUDE)
             as_attachment = request_args.get('as_attachment', 0)
@@ -256,7 +255,7 @@ class SearchDocumentResource(DocumentBaseResource):
     def post(self):
         request_data = request.get_json()
         try:
-            data = SearchSchema().load(request_data)
+            data = SearchSerializer().load(request_data)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 

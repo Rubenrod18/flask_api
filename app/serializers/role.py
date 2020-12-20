@@ -6,7 +6,7 @@ from app.models.role import Role as RoleModel
 from app.serializers.core import TimestampField
 
 
-class RoleSchema(ma.Schema):
+class RoleSerializer(ma.Schema):
     class Meta:
         ordered = True
         fields = (

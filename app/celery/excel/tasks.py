@@ -18,8 +18,7 @@ from app.models.user import User as UserModel
 from app.utils import (find_longest_word, pos_to_char, to_readable,
                        get_request_query_fields, create_search_query)
 from app.utils.file_storage import FileStorage
-from app.serializers import (UserSchema as UserSerializer,
-                             DocumentSchema as DocumentSerializer)
+from app.serializers import DocumentSerializer, UserSerializer
 
 logger = get_task_logger(__name__)
 

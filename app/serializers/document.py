@@ -8,7 +8,7 @@ from app.serializers.core import TimestampField
 from config import Config
 
 
-class DocumentSchema(ma.Schema):
+class DocumentSerializer(ma.Schema):
     class Meta:
         ordered = True
         fields = (
@@ -17,8 +17,8 @@ class DocumentSchema(ma.Schema):
         )
 
     id = fields.Int()
-    created_by = fields.Nested('UserSchema', only=('id', 'name', 'last_name',
-                                                   'email'))
+    created_by = fields.Nested('UserSerializer', only=('id', 'name', 'last_name',
+                                                       'email'))
     name = fields.Str()
     internal_filename = fields.Str()
     mime_type = fields.Str()
@@ -48,7 +48,7 @@ class DocumentSchema(ma.Schema):
         return data
 
 
-class GetDocumentDataInputSchema(ma.Schema):
+class DocumentAttachmentSerializer(ma.Schema):
     as_attachment = fields.Int(validate=validate.OneOf([1, 0]))
 
     @pre_load

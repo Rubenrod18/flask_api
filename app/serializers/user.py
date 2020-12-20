@@ -5,12 +5,12 @@ from werkzeug.exceptions import Unauthorized, BadRequest, NotFound, Forbidden
 
 from app.extensions import ma
 from app.models.user import User as UserModel
-from app.serializers import RoleSchema
+from app.serializers import RoleSerializer
 from app.serializers.core import TimestampField
 from config import Config
 
 
-class UserSchema(ma.Schema):
+class UserSerializer(ma.Schema):
     class Meta:
         ordered = True
         fields = (
@@ -19,7 +19,7 @@ class UserSchema(ma.Schema):
         )
 
     id = fields.Int()
-    created_by = fields.Nested(lambda: UserSchema(only=('id',)))
+    created_by = fields.Nested(lambda: UserSerializer(only=('id',)))
     name = fields.Str()
     last_name = fields.Str()
     email = fields.Email()
@@ -33,7 +33,7 @@ class UserSchema(ma.Schema):
     created_at = TimestampField()
     updated_at = TimestampField()
     deleted_at = TimestampField()
-    roles = fields.List(fields.Nested(RoleSchema, only=('name', 'label')))
+    roles = fields.List(fields.Nested(RoleSerializer, only=('name', 'label')))
 
     def validate_credentials(self, data: dict) -> dict:
         self.validate_email(data)
@@ -79,7 +79,7 @@ class UserSchema(ma.Schema):
         return data
 
 
-class ExportWordInputSchema(ma.Schema):
+class UserExportWordSerializer(ma.Schema):
     to_pdf = fields.Int(validate=validate.OneOf([1, 0]))
 
     @pre_load

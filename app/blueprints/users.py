@@ -14,9 +14,8 @@ from app.blueprints.base import BaseResource
 from app.extensions import db_wrapper, api as root_api
 from app.models.user import User as UserModel, user_datastore
 from app.models.role import Role as RoleModel
-from app.serializers import (UserSchema as UserSerializer,
-                             ExportWordInputSchema as ExportWordInputSerializer,
-                             SearchSchema)
+from app.serializers import (UserSerializer, UserExportWordSerializer,
+                             SearchSerializer)
 from app.swagger import (user_input_sw_model, user_output_sw_model,
                          user_search_output_sw_model, search_input_sw_model)
 from app.utils.decorators import token_required
@@ -150,7 +149,7 @@ class UsersSearchResource(UserBaseResource):
     def post(self) -> tuple:
         request_data = request.get_json()
         try:
-            data = SearchSchema().load(request_data)
+            data = SearchSerializer().load(request_data)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
@@ -184,7 +183,7 @@ class ExportUsersExcelResource(UserBaseResource):
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         try:
-            request_data = SearchSchema().load(request.get_json())
+            request_data = SearchSerializer().load(request.get_json())
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
@@ -210,12 +209,12 @@ class ExportUsersWordResource(UserBaseResource):
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         try:
-            request_data = SearchSchema().load(request.get_json())
+            request_data = SearchSerializer().load(request.get_json())
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
         try:
-            serializer = ExportWordInputSerializer()
+            serializer = UserExportWordSerializer()
             request_args = serializer.load(request.args.to_dict(),
                                            unknown=EXCLUDE)
             to_pdf = request_args.get('to_pdf', 0)
@@ -243,12 +242,12 @@ class ExportUsersExcelAndWordResource(UserBaseResource):
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         try:
-            request_data = SearchSchema().load(request.get_json())
+            request_data = SearchSerializer().load(request.get_json())
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
         try:
-            serializer = ExportWordInputSerializer()
+            serializer = UserExportWordSerializer()
             request_args = serializer.load(request.args.to_dict(),
                                            unknown=EXCLUDE)
             to_pdf = request_args.get('to_pdf', 0)

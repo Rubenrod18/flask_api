@@ -10,7 +10,7 @@ from werkzeug.exceptions import (Forbidden, UnprocessableEntity)
 from app.extensions import api as root_api
 from app.models.user import User as UserModel, user_datastore
 from app.celery.tasks import reset_password_email
-from app.serializers import UserSchema
+from app.serializers import UserSerializer
 from app.swagger import (auth_login_sw_model, auth_token_sw_model,
                          auth_user_reset_password_sw_model,
                          auth_user_reset_password_token_sw_model)
@@ -29,7 +29,7 @@ class AuthUserLoginResource(Resource):
     @api.marshal_with(auth_token_sw_model)
     def post(self) -> tuple:
         try:
-            data = UserSchema().validate_credentials(request.get_json())
+            data = UserSerializer().validate_credentials(request.get_json())
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
@@ -59,7 +59,7 @@ class RequestResetPasswordResource(Resource):
     @api.expect(auth_user_reset_password_sw_model)
     def post(self) -> tuple:
         try:
-            data = UserSchema().validate_email(request.get_json())
+            data = UserSerializer().validate_email(request.get_json())
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
@@ -103,7 +103,7 @@ class ResetPasswordResource(Resource):
     def post(self, token: str) -> tuple:
         try:
             password = request.get_json().get('password')
-            UserSchema().validate_password(password)
+            UserSerializer().validate_password(password)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
