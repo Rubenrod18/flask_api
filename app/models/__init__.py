@@ -1,9 +1,23 @@
-"""Registers database models."""
+"""Registers database models.
+
+TODO: pending to define models with suffix "Model".
+
+There is not posible to rename the models with suffix "Model" because
+Flask-Security-Too doesn't allow it. Maybe in the next major version could be
+available.
+https://github.com/Flask-Middleware/flask-security/issues/395
+
+"""
 import logging
 import os
 import os.path
 from pydoc import locate
 
+from .base import Base
+from .document import Document
+from .role import Role
+from .user import User
+from .user_roles import UserRoles, user_datastore
 
 logger = logging.getLogger(__name__)
 

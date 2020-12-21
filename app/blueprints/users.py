@@ -12,9 +12,7 @@ from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email, create_word_and_excel_documents
 from app.blueprints.base import BaseResource
 from app.extensions import db_wrapper, api as root_api
-from app.models.user import User as UserModel
-from app.models.role import Role as RoleModel
-from app.models.user_roles import user_datastore
+from app.models import User as UserModel, Role as RoleModel, user_datastore
 from app.serializers import (UserSerializer, UserExportWordSerializer,
                              SearchSerializer)
 from app.swagger import (user_input_sw_model, user_output_sw_model,

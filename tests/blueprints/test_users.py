@@ -5,8 +5,7 @@ from flask.testing import FlaskClient
 from peewee import fn
 
 from app.extensions import db_wrapper
-from app.models.role import Role as RoleModel
-from app.models.user import User as UserModel
+from app.models import Role as RoleModel, User as UserModel
 
 
 def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any):

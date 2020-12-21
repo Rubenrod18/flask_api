@@ -13,8 +13,7 @@ from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
 from app.extensions import celery
-from app.models.document import Document as DocumentModel
-from app.models.user import User as UserModel
+from app.models import Document as DocumentModel, User as UserModel
 from app.utils import (find_longest_word, pos_to_char, to_readable,
                        get_request_query_fields, create_search_query)
 from app.utils.file_storage import FileStorage

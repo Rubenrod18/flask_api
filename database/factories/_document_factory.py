@@ -7,8 +7,7 @@ from shutil import copyfile
 from flask import current_app
 from peewee import fn
 
-from app.models.document import Document as DocumentModel
-from app.models.user import User as UserModel
+from app.models import Document as DocumentModel, User as UserModel
 from app.utils import ignore_keys, PDF_MIME_TYPE
 from database import fake
 
