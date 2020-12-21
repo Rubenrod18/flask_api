@@ -7,7 +7,7 @@ from flask_security import roles_accepted
 from werkzeug.exceptions import NotFound
 
 from app.extensions import db_wrapper, api as root_api
-from app.utils import class_for_name
+from app.utils import get_attr_from_module
 
 from app.utils.decorators import token_required
 
@@ -33,7 +33,7 @@ class TaskResource(Resource):
         try:
             for row in cursor.fetchone():
                 module_name, class_name = build_task_import(row)
-                task = class_for_name(module_name, class_name)
+                task = get_attr_from_module(module_name, class_name)
         except TypeError:
             raise NotFound('Task not found')
 

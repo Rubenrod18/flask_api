@@ -52,12 +52,35 @@ class FileEmptyError(OSError):
     pass
 
 
-def class_for_name(module_name: str, class_name: str) -> any:
-    # load the module, will raise ImportError if module cannot be loaded
-    m = importlib.import_module(module_name)
-    # get the class, will raise AttributeError if class cannot be found
-    c = getattr(m, class_name)
-    return c
+def get_attr_from_module(module: str, attr: str) -> any:
+    """Get attribute from a module.
+
+    Parameters
+    ----------
+    module : str
+        Module absolute path.
+    attr : str
+        Module's attribute. It could be any kind of variable belongs to module.
+
+    Examples
+    --------
+
+    >>> from app.utils import get_attr_from_module
+    >>> module_path = 'app.blueprints.base'
+    >>> module_attr = 'blueprint'
+    >>> get_attr_from_module(module_path, module_attr)
+    <flask.blueprints.Blueprint object at ...>
+
+    Raises
+    ------
+    ImportError
+        Module doesn't exist.
+    AttributeError
+        Attribute doesn't exist in module.
+
+    """
+    m = importlib.import_module(module)
+    return getattr(m, attr)
 
 
 def to_readable(obj: object) -> object:
