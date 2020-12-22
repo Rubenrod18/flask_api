@@ -2,7 +2,6 @@ import logging
 import mimetypes
 import os
 import uuid
-from datetime import datetime
 
 from flask import Blueprint, request, current_app, send_file
 from flask_login import current_user
@@ -14,6 +13,7 @@ from werkzeug.exceptions import (NotFound, UnprocessableEntity,
 
 from app.blueprints.base import BaseResource
 from app.extensions import api as root_api
+from app.managers.document import DocumentManager
 from app.models.document import Document as DocumentModel
 from app.serializers import (DocumentSerializer, DocumentAttachmentSerializer,
                              SearchSerializer)
@@ -33,7 +33,10 @@ logger = logging.getLogger(__name__)
 class DocumentBaseResource(BaseResource):
     db_model = DocumentModel
     request_field_name = 'document'
-    document_serializer = DocumentSerializer()
+    doc_manager = DocumentManager()
+    doc_serializer = DocumentSerializer()
+    doc_attach_serializer = DocumentAttachmentSerializer()
+    search_serializer = SearchSerializer()
 
     def get_request_file(self) -> dict:
         file = {}
@@ -46,30 +49,24 @@ class DocumentBaseResource(BaseResource):
                 'filename': request_file.filename,
                 'file_data': request_file.read(),
             }
-
         return file
 
-    def get_document_data(self, document_id: int) -> tuple:
-        document = DocumentModel.get_or_none(DocumentModel.id == document_id,
-                                             DocumentModel.deleted_at.is_null())
+    def get_doc_data(self, document_id: int) -> tuple:
+        args = (DocumentModel.deleted_at.is_null(),)
+        document = self.doc_manager.find(document_id, *args)
         if document is None:
             raise NotFound('Document doesn\'t exist')
+        return {'data': self.doc_serializer.dump(document)}, 200
 
-        document_data = self.document_serializer.dump(document)
-
-        return {'data': document_data}, 200
-
-    @staticmethod
-    def get_document_content(document_id: int):
-        document = DocumentModel.get_or_none(DocumentModel.id == document_id,
-                                             DocumentModel.deleted_at.is_null())
+    def get_document_content(self, document_id: int):
+        args = (DocumentModel.deleted_at.is_null(),)
+        document = self.doc_manager.find(document_id, *args)
         if document is None:
             raise NotFound('Document doesn\'t exist')
 
         try:
-            serializer = DocumentAttachmentSerializer()
-            request_args = serializer.load(request.args.to_dict(),
-                                           unknown=EXCLUDE)
+            request_args = (self.doc_attach_serializer
+                            .load(request.args.to_dict(), unknown=EXCLUDE))
             as_attachment = request_args.get('as_attachment', 0)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
@@ -88,10 +85,7 @@ class DocumentBaseResource(BaseResource):
 
         if as_attachment:
             kwargs['attachment_filename'] = attachment_filename
-
-        response = send_file(**kwargs)
-
-        return response
+        return send_file(**kwargs)
 
 
 @api.route('')
@@ -112,10 +106,9 @@ class NewDocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
-        request_data = self.get_request_file()
-
         try:
-            data = self.document_serializer.valid_request_file(request_data)
+            data = self.doc_serializer.valid_request_file(
+                self.get_request_file())
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
@@ -134,20 +127,17 @@ class NewDocumentResource(DocumentBaseResource):
                 'name': data.get('filename'),
                 'internal_filename': internal_filename,
                 'mime_type': data.get('mime_type'),
-                'directory_path': filepath,
+                'directory_path': current_app.config.get('STORAGE_DIRECTORY'),
                 'size': fs.get_filesize(filepath),
             }
-
-            document = DocumentModel.create(**data)
+            document = self.doc_manager.create(**data)
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
             logger.debug(e)
             raise InternalServerError()
 
-        document_data = self.document_serializer.dump(document)
-
-        return {'data': document_data}, 201
+        return {'data': self.doc_serializer.dump(document)}, 201
 
 
 @api.route('/<int:document_id>')
@@ -165,13 +155,10 @@ class DocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def get(self, document_id: int) -> tuple:
-        headers = request.headers.get('Content-Type')
-
-        if headers == 'application/json':
-            response = self.get_document_data(document_id)
+        if request.headers.get('Content-Type') == 'application/json':
+            response = self.get_doc_data(document_id)
         else:
             response = self.get_document_content(document_id)
-
         return response
 
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
@@ -182,21 +169,20 @@ class DocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def put(self, document_id: int) -> tuple:
-        document = DocumentModel.get_or_none(DocumentModel.id == document_id)
+        document = self.doc_manager.find(document_id)
         if document is None:
             raise BadRequest('Document doesn\'t exist')
 
         if document.deleted_at is not None:
             raise BadRequest('Document already deleted')
 
-        request_data = self.get_request_file()
         try:
-            data = self.document_serializer.valid_request_file(request_data)
+            data = self.doc_serializer.valid_request_file(
+                self.get_request_file())
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
         filepath = f'{document.directory_path}/{document.internal_filename}'
-
         try:
             fs = FileStorage()
             fs.save_bytes(data.get('file_data'), filepath, override=True)
@@ -207,19 +193,16 @@ class DocumentResource(DocumentBaseResource):
                 'size': fs.get_filesize(filepath),
                 'id': document_id,
             }
-
-            DocumentModel(**data).save()
+            self.doc_manager.save(**data)
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
             logger.debug(e)
             raise InternalServerError()
 
-        document = (DocumentModel.get_or_none(DocumentModel.id == document_id,
-                                              DocumentModel.deleted_at.is_null()))
-        document_data = self.document_serializer.dump(document)
-
-        return {'data': document_data}, 200
+        args = (DocumentModel.deleted_at.is_null(),)
+        document = self.doc_manager.find(document_id, *args)
+        return {'data': self.doc_serializer.dump(document)}, 200
 
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden', 404: 'Not Found'},
@@ -228,19 +211,15 @@ class DocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def delete(self, document_id: int):
-        document = DocumentModel.get_or_none(DocumentModel.id == document_id)
+        document = self.doc_manager.find(document_id)
         if document is None:
             raise NotFound('Document doesn\'t exist')
 
         if document.deleted_at is not None:
             raise BadRequest('Document already deleted')
 
-        document.deleted_at = datetime.utcnow()
-        document.save()
-
-        document_data = self.document_serializer.dump(document)
-
-        return {'data': document_data}, 200
+        document = self.doc_manager.delete(document_id)
+        return {'data': self.doc_serializer.dump(document)}, 200
 
 
 @api.route('/search')
@@ -253,27 +232,16 @@ class SearchDocumentResource(DocumentBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self):
-        request_data = request.get_json()
         try:
-            data = SearchSerializer().load(request_data)
+            request_data = self.search_serializer.load(request.get_json())
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
-        page_number, items_per_page, order_by = self.get_request_query_fields(data)
-
-        query = DocumentModel.select()
-        records_total = query.count()
-
-        query = self.create_search_query(query, request_data)
-        query = (query.order_by(*order_by)
-                 .paginate(page_number, items_per_page))
-
-        records_filtered = query.count()
-        self.document_serializer = DocumentSerializer(many=True)
-        document_data = self.document_serializer.dump(list(query))
+        doc_data = self.doc_manager.get(**request_data)
+        doc_serializer = DocumentSerializer(many=True)
 
         return {
-                   'data': document_data,
-                   'records_total': records_total,
-                   'records_filtered': records_filtered,
+                   'data': doc_serializer.dump(list(doc_data['query'])),
+                   'records_total': doc_data['records_total'],
+                   'records_filtered': doc_data['records_filtered'],
                }, 200

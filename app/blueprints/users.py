@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from flask_login import current_user
 from flask import Blueprint, request, url_for
@@ -12,7 +11,8 @@ from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email, create_word_and_excel_documents
 from app.blueprints.base import BaseResource
 from app.extensions import db_wrapper, api as root_api
-from app.models import User as UserModel, Role as RoleModel, user_datastore
+from app.managers import RoleManager, UserManager
+from app.models import User as UserModel, user_datastore
 from app.serializers import (UserSerializer, UserExportWordSerializer,
                              SearchSerializer)
 from app.swagger import (user_input_sw_model, user_output_sw_model,
@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 
 class UserBaseResource(BaseResource):
     db_model = UserModel
+    user_manager = UserManager()
+    role_manager = RoleManager()
     user_serializer = UserSerializer()
 
     def deserialize_request_data(self, **kwargs: dict) -> dict:
@@ -52,7 +54,7 @@ class NewUserResource(UserBaseResource):
         data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
 
         with db_wrapper.database.atomic():
-            role = RoleModel.get_by_id(data['role_id'])
+            role = self.role_manager.find(data['role_id'])
 
             data['created_by'] = current_user.id
             data['roles'] = [role]
@@ -74,13 +76,11 @@ class UserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
-        user = UserModel.get_or_none(UserModel.id == user_id)
+        user = self.user_manager.find(user_id)
         if user is None:
             raise NotFound('User doesn\'t exist')
 
-        user_data = self.user_serializer.dump(user)
-
-        return {'data': user_data}, 200
+        return {'data': self.user_serializer.dump(user)}, 200
 
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden', 422: 'Unprocessable Entity'},
@@ -90,7 +90,7 @@ class UserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def put(self, user_id: int) -> tuple:
-        user = UserModel.get_or_none(UserModel.id == user_id)
+        user = self.user_manager.find(user_id)
         if user is None:
             raise BadRequest('User doesn\'t exist')
 
@@ -102,18 +102,16 @@ class UserResource(UserBaseResource):
 
         with db_wrapper.database.atomic():
             data['id'] = user_id
-            UserModel(**data).save()
+            self.user_manager.save(**data)
 
             if 'role_id' in data:
                 user_datastore.remove_role_from_user(user, user.roles[0])
-                role = RoleModel.get_by_id(data['role_id'])
+                role = self.role_manager.find(data['role_id'])
                 user_datastore.add_role_to_user(user, role)
 
-        user = (UserModel.get_or_none(UserModel.id == user_id,
-                                      UserModel.deleted_at.is_null()))
-        user_data = self.user_serializer.dump(user)
-
-        return {'data': user_data}, 200
+        args = (UserModel.deleted_at.is_null(),)
+        user = self.user_manager.find(user_id, *args)
+        return {'data': self.user_serializer.dump(user)}, 200
 
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden', 422: 'Unprocessable Entity'},
@@ -122,18 +120,15 @@ class UserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
-        user = UserModel.get_or_none(UserModel.id == user_id)
+        user = self.user_manager.find(user_id)
         if user is None:
             raise NotFound('User doesn\'t exist')
 
         if user.deleted_at is not None:
             raise BadRequest('User already deleted')
 
-        user.deleted_at = datetime.utcnow()
-        user.save()
-        user_data = self.user_serializer.dump(user)
-
-        return {'data': user_data}, 200
+        user = self.user_manager.delete(user_id)
+        return {'data': self.user_serializer.dump(user)}, 200
 
 
 @api.route('/search')
@@ -146,29 +141,18 @@ class UsersSearchResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
-        request_data = request.get_json()
         try:
-            data = SearchSerializer().load(request_data)
+            request_data = SearchSerializer().load(request.get_json())
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
-        page_number, items_per_page, order_by = self.get_request_query_fields(data)
-
-        query = UserModel.select()
-        records_total = query.count()
-
-        query = self.create_search_query(query, request_data)
-        query = (query.order_by(*order_by)
-                 .paginate(page_number, items_per_page))
-
-        records_filtered = query.count()
-        self.user_serializer = UserSerializer(many=True)
-        user_data = self.user_serializer.dump(list(query))
+        user_data = self.user_manager.get(**request_data)
+        user_serializer = UserSerializer(many=True)
 
         return {
-                   'data': user_data,
-                   'records_total': records_total,
-                   'records_filtered': records_filtered,
+                   'data': user_serializer.dump(list(user_data['query'])),
+                   'records_total': user_data['records_total'],
+                   'records_filtered': user_data['records_filtered'],
                }, 200
 
 

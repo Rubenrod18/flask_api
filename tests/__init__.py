@@ -53,6 +53,11 @@ How to usage::
 How to call a specific test::
 
     source venv/bin/activate
+    pytest tests/blueprints/test_base.py
+
+How to call a specific test function::
+
+    source venv/bin/activate
     pytest -k test_welcome_api
 
 You can use coverage package for running tests as well::
