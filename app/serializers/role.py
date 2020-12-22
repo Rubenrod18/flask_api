@@ -23,7 +23,7 @@ class RoleSerializer(ma.Schema):
     deleted_at = TimestampField()
 
     @staticmethod
-    def valid_request_role(data: dict) -> dict:
+    def valid_role_name(data: dict) -> dict:
         if RoleModel.get_or_none(name=data.get('role_name')):
             raise BadRequest('Role name already created')
 
