@@ -1,12 +1,13 @@
 from datetime import datetime
 
+from app.models import Base
 from app.utils import get_request_query_fields, create_search_query
 
 
 class BaseManager(object):
 
     def __init__(self, *args, **kwargs):
-        self.model = None
+        self.model = Base
 
     def create(self, **kwargs):
         return self.model.create(**kwargs)
@@ -38,8 +39,9 @@ class BaseManager(object):
 
     def find(self, record_id: int, *args):
         query = (self.model.id == record_id,)
-
         if args:
             query = query + args
-
         return self.model.get_or_none(*query)
+
+    def raw(self, query: str):
+        return self.model.raw(query)
