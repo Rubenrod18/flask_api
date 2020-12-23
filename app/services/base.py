@@ -11,22 +11,24 @@ class BaseService(object):
         self.manager = BaseManager()
 
     def create(self, **kwargs):
-        pass
+        return self.manager.create(**kwargs)
 
-    def save(self, **kwargs):
-        pass
+    def find(self, record_id: int, *args):
+        return self.manager.find(record_id, *args)
+
+    def save(self, record_id: int, **kwargs):
+        self.manager.save(record_id, **kwargs)
+
+        args = (self.manager.model.deleted_at.is_null(),)
+        return self.manager.find(record_id, *args)
 
     def get(self, **kwargs):
         try:
-            data = SearchSerializer().load(**kwargs)
+            data = SearchSerializer().load(kwargs)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
         return self.manager.get(**data)
 
     def delete(self, record_id: int):
-        pass
-
-    def find(self, record_id: int):
-        pass
-
+        return self.manager.delete(record_id)

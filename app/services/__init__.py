@@ -1,1 +1,1 @@
-"""Registers services for managing businnes logic."""
+"""Registers services for managing business logic."""

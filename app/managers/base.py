@@ -11,7 +11,8 @@ class BaseManager(object):
     def create(self, **kwargs):
         return self.model.create(**kwargs)
 
-    def save(self, **kwargs):
+    def save(self, record_id: int, **kwargs):
+        kwargs['id'] = record_id
         return self.model(**kwargs).save()
 
     def get(self, **kwargs):

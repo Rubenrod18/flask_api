@@ -22,7 +22,7 @@ from app.utils.decorators import token_required
 _API_DESCRIPTION = ('Users with role admin or team_leader can manage '
                     'these endpoints.')
 
-blueprint = Blueprint('users', __name__, )
+blueprint = Blueprint('users', __name__)
 api = root_api.namespace('users', description=_API_DESCRIPTION)
 logger = logging.getLogger(__name__)
 
@@ -101,8 +101,7 @@ class UserResource(UserBaseResource):
         data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
 
         with db_wrapper.database.atomic():
-            data['id'] = user_id
-            self.user_manager.save(**data)
+            self.user_manager.save(user_id, **data)
 
             if 'role_id' in data:
                 user_datastore.remove_role_from_user(user, user.roles[0])

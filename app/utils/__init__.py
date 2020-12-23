@@ -6,6 +6,7 @@ from datetime import date, datetime
 from functools import reduce
 from typing import Type
 
+from flask import request
 from peewee import (CharField, ModelSelect, TextField, FixedCharField,
                     UUIDField, Model, Field)
 
@@ -245,3 +246,17 @@ def create_search_query(db_model: Type[Model], query: ModelSelect,
         query = query.where(*sql_clauses)
 
     return query
+
+
+def get_request_file(field_name: str = None) -> dict:
+    field_name = 'document' if field_name is None else field_name
+    file = {}
+    request_file = request.files.to_dict().get(field_name)
+
+    if request_file:
+        file = {
+            'mime_type': request_file.mimetype,
+            'filename': request_file.filename,
+            'file_data': request_file.read(),
+        }
+    return file

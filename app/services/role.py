@@ -2,7 +2,6 @@ from marshmallow import ValidationError
 from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 
 from app.managers import RoleManager
-from app.models import Role as RoleModel
 from app.serializers import RoleSerializer
 from app.services.base import BaseService
 
@@ -23,8 +22,8 @@ class RoleService(BaseService):
 
         return self.manager.create(**data)
 
-    def find(self, role_id: int):
-        role = self.manager.find(role_id)
+    def find(self, role_id: int, *args):
+        role = self.manager.find(role_id, *args)
         if role is None:
             raise NotFound('Role doesn\'t exist')
         return role
@@ -42,10 +41,9 @@ class RoleService(BaseService):
         if role.deleted_at is not None:
             raise BadRequest('Role already deleted')
 
-        serialized_data['id'] = role_id
-        self.manager.save(**serialized_data)
+        self.manager.save(role_id, **serialized_data)
 
-        args = (RoleModel.deleted_at.is_null(),)
+        args = (self.manager.model.deleted_at.is_null(),)
         return self.manager.find(role_id, *args)
 
     def delete(self, role_id: int):

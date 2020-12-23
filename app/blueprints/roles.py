@@ -3,14 +3,13 @@ import logging
 from flask import Blueprint, request
 from flask_security import roles_required
 
-from .base import BaseResource
 from app.extensions import api as root_api
 from app.models.role import Role as RoleModel
 from app.serializers import RoleSerializer
 from app.swagger import (role_input_sw_model, role_output_sw_model,
                          search_input_sw_model, role_search_output_sw_model)
 from app.utils.decorators import token_required
-from ..managers.role import RoleManager
+from .base import BaseResource
 from ..services.role import RoleService
 
 _API_DESCRIPTION = 'Users with role admin can manage these endpoints.'
@@ -23,7 +22,6 @@ logger = logging.getLogger(__name__)
 class RoleBaseResource(BaseResource):
     db_model = RoleModel
     role_service = RoleService()
-    role_manager = RoleManager()
     role_serializer = RoleSerializer()
 
 
@@ -84,7 +82,7 @@ class RolesSearchResource(RoleBaseResource):
     @token_required
     @roles_required('admin')
     def post(self) -> tuple:
-        role_data = self.role_manager.get(**request.get_json())
+        role_data = self.role_service.get(**request.get_json())
         role_serializer = RoleSerializer(many=True)
         return {
                    'data': role_serializer.dump(list(role_data['query'])),
