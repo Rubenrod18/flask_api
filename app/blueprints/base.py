@@ -1,5 +1,3 @@
-import logging
-
 from flask_restx import Resource
 from flask import Blueprint
 from peewee import ModelSelect
@@ -9,7 +7,6 @@ from ..utils import get_request_query_fields, create_search_query
 
 blueprint = Blueprint('base', __name__)
 api = root_api.namespace('', description='Base endpoints')
-logger = logging.getLogger(__name__)
 
 
 class BaseResource(Resource):

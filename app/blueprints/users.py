@@ -1,5 +1,3 @@
-import logging
-
 from flask import Blueprint, request, url_for
 from flask_security import roles_accepted
 
@@ -17,7 +15,6 @@ _API_DESCRIPTION = ('Users with role admin or team_leader can manage '
 
 blueprint = Blueprint('users', __name__)
 api = root_api.namespace('users', description=_API_DESCRIPTION)
-logger = logging.getLogger(__name__)
 
 
 class UserBaseResource(BaseResource):

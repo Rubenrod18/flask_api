@@ -1,5 +1,3 @@
-import logging
-
 from flask import Blueprint
 from flask_restx import Resource
 from flask_security import roles_accepted
@@ -10,7 +8,6 @@ from app.utils.decorators import token_required
 
 blueprint = Blueprint('tasks', __name__, url_prefix='/api/tasks')
 api = root_api.namespace('tasks', description='Tasks endpoints')
-logger = logging.getLogger(__name__)
 
 
 class TaskResource(Resource):

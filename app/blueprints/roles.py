@@ -1,5 +1,3 @@
-import logging
-
 from flask import Blueprint, request
 from flask_security import roles_required
 
@@ -16,7 +14,6 @@ _API_DESCRIPTION = 'Users with role admin can manage these endpoints.'
 
 blueprint = Blueprint('roles', __name__)
 api = root_api.namespace('roles', description=_API_DESCRIPTION)
-logger = logging.getLogger(__name__)
 
 
 class RoleBaseResource(BaseResource):

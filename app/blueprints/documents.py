@@ -1,5 +1,3 @@
-import logging
-
 from flask import Blueprint, request
 from flask_security import roles_accepted
 from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
@@ -19,7 +17,6 @@ _API_DESCRIPTION = ('Users with role admin, team_leader or worker can '
 
 blueprint = Blueprint('documents', __name__)
 api = root_api.namespace('documents', description=_API_DESCRIPTION)
-logger = logging.getLogger(__name__)
 
 
 class DocumentBaseResource(BaseResource):
