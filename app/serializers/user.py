@@ -1,80 +1,60 @@
-from flask_restx import ValidationError
-from flask_security import verify_password
 from marshmallow import fields, validate, pre_load
-from werkzeug.exceptions import Unauthorized, BadRequest, NotFound, Forbidden
+from werkzeug.exceptions import BadRequest, NotFound
 
 from app.extensions import ma
-from app.models.user import User as UserModel
+from app.managers import UserManager, RoleManager
 from app.serializers import RoleSerializer
 from app.serializers.core import TimestampField
 from config import Config
+
+user_manager = UserManager()
+role_manager = RoleManager()
+
+
+class VerifyRoleId(fields.Field):
+
+    def _deserialize(self, value, *args, **kwargs):
+        role = role_manager.find(value)
+        if role is None:
+            raise NotFound(f'Role "{value}" not found')
+
+        if role.deleted_at is not None:
+            raise BadRequest(f'Role "{value}" deleted')
+
+        return value
 
 
 class UserSerializer(ma.Schema):
     class Meta:
         ordered = True
-        fields = (
-            'id', 'name', 'last_name', 'email', 'genre', 'birth_date', 'active',
-            'created_at', 'updated_at', 'deleted_at', 'created_by', 'roles',
-        )
 
-    id = fields.Int()
+    id = fields.Int(dump_only=True)
     created_by = fields.Nested(lambda: UserSerializer(only=('id',)))
     name = fields.Str()
     last_name = fields.Str()
-    email = fields.Email()
+    email = fields.Email(required=True)
     password = fields.Str(
         validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN,
-                                 max=50)
+                                 max=50),
+        load_only=True
     )
     genre = fields.Str(validate=validate.OneOf(['m', 'f']))
     birth_date = fields.Date()
     active = fields.Bool()
-    created_at = TimestampField()
-    updated_at = TimestampField()
-    deleted_at = TimestampField()
-    roles = fields.List(fields.Nested(RoleSerializer, only=('name', 'label')))
+    created_at = TimestampField(dump_only=True)
+    updated_at = TimestampField(dump_only=True)
+    deleted_at = TimestampField(dump_only=True)
+    roles = fields.List(
+        fields.Nested(RoleSerializer, only=('name', 'label')),
+        dump_only=True
+    )
 
-    def validate_credentials(self, data: dict) -> dict:
-        self.validate_email(data)
-
-        user = UserModel.get_or_none(email=data.get('email'))
-        if user and not verify_password(data.get('password'), user.password):
-            raise Unauthorized('Credentials invalid')
-
-        return data
+    role_id = VerifyRoleId(load_only=True)
 
     @staticmethod
-    def valid_request_user(data: dict) -> dict:
-        if UserModel.get_or_none(email=data.get('email')):
+    def valid_request_email(data: dict) -> dict:
+        if user_manager.find_by_email(data.get('email')):
             raise BadRequest('User email already created')
-
-        return data
-
-    @staticmethod
-    def validate_password(password: str) -> None:
-        password_length_min = Config.SECURITY_PASSWORD_LENGTH_MIN
-        password_length_max = 50
-
-        if len(password) < password_length_min:
-            raise ValidationError(f'Password must be greater '
-                                  f'than {password_length_min}.')
-        if len(password) > password_length_max:
-            raise ValidationError(f'Password must not be greater '
-                                  f'than {password_length_max}.')
-
-    @staticmethod
-    def validate_email(data: dict) -> dict:
-        user = UserModel.get_or_none(email=data.get('email'))
-
-        if user is None:
-            raise NotFound('User not found')
-
-        if not user.active:
-            raise Forbidden('User not actived')
-
-        if user.deleted_at is not None:
-            raise Forbidden('User deleted')
 
         return data
 

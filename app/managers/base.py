@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from app.models import Base
+from app.models import Base as BaseModel
 from app.utils import get_request_query_fields, create_search_query
 
 
 class BaseManager(object):
 
     def __init__(self, *args, **kwargs):
-        self.model = Base
+        self.model = BaseModel
 
     def create(self, **kwargs):
         return self.model.create(**kwargs)

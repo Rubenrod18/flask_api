@@ -15,8 +15,7 @@ class RoleService(BaseService):
 
     def create(self, **kwargs):
         try:
-            self.serializer.valid_role_name(kwargs)
-            data = self.serializer.load(data=kwargs)
+            data = self.serializer.load(kwargs)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 

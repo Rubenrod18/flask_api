@@ -26,7 +26,7 @@ def get_blueprints() -> list:
 
                 try:
                     bp = get_attr_from_module(abs_path_module, 'blueprint')
-                except AttributeError:
+                except AttributeError as e:
                     continue
                 else:
                     blueprints.append(bp)

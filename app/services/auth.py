@@ -1,30 +1,43 @@
 import flask_security
 from flask import url_for
+from flask_security import verify_password
 from flask_security.passwordless import generate_login_token
 from marshmallow import ValidationError
-from werkzeug.exceptions import UnprocessableEntity, Forbidden
+from werkzeug.exceptions import UnprocessableEntity, Forbidden, Unauthorized
 
 from app.celery.tasks import reset_password_email
 from app.managers import UserManager
 from app.models import user_datastore
 from app.serializers import UserSerializer
+from app.serializers.auth import AuthSerializer
+from app.swagger import auth_login_sw_model
 
 
 class AuthService(object):
 
     def __init__(self):
-        self.user_serializer = UserSerializer()
+        self.auth_serializer = AuthSerializer()
         self.user_manager = UserManager()
+        self.user_serializer = UserSerializer()
 
     def login_user(self, **kwargs) -> str:
         try:
-            data = self.user_serializer.validate_credentials(kwargs)
+            data = {key: value for key, value in kwargs.items()
+                    if key in auth_login_sw_model.keys()}
+            self.user_serializer.load(data, partial=True)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
         user = user_datastore.find_user(**{'email': data.get('email')})
+        if (user is None
+                or not verify_password(data.get('password'), user.password)):
+            raise Unauthorized('Credentials invalid')
+
+        if user.active is False:
+            raise Forbidden('User not actived')
+
         token = generate_login_token(user)
-        # TODO: Pending to testing whats happen id add a new field in user model when a user is logged
+        # TODO: Pending to testing whats happen if add a new field in user model when a user is logged
         flask_security.login_user(user)
         return token
 
@@ -35,11 +48,10 @@ class AuthService(object):
 
     def request_reset_password(self, **kwargs):
         try:
-            data = self.user_serializer.validate_email(kwargs)
+            user = self.auth_serializer.validate_user_email(kwargs.get('email'))
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 
-        user = self.user_manager.find_by_email(data['email'])
         token = user.get_reset_token()
         reset_password_url = url_for('auth_reset_password_resource',
                                      token=token,
@@ -65,7 +77,7 @@ class AuthService(object):
 
     def confirm_request_reset_password(self, token, password) -> str:
         try:
-            self.user_serializer.validate_password(password)
+            self.auth_serializer.validate_user_password(password)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
 

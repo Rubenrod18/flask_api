@@ -1,20 +1,13 @@
 import logging
 
-from flask_login import current_user
 from flask import Blueprint, request, url_for
 from flask_security import roles_accepted
-from marshmallow import ValidationError, INCLUDE, EXCLUDE
-from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
 
-from app.celery.word.tasks import export_user_data_in_word
-from app.celery.excel.tasks import export_user_data_in_excel
-from app.celery.tasks import create_user_email, create_word_and_excel_documents
 from app.blueprints.base import BaseResource
-from app.extensions import db_wrapper, api as root_api
-from app.managers import RoleManager, UserManager
-from app.models import User as UserModel, user_datastore
-from app.serializers import (UserSerializer, UserExportWordSerializer,
-                             SearchSerializer)
+from app.extensions import api as root_api
+from app.serializers import UserSerializer
+from app.services.task import TaskService
+from app.services.user import UserService
 from app.swagger import (user_input_sw_model, user_output_sw_model,
                          user_search_output_sw_model, search_input_sw_model)
 from app.utils.decorators import token_required
@@ -28,16 +21,9 @@ logger = logging.getLogger(__name__)
 
 
 class UserBaseResource(BaseResource):
-    db_model = UserModel
-    user_manager = UserManager()
-    role_manager = RoleManager()
     user_serializer = UserSerializer()
-
-    def deserialize_request_data(self, **kwargs: dict) -> dict:
-        try:
-            return self.user_serializer.load(**kwargs)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
+    user_service = UserService()
+    task_service = TaskService()
 
 
 @api.route('')
@@ -50,20 +36,9 @@ class NewUserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
-        request_data = self.user_serializer.valid_request_user(request.get_json())
-        data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
-
-        with db_wrapper.database.atomic():
-            role = self.role_manager.find(data['role_id'])
-
-            data['created_by'] = current_user.id
-            data['roles'] = [role]
-            user = user_datastore.create_user(**data)
-
+        user = self.user_service.create(request.get_json())
         user_data = self.user_serializer.dump(user)
-        create_user_email.delay(user_data)
-        logger.debug(user_data)
-
+        self.task_service.send_create_user_email(**user_data)
         return {'data': user_data}, 201
 
 
@@ -76,10 +51,7 @@ class UserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
-        user = self.user_manager.find(user_id)
-        if user is None:
-            raise NotFound('User doesn\'t exist')
-
+        user = self.user_service.find(user_id)
         return {'data': self.user_serializer.dump(user)}, 200
 
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
@@ -90,26 +62,7 @@ class UserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def put(self, user_id: int) -> tuple:
-        user = self.user_manager.find(user_id)
-        if user is None:
-            raise BadRequest('User doesn\'t exist')
-
-        if user.deleted_at is not None:
-            raise BadRequest('User already deleted')
-
-        request_data = self.user_serializer.valid_request_user(request.get_json())
-        data = self.deserialize_request_data(data=request_data, unknown=INCLUDE)
-
-        with db_wrapper.database.atomic():
-            self.user_manager.save(user_id, **data)
-
-            if 'role_id' in data:
-                user_datastore.remove_role_from_user(user, user.roles[0])
-                role = self.role_manager.find(data['role_id'])
-                user_datastore.add_role_to_user(user, role)
-
-        args = (UserModel.deleted_at.is_null(),)
-        user = self.user_manager.find(user_id, *args)
+        user = self.user_service.save(user_id, **request.get_json())
         return {'data': self.user_serializer.dump(user)}, 200
 
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
@@ -119,14 +72,7 @@ class UserResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
-        user = self.user_manager.find(user_id)
-        if user is None:
-            raise NotFound('User doesn\'t exist')
-
-        if user.deleted_at is not None:
-            raise BadRequest('User already deleted')
-
-        user = self.user_manager.delete(user_id)
+        user = self.user_service.delete(user_id)
         return {'data': self.user_serializer.dump(user)}, 200
 
 
@@ -140,14 +86,8 @@ class UsersSearchResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
-        try:
-            request_data = SearchSerializer().load(request.get_json())
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-
-        user_data = self.user_manager.get(**request_data)
+        user_data = self.user_service.get(**request.get_json())
         user_serializer = UserSerializer(many=True)
-
         return {
                    'data': user_serializer.dump(list(user_data['query'])),
                    'records_total': user_data['records_total'],
@@ -164,21 +104,11 @@ class ExportUsersExcelResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        try:
-            request_data = SearchSerializer().load(request.get_json())
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-
-        task = export_user_data_in_excel.apply_async(
-            (current_user.id, request_data),
-            countdown=5
-        )
-
-        return {
-                   'task': task.id,
-                   'url': url_for('tasks_task_status_resource', task_id=task.id,
-                                  _external=True),
-               }, 202
+        task = self.task_service.export_user_data_in_excel(request.get_json())
+        return {'task': task.id,
+                'url': url_for('tasks_task_status_resource', task_id=task.id,
+                               _external=True)
+                }, 202
 
 
 @api.route('/word')
@@ -190,28 +120,12 @@ class ExportUsersWordResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        try:
-            request_data = SearchSerializer().load(request.get_json())
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-
-        try:
-            serializer = UserExportWordSerializer()
-            request_args = serializer.load(request.args.to_dict(),
-                                           unknown=EXCLUDE)
-            to_pdf = request_args.get('to_pdf', 0)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-
-        task = export_user_data_in_word.apply_async(
-            args=[current_user.id, request_data, to_pdf]
-        )
-
-        return {
-                   'task': task.id,
-                   'url': url_for('tasks_task_status_resource', task_id=task.id,
-                                  _external=True),
-               }, 202
+        payload, args = request.get_json(), request.args.to_dict()
+        task = self.task_service.export_user_data_in_word(payload, args)
+        return {'task': task.id,
+                'url': url_for('tasks_task_status_resource', task_id=task.id,
+                               _external=True),
+                }, 202
 
 
 @api.route('/word_and_xlsx')
@@ -223,21 +137,6 @@ class ExportUsersExcelAndWordResource(UserBaseResource):
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        try:
-            request_data = SearchSerializer().load(request.get_json())
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-
-        try:
-            serializer = UserExportWordSerializer()
-            request_args = serializer.load(request.args.to_dict(),
-                                           unknown=EXCLUDE)
-            to_pdf = request_args.get('to_pdf', 0)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-
-        create_word_and_excel_documents.apply_async(
-            args=[current_user.id, request_data, to_pdf]
-        )
-
+        payload, args = request.get_json(), request.args.to_dict()
+        self.task_service.export_user_data_in_excel_and_word(payload, args)
         return {}, 202
