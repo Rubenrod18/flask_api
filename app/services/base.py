@@ -1,6 +1,3 @@
-from marshmallow import ValidationError
-from werkzeug.exceptions import UnprocessableEntity
-
 from app.managers import BaseManager
 from app.serializers import SearchSerializer
 
@@ -23,11 +20,7 @@ class BaseService(object):
         return self.manager.find(record_id, *args)
 
     def get(self, **kwargs):
-        try:
-            data = SearchSerializer().load(kwargs)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-
+        data = SearchSerializer().load(kwargs)
         return self.manager.get(**data)
 
     def delete(self, record_id: int):

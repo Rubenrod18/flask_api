@@ -5,8 +5,8 @@ import uuid
 
 from flask import current_app, send_file
 from flask_login import current_user
-from marshmallow import ValidationError, EXCLUDE
-from werkzeug.exceptions import (UnprocessableEntity, InternalServerError)
+from marshmallow import EXCLUDE
+from werkzeug.exceptions import InternalServerError
 
 from app.managers import DocumentManager
 from app.serializers import DocumentSerializer, DocumentAttachmentSerializer
@@ -26,10 +26,7 @@ class DocumentService(BaseService):
         self.file_storage = FileStorage()
 
     def create(self, **kwargs):
-        try:
-            data = self.serializer.valid_request_file(kwargs)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
+        data = self.serializer.valid_request_file(kwargs)
 
         file_extension = mimetypes.guess_extension(data.get('mime_type'))
         internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
@@ -58,23 +55,16 @@ class DocumentService(BaseService):
             return document
 
     def find(self, document_id: int, *args):
-        try:
-            self.serializer.load({'id': document_id}, partial=True)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-        else:
-            return self.manager.find(document_id, *args)
+        self.serializer.load({'id': document_id}, partial=True)
+        return self.manager.find(document_id, *args)
 
     def save(self, document_id: int, **kwargs):
-        try:
-            self.serializer.load({'id': document_id}, partial=True)
-            file = get_request_file()
-            data = self.serializer.valid_request_file(file)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-        else:
-            document = self.manager.find(document_id)
-            filepath = f'{document.directory_path}/{document.internal_filename}'
+        self.serializer.load({'id': document_id}, partial=True)
+        file = get_request_file()
+        data = self.serializer.valid_request_file(file)
+
+        document = self.manager.find(document_id)
+        filepath = f'{document.directory_path}/{document.internal_filename}'
 
         try:
             fs = FileStorage()
@@ -95,23 +85,16 @@ class DocumentService(BaseService):
             return document.reload()
 
     def delete(self, document_id: int):
-        try:
-            self.serializer.load({'id': document_id}, partial=True)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-        else:
-            return self.manager.delete(document_id)
+        self.serializer.load({'id': document_id}, partial=True)
+        return self.manager.delete(document_id)
 
     def get_document_content(self, document_id: int, **kwargs):
-        try:
-            self.serializer.load({'id': document_id}, partial=True)
-            request_args = DocumentAttachmentSerializer().load(kwargs,
-                                                               unknown=EXCLUDE)
-            as_attachment = request_args.get('as_attachment', 0)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-        else:
-            document = self.manager.find(document_id)
+        self.serializer.load({'id': document_id}, partial=True)
+        request_args = DocumentAttachmentSerializer().load(kwargs,
+                                                           unknown=EXCLUDE)
+
+        as_attachment = request_args.get('as_attachment', 0)
+        document = self.manager.find(document_id)
 
         mime_type = document.mime_type
         file_extension = mimetypes.guess_extension(mime_type)

@@ -1,7 +1,7 @@
 from celery.local import PromiseProxy
 from flask_login import current_user
-from marshmallow import ValidationError, EXCLUDE
-from werkzeug.exceptions import NotFound, UnprocessableEntity
+from marshmallow import EXCLUDE
+from werkzeug.exceptions import NotFound
 
 from app.celery.excel.tasks import export_user_data_in_excel
 from app.celery.tasks import create_user_email, create_word_and_excel_documents
@@ -43,10 +43,7 @@ class TaskService(object):
         create_user_email.delay(kwargs)
 
     def export_user_data_in_excel(self, data):
-        try:
-            data = self.search_serializer.load(data)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
+        data = self.search_serializer.load(data)
 
         return export_user_data_in_excel.apply_async(
             (current_user.id, data),
@@ -54,34 +51,20 @@ class TaskService(object):
         )
 
     def export_user_data_in_word(self, data: dict, args: dict):
-        try:
-            data = self.search_serializer.load(data)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
+        data = self.search_serializer.load(data)
+        request_args = self.user_word_export_serializer.load(args,
+                                                             unknown=EXCLUDE)
 
-        try:
-            request_args = self.user_word_export_serializer.load(args,
-                                                                 unknown=EXCLUDE)
-            to_pdf = request_args.get('to_pdf', 0)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-
+        to_pdf = request_args.get('to_pdf', 0)
         return export_user_data_in_word.apply_async(
             args=[current_user.id, data, to_pdf]
         )
 
     def export_user_data_in_excel_and_word(self, data, args):
-        try:
-            request_data = self.search_serializer.load(data)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-
-        try:
-            request_args = self.user_word_export_serializer.load(args,
-                                                                 unknown=EXCLUDE)
-            to_pdf = request_args.get('to_pdf', 0)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
+        request_data = self.search_serializer.load(data)
+        request_args = self.user_word_export_serializer.load(args,
+                                                             unknown=EXCLUDE)
+        to_pdf = request_args.get('to_pdf', 0)
 
         return create_word_and_excel_documents.apply_async(
             args=[current_user.id, request_data, to_pdf]

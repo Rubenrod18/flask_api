@@ -1,6 +1,5 @@
 from flask_login import current_user
-from marshmallow import ValidationError, EXCLUDE
-from werkzeug.exceptions import UnprocessableEntity
+from marshmallow import EXCLUDE
 
 from app.extensions import db_wrapper
 from app.managers import UserManager, RoleManager
@@ -18,10 +17,7 @@ class UserService(BaseService):
         self.user_serializer = UserSerializer()
 
     def create(self, user_data):
-        try:
-            deserialized_data = self.user_serializer.load(user_data)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
+        deserialized_data = self.user_serializer.load(user_data)
 
         with db_wrapper.database.atomic():
             role = self.role_manager.find(deserialized_data['role_id'])
@@ -32,22 +28,14 @@ class UserService(BaseService):
         return user
 
     def find(self, user_id: int, *args):
-        try:
-            self.user_serializer.load({'id': user_id}, partial=True)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-        else:
-            return self.manager.find(user_id, *args)
+        self.user_serializer.load({'id': user_id}, partial=True)
+        return self.manager.find(user_id, *args)
 
     def save(self, user_id: int, **kwargs):
-        try:
-            kwargs['id'] = user_id
-            data = self.user_serializer.load(kwargs, unknown=EXCLUDE)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-        else:
-            user = self.manager.find(user_id)
+        kwargs['id'] = user_id
+        data = self.user_serializer.load(kwargs, unknown=EXCLUDE)
 
+        user = self.manager.find(user_id)
         with db_wrapper.database.atomic():
             self.manager.save(user_id, **data)
 
@@ -55,12 +43,9 @@ class UserService(BaseService):
                 user_datastore.remove_role_from_user(user, user.roles[0])
                 role = self.role_manager.find(data['role_id'])
                 user_datastore.add_role_to_user(user, role)
+
         return user.reload()
 
     def delete(self, user_id: int):
-        try:
-            self.user_serializer.load({'id': user_id}, partial=True)
-        except ValidationError as e:
-            raise UnprocessableEntity(e.messages)
-        else:
-            return self.manager.delete(user_id)
+        self.user_serializer.load({'id': user_id}, partial=True)
+        return self.manager.delete(user_id)
