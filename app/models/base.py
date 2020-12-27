@@ -50,3 +50,6 @@ class Base(db.Model):
     @staticmethod
     def raw(query: str):
         return db.database.execute_sql(query)
+
+    def reload(self):
+        return type(self).get(self._pk_expr())

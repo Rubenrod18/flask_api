@@ -34,11 +34,9 @@ def test_user_login(client: FlaskClient):
         db_wrapper.database.close()
 
         response = client.post('/api/auth/login', json=data)
-        json_response = response.get_json()
 
         assert user.active is False
-        assert 403 == response.status_code
-        assert json_response.get('message') == 'User not actived'
+        assert 401 == response.status_code
 
     def _test_invalid_password():
         data = {
@@ -47,10 +45,7 @@ def test_user_login(client: FlaskClient):
         }
 
         response = client.post('/api/auth/login', json=data)
-        json_response = response.get_json()
-
         assert 401 == response.status_code
-        assert json_response.get('message') == 'Credentials invalid'
 
     def _test_login():
         with client:

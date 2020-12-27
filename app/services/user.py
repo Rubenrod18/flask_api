@@ -1,6 +1,6 @@
 from flask_login import current_user
 from marshmallow import ValidationError, EXCLUDE
-from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
+from werkzeug.exceptions import UnprocessableEntity
 
 from app.extensions import db_wrapper
 from app.managers import UserManager, RoleManager
@@ -32,23 +32,21 @@ class UserService(BaseService):
         return user
 
     def find(self, user_id: int, *args):
-        user = self.manager.find(user_id, *args)
-        if user is None:
-            raise NotFound('User doesn\'t exist')
-        return user
+        try:
+            self.user_serializer.load({'id': user_id}, partial=True)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
+        else:
+            return self.manager.find(user_id, *args)
 
     def save(self, user_id: int, **kwargs):
-        user = self.manager.find(user_id)
-        if user is None:
-            raise BadRequest('User doesn\'t exist')
-
-        if user.deleted_at is not None:
-            raise BadRequest('User already deleted')
-
         try:
+            kwargs['id'] = user_id
             data = self.user_serializer.load(kwargs, unknown=EXCLUDE)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
+        else:
+            user = self.manager.find(user_id)
 
         with db_wrapper.database.atomic():
             self.manager.save(user_id, **data)
@@ -57,17 +55,12 @@ class UserService(BaseService):
                 user_datastore.remove_role_from_user(user, user.roles[0])
                 role = self.role_manager.find(data['role_id'])
                 user_datastore.add_role_to_user(user, role)
-
-        args = (self.manager.model.deleted_at.is_null(),)
-        user = self.manager.find(user_id, *args)
-        return user
+        return user.reload()
 
     def delete(self, user_id: int):
-        user = self.manager.find(user_id)
-        if user is None:
-            raise NotFound('User doesn\'t exist')
-
-        if user.deleted_at is not None:
-            raise BadRequest('User already deleted')
-
-        return self.manager.delete(user_id)
+        try:
+            self.user_serializer.load({'id': user_id}, partial=True)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
+        else:
+            return self.manager.delete(user_id)

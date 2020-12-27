@@ -1,5 +1,5 @@
 from marshmallow import ValidationError
-from werkzeug.exceptions import UnprocessableEntity, NotFound, BadRequest
+from werkzeug.exceptions import UnprocessableEntity
 
 from app.managers import RoleManager
 from app.serializers import RoleSerializer
@@ -18,39 +18,31 @@ class RoleService(BaseService):
             data = self.serializer.load(kwargs)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
-
-        return self.manager.create(**data)
+        else:
+            return self.manager.create(**data)
 
     def find(self, role_id: int, *args):
-        role = self.manager.find(role_id, *args)
-        if role is None:
-            raise NotFound('Role doesn\'t exist')
-        return role
+        try:
+            self.serializer.load({'id': role_id}, partial=True)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
+        else:
+            return self.manager.find(role_id)
 
     def save(self, role_id: int, **kwargs):
         try:
+            kwargs['id'] = role_id
             serialized_data = self.serializer.load(kwargs)
         except ValidationError as e:
             raise UnprocessableEntity(e.messages)
-
-        role = self.manager.find(role_id)
-        if role is None:
-            raise BadRequest('Role doesn\'t exist')
-
-        if role.deleted_at is not None:
-            raise BadRequest('Role already deleted')
-
-        self.manager.save(role_id, **serialized_data)
-
-        args = (self.manager.model.deleted_at.is_null(),)
-        return self.manager.find(role_id, *args)
+        else:
+            self.manager.save(role_id, **serialized_data)
+            return self.manager.find(role_id)
 
     def delete(self, role_id: int):
-        role = self.manager.find(role_id)
-        if role is None:
-            raise NotFound('Role doesn\'t exist')
-
-        if role.deleted_at is not None:
-            raise BadRequest('Role already deleted')
-
-        return self.manager.delete(role_id)
+        try:
+            self.serializer.load({'id': role_id}, partial=True)
+        except ValidationError as e:
+            raise UnprocessableEntity(e.messages)
+        else:
+            return self.manager.delete(role_id)

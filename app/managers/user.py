@@ -8,5 +8,8 @@ class UserManager(BaseManager):
         super(BaseManager, self).__init__()
         self.model = UserModel
 
-    def find_by_email(self, email: str):
-        return self.model.get_or_none(email=email)
+    def find_by_email(self, email: str, *args):
+        query = (self.model.email == email,)
+        if args:
+            query = query + args
+        return self.model.get_or_none(*query)

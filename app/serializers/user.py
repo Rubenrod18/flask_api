@@ -1,4 +1,6 @@
-from marshmallow import fields, validate, pre_load
+import logging
+
+from marshmallow import fields, validate, pre_load, validates
 from werkzeug.exceptions import BadRequest, NotFound
 
 from app.extensions import ma
@@ -7,6 +9,7 @@ from app.serializers import RoleSerializer
 from app.serializers.core import TimestampField
 from config import Config
 
+logger = logging.getLogger(__name__)
 user_manager = UserManager()
 role_manager = RoleManager()
 
@@ -28,7 +31,7 @@ class UserSerializer(ma.Schema):
     class Meta:
         ordered = True
 
-    id = fields.Int(dump_only=True)
+    id = fields.Int()
     created_by = fields.Nested(lambda: UserSerializer(only=('id',)))
     name = fields.Str()
     last_name = fields.Str()
@@ -51,6 +54,19 @@ class UserSerializer(ma.Schema):
 
     role_id = VerifyRoleId(load_only=True)
 
+    @validates('id')
+    def validate_id(self, user_id):
+        args = (user_manager.model.deleted_at.is_null(),)
+        user = user_manager.find(user_id, *args)
+
+        if user is None:
+            logger.debug(f'User "{user_id}" not found.')
+            raise NotFound('User not found')
+
+        if user.deleted_at is not None:
+            logger.debug(f'User "{user_id}" deleted.')
+            raise NotFound('User not found')
+
     @staticmethod
     def valid_request_email(data: dict) -> dict:
         if user_manager.find_by_email(data.get('email')):
@@ -63,7 +79,7 @@ class UserExportWordSerializer(ma.Schema):
     to_pdf = fields.Int(validate=validate.OneOf([1, 0]))
 
     @pre_load
-    def convert_to_integer(self, value, many, **kwargs):
+    def process_input(self, value, many, **kwargs):
         if 'to_pdf' in value:
             value['to_pdf'] = int(value.get('to_pdf'))
         return value

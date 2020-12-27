@@ -260,3 +260,8 @@ def get_request_file(field_name: str = None) -> dict:
             'file_data': request_file.read(),
         }
     return file
+
+
+def filter_by_keys(data: dict, keys: list) -> dict:
+    return {key: value for key, value in data.items()
+            if key in keys}
