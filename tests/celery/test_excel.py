@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from flask import Flask
 from peewee import fn
 
-from app.celery.excel.tasks import export_user_data_in_excel
+from app.celery.excel.tasks import export_user_data_in_excel_task
 from app.models.user import User as UserModel
 from app.utils.constants import MS_EXCEL_MIME_TYPE
 
@@ -25,8 +25,8 @@ def test_export_excel_task(app: Flask):
         'page_number': 1,
     }
 
-    task = export_user_data_in_excel.delay(created_by=user.id,
-                                           request_data=request_data)
+    task = export_user_data_in_excel_task.delay(created_by=user.id,
+                                                request_data=request_data)
     result = task.get()
 
     document_data = result.get('result')

@@ -76,15 +76,7 @@ def _get_user_data(request_data: dict) -> list:
 
 
 @celery.task(bind=True, base=ContextTask)
-def export_user_data_in_word(self, created_by: int, request_data: dict, to_pdf: int):
-    """ Export User Data in Word
-
-    :param self:
-    :param created_by:
-    :param request_data:
-    :param to_pdf:
-    :return:
-    """
+def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_pdf: int):
     def _write_docx_content(rows: list, document: docx.Document) -> None:
         header_fields = rows[0]
         assert len(header_fields) == len(_COLUMN_DISPLAY_ORDER)

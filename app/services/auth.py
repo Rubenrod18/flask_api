@@ -2,10 +2,10 @@ import flask_security
 from flask import url_for
 from flask_security.passwordless import generate_login_token
 
-from app.celery.tasks import reset_password_email
 from app.managers import UserManager
 from app.serializers.auth import (AuthUserLoginSerializer,
                                   AuthUserConfirmResetPassword)
+from app.services.task import TaskService
 from app.swagger import auth_login_sw_model, auth_user_reset_password_sw_model
 from app.utils import filter_by_keys
 
@@ -13,6 +13,7 @@ from app.utils import filter_by_keys
 class AuthService(object):
 
     def __init__(self):
+        self.task_service = TaskService()
         self.user_manager = UserManager()
         self.auth_user_login_serializer = AuthUserLoginSerializer()
         self.auth_user_confirm_reset_password = AuthUserConfirmResetPassword()
@@ -43,7 +44,7 @@ class AuthService(object):
             'email': user.email,
             'reset_password_url': reset_password_url,
         }
-        reset_password_email.delay(email_data)
+        self.task_service.reset_password_email(**email_data)
 
     def verify_reset_token(self, token):
         fields = ['token']

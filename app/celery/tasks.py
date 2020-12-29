@@ -4,15 +4,15 @@ from flask import render_template, current_app
 from flask_mail import Message
 
 from app.celery import ContextTask
-from app.celery.word.tasks import export_user_data_in_word
-from app.celery.excel.tasks import export_user_data_in_excel
+from app.celery.word.tasks import export_user_data_in_word_task
+from app.celery.excel.tasks import export_user_data_in_excel_task
 from app.extensions import mail, celery
 
 logger = get_task_logger(__name__)
 
 
 @celery.task(base=ContextTask)
-def create_user_email(email_data) -> bool:
+def create_user_email_task(email_data) -> bool:
     logger.info(f'to: {email_data}')
 
     to = [email_data.get('email')]
@@ -29,7 +29,7 @@ def create_user_email(email_data) -> bool:
 
 
 @celery.task(base=ContextTask)
-def reset_password_email(email_data) -> bool:
+def reset_password_email_task(email_data) -> bool:
     logger.info(f'to: {email_data}')
 
     to = [email_data.get('email')]
@@ -46,7 +46,7 @@ def reset_password_email(email_data) -> bool:
 
 
 @celery.task(base=ContextTask)
-def send_email_with_attachments(task_data: list) -> bool:
+def send_email_with_attachments_task(task_data: list) -> bool:
     auth_user_data = task_data[0].get('result').get('created_by')
 
     to = [auth_user_data.get('email')]
@@ -76,13 +76,13 @@ def send_email_with_attachments(task_data: list) -> bool:
 
 
 @celery.task(base=ContextTask)
-def create_word_and_excel_documents(created_by: int, request_data: dict,
-                                    to_pdf: int) -> bool:
+def create_word_and_excel_documents_task(created_by: int, request_data: dict,
+                                         to_pdf: int) -> bool:
     group_tasks = [
-        export_user_data_in_word.s(created_by, request_data, to_pdf),
-        export_user_data_in_excel.s(created_by, request_data),
+        export_user_data_in_word_task.s(created_by, request_data, to_pdf),
+        export_user_data_in_excel_task.s(created_by, request_data),
     ]
-    callback_task = send_email_with_attachments.s()
+    callback_task = send_email_with_attachments_task.s()
 
     chord(group_tasks, callback_task)()
 

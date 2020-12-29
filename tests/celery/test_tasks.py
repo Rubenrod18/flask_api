@@ -2,7 +2,7 @@
 from flask import url_for, Flask
 from peewee import fn
 
-from app.celery.tasks import create_user_email, reset_password_email, create_word_and_excel_documents
+from app.celery.tasks import create_user_email_task, reset_password_email_task, create_word_and_excel_documents_task
 from app.models.user import User as UserModel
 
 
@@ -10,7 +10,7 @@ def test_create_user_email_task(factory: any):
     ignore_fields = ['role', 'created_by']
     data = factory('User').make(exclude=ignore_fields, to_dict=True)
 
-    task = create_user_email.delay(data)
+    task = create_user_email_task.delay(data)
     result = task.get()
 
     assert result
@@ -32,7 +32,7 @@ def test_reset_password_email_task(app: Flask):
         'reset_password_url': reset_password_url,
     }
 
-    task = reset_password_email.delay(email_data)
+    task = reset_password_email_task.delay(email_data)
     result = task.get()
 
     assert result
@@ -50,7 +50,7 @@ def test_create_word_and_excel_documents(app: Flask):
         'page_number': 1,
     }
 
-    task = create_word_and_excel_documents.delay(**{'created_by': user.id,
+    task = create_word_and_excel_documents_task.delay(**{'created_by': user.id,
                                                     'request_data': request_data,
                                                     'to_pdf': 1})
     result = task.get()
