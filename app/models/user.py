@@ -1,14 +1,13 @@
 import logging
 
 from flask import current_app
-from flask_security import UserMixin, PeeweeUserDatastore, hash_password
+from flask_security import UserMixin, hash_password
 from itsdangerous import URLSafeSerializer, TimestampSigner
 from peewee import (CharField, DateField, TimestampField, ForeignKeyField,
                     BooleanField, FixedCharField, ManyToManyField)
 
 from .base import Base as BaseModel
 from .role import Role as RoleModel
-from ..extensions import db_wrapper as db
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +38,7 @@ class User(BaseModel, UserMixin):
         return super(User, self).save(*args, **kwargs)
 
     def get_reset_token(self) -> str:
+        # TODO: move to user's service
         secret_key = current_app.config.get('SECRET_KEY')
         expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
         salt = expire_in.__str__()
@@ -51,6 +51,7 @@ class User(BaseModel, UserMixin):
 
     @staticmethod
     def verify_reset_token(token: str) -> any:
+        # TODO: move to user's service
         secret_key = current_app.config.get('SECRET_KEY')
         expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
         salt = expire_in.__str__()
@@ -67,14 +68,10 @@ class User(BaseModel, UserMixin):
 
     @staticmethod
     def ensure_password(plain_text: str) -> str:
+        # TODO: move to user'service
         hashed_password = None
 
         if plain_text:
             hashed_password = hash_password(plain_text)
 
         return hashed_password
-
-
-UserRoles = User.roles.through_model
-
-user_datastore = PeeweeUserDatastore(db, User, RoleModel, UserRoles)

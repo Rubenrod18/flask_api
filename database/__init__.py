@@ -12,7 +12,7 @@ from faker.providers import person, file
 from faker.providers import date_time
 
 from app.extensions import db_wrapper
-from app.models import get_models
+from app.models import get_db_models
 from database.migrations import Migration
 
 fake = Faker()
@@ -26,7 +26,7 @@ def init_database() -> None:
     table_names = db_wrapper.database.get_tables()
 
     if not table_names:
-        models = get_models()
+        models = get_db_models()
         db_wrapper.database.create_tables(models)
 
     table_name = Migration._meta.table_name

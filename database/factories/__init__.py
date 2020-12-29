@@ -13,7 +13,7 @@ The factory concept is based on `Laravel factories
 """
 import os
 
-from app.utils import class_for_name
+from app.utils import get_attr_from_module
 
 
 class Factory:
@@ -106,7 +106,7 @@ class Factory:
         self.__check_exists_factory(factory_classname, model_name)
 
         for item in range(records):
-            factory_class = class_for_name(factory_module, factory_classname)
+            factory_class = get_attr_from_module(factory_module, factory_classname)
             factory = factory_class()
             self.__models.append(factory)
 
@@ -185,7 +185,7 @@ class Factory:
 
             module = f'{self.__current_module}.{basename}'
 
-            factory_class = class_for_name(module, classname)
+            factory_class = get_attr_from_module(module, classname)
             factories_classnames.add(factory_class().__class__.__name__)
 
         if factory_classname not in factories_classnames:

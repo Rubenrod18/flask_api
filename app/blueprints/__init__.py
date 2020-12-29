@@ -1,16 +1,40 @@
 """Registers Flask blueprints."""
-from .base import blueprint as blueprint_base
-from .auth import blueprint as blueprint_auth
-from .users import blueprint as blueprint_users
-from .roles import blueprint as blueprint_roles
-from .documents import blueprint as blueprint_documents
-from .tasks import blueprint as blueprint_tasks
+import os
 
-BLUEPRINTS = [
-    blueprint_base,
-    blueprint_users,
-    blueprint_roles,
-    blueprint_auth,
-    blueprint_documents,
-    blueprint_tasks,
-]
+from app.utils import get_attr_from_module
+
+
+def get_blueprints() -> list:
+    """Get Blueprints via dynamic way."""
+    def get_bp_modules() -> list:
+        """Get Blueprints modules."""
+        abs_path = os.path.abspath(__file__)
+        path = os.path.dirname(abs_path)
+        dirs = os.listdir(path)
+
+        dirs.remove(os.path.basename(__file__))
+
+        return dirs
+
+    def get_bp_instances(modules: list) -> list:
+        """Get Blueprints instances."""
+        blueprints = []
+
+        for item in modules:
+            if item.endswith('.py'):
+                abs_path_module = '{}.{}'.format(__name__, item[:-3])
+
+                try:
+                    bp = get_attr_from_module(abs_path_module, 'blueprint')
+                except AttributeError as e:
+                    continue
+                else:
+                    blueprints.append(bp)
+
+        return blueprints
+
+    bp_modules = get_bp_modules()
+    return get_bp_instances(bp_modules)
+
+
+BLUEPRINTS = get_blueprints()

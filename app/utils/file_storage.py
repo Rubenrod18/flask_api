@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from shutil import copyfile
 
-from app.utils import FileEmptyError
+from app.exceptions import FileEmptyError
 
 logger = logging.getLogger(__name__)
 

@@ -5,8 +5,7 @@ from playhouse.migrate import migrate, CharField, TimestampField, TextField
 from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
-from app.models.base import Base as BaseModel
-from app.models.role import Role as RoleModel
+from app.models import Base as BaseModel, Role as RoleModel
 from database.migrations import migrate_actions, rollback_actions, migrator
 
 

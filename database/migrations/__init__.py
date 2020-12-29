@@ -6,7 +6,7 @@ from peewee import CompositeKey, CharField
 from playhouse.migrate import SqliteMigrator
 
 from app.extensions import db_wrapper
-from app.utils import class_for_name
+from app.utils import get_attr_from_module
 
 migrator = SqliteMigrator(db_wrapper.database)
 
@@ -103,7 +103,7 @@ def init_migrations(rollback: bool = False) -> None:
                 class_name = migration_filename[4:].title().replace('_', '')
 
                 module_path = '{}.{}'.format(__name__, migration_filename)
-                migration = class_for_name(module_path, class_name)()
+                migration = get_attr_from_module(module_path, class_name)()
 
                 migration.down()
             else:
@@ -114,7 +114,7 @@ def init_migrations(rollback: bool = False) -> None:
                     class_name = migration_filename[4:].title().replace('_', '')
 
                     module_path = '{}.{}'.format(__name__, migration_filename)
-                    migration = class_for_name(module_path, class_name)()
+                    migration = get_attr_from_module(module_path, class_name)()
 
                     exists = Migration.get_or_none(name=migration.name)
 

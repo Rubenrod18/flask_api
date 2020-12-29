@@ -10,7 +10,7 @@ from app.models.user import User as UserModel
 
 
 def test_user_login(client: FlaskClient):
-    def _test_validation_request():
+    def _test_invalid_user():
         data = {
             'email': '123@mail.com',
             'password': '12345678',
@@ -20,7 +20,7 @@ def test_user_login(client: FlaskClient):
         json_response = response.get_json()
 
         assert json_response.get('message')
-        assert 404 == response.status_code
+        assert 401 == response.status_code
 
     def _test_inactive_user():
         user = (UserModel.select()
@@ -34,10 +34,9 @@ def test_user_login(client: FlaskClient):
         db_wrapper.database.close()
 
         response = client.post('/api/auth/login', json=data)
-        json_response = response.get_json()
 
-        assert 403 == response.status_code
-        assert json_response.get('message') == 'User not actived'
+        assert user.active is False
+        assert 401 == response.status_code
 
     def _test_invalid_password():
         data = {
@@ -46,10 +45,7 @@ def test_user_login(client: FlaskClient):
         }
 
         response = client.post('/api/auth/login', json=data)
-        json_response = response.get_json()
-
         assert 401 == response.status_code
-        assert json_response.get('message') == 'Credentials invalid'
 
     def _test_login():
         with client:
@@ -66,7 +62,7 @@ def test_user_login(client: FlaskClient):
             assert token
             assert current_user.is_authenticated
 
-    _test_validation_request()
+    _test_invalid_user()
     _test_inactive_user()
     _test_invalid_password()
     _test_login()

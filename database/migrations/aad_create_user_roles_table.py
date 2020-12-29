@@ -7,9 +7,8 @@ from playhouse.migrate import (migrate, ForeignKeyField, CharField,
 from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
-from app.models.base import Base as BaseModel
-from app.models.role import Role as RoleModel
-from app.models.user import User as UserModel, UserRoles as UserRolesModel
+from app.models import (Base as BaseModel, Role as RoleModel, User as UserModel,
+                        UserRoles as UserRolesModel)
 from database.migrations import migrate_actions, rollback_actions, migrator
 
 

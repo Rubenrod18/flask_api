@@ -5,7 +5,7 @@ from flask import current_app, request
 from flask_security.passwordless import login_token_status
 from werkzeug.exceptions import Forbidden, Unauthorized
 
-from app.utils import TOKEN_REGEX
+from app.utils.constants import TOKEN_REGEX
 
 
 def token_required(fnc):
