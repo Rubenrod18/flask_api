@@ -4,7 +4,6 @@ from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
 
 from app.blueprints.base import BaseResource
 from app.extensions import api as root_api
-from app.models.document import Document as DocumentModel
 from app.serializers import DocumentSerializer
 from app.services.document import DocumentService
 from app.swagger import (document_output_sw_model,
@@ -20,7 +19,6 @@ api = root_api.namespace('documents', description=_API_DESCRIPTION)
 
 
 class DocumentBaseResource(BaseResource):
-    db_model = DocumentModel
     doc_service = DocumentService()
     doc_serializer = DocumentSerializer()
 

@@ -18,9 +18,9 @@ api = root_api.namespace('users', description=_API_DESCRIPTION)
 
 
 class UserBaseResource(BaseResource):
-    user_serializer = UserSerializer()
     user_service = UserService()
     task_service = TaskService()
+    user_serializer = UserSerializer()
 
 
 @api.route('')

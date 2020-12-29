@@ -8,7 +8,8 @@ from flask import current_app
 from peewee import fn
 
 from app.models import Document as DocumentModel, User as UserModel
-from app.utils import ignore_keys, PDF_MIME_TYPE
+from app.utils import ignore_keys
+from app.utils.constants import PDF_MIME_TYPE
 from database import fake
 
 

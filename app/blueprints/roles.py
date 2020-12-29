@@ -2,7 +2,6 @@ from flask import Blueprint, request
 from flask_security import roles_required
 
 from app.extensions import api as root_api
-from app.models.role import Role as RoleModel
 from app.serializers import RoleSerializer
 from app.swagger import (role_input_sw_model, role_output_sw_model,
                          search_input_sw_model, role_search_output_sw_model)
@@ -17,7 +16,6 @@ api = root_api.namespace('roles', description=_API_DESCRIPTION)
 
 
 class RoleBaseResource(BaseResource):
-    db_model = RoleModel
     role_service = RoleService()
     role_serializer = RoleSerializer()
 

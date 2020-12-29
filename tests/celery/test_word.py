@@ -5,7 +5,7 @@ from flask import Flask
 
 from app.celery.word.tasks import export_user_data_in_word
 from app.models.user import User as UserModel
-from app.utils import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
+from app.utils.constants import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
 
 
 def test_export_word_task(app: Flask):

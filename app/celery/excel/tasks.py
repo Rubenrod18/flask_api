@@ -14,10 +14,10 @@ from xlsxwriter.worksheet import Worksheet
 from app.celery import ContextTask
 from app.extensions import celery
 from app.models import Document as DocumentModel, User as UserModel
-from app.utils import (find_longest_word, pos_to_char, to_readable,
-                       get_request_query_fields, create_search_query)
-from app.utils.file_storage import FileStorage
 from app.serializers import DocumentSerializer, UserSerializer
+from app.utils import (find_longest_word, pos_to_char, to_readable)
+from app.utils.file_storage import FileStorage
+from app.utils.request_query_operator import RequestQueryOperator as rqo
 
 logger = get_task_logger(__name__)
 
@@ -78,10 +78,10 @@ def _add_excel_autofilter(worksheet: Worksheet):
 
 
 def _get_user_data(request_data: dict) -> list:
-    page_number, items_per_page, order_by = get_request_query_fields(UserModel, request_data)
+    page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel, request_data)
 
     query = UserModel.select()
-    query = create_search_query(UserModel, query, request_data)
+    query = rqo.create_search_query(UserModel, query, request_data)
     query = (query.order_by(*order_by)
              .paginate(page_number, items_per_page))
 

@@ -6,7 +6,7 @@ from peewee import fn
 
 from app.celery.excel.tasks import export_user_data_in_excel
 from app.models.user import User as UserModel
-from app.utils import MS_EXCEL_MIME_TYPE
+from app.utils.constants import MS_EXCEL_MIME_TYPE
 
 
 def test_export_excel_task(app: Flask):

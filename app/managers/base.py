@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from app.models import Base as BaseModel
-from app.utils import get_request_query_fields, create_search_query
+from app.utils.request_query_operator import RequestQueryOperator as rqo
 
 
 class BaseManager(object):
@@ -17,12 +17,12 @@ class BaseManager(object):
         return self.model(**kwargs).save()
 
     def get(self, **kwargs):
-        page, items, order = get_request_query_fields(self.model, kwargs)
+        page, items, order = rqo.get_request_query_fields(self.model, kwargs)
 
         query = self.model.select()
         records_total = query.count()
 
-        query = create_search_query(self.model, query, kwargs)
+        query = rqo.create_search_query(self.model, query, kwargs)
         query = query.order_by(*order).paginate(page, items)
 
         return {

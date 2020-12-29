@@ -12,10 +12,14 @@ from marshmallow import ValidationError
 
 
 def init_app(app: Flask) -> None:
-    app.errorhandler(ValidationError)(handle_validation_error_exception)
+    app.errorhandler(ValidationError)(_handle_validation_error_exception)
 
 
-def handle_validation_error_exception(ex: ValidationError) -> tuple:
+def _handle_validation_error_exception(ex: ValidationError) -> tuple:
     if current_app.debug:
         traceback.print_exc()
     return {'message': ex.messages}, 422
+
+
+class FileEmptyError(OSError):
+    pass

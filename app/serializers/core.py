@@ -3,7 +3,7 @@ from datetime import datetime
 from marshmallow import fields, validate
 
 from app.extensions import ma
-from app.utils import QUERY_OPERATORS, STRING_QUERY_OPERATORS
+from app.utils.constants import QUERY_OPERATORS, STRING_QUERY_OPERATORS
 
 
 class TimestampField(fields.Field):
