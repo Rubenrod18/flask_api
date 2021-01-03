@@ -38,7 +38,7 @@ class NewDocumentResource(DocumentBaseResource):
     @api.marshal_with(document_sw_model, envelope='data', code=201)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
-    def post(self):
+    def post(self) -> tuple:
         document = self.doc_service.create(**get_request_file())
         return self.doc_serializer.dump(document), 201
 
@@ -84,7 +84,7 @@ class DocumentResource(DocumentBaseResource):
     @api.marshal_with(document_sw_model, envelope='data')
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
-    def delete(self, document_id: int):
+    def delete(self, document_id: int) -> tuple:
         document = self.doc_service.delete(document_id)
         return self.doc_serializer.dump(document), 200
 
@@ -98,7 +98,7 @@ class SearchDocumentResource(DocumentBaseResource):
     @api.marshal_with(document_search_output_sw_model)
     @token_required
     @roles_accepted('admin', 'team_leader', 'worker')
-    def post(self):
+    def post(self) -> tuple:
         doc_data = self.doc_service.get(**request.get_json())
         doc_serializer = DocumentSerializer(many=True)
         return {'data': doc_serializer.dump(list(doc_data['query'])),
