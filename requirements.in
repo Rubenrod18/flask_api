@@ -1,11 +1,19 @@
+# Add .env support to your django/flask apps in development and deployments
+python-dotenv
+
 # Database
 faker
 peewee
-sqlalchemy # required by celery
+sqlalchemy # Required by celery
 
 # Distributed Task Queue
-celery
+celery==4.4.7  # Upgrade package when flower will be compatible with Celery 5
 flower
+
+# Files
+python-docx
+python-magic
+xlsxwriter
 
 # Framework and extensions
 flask
@@ -17,14 +25,9 @@ flask-security-too
 supervisor
 supervisord-dependent-startup
 
-# Security
-bcrypt
-
-# Web packages
-python-docx
-python-dotenv
-python-magic
-xlsxwriter
+# Support for the Internationalised Domain Names in Applications (IDNA) protocol
+# as specified in RFC 5891
+idna==2.10  # Upgrade package when sphinx will be compatible with idna 3.0
 
 # Web server gateway interface
 uwsgi
