@@ -22,7 +22,7 @@ class DocumentSerializer(ma.Schema):
     created_by = fields.Nested('UserSerializer', only=('id', 'name', 'last_name',
                                                        'email'))
     name = fields.Str()
-    internal_filename = fields.Str(load_only=True)
+    internal_filename = fields.Str()
     mime_type = fields.Str()
     directory_path = fields.Str(load_only=True)
     size = fields.Integer()

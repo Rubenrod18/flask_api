@@ -6,7 +6,6 @@ from app.swagger.core import creator_sw_model
 document_sw_model = api.model('Document', {
     'id': fields.Integer(),
     'name': fields.String,
-    'internal_name': fields.String,
     'mime_type': fields.String,
     'size': fields.Integer,
     'url': fields.String,
