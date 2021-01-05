@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.1](https://github.com/rubenrod18/flask_api/compare/v2.0.0...v2.0.1) (2021-01-05)
+
+
+### Bug Fixes
+
+* **tasks:** correct output data on serializers and swagger ([d5c050a](https://github.com/rubenrod18/flask_api/commit/d5c050af9f087290112a5b8c08d3f8ec1baf33a0))
+
+
+### Build System
+
+* **npm:** update npm dependencies for fixing a vulnerability found ([15ee5de](https://github.com/rubenrod18/flask_api/commit/15ee5de92b126bf6ceb5216cb533b9832b4f00d4))
+* **pip:** update Python packages ([11676b6](https://github.com/rubenrod18/flask_api/commit/11676b65ce6c1f06f4478640c2aece33bcd984f6))
+
+
+### Code Refactoring
+
+* **blueprints:** import dynamic way ([30ee0a0](https://github.com/rubenrod18/flask_api/commit/30ee0a00940eb4c9eb555b74e162bd6e9179116c))
+* **blueprints:** remove logging module from all blueprints ([a51709e](https://github.com/rubenrod18/flask_api/commit/a51709eacd07f8f58e2550d9b8ddbe5506a8b7f2))
+* **db:** models available could be import from init module ([2361e0e](https://github.com/rubenrod18/flask_api/commit/2361e0e0641ae66e95d9f9226a59052893de2e1e))
+* **db:** move user_roles model to its own module ([650eb39](https://github.com/rubenrod18/flask_api/commit/650eb3978a5b0c55fab42c54a835556b7e812b52))
+* **exceptions:**  add error handler to marshmallow validation error class ([10bb664](https://github.com/rubenrod18/flask_api/commit/10bb6649017c3fafc3f504adc5cd9606f238fc57))
+* **exceptions:** correct error handler to marshmallow validation error class ([ba30805](https://github.com/rubenrod18/flask_api/commit/ba308058379b7942d86d7b8affe3093833590151))
+* **managers:** add new logic for managing database queries through database models ([758e077](https://github.com/rubenrod18/flask_api/commit/758e077e66812934d9843425a7acf18a855ff747))
+* **serializers:** correct user email validation ([2d733cf](https://github.com/rubenrod18/flask_api/commit/2d733cf4148d804a7e1f2f344b28dde96ea322e6))
+* **serializers:** move app.marshmallow_schema.py to serializers package ([47f75e1](https://github.com/rubenrod18/flask_api/commit/47f75e13832fa67b64ad013187e6ad3a589b3e5f))
+* **serializers:** upgrade validation fields ([24ac198](https://github.com/rubenrod18/flask_api/commit/24ac198caa6efa92ab87848644f0db0729ff7010))
+* **services:** add new logic for managing business logic to auth ([3c969b5](https://github.com/rubenrod18/flask_api/commit/3c969b559f155d10ce255c85b083d2b9d83ffc6b))
+* **services:** add new logic for managing business logic to documents ([1ce7b96](https://github.com/rubenrod18/flask_api/commit/1ce7b9666224c71e9988e1091f2e7cae9ca94934))
+* **services:** add new logic for managing business logic to roles ([7fff4c1](https://github.com/rubenrod18/flask_api/commit/7fff4c1acbbe1233e006d5764565fe7a3c9f65fc))
+* **services:** add new logic for managing business logic to tasks ([079741d](https://github.com/rubenrod18/flask_api/commit/079741d0be83a191fea63679a084f905e40a5214))
+* **services:** add new logic for managing business logic to users ([572f37f](https://github.com/rubenrod18/flask_api/commit/572f37f24a6abaff7055def28bfb1179a9cc5b6d))
+* **swagger:** move app.utils.swagger_models to app.swagger package ([ef4dd87](https://github.com/rubenrod18/flask_api/commit/ef4dd874fde42da66b7a8dc650457d514d457963))
+* **swagger:** update document swagger models ([7015c61](https://github.com/rubenrod18/flask_api/commit/7015c61d5e2eb69d334b137b3ed692d6a1950249))
+* **swagger:** update role swagger models ([d618021](https://github.com/rubenrod18/flask_api/commit/d618021f93839bb5989cbb39191f38fad82ca2d7))
+* **swagger:** update user swagger models ([766e697](https://github.com/rubenrod18/flask_api/commit/766e697ab72b86f4ae4d3827d85faf16298bbbc9))
+* **tasks:** add suffix to task names ([998a56d](https://github.com/rubenrod18/flask_api/commit/998a56dc4c88c94ba43b6d512364f0b9177fe52d))
+* **utils:** create new modules to constants and request query operators ([cbf12c9](https://github.com/rubenrod18/flask_api/commit/cbf12c98008c69ffe5ae3af9a6a6eabebeda93ad))
+
 ## [2.0.0](https://github.com/rubenrod18/flask_api/compare/v1.4.1...v2.0.0) (2020-10-27)
 
 
