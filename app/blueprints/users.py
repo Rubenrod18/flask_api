@@ -6,13 +6,12 @@ from app.extensions import api as root_api
 from app.serializers import UserSerializer
 from app.services.task import TaskService
 from app.services.user import UserService
-from app.swagger import (user_input_sw_model, user_output_sw_model,
+from app.swagger import (user_input_sw_model, user_sw_model,
                          user_search_output_sw_model, search_input_sw_model)
 from app.utils.decorators import token_required
 
 _API_DESCRIPTION = ('Users with role admin or team_leader can manage '
                     'these endpoints.')
-
 blueprint = Blueprint('users', __name__)
 api = root_api.namespace('users', description=_API_DESCRIPTION)
 
@@ -29,14 +28,14 @@ class NewUserResource(UserBaseResource):
                         422: 'Unprocessable Entity'},
              security='auth_token')
     @api.expect(user_input_sw_model)
-    @api.marshal_with(user_output_sw_model, code=201)
+    @api.marshal_with(user_sw_model, envelope='data', code=201)
     @token_required
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
         user = self.user_service.create(request.get_json())
         user_data = self.user_serializer.dump(user)
         self.task_service.send_create_user_email(**user_data)
-        return {'data': user_data}, 201
+        return user_data, 201
 
 
 @api.route('/<int:user_id>')
@@ -44,33 +43,33 @@ class UserResource(UserBaseResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
                         422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.marshal_with(user_output_sw_model)
+    @api.marshal_with(user_sw_model, envelope='data')
     @token_required
     @roles_accepted('admin', 'team_leader')
     def get(self, user_id: int) -> tuple:
         user = self.user_service.find(user_id)
-        return {'data': self.user_serializer.dump(user)}, 200
+        return self.user_serializer.dump(user), 200
 
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden', 422: 'Unprocessable Entity'},
              security='auth_token')
     @api.expect(user_input_sw_model)
-    @api.marshal_with(user_output_sw_model)
+    @api.marshal_with(user_sw_model, envelope='data')
     @token_required
     @roles_accepted('admin', 'team_leader')
     def put(self, user_id: int) -> tuple:
         user = self.user_service.save(user_id, **request.get_json())
-        return {'data': self.user_serializer.dump(user)}, 200
+        return self.user_serializer.dump(user), 200
 
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized',
                         403: 'Forbidden', 422: 'Unprocessable Entity'},
              security='auth_token')
-    @api.marshal_with(user_output_sw_model)
+    @api.marshal_with(user_sw_model, envelope='data')
     @token_required
     @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
         user = self.user_service.delete(user_id)
-        return {'data': self.user_serializer.dump(user)}, 200
+        return self.user_serializer.dump(user), 200
 
 
 @api.route('/search')

@@ -5,5 +5,5 @@ from .core import (creator_sw_model, search_input_sw_model)
 from .document import (document_sw_model, document_search_output_sw_model)
 from .role import (role_sw_model, role_input_sw_model,
                    role_search_output_sw_model)
-from .user import (user_sw_model, user_input_sw_model, user_output_sw_model,
+from .user import (user_sw_model, user_input_sw_model,
                    user_search_output_sw_model)
