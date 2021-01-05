@@ -1,25 +1,17 @@
 from flask_restx import fields
 
 from app.extensions import api
+from app.swagger.core import record_monitoring_sw_model
 
 role_input_sw_model = api.model('RoleInput', {
-    'name': fields.String(required=True),
     'description': fields.String,
     'label': fields.String(required=True),
 })
 
-role_sw_model = api.model('Role', {
-    'id': fields.Integer(),
-    'name': fields.String,
+role_sw_model = api.clone('Role', record_monitoring_sw_model, {
+    'name': fields.String(readonly=True),
     'description': fields.String,
     'label': fields.String,
-    'created_at': fields.String(),
-    'updated_at': fields.String(),
-    'deleted_at': fields.String(),
-})
-
-role_output_sw_model = api.model('RoleOutput', {
-    'data': fields.Nested(role_sw_model),
 })
 
 role_search_output_sw_model = api.model('RoleSearchOutput', {

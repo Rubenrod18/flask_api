@@ -55,7 +55,7 @@ class UserSerializer(ma.Schema):
     role_id = VerifyRoleId(load_only=True)
 
     @validates('id')
-    def validate_id(self, user_id):
+    def validate_id(self, user_id: int):
         args = (user_manager.model.deleted_at.is_null(),)
         user = user_manager.find(user_id, *args)
 
@@ -67,12 +67,10 @@ class UserSerializer(ma.Schema):
             logger.debug(f'User "{user_id}" deleted.')
             raise NotFound('User not found')
 
-    @staticmethod
-    def valid_request_email(data: dict) -> dict:
-        if user_manager.find_by_email(data.get('email')):
+    @validates('email')
+    def validate_email(self, email: str):
+        if user_manager.find_by_email(email):
             raise BadRequest('User email already created')
-
-        return data
 
 
 class UserExportWordSerializer(ma.Schema):
