@@ -13,6 +13,11 @@ In short, marshmallow schemas can be used to:
   objects can then be rendered to standard formats such as JSON for use in
   an HTTP API.
 
+References
+----------
+Pre-/Post-processor Invocation Order:
+https://marshmallow.readthedocs.io/en/stable/extending.html?highlight=step1#pre-post-processor-invocation-order
+
 """
 from .core import SearchSerializer
 from .document import DocumentSerializer, DocumentAttachmentSerializer
