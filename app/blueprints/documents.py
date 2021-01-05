@@ -20,7 +20,7 @@ api = root_api.namespace('documents', description=_API_DESCRIPTION)
 
 class DocumentBaseResource(BaseResource):
     doc_service = DocumentService()
-    doc_serializer = DocumentSerializer()
+    doc_serializer = DocumentSerializer(exclude=('internal_filename',))
 
 
 @api.route('')
