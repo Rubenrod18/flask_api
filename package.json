@@ -24,6 +24,6 @@
   },
   "devDependencies": {
     "npm-check": "^5.9.2",
-    "standard-version": "^9.0.0"
+    "standard-version": "^9.1.0"
   }
 }

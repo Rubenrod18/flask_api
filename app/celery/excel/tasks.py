@@ -13,13 +13,11 @@ from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
 from app.extensions import celery
-from app.models.document import Document as DocumentModel
-from app.models.user import User as UserModel
-from app.utils import (find_longest_word, pos_to_char, to_readable,
-                       get_request_query_fields, create_search_query)
+from app.models import Document as DocumentModel, User as UserModel
+from app.serializers import DocumentSerializer, UserSerializer
+from app.utils import (find_longest_word, pos_to_char, to_readable)
 from app.utils.file_storage import FileStorage
-from app.utils.marshmallow_schema import (UserSchema as UserSerializer,
-                                          DocumentSchema as DocumentSerializer)
+from app.utils.request_query_operator import RequestQueryOperator as rqo
 
 logger = get_task_logger(__name__)
 
@@ -80,10 +78,10 @@ def _add_excel_autofilter(worksheet: Worksheet):
 
 
 def _get_user_data(request_data: dict) -> list:
-    page_number, items_per_page, order_by = get_request_query_fields(UserModel, request_data)
+    page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel, request_data)
 
     query = UserModel.select()
-    query = create_search_query(UserModel, query, request_data)
+    query = rqo.create_search_query(UserModel, query, request_data)
     query = (query.order_by(*order_by)
              .paginate(page_number, items_per_page))
 
@@ -94,14 +92,7 @@ def _get_user_data(request_data: dict) -> list:
 
 
 @celery.task(bind=True, base=ContextTask)
-def export_user_data_in_excel(self, created_by: int, request_data: dict):
-    """ Export User Data in Excel task
-
-    :param self:
-    :param created_by:
-    :param request_data:
-    :return:
-    """
+def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
     def _write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> int:
         excel_longest_word = ''
 

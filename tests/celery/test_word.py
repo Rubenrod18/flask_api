@@ -3,14 +3,14 @@ from urllib.parse import urlparse
 
 from flask import Flask
 
-from app.celery.word.tasks import export_user_data_in_word
+from app.celery.word.tasks import export_user_data_in_word_task
 from app.models.user import User as UserModel
-from app.utils import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
+from app.utils.constants import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
 
 
 def test_export_word_task(app: Flask):
     def _run_task(created_by: int, request_data: dict, to_pdf: int = 0):
-        task = export_user_data_in_word.delay(created_by, request_data, to_pdf)
+        task = export_user_data_in_word_task.delay(created_by, request_data, to_pdf)
         result = task.get()
 
         document_data = result.get('result')

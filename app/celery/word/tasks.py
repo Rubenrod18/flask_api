@@ -10,14 +10,13 @@ from flask import current_app
 
 from app.celery import ContextTask
 from app.extensions import celery
-from app.models.document import Document as DocumentModel
-from app.models.user import User as UserModel
-from app.utils import (to_readable, create_search_query, get_request_query_fields,
-                       PDF_MIME_TYPE, MS_WORD_MIME_TYPE)
+from app.models import Document as DocumentModel, User as UserModel
+from app.utils import to_readable
+from app.utils.constants import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
 from app.utils.file_storage import FileStorage
 from app.utils.libreoffice import convert_to
-from app.utils.marshmallow_schema import (UserSchema as UserSerializer,
-                                          DocumentSchema as DocumentSerializer)
+from app.utils.request_query_operator import RequestQueryOperator as rqo
+from app.serializers import DocumentSerializer, UserSerializer
 
 logger = get_task_logger(__name__)
 
@@ -62,11 +61,11 @@ def _add_table_column_names(rows: list, original_column_names: set) -> None:
 
 
 def _get_user_data(request_data: dict) -> list:
-    page_number, items_per_page, order_by = get_request_query_fields(UserModel,
-                                                                     request_data)
+    page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel,
+                                                                         request_data)
 
     query = UserModel.select()
-    query = create_search_query(UserModel, query, request_data)
+    query = rqo.create_search_query(UserModel, query, request_data)
     query = (query.order_by(*order_by)
              .paginate(page_number, items_per_page))
 
@@ -77,15 +76,7 @@ def _get_user_data(request_data: dict) -> list:
 
 
 @celery.task(bind=True, base=ContextTask)
-def export_user_data_in_word(self, created_by: int, request_data: dict, to_pdf: int):
-    """ Export User Data in Word
-
-    :param self:
-    :param created_by:
-    :param request_data:
-    :param to_pdf:
-    :return:
-    """
+def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_pdf: int):
     def _write_docx_content(rows: list, document: docx.Document) -> None:
         header_fields = rows[0]
         assert len(header_fields) == len(_COLUMN_DISPLAY_ORDER)

@@ -46,3 +46,10 @@ class Base(db.Model):
             fields = sorted(fields, key=lambda x: sort_order.index(x))
 
         return fields
+
+    @staticmethod
+    def raw(query: str):
+        return db.database.execute_sql(query)
+
+    def reload(self):
+        return type(self).get(self._pk_expr())

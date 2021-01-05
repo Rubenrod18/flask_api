@@ -10,15 +10,9 @@ import os
 import flask
 from flask import Flask
 
-from app import extensions
+from app import extensions, exceptions
 from app.blueprints import BLUEPRINTS
 from app.middleware import Middleware
-
-
-def _init_app(app: Flask) -> None:
-    """Call the method 'init_app' to register the extensions in the Flask
-    object passed as parameter."""
-    extensions.init_app(app)
 
 
 def _register_blueprints(app: Flask) -> None:
@@ -67,7 +61,8 @@ def create_app(env_config: str) -> Flask:
     app.wsgi_app = Middleware(app)
 
     _init_logging(app)
-    _init_app(app)
+    extensions.init_app(app)
     _register_blueprints(app)
+    exceptions.init_app(app)
 
     return app

@@ -1,8 +1,7 @@
 import os
 
 from app.extensions import db_wrapper
-from app.models.role import Role as RoleModel
-from app.models.user import User as UserModel
+from app.models import Role as RoleModel, User as UserModel
 from database import seed_actions
 from database.factories import Factory
 

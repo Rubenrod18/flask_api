@@ -7,7 +7,7 @@ from app.models.role import Role as RoleModel
 
 
 def test_save_role_endpoint(client: FlaskClient, auth_header: any, factory: any):
-    ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at']
+    ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at', 'name']
     data = factory('Role').make(exclude=ignore_fields, to_dict=True)
 
     response = client.post('/api/roles', json=data, headers=auth_header())
@@ -15,8 +15,8 @@ def test_save_role_endpoint(client: FlaskClient, auth_header: any, factory: any)
     json_data = json_response.get('data')
 
     assert 201 == response.status_code
-    assert data.get('name') == json_data.get('name')
-    assert data.get('name').lower() == json_data.get('name').lower().replace('-', ' ')
+    assert data.get('label') == json_data.get('label')
+    assert data.get('label').lower().replace(' ', '-') == json_data.get('name')
     assert json_data.get('created_at')
     assert json_data.get('updated_at') == json_data.get('created_at')
     assert json_data.get('deleted_at') is None
@@ -31,7 +31,7 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: any, factory: an
                .id)
     db_wrapper.database.close()
 
-    ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at']
+    ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at', 'name']
     data = factory('Role').make(exclude=ignore_fields, to_dict=True)
 
     response = client.put('/api/roles/%s' % role_id, json=data, headers=auth_header())
@@ -41,7 +41,8 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: any, factory: an
 
     assert 200 == response.status_code
     assert role_id == json_data.get('id')
-    assert data.get('name') == json_data.get('name')
+    assert data.get('label') == json_data.get('label')
+    assert data.get('label').lower().replace(' ', '-') == json_data.get('name')
     assert json_data.get('created_at')
     assert json_data.get('updated_at') >= json_data.get('created_at')
     assert json_data.get('deleted_at') is None
