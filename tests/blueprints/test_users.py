@@ -1,14 +1,14 @@
 """Module for testing users blueprint."""
 import os
 
-from flask.testing import FlaskClient
 from peewee import fn
 
 from app.extensions import db_wrapper
 from app.models import Role as RoleModel, User as UserModel
+from tests.custom_flask_client import CustomFlaskClient
 
 
-def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
+def test_save_user_endpoint(client: CustomFlaskClient, auth_header: any, factory: any):
     role = RoleModel.get_by_id(1)
 
     ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by']
@@ -36,7 +36,7 @@ def test_save_user_endpoint(client: FlaskClient, auth_header: any, factory: any)
     assert role.label == role_data.get('label')
 
 
-def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: any):
+def test_update_user_endpoint(client: CustomFlaskClient, auth_header: any, factory: any):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -76,7 +76,7 @@ def test_update_user_endpoint(client: FlaskClient, auth_header: any, factory: an
     assert role.label == role_data.get('label')
 
 
-def test_get_user_endpoint(client: FlaskClient, auth_header: any):
+def test_get_user_endpoint(client: CustomFlaskClient, auth_header: any):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -107,7 +107,7 @@ def test_get_user_endpoint(client: FlaskClient, auth_header: any):
     assert role.label == role_data.get('label')
 
 
-def test_delete_user_endpoint(client: FlaskClient, auth_header: any):
+def test_delete_user_endpoint(client: CustomFlaskClient, auth_header: any):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -126,7 +126,7 @@ def test_delete_user_endpoint(client: FlaskClient, auth_header: any):
     assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
 
-def test_search_users_endpoint(client: FlaskClient, auth_header: any):
+def test_search_users_endpoint(client: CustomFlaskClient, auth_header: any):
     user_name = (UserModel.select(UserModel.name)
                  .where(UserModel.deleted_at.is_null())
                  .order_by(fn.Random())
@@ -165,7 +165,7 @@ def test_search_users_endpoint(client: FlaskClient, auth_header: any):
     assert user_data[0]['name'].find(user_name) != -1
 
 
-def test_export_word_endpoint(client: FlaskClient, auth_header: any):
+def test_export_word_endpoint(client: CustomFlaskClient, auth_header: any):
     def _request(uri: str, headers: str, json: dict) -> None:
         response = client.post(uri, json=json, headers=headers)
         json_response = response.get_json()
@@ -189,12 +189,19 @@ def test_export_word_endpoint(client: FlaskClient, auth_header: any):
     _request('/api/users/word?to_pdf=0', auth_header(), json)
 
 
-def test_export_excel_endpoint(client: FlaskClient, auth_header: any):
-    data = {}
-
-    response = client.post('/api/users/xlsx', json=data, headers=auth_header())
+def test_export_excel_endpoint(client: CustomFlaskClient, auth_header: any):
+    response = client.post('/api/users/xlsx', json={}, headers=auth_header())
     json_response = response.get_json()
 
     assert 202 == response.status_code
     assert json_response.get('task')
     assert json_response.get('url')
+
+
+def test_export_excel_and_word_endpoint(client: CustomFlaskClient,
+                                        auth_header: any):
+    response = client.post('/api/users/word_and_xlsx', json={},
+                           headers=auth_header())
+
+    assert 202 == response.status_code
+    assert isinstance(response.get_json(), dict)

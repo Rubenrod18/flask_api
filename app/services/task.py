@@ -74,3 +74,28 @@ class TaskService(object):
         return create_word_and_excel_documents_task.apply_async(
             args=[current_user.id, request_data, to_pdf]
         )
+
+    def check_task_status(self, task_id: str) -> dict:
+        task = self.find_by_id(task_id)
+        task_data = task.AsyncResult(task_id)
+        response = {'state': task_data.state}
+
+        if task_data.state == 'PENDING':
+            response.update({
+                'current': 0,
+                'total': 1,
+            })
+        elif task_data.state != 'FAILURE':
+            response.update({
+                'current': task_data.info.get('current', 0),
+                'total': task_data.info.get('total', 1),
+                'result': task_data.info.get('result'),
+            })
+        else:
+            response.update({
+                'current': 1,
+                'total': 1,
+                'status': str(task_data.info),
+            })
+
+        return response

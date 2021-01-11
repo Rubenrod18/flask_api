@@ -2,14 +2,14 @@
 import os
 
 from flask import Flask
-from flask.testing import FlaskClient
 from flask_login import current_user
 
 from app.extensions import db_wrapper
 from app.models.user import User as UserModel
+from tests.custom_flask_client import CustomFlaskClient
 
 
-def test_user_login(client: FlaskClient):
+def test_user_login(client: CustomFlaskClient):
     def _test_invalid_user():
         data = {
             'email': '123@mail.com',
@@ -68,7 +68,7 @@ def test_user_login(client: FlaskClient):
     _test_login()
 
 
-def test_user_logout(client: FlaskClient, auth_header: any):
+def test_user_logout(client: CustomFlaskClient, auth_header: any):
     with client:
         response = client.post('/api/auth/logout', json={}, headers=auth_header())
 
@@ -76,7 +76,7 @@ def test_user_logout(client: FlaskClient, auth_header: any):
         assert not current_user.is_authenticated
 
 
-def test_request_reset_password(client: FlaskClient):
+def test_request_reset_password(client: CustomFlaskClient):
     data = {
         'email': os.getenv('TEST_USER_EMAIL'),
     }
@@ -86,7 +86,7 @@ def test_request_reset_password(client: FlaskClient):
     assert 202 == response.status_code
 
 
-def test_validate_reset_password(client: FlaskClient, app: Flask):
+def test_validate_reset_password(client: CustomFlaskClient, app: Flask):
     email = os.getenv('TEST_USER_EMAIL')
 
     user = UserModel.get(email=email)
@@ -100,7 +100,7 @@ def test_validate_reset_password(client: FlaskClient, app: Flask):
     assert 200 == response.status_code
 
 
-def test_reset_password(client: FlaskClient):
+def test_reset_password(client: CustomFlaskClient):
     email = os.getenv('TEST_USER_EMAIL')
 
     user = UserModel.get(email=email)
