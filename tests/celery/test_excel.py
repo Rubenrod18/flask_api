@@ -25,21 +25,18 @@ def test_export_excel_task(app: Flask):
         'page_number': 1,
     }
 
-    task = export_user_data_in_excel_task.delay(created_by=user.id,
-                                                request_data=request_data)
-    result = task.get()
+    result = export_user_data_in_excel_task(created_by=user.id,
+                                            request_data=request_data)
 
     document_data = result.get('result')
     parse_url = urlparse(document_data.get('url'))
-
-    mime_type = MS_EXCEL_MIME_TYPE
 
     assert result.get('current') == result.get('total')
     assert result.get('status') == 'Task completed!'
 
     assert user.id == document_data.get('created_by').get('id')
     assert document_data.get('name')
-    assert mime_type == document_data.get('mime_type')
+    assert MS_EXCEL_MIME_TYPE == document_data.get('mime_type')
     assert document_data.get('size') > 0
     assert parse_url.scheme and parse_url.netloc
     assert document_data.get('created_at') == document_data.get('updated_at')
