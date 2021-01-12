@@ -8,10 +8,12 @@ from app.models import Role as RoleModel, User as UserModel
 from tests.custom_flask_client import CustomFlaskClient
 
 
-def test_save_user_endpoint(client: CustomFlaskClient, auth_header: any, factory: any):
+def test_create_user_endpoint(client: CustomFlaskClient, auth_header: any,
+                              factory: any):
     role = RoleModel.get_by_id(1)
 
-    ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by']
+    ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at',
+                     'created_by']
     data = factory('User').make(exclude=ignore_fields, to_dict=True)
     data['password'] = os.getenv('TEST_USER_PASSWORD')
     data['role_id'] = role.id
@@ -36,7 +38,24 @@ def test_save_user_endpoint(client: CustomFlaskClient, auth_header: any, factory
     assert role.label == role_data.get('label')
 
 
-def test_update_user_endpoint(client: CustomFlaskClient, auth_header: any, factory: any):
+def test_create_invalid_user_endpoint(client: CustomFlaskClient,
+                                      auth_header: any):
+    data = {
+      'name': 'string',
+      'last_name': 'string',
+      'email': 'string',
+      'genre': 'string',
+      'password': 'string',
+      'birth_date': 'string',
+      'role_id': 1
+    }
+
+    response = client.post('/api/users', json=data, headers=auth_header())
+    assert 422 == response.status_code
+
+
+def test_update_user_endpoint(client: CustomFlaskClient, auth_header: any,
+                              factory: any):
     user_id = (UserModel.select(UserModel.id)
                .where(UserModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -44,7 +63,8 @@ def test_update_user_endpoint(client: CustomFlaskClient, auth_header: any, facto
                .get()
                .id)
 
-    ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by']
+    ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at',
+                     'created_by']
     data = factory('User').make(to_dict=True, exclude=ignore_fields)
 
     data['password'] = os.getenv('TEST_USER_PASSWORD')
@@ -56,7 +76,8 @@ def test_update_user_endpoint(client: CustomFlaskClient, auth_header: any, facto
     data['role_id'] = role.id
     db_wrapper.database.close()
 
-    response = client.put('/api/users/%s' % user_id, json=data, headers=auth_header())
+    response = client.put('/api/users/%s' % user_id, json=data,
+                          headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -88,7 +109,8 @@ def test_get_user_endpoint(client: CustomFlaskClient, auth_header: any):
     role = user.roles[0]
     db_wrapper.database.close()
 
-    response = client.get('/api/users/%s' % user_id, json={}, headers=auth_header())
+    response = client.get('/api/users/%s' % user_id, json={},
+                          headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -116,7 +138,8 @@ def test_delete_user_endpoint(client: CustomFlaskClient, auth_header: any):
                .id)
     db_wrapper.database.close()
 
-    response = client.delete('/api/users/%s' % user_id, json={}, headers=auth_header())
+    response = client.delete('/api/users/%s' % user_id, json={},
+                             headers=auth_header())
     json_response = response.get_json()
     json_data = json_response.get('data')
 
@@ -151,7 +174,8 @@ def test_search_users_endpoint(client: CustomFlaskClient, auth_header: any):
         ],
     }
 
-    response = client.post('/api/users/search', json=json_body, headers=auth_header())
+    response = client.post('/api/users/search', json=json_body,
+                           headers=auth_header())
     json_response = response.get_json()
 
     user_data = json_response.get('data')
