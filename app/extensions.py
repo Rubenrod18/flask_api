@@ -33,7 +33,7 @@ def init_app(app: Flask) -> None:
     security.init_app(app, datastore=user_datastore, register_blueprint=False)
     mail.init_app(app)
     ma.init_app(app)
-
+    celery.init_app(app)  # Only for coverage.
     api.init_app(app)
 
     # This hook ensures that a connection is opened to handle any queries
