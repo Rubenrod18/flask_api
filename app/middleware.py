@@ -51,9 +51,9 @@ class Middleware:
 
         if is_api_request:
             content_type = self.parse_content_type(request.content_type)
-            # accept_mimetypes = request.accept_mimetypes.accept_json
+            accept_mimetypes = request.accept_mimetypes.accept_json  # Swagger
 
-            if content_type in self.content_types:
+            if content_type in self.content_types or accept_mimetypes:
                 return self.app(environ, start_response)
 
             response = Response(response='{"message": "Content type no valid"}',
