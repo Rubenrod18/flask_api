@@ -2,18 +2,16 @@
 from flask import url_for, Flask
 from peewee import fn
 
-from app.celery.tasks import create_user_email_task, reset_password_email_task, create_word_and_excel_documents_task
+from app.celery.tasks import (create_user_email_task, reset_password_email_task,
+                              create_word_and_excel_documents_task,
+                              send_email_with_attachments_task)
 from app.models.user import User as UserModel
 
 
 def test_create_user_email_task(factory: any):
     ignore_fields = ['role', 'created_by']
     data = factory('User').make(exclude=ignore_fields, to_dict=True)
-
-    task = create_user_email_task.delay(data)
-    result = task.get()
-
-    assert result
+    assert create_user_email_task(data) is True
 
 
 def test_reset_password_email_task(app: Flask):
@@ -27,15 +25,26 @@ def test_reset_password_email_task(app: Flask):
         token = user.get_reset_token()
         reset_password_url = url_for('auth_reset_password_resource', token=token,
                                      _external=True)
-    email_data = {
-        'email': user.email,
-        'reset_password_url': reset_password_url,
-    }
+    email_data = {'email': user.email, 'reset_password_url': reset_password_url}
+    assert reset_password_email_task(email_data) is True
 
-    task = reset_password_email_task.delay(email_data)
-    result = task.get()
 
-    assert result
+def test_send_email_with_attachments_task(app: Flask):
+    args = [
+        {
+            'result': {
+                'name': 'example.pdf',
+                'internal_filename': 'example.pdf',
+                'mime_type': 'application/pdf',
+                'created_by': {
+                    'email': app.config.get('TEST_USER_EMAIL'),
+                    'name': 'admin',
+                }
+            }
+        }
+    ]
+
+    assert send_email_with_attachments_task(args) is True
 
 
 def test_create_word_and_excel_documents(app: Flask):
@@ -50,9 +59,5 @@ def test_create_word_and_excel_documents(app: Flask):
         'page_number': 1,
     }
 
-    task = create_word_and_excel_documents_task.delay(**{'created_by': user.id,
-                                                    'request_data': request_data,
-                                                    'to_pdf': 1})
-    result = task.get()
-
-    assert result
+    kwargs = {'created_by': user.id, 'request_data': request_data, 'to_pdf': 1}
+    assert create_word_and_excel_documents_task(**kwargs) is True

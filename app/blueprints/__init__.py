@@ -23,13 +23,8 @@ def get_blueprints() -> list:
         for item in modules:
             if item.endswith('.py'):
                 abs_path_module = '{}.{}'.format(__name__, item[:-3])
-
-                try:
-                    bp = get_attr_from_module(abs_path_module, 'blueprint')
-                except AttributeError as e:
-                    continue
-                else:
-                    blueprints.append(bp)
+                bp = get_attr_from_module(abs_path_module, 'blueprint')
+                blueprints.append(bp)
 
         return blueprints
 

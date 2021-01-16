@@ -1,12 +1,12 @@
 """Module for testing roles blueprint."""
-from flask.testing import FlaskClient
 from peewee import fn
 
 from app.extensions import db_wrapper
 from app.models.role import Role as RoleModel
+from tests.custom_flask_client import CustomFlaskClient
 
 
-def test_save_role_endpoint(client: FlaskClient, auth_header: any, factory: any):
+def test_save_role_endpoint(client: CustomFlaskClient, auth_header: any, factory: any):
     ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at', 'name']
     data = factory('Role').make(exclude=ignore_fields, to_dict=True)
 
@@ -22,7 +22,7 @@ def test_save_role_endpoint(client: FlaskClient, auth_header: any, factory: any)
     assert json_data.get('deleted_at') is None
 
 
-def test_update_role_endpoint(client: FlaskClient, auth_header: any, factory: any):
+def test_update_role_endpoint(client: CustomFlaskClient, auth_header: any, factory: any):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -48,7 +48,7 @@ def test_update_role_endpoint(client: FlaskClient, auth_header: any, factory: an
     assert json_data.get('deleted_at') is None
 
 
-def test_get_role_endpoint(client: FlaskClient, auth_header: any):
+def test_get_role_endpoint(client: CustomFlaskClient, auth_header: any):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -72,7 +72,7 @@ def test_get_role_endpoint(client: FlaskClient, auth_header: any):
     assert role.deleted_at == json_data.get('deleted_at')
 
 
-def test_delete_role_endpoint(client: FlaskClient, auth_header: any):
+def test_delete_role_endpoint(client: CustomFlaskClient, auth_header: any):
     role_id = (RoleModel.select(RoleModel.id)
                .where(RoleModel.deleted_at.is_null())
                .order_by(fn.Random())
@@ -91,7 +91,7 @@ def test_delete_role_endpoint(client: FlaskClient, auth_header: any):
     assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
 
-def test_search_roles_endpoint(client: FlaskClient, auth_header: any):
+def test_search_roles_endpoint(client: CustomFlaskClient, auth_header: any):
     role_name = (RoleModel.select(RoleModel.name)
                  .where(RoleModel.deleted_at.is_null())
                  .order_by(fn.Random())
