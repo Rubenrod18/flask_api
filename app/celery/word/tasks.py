@@ -153,8 +153,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
         logger.debug(e)
         raise e
 
-    document_serializer = DocumentSerializer()
-    # TODO: pending to exclude internal_filename
+    document_serializer = DocumentSerializer(exclude=('internal_filename',))
     document_data = document_serializer.dump(document)
 
     return {
