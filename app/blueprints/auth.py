@@ -52,7 +52,7 @@ class RequestResetPasswordResource(AuthBaseResource):
 class ResetPasswordResource(AuthBaseResource):
     @api.doc(responses={200: 'Success', 403: 'Forbidden'})
     def get(self, token: str) -> tuple:
-        self.auth_service.verify_reset_token(token)
+        self.auth_service.check_token_status(token)
         return {}, 200
 
     @api.doc(responses={200: 'Success', 403: 'Forbidden',
