@@ -72,18 +72,11 @@ class _UserFactory:
         if to_dict:
             user = data
         else:
-            user = UserModel()
-            user.created_by = data.get('created_by')
-            user.name = data.get('name')
-            user.last_name = data.get('last_name')
-            user.email = data.get('email')
-            user.genre = data.get('genre')
-            user.password = data.get('password')
-            user.birth_date = data.get('birth_date')
-            user.active = data.get('active')
-            user.created_at = data.get('created_at')
-            user.updated_at = data.get('updated_at')
-            user.deleted_at = data.get('deleted_at')
+            model_data = {
+                item: data.get(item)
+                for item in UserModel.get_fields(exclude)
+            }
+            user = UserModel(**model_data)
 
         return user
 

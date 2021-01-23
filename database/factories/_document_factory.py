@@ -71,32 +71,23 @@ class _DocumentFactory:
         if to_dict:
             document = data
         else:
-            document = DocumentModel()
-            document.created_by = data.get('created_by')
-            document.name = data.get('name')
-            document.internal_filename = data.get('internal_filename')
-            document.mime_type = data.get('mime_type')
-            document.directory_path = data.get('directory_path')
-            document.size = data.get('size')
-            document.created_at = data.get('created_at')
-            document.updated_at = data.get('updated_at')
-            document.deleted_at = data.get('deleted_at')
+            model_data = {
+                item: data.get(item)
+                for item in DocumentModel.get_fields(exclude)
+            }
+            document = DocumentModel(**model_data)
 
         return document
 
     def create(self, params: dict) -> DocumentModel:
-        exclude = []
-
-        data = self._fill(params, exclude)
-
+        data = self._fill(params, exclude=[])
         return DocumentModel.create(**data)
 
     def bulk_create(self, total: int, params: dict) -> bool:
         data = []
 
         for item in range(total):
-            data.append(self.make(params, False, []))
+            data.append(self.make(params, to_dict=False, exclude=[]))
 
         DocumentModel.bulk_create(data)
-
         return True

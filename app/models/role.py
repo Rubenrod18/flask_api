@@ -18,3 +18,6 @@ class Role(BaseModel, RoleMixin):
     created_at = TimestampField(default=None)
     updated_at = TimestampField()
     deleted_at = TimestampField(default=None, null=True)
+
+    def __init__(self, *args, **kwargs):
+        super(Role, self).__init__(*args, **kwargs)

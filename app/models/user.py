@@ -31,6 +31,9 @@ class User(BaseModel, UserMixin):
     deleted_at = TimestampField(default=None, null=True)
     roles = ManyToManyField(RoleModel, backref='users')
 
+    def __init__(self, *args, **kwargs):
+        super(User, self).__init__(*args, **kwargs)
+
     def save(self, *args: list, **kwargs: dict) -> int:
         if self.password and 'password' in self._dirty:
             self.password = self.ensure_password(self.password)
