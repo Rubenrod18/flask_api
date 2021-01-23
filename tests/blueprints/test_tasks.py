@@ -29,8 +29,9 @@ def test_check_task_status(client: CustomFlaskClient, auth_header: any):
     create_task_table()
     insert_task_record()
 
-    response = client.get('/api/tasks/status/59cc0424-6f97-44c1-a253-7b4d7566e3f7',
-                          json={}, headers=auth_header())
+    task_id = '59cc0424-6f97-44c1-a253-7b4d7566e3f7'
+    response = client.get(f'/api/tasks/status/{task_id}', json={},
+                          headers=auth_header())
     json_data = response.get_json()
 
     assert 200 == response.status_code
