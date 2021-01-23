@@ -9,9 +9,8 @@ from app.utils.constants import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
 
 
 def test_export_word_task(app: Flask):
-    def _run_task(created_by: int, request_data: dict, to_pdf: int = 0):
-        task = export_user_data_in_word_task.delay(created_by, request_data, to_pdf)
-        result = task.get()
+    def run_task(created_by: int, request_data: dict, to_pdf: int = 0):
+        result = export_user_data_in_word_task(created_by, request_data, to_pdf)
 
         document_data = result.get('result')
         parse_url = urlparse(document_data.get('url'))
@@ -40,7 +39,7 @@ def test_export_word_task(app: Flask):
         'page_number': 1,
     }
 
-    _run_task(user.id, request_data)
-    _run_task(**{'created_by': user.id, 'request_data': request_data,
-                 'to_pdf': 1})
-    _run_task(created_by=user.id, request_data=request_data, to_pdf=0)
+    run_task(user.id, request_data)
+    run_task(**{'created_by': user.id, 'request_data': request_data,
+                'to_pdf': 1})
+    run_task(created_by=user.id, request_data=request_data, to_pdf=0)

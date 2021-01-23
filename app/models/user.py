@@ -31,6 +31,9 @@ class User(BaseModel, UserMixin):
     deleted_at = TimestampField(default=None, null=True)
     roles = ManyToManyField(RoleModel, backref='users')
 
+    def __init__(self, *args, **kwargs):
+        super(User, self).__init__(*args, **kwargs)
+
     def save(self, *args: list, **kwargs: dict) -> int:
         if self.password and 'password' in self._dirty:
             self.password = self.ensure_password(self.password)
@@ -38,7 +41,6 @@ class User(BaseModel, UserMixin):
         return super(User, self).save(*args, **kwargs)
 
     def get_reset_token(self) -> str:
-        # TODO: move to user's service
         secret_key = current_app.config.get('SECRET_KEY')
         expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
         salt = expire_in.__str__()
@@ -51,7 +53,6 @@ class User(BaseModel, UserMixin):
 
     @staticmethod
     def verify_reset_token(token: str) -> any:
-        # TODO: move to user's service
         secret_key = current_app.config.get('SECRET_KEY')
         expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
         salt = expire_in.__str__()
@@ -68,10 +69,4 @@ class User(BaseModel, UserMixin):
 
     @staticmethod
     def ensure_password(plain_text: str) -> str:
-        # TODO: move to user'service
-        hashed_password = None
-
-        if plain_text:
-            hashed_password = hash_password(plain_text)
-
-        return hashed_password
+        return hash_password(plain_text) if plain_text else None

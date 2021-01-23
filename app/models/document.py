@@ -23,6 +23,9 @@ class Document(BaseModel):
     updated_at = TimestampField()
     deleted_at = TimestampField(default=None, null=True)
 
+    def __init__(self, *args, **kwargs):
+        super(Document, self).__init__(*args, **kwargs)
+
     @property
     def url(self):
         return url_for('documents_document_resource', document_id=self.id,

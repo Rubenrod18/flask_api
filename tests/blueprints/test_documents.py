@@ -2,15 +2,15 @@
 from urllib.parse import urlparse
 
 from flask import current_app
-from flask.testing import FlaskClient
 from peewee import fn
 
 from app.extensions import db_wrapper
 from app.models.document import Document as DocumentModel
 from app.utils.file_storage import FileStorage
+from tests.custom_flask_client import CustomFlaskClient
 
 
-def test_save_document(client: FlaskClient, auth_header: any):
+def test_save_document(client: CustomFlaskClient, auth_header: any):
     pdf_file = '%s/example.pdf' % current_app.config.get('STORAGE_DIRECTORY')
     data = {
         'document': open(pdf_file, 'rb'),
@@ -36,7 +36,7 @@ def test_save_document(client: FlaskClient, auth_header: any):
     assert json_data.get('deleted_at') is None
 
 
-def test_update_document(client: FlaskClient, auth_header: any):
+def test_update_document(client: CustomFlaskClient, auth_header: any):
     pdf_file = '%s/example.pdf' % current_app.config.get('STORAGE_DIRECTORY')
     document = (DocumentModel.select()
                 .where(DocumentModel.deleted_at.is_null())
@@ -70,7 +70,7 @@ def test_update_document(client: FlaskClient, auth_header: any):
     assert json_data.get('deleted_at') is None
 
 
-def test_get_document_data(client: FlaskClient, auth_header: any):
+def test_get_document_data(client: CustomFlaskClient, auth_header: any):
     document = (DocumentModel.select()
                 .where(DocumentModel.deleted_at.is_null())
                 .order_by(fn.Random())
@@ -96,7 +96,7 @@ def test_get_document_data(client: FlaskClient, auth_header: any):
     assert document.deleted_at == json_data.get('deleted_at')
 
 
-def test_get_document_file(client: FlaskClient, auth_header: any):
+def test_get_document_file(client: CustomFlaskClient, auth_header: any):
     document = (DocumentModel.select()
                 .where(DocumentModel.deleted_at.is_null())
                 .order_by(fn.Random())
@@ -114,7 +114,7 @@ def test_get_document_file(client: FlaskClient, auth_header: any):
     assert isinstance(response.get_data(), bytes)
 
 
-def test_delete_document(client: FlaskClient, auth_header: any):
+def test_delete_document(client: CustomFlaskClient, auth_header: any):
     document_id = (DocumentModel.select(DocumentModel.id)
                    .where(DocumentModel.deleted_at.is_null())
                    .order_by(fn.Random())
@@ -133,7 +133,7 @@ def test_delete_document(client: FlaskClient, auth_header: any):
     assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
 
-def test_search_document(client: FlaskClient, auth_header: any):
+def test_search_document(client: CustomFlaskClient, auth_header: any):
     document_name = (DocumentModel.select(DocumentModel.name)
                      .where(DocumentModel.deleted_at.is_null())
                      .order_by(fn.Random())

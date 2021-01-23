@@ -43,29 +43,23 @@ class _RoleFactory:
         if to_dict:
             role = data
         else:
-            role = RoleModel()
-            role.name = data.get('name')
-            role.description = data.get('description')
-            role.label = data.get('label')
-            role.created_at = data.get('created_at')
-            role.updated_at = data.get('updated_at')
-            role.deleted_at = data.get('deleted_at')
+            model_data = {
+                item: data.get(item)
+                for item in RoleModel.get_fields(exclude)
+            }
+            role = RoleModel(**model_data)
 
         return role
 
     def create(self, params: dict) -> RoleModel:
-        exclude = []
-
-        data = self._fill(params, exclude)
-
+        data = self._fill(params, exclude=[])
         return RoleModel.create(**data)
 
     def bulk_create(self, total: int, params: dict) -> bool:
         data = []
 
         for item in range(total):
-            data.append(self.make(params, False, []))
+            data.append(self.make(params, to_dict=False, exclude=[]))
 
         RoleModel.bulk_create(data)
-
         return True

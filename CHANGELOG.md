@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [2.0.1](https://github.com/rubenrod18/flask_api/compare/v2.0.0...v2.0.1) (2021-01-05)
+## [2.0.1](https://github.com/rubenrod18/flask_api/compare/v2.0.0...v2.0.1) (2021-01-05)
 
 
 ### Bug Fixes
@@ -68,7 +68,7 @@ All notable changes to this project will be documented in this file. See [standa
 * **pip:** remove cerberus package ([4a4fe72](https://github.com/rubenrod18/flask_api/commit/4a4fe7265b84857581480b4c0ddd464d852bf6b2))
 * **pip:** split python packages in two requirements local and production ([f39a2a5](https://github.com/rubenrod18/flask_api/commit/f39a2a5f8c89aa9f0ff1f25150d0315274d527ba))
 
-### [1.4.1](https://github.com/rubenrod18/flask-api/compare/v1.4.0...v1.4.1) (2020-10-07)
+## [1.4.1](https://github.com/rubenrod18/flask-api/compare/v1.4.0...v1.4.1) (2020-10-07)
 
 
 ### Bug Fixes
@@ -162,7 +162,7 @@ All notable changes to this project will be documented in this file. See [standa
 * **doc:** add standard-version NodeJS package ([c1b2cb3](https://github.com/rubenrod18/flask-api/commit/c1b2cb37702040843c854a9137249273d0793a6b))
 
 
-### 0.6.1 (2020-04-23)
+## 0.6.1 (2020-04-23)
 
 
 ### ⚠ BREAKING CHANGES

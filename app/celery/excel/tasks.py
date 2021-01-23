@@ -181,7 +181,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
             os.remove(filepath)
         raise
 
-    document_serializer = DocumentSerializer()
+    document_serializer = DocumentSerializer(exclude=('internal_filename',))
     document_data = document_serializer.dump(document)
 
     return {

@@ -76,4 +76,15 @@ detailing missed lines::
     source venv/bin/activate
     coverage html
 
+References
+----------
+How can I test Celery tasks?
+
+Depends on what exactly you want to be testing.
+
+    - Test the task code directly. Don't call "task.delay(...)" just call "task(...)" from your unit tests.
+    - Use CELERY_ALWAYS_EAGER. This will cause your tasks to be called immediately at the point you say "task.delay(...)", so you can test the whole path (but not any asynchronous behavior).
+
+https://stackoverflow.com/questions/12078667/how-do-you-unit-test-a-celery-task
+
 """

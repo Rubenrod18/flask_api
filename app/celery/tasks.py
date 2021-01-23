@@ -7,6 +7,7 @@ from app.celery import ContextTask
 from app.celery.word.tasks import export_user_data_in_word_task
 from app.celery.excel.tasks import export_user_data_in_excel_task
 from app.extensions import mail, celery
+from app.managers import DocumentManager
 
 logger = get_task_logger(__name__)
 
@@ -47,6 +48,7 @@ def reset_password_email_task(email_data) -> bool:
 
 @celery.task(base=ContextTask)
 def send_email_with_attachments_task(task_data: list) -> bool:
+    document_manager = DocumentManager()
     auth_user_data = task_data[0].get('result').get('created_by')
 
     to = [auth_user_data.get('email')]
@@ -60,15 +62,9 @@ def send_email_with_attachments_task(task_data: list) -> bool:
     msg.html = render_template('mails/attachments.html', **auth_user_data)
 
     for item in task_data:
-        document = item.get('result')
-
-        directory_path = current_app.config.get('STORAGE_DIRECTORY')
-        filepath = '%s/%s' % (directory_path,
-                              document.get('internal_filename'))
-        filename = document.get('name')
-
-        with open(filepath, 'rb') as fp:
-            msg.attach(filename, document.get('mime_type'),
+        document = document_manager.find(item.get('result')['id'])
+        with open(document.get_filepath(), 'rb') as fp:
+            msg.attach(document.name, document.mime_type,
                        fp.read())
 
     mail.send(msg)

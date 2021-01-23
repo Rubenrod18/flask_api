@@ -52,7 +52,7 @@ class AuthUserLoginSerializer(ma.Schema):
         return self.__user
 
 
-class AuthUserConfirmResetPassword(ma.Schema):
+class AuthUserConfirmResetPasswordSerializer(ma.Schema):
     token = fields.Str(required=True)
     # TODO: It could be safer if I add "password" and "confirm_password" fields.
     password = fields.Str(
