@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.2](https://github.com/rubenrod18/flask_api/compare/v2.0.1...v2.0.2) (2021-01-23)
+
+
+### Bug Fixes
+
+* **celery:** new settings name are not applies on celery 4.4.7 ([f1a0bff](https://github.com/rubenrod18/flask_api/commit/f1a0bffda260b1bb647037c8f708541523fc600c))
+* **middleware:** correct middleware for allowing to let in Swagger ([441b077](https://github.com/rubenrod18/flask_api/commit/441b077e963fda836258ce9fc1550543486f61dc))
+* **tasks:** correct task for sending an email with attachments ([43d516c](https://github.com/rubenrod18/flask_api/commit/43d516cd2a4472fb222aeba62eab1bef87739496))
+
+
+### Build System
+
+* **pip:** update python dependencies ([8964eed](https://github.com/rubenrod18/flask_api/commit/8964eed7f12870b70ae410d9633e47faabafc679))
+
+
+### Code Refactoring
+
+* **blueprints:** update way to register all blueprints ([b7692b2](https://github.com/rubenrod18/flask_api/commit/b7692b238679c85f90b7a5120f9297392d6b03ce))
+* update way to test Celery tasks ([eb3f72d](https://github.com/rubenrod18/flask_api/commit/eb3f72d39db808f5932b3c2aea6dc4c35a01a83a))
+* **celery:** update way to run Celery ([dee133d](https://github.com/rubenrod18/flask_api/commit/dee133d02cec4650c3203567589cf77f1f0bc761))
+* **factories:** update way to create a model instance from a factory ([ddfcb7d](https://github.com/rubenrod18/flask_api/commit/ddfcb7d81784d57685f0daac7ee51d7fd127ddd9))
+* **swagger:** update order field format ([ccbfcda](https://github.com/rubenrod18/flask_api/commit/ccbfcdab4ffa9b26fa26bf3ada06f4b09739741b))
+* **tasks:** exclude internal_filename in Celery tasks ([53dcf6d](https://github.com/rubenrod18/flask_api/commit/53dcf6d2b6db728f71d060b2da838472111a1c23))
+
 ## [2.0.1](https://github.com/rubenrod18/flask_api/compare/v2.0.0...v2.0.1) (2021-01-05)
 
 
