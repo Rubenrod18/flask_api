@@ -43,21 +43,6 @@ class MyCelery(Celery):
             module = module[:-6]
         return super(MyCelery, self).gen_task_name(name, module)
 
-    def init_app(self, app: Flask) -> Celery:
-        celery = MyCelery(app.import_name)
-        celery.conf.update(app.config)
-
-        logger.debug(celery.conf.table(with_defaults=True))
-
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
-
-        ContextTask.__call__ = __call__
-
-        celery.register_task(ContextTask())
-        return celery
-
 
 class ContextTask(Task):
     abstract = True
@@ -70,3 +55,18 @@ class ContextTask(Task):
             einfo: {einfo}
             exception: {exc}
         """)
+
+
+def make_celery(app: Flask) -> Celery:
+    celery = MyCelery(app.import_name)
+    celery.conf.update(app.config)
+
+    logger.debug(celery.conf.table(with_defaults=True))
+
+    def __call__(self, *args, **kwargs):
+        with app.app_context():
+            return self.run(*args, **kwargs)
+    ContextTask.__call__ = __call__
+
+    celery.register_task(ContextTask())
+    return celery

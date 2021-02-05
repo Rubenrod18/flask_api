@@ -1,6 +1,6 @@
 from celery import chord
 from celery.utils.log import get_task_logger
-from flask import render_template, current_app
+from flask import render_template
 from flask_mail import Message
 
 from app.celery import ContextTask

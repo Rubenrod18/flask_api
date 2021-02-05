@@ -27,28 +27,28 @@ class Meta(type):
         https://docs.celeryproject.org/en/latest/userguide/configuration.html#new-lowercase-settings
 
         """
-        if celery.__version__ != '4.4.7':
-            new_settings_names = {
-                'CELERY_BROKER_URL': 'broker_url',
-                'CELERY_RESULT_BACKEND': 'result_backend',
-                'CELERY_TASK_SERIALIZER': 'task_serializer',
-                'CELERY_RESULT_SERIALIZER': 'result_serializer',
-                'CELERY_ACCEPT_CONTENT': 'accept_content',
-                'CELERY_TIMEZONE': 'timezone',
-                'CELERY_ENABLE_UTC': 'enable_utc',
-                'CELERY_INCLUDE': 'include',
-                'CELERY_TASK_TRACK_STARTED': 'task_track_started',
-                'CELERY_RESULT_EXPIRES': 'result_expires',
-                'CELERY_WORKER_LOG_FORMAT': 'worker_log_format',
-                'CELERY_WORKER_TASK_LOG_FORMAT': 'worker_task_log_format',
-                'CELERY_RESULT_EXTENDED': 'result_extended',
-                'CELERY_TASK_DEFAULT_RATE_LIMIT': 'task_default_rate_limit',
-            }
+        new_settings_names = {
+            'CELERY_BROKER_URL': 'broker_url',
+            'CELERY_RESULT_BACKEND': 'result_backend',
+            'CELERY_TASK_SERIALIZER': 'task_serializer',
+            'CELERY_RESULT_SERIALIZER': 'result_serializer',
+            'CELERY_ACCEPT_CONTENT': 'accept_content',
+            'CELERY_TIMEZONE': 'timezone',
+            'CELERY_ENABLE_UTC': 'enable_utc',
+            'CELERY_INCLUDE': 'include',
+            'CELERY_TASK_TRACK_STARTED': 'task_track_started',
+            'CELERY_RESULT_EXPIRES': 'result_expires',
+            'CELERY_WORKER_LOG_FORMAT': 'worker_log_format',
+            'CELERY_WORKER_TASK_LOG_FORMAT': 'worker_task_log_format',
+            'CELERY_RESULT_EXTENDED': 'result_extended',
+            'CELERY_TASK_DEFAULT_RATE_LIMIT': 'task_default_rate_limit',
+            'CELERY_TASK_ALWAYS_EAGER': 'task_always_eager',
+        }
 
-            for current_name, new_name in new_settings_names.items():
-                if hasattr(config, current_name):
-                    setattr(config, new_name, getattr(config, current_name))
-                    delattr(config, current_name)
+        for current_name, new_name in new_settings_names.items():
+            if hasattr(config, current_name):
+                setattr(config, new_name, getattr(config, current_name))
+                delattr(config, current_name)
 
 
 class Config(metaclass=Meta):
@@ -111,6 +111,7 @@ class Config(metaclass=Meta):
                                      '%(task_id)s - %(message)s')
     CELERY_RESULT_EXTENDED = True
     CELERY_TASK_DEFAULT_RATE_LIMIT = 3
+    CELERY_TASK_ALWAYS_EAGER = False
 
     # Flask Swagger UI
     SWAGGER_URL = os.getenv('SWAGGER_URL', '/docs')
@@ -179,6 +180,9 @@ class TestConfig(Config):
             'synchronous': 0,
         },
     }
+
+    # Celery
+    CELERY_TASK_ALWAYS_EAGER = False
 
     # Mr Developer
     STORAGE_DIRECTORY = f'{Config.STORAGE_DIRECTORY}/tests'
