@@ -5,7 +5,7 @@ from peewee import fn
 from app.celery.tasks import (create_user_email_task, reset_password_email_task,
                               create_word_and_excel_documents_task,
                               send_email_with_attachments_task)
-from app.models.user import User as UserModel
+from app.models import Document as DocumentModel, User as UserModel
 
 
 def test_create_user_email_task(factory: any):
@@ -30,9 +30,15 @@ def test_reset_password_email_task(app: Flask):
 
 
 def test_send_email_with_attachments_task(app: Flask):
+    document = (DocumentModel.select(DocumentModel.id)
+                .order_by(fn.Random())
+                .limit(1)
+                .get())
+
     args = [
         {
             'result': {
+                'id': document.id,
                 'name': 'example.pdf',
                 'internal_filename': 'example.pdf',
                 'mime_type': 'application/pdf',

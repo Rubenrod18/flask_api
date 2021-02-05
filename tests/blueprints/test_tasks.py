@@ -8,7 +8,7 @@ from tests.custom_flask_client import CustomFlaskClient
 def test_check_task_status(client: CustomFlaskClient, auth_header: any):
     def create_task_table():
         sql_file = ('%s/create_task_table.sql'
-                    % current_app.config.get('STORAGE_DIRECTORY'))
+                    % current_app.config.get('MOCKUP_DIRECTORY'))
         with open(sql_file, 'r') as fp:
             sql = fp.read()
 
@@ -18,7 +18,7 @@ def test_check_task_status(client: CustomFlaskClient, auth_header: any):
 
     def insert_task_record():
         sql_file = ('%s/create_task_record.sql'
-                    % current_app.config.get('STORAGE_DIRECTORY'))
+                    % current_app.config.get('MOCKUP_DIRECTORY'))
         with open(sql_file, 'r') as fp:
             sql = fp.read()
 

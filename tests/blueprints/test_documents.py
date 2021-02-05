@@ -11,7 +11,7 @@ from tests.custom_flask_client import CustomFlaskClient
 
 
 def test_save_document(client: CustomFlaskClient, auth_header: any):
-    pdf_file = '%s/example.pdf' % current_app.config.get('STORAGE_DIRECTORY')
+    pdf_file = '%s/example.pdf' % current_app.config.get('MOCKUP_DIRECTORY')
     data = {
         'document': open(pdf_file, 'rb'),
     }
@@ -37,7 +37,7 @@ def test_save_document(client: CustomFlaskClient, auth_header: any):
 
 
 def test_update_document(client: CustomFlaskClient, auth_header: any):
-    pdf_file = '%s/example.pdf' % current_app.config.get('STORAGE_DIRECTORY')
+    pdf_file = '%s/example.pdf' % current_app.config.get('MOCKUP_DIRECTORY')
     document = (DocumentModel.select()
                 .where(DocumentModel.deleted_at.is_null())
                 .order_by(fn.Random())

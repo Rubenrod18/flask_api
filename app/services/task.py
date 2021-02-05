@@ -21,7 +21,6 @@ class TaskService(object):
         self.user_word_export_serializer = UserExportWordSerializer()
 
     def find_by_id(self, task_id: str) -> PromiseProxy:
-        # TODO: pending to define documentation
         def build_task_import(task_path: str) -> tuple:
             """Build a task import path.
 
