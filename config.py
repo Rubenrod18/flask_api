@@ -131,6 +131,7 @@ class Config(metaclass=Meta):
 
     ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
     STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
+    MOCKUP_DIRECTORY = '%s/storage/mockups' % ROOT_DIRECTORY
     LOG_DIRECTORY = '%s/log' % ROOT_DIRECTORY
 
     RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
@@ -153,16 +154,19 @@ class ProdConfig(Config):
 
 class DevConfig(Config):
     """Development configuration options."""
+    # Flask
     DEVELOPMENT = True
     DEBUG = True
 
 
 class TestConfig(Config):
     """Testing configuration options."""
+    # Flask
     DEVELOPMENT = True
     DEBUG = True
     TESTING = True
 
+    # Peewee
     DATABASE = {
         'name': 'test.db',
         'engine': 'peewee.SqliteDatabase',
@@ -176,4 +180,5 @@ class TestConfig(Config):
         },
     }
 
-    STORAGE_DIRECTORY = '%s/storage/test' % Config.ROOT_DIRECTORY
+    # Mr Developer
+    STORAGE_DIRECTORY = f'{Config.STORAGE_DIRECTORY}/tests'
