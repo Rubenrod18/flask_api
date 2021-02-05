@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.3](https://github.com/rubenrod18/flask_api/compare/v2.0.2...v2.0.3) (2021-02-05)
+
+
+### Bug Fixes
+
+* **celery:** task fields are saving on database when the task is finished ([bc93505](https://github.com/rubenrod18/flask_api/commit/bc935055259b68b54775f1afe5c528d9cf170bf9))
+
+
+### Code Refactoring
+
+* add new mockups directory in storage directory ([91e642e](https://github.com/rubenrod18/flask_api/commit/91e642e3fc75a7f29c98be12f85af1773f23136c))
+* tls and ssl flask mail are getting from environment file ([e548d57](https://github.com/rubenrod18/flask_api/commit/e548d579424ae99257ee4082986929ffc17a325a))
+
 ## [2.0.2](https://github.com/rubenrod18/flask_api/compare/v2.0.1...v2.0.2) (2021-01-23)
 
 
