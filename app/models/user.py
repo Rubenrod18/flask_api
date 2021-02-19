@@ -4,7 +4,7 @@ from flask import current_app
 from flask_security import UserMixin, hash_password
 from itsdangerous import URLSafeSerializer, TimestampSigner
 from peewee import (CharField, DateField, TimestampField, ForeignKeyField,
-                    BooleanField, FixedCharField, ManyToManyField)
+                    BooleanField, FixedCharField, ManyToManyField, TextField)
 
 from .base import Base as BaseModel
 from .role import Role as RoleModel
@@ -13,9 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 class User(BaseModel, UserMixin):
+    """User database model.
+
+    References
+    ----------
+    fs_uniquier field is required by flask-security-too:
+    https://flask-security-too.readthedocs.io/en/stable/changelog.html#version-4-0-0
+
+    """
     class Meta:
         table_name = 'users'
 
+    fs_uniquifier = TextField(null=False)
     created_by = ForeignKeyField('self', null=True, backref='children',
                                  column_name='created_by')
     name = CharField()
