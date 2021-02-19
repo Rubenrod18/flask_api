@@ -17,6 +17,7 @@ xlsxwriter
 
 # Framework and extensions
 flask
+flask-mail
 flask-marshmallow
 flask-restx
 flask-security-too
