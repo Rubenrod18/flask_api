@@ -13,7 +13,7 @@ def test_create_user_endpoint(client: CustomFlaskClient, auth_header: any,
     role = RoleModel.get_by_id(1)
 
     ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at',
-                     'created_by']
+                     'created_by', 'fs_uniquifier']
     data = factory('User').make(exclude=ignore_fields, to_dict=True)
     data['password'] = os.getenv('TEST_USER_PASSWORD')
     data['role_id'] = role.id

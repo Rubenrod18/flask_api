@@ -21,8 +21,13 @@ class UserService(BaseService):
 
         with db_wrapper.database.atomic():
             role = self.role_manager.find(deserialized_data['role_id'])
+
+            user = self.manager.get_last_record()
+            fs_uniquifier = 1 if user is None else user.id + 1
+
             deserialized_data.update({'created_by': current_user.id,
-                                      'roles': [role]})
+                                      'roles': [role],
+                                      'fs_uniquifier': fs_uniquifier})
             user = user_datastore.create_user(**deserialized_data)
 
         return user

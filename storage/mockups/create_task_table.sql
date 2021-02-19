@@ -1,4 +1,4 @@
-CREATE TABLE celery_taskmeta (
+CREATE TABLE IF NOT EXISTS celery_taskmeta (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	task_id VARCHAR(155),
 	status VARCHAR(50),

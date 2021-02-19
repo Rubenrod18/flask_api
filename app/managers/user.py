@@ -13,3 +13,9 @@ class UserManager(BaseManager):
         if args:
             query = query + args
         return self.model.get_or_none(*query)
+
+    def get_last_record(self):
+        return (self.model.select()
+                .order_by(UserModel.id.desc())
+                .limit(1)
+                .first())
