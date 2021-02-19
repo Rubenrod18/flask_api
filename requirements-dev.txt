@@ -10,7 +10,7 @@ amqp==2.6.1
     # via
     #   -r requirements.txt
     #   kombu
-aniso8601==8.1.1
+aniso8601==9.0.0
     # via
     #   -r requirements.txt
     #   flask-restx
@@ -57,7 +57,7 @@ email-validator==1.1.2
     # via
     #   -r requirements.txt
     #   flask-security-too
-faker==6.0.0
+faker==6.4.1
     # via -r requirements.txt
 flask-login==0.5.0
     # via
@@ -157,7 +157,7 @@ passlib==1.7.4
     #   flask-security-too
 pbr==5.5.1
     # via sphinx-click
-peewee==3.14.0
+peewee==3.14.1
     # via -r requirements.txt
 pip-tools==5.5.0
     # via -r requirements-dev.in
@@ -169,7 +169,7 @@ prometheus-client==0.8.0
     #   flower
 py==1.10.0
     # via pytest
-pygments==2.7.4
+pygments==2.8.0
     # via sphinx
 pyparsing==2.4.7
     # via packaging
@@ -187,7 +187,7 @@ python-docx==0.8.10
     # via -r requirements.txt
 python-dotenv==0.15.0
     # via -r requirements.txt
-python-magic==0.4.18
+python-magic==0.4.22
     # via -r requirements.txt
 pytz==2021.1
     # via
@@ -211,7 +211,7 @@ sphinx-click==2.5.0
     # via -r requirements-dev.in
 sphinx-rtd-theme==0.5.1
     # via -r requirements-dev.in
-sphinx==3.4.3
+sphinx==3.5.1
     # via
     #   -r requirements-dev.in
     #   sphinx-click

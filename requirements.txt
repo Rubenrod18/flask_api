@@ -6,7 +6,7 @@
 #
 amqp==2.6.1
     # via kombu
-aniso8601==8.1.1
+aniso8601==9.0.0
     # via flask-restx
 attrs==20.3.0
     # via jsonschema
@@ -26,7 +26,7 @@ dnspython==2.1.0
     # via email-validator
 email-validator==1.1.2
     # via flask-security-too
-faker==6.0.0
+faker==6.4.1
     # via -r requirements.in
 flask-login==0.5.0
     # via flask-security-too
@@ -85,7 +85,7 @@ marshmallow==3.10.0
     # via flask-marshmallow
 passlib==1.7.4
     # via flask-security-too
-peewee==3.14.0
+peewee==3.14.1
     # via -r requirements.in
 prometheus-client==0.8.0
     # via flower
@@ -97,7 +97,7 @@ python-docx==0.8.10
     # via -r requirements.in
 python-dotenv==0.15.0
     # via -r requirements.in
-python-magic==0.4.18
+python-magic==0.4.22
     # via -r requirements.in
 pytz==2021.1
     # via
