@@ -17,6 +17,13 @@ UserList = List[UserModel]
 class _UserFactory:
     @staticmethod
     def _fill(params: dict, to_dict: bool, exclude: list) -> dict:
+        def generate_fake_user_email():
+            fake_email = fake.random_element([fake.email(),
+                                              fake.safe_email(),
+                                              fake.free_email(),
+                                              fake.company_email()])
+            return f'%s_{fake_email}' % randint(1, 9999)
+
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
         current_date = datetime.utcnow()
 
@@ -42,13 +49,18 @@ class _UserFactory:
         else:
             created_by = None
 
+        user = (UserModel.select()
+                .order_by(UserModel.id.desc())
+                .limit(1)
+                .first())
+        fs_uniquifier = 1 if user is None else user.id + 1
+
         data = {
+            'fs_uniquifier': fs_uniquifier,
             'created_by': params.get('created_by') or created_by,
             'name': params.get('name') or fake.name(),
             'last_name': params.get('last_name') or fake.last_name(),
-            'email': params.get('email') or fake.random_element(
-                [fake.email(), fake.safe_email(), fake.free_email(),
-                 fake.company_email()]),
+            'email': params.get('email') or generate_fake_user_email(),
             'genre': params.get('genre') or fake.random_element(['m', 'f']),
             'password': params.get('password') or current_app.config.get('TEST_USER_PASSWORD'),
             'birth_date': params.get('birth_date') or birth_date.strftime('%Y-%m-%d'),
