@@ -181,8 +181,5 @@ class TestConfig(Config):
         },
     }
 
-    # Celery
-    CELERY_TASK_ALWAYS_EAGER = False
-
     # Mr Developer
     STORAGE_DIRECTORY = f'{Config.STORAGE_DIRECTORY}/tests'

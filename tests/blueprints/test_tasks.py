@@ -1,33 +1,16 @@
-from flask import current_app
-
+from app.celery.tests.tasks import create_task_table, insert_task_record
 from app.extensions import db_wrapper
-from app.managers import BaseManager
 from tests.custom_flask_client import CustomFlaskClient
 
 
-def test_check_task_status(client: CustomFlaskClient, auth_header: any):
-    def create_task_table():
-        sql_file = ('%s/create_task_table.sql'
-                    % current_app.config.get('MOCKUP_DIRECTORY'))
-        with open(sql_file, 'r') as fp:
-            sql = fp.read()
-
-        base_manager = BaseManager()
-        base_manager.raw(sql)
-        db_wrapper.database.close()
-
-    def insert_task_record():
-        sql_file = ('%s/create_task_record.sql'
-                    % current_app.config.get('MOCKUP_DIRECTORY'))
-        with open(sql_file, 'r') as fp:
-            sql = fp.read()
-
-        base_manager = BaseManager()
-        base_manager.raw(sql)
-        db_wrapper.database.close()
-
+def _create_task_record():
     create_task_table()
     insert_task_record()
+    db_wrapper.database.close()
+
+
+def test_check_task_status(client: CustomFlaskClient, auth_header: any):
+    _create_task_record()
 
     task_id = '59cc0424-6f97-44c1-a253-7b4d7566e3f7'
     response = client.get(f'/api/tasks/status/{task_id}', json={},
