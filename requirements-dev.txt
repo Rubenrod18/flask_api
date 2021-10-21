@@ -19,7 +19,7 @@ attrs==20.3.0
     #   -r requirements.txt
     #   jsonschema
     #   pytest
-babel==2.9.0
+babel==2.9.1
     # via sphinx
 billiard==3.6.3.0
     # via
@@ -59,6 +59,16 @@ email-validator==1.1.2
     #   flask-security-too
 faker==6.4.1
     # via -r requirements.txt
+flask==1.1.2
+    # via
+    #   -r requirements.txt
+    #   flask-login
+    #   flask-mail
+    #   flask-marshmallow
+    #   flask-principal
+    #   flask-restx
+    #   flask-security-too
+    #   flask-wtf
 flask-login==0.5.0
     # via
     #   -r requirements.txt
@@ -79,16 +89,6 @@ flask-wtf==0.14.3
     # via
     #   -r requirements.txt
     #   flask-security-too
-flask==1.1.2
-    # via
-    #   -r requirements.txt
-    #   flask-login
-    #   flask-mail
-    #   flask-marshmallow
-    #   flask-principal
-    #   flask-restx
-    #   flask-security-too
-    #   flask-wtf
 flower==0.9.7
     # via -r requirements.txt
 humanize==3.2.0
@@ -103,12 +103,7 @@ idna==2.10
 imagesize==1.2.0
     # via sphinx
 importlib-metadata==3.4.0
-    # via
-    #   -r requirements.txt
-    #   jsonschema
-    #   kombu
-    #   pluggy
-    #   pytest
+    # via -r requirements.txt
 iniconfig==1.1.1
     # via pytest
 itsdangerous==1.1.0
@@ -207,15 +202,15 @@ six==1.15.0
     #   python-dateutil
 snowballstemmer==2.1.0
     # via sphinx
-sphinx-click==2.5.0
-    # via -r requirements-dev.in
-sphinx-rtd-theme==0.5.1
-    # via -r requirements-dev.in
 sphinx==3.5.1
     # via
     #   -r requirements-dev.in
     #   sphinx-click
     #   sphinx-rtd-theme
+sphinx-click==2.5.0
+    # via -r requirements-dev.in
+sphinx-rtd-theme==0.5.1
+    # via -r requirements-dev.in
 sphinxcontrib-applehelp==1.0.2
     # via sphinx
 sphinxcontrib-devhelp==1.0.2
@@ -251,9 +246,7 @@ tornado==6.1
     #   -r requirements.txt
     #   flower
 typing-extensions==3.7.4.3
-    # via
-    #   -r requirements.txt
-    #   importlib-metadata
+    # via -r requirements.txt
 urllib3==1.26.3
     # via requests
 uwsgi==2.0.19.1
