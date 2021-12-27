@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.5](https://github.com/rubenrod18/flask_api/compare/v2.0.4...v2.0.5) (2021-12-27)
+
+
+### Bug Fixes
+
+* **npm:** upgrade package versions ([f62f335](https://github.com/rubenrod18/flask_api/commit/f62f3356f0c7c66c90370678c89394f74442c15f))
+
 ## [2.0.4](https://github.com/rubenrod18/flask_api/compare/v2.0.3...v2.0.4) (2021-02-19)
 
 
