@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.5](https://github.com/rubenrod18/flask_api/compare/v2.0.4...v2.0.5) (2021-12-27)
+
+
+### Bug Fixes
+
+* **npm:** upgrade package versions ([f62f335](https://github.com/rubenrod18/flask_api/commit/f62f3356f0c7c66c90370678c89394f74442c15f))
+
+## [2.0.4](https://github.com/rubenrod18/flask_api/compare/v2.0.3...v2.0.4) (2021-02-19)
+
+
+### Bug Fixes
+
+* **users:** add new fs_uniquifier column on users table ([a28be38](https://github.com/rubenrod18/flask_api/commit/a28be38572ba25906aa10e74293040c65dba1fbe))
+
+
+### Build System
+
+* **npm:** update node package versions ([6314da3](https://github.com/rubenrod18/flask_api/commit/6314da35c80c9994b4ca2f9f99428475f8fb8608))
+* **pip:** update flask-security-too version to 4.0.0 ([698acb6](https://github.com/rubenrod18/flask_api/commit/698acb6015579e1f740240edec9350464868adbc))
+* **pip:** update python package versions ([09755c8](https://github.com/rubenrod18/flask_api/commit/09755c82f2b01af60bf361c3569c4e8d08567ab1))
+
 ## [2.0.3](https://github.com/rubenrod18/flask_api/compare/v2.0.2...v2.0.3) (2021-02-05)
 
 
