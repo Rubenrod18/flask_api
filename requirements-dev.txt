@@ -6,22 +6,22 @@
 #
 alabaster==0.7.12
     # via sphinx
-amqp==2.6.1
+amqp==5.0.9
     # via
     #   -r requirements.txt
     #   kombu
-aniso8601==9.0.0
+aniso8601==9.0.1
     # via
     #   -r requirements.txt
     #   flask-restx
-attrs==20.3.0
+attrs==21.2.0
     # via
     #   -r requirements.txt
     #   jsonschema
     #   pytest
-babel==2.9.0
+babel==2.9.1
     # via sphinx
-billiard==3.6.3.0
+billiard==3.6.4.0
     # via
     #   -r requirements.txt
     #   celery
@@ -30,34 +30,54 @@ blinker==1.4
     #   -r requirements.txt
     #   flask-mail
     #   flask-principal
-celery==4.4.7
+    #   flask-security-too
+celery==5.2.2
     # via
     #   -r requirements.txt
     #   flower
-certifi==2020.12.5
+certifi==2021.10.8
     # via requests
-chardet==4.0.0
+charset-normalizer==2.0.9
     # via requests
-click==7.1.2
+click-didyoumean==0.3.0
     # via
     #   -r requirements.txt
+    #   celery
+click-plugins==1.1.1
+    # via
+    #   -r requirements.txt
+    #   celery
+click-repl==0.2.0
+    # via
+    #   -r requirements.txt
+    #   celery
+click==8.0.3
+    # via
+    #   -r requirements.txt
+    #   celery
+    #   click-didyoumean
+    #   click-plugins
+    #   click-repl
     #   flask
     #   pip-tools
-coverage==5.4
+    #   sphinx-click
+coverage==6.2
     # via -r requirements-dev.in
 dnspython==2.1.0
     # via
     #   -r requirements.txt
     #   email-validator
-docutils==0.16
+docutils==0.17.1
     # via
     #   m2r2
     #   sphinx
-email-validator==1.1.2
+    #   sphinx-click
+    #   sphinx-rtd-theme
+email-validator==1.1.3
     # via
     #   -r requirements.txt
     #   flask-security-too
-faker==6.4.1
+faker==11.0.0
     # via -r requirements.txt
 flask-login==0.5.0
     # via
@@ -71,15 +91,15 @@ flask-principal==0.4.0
     # via
     #   -r requirements.txt
     #   flask-security-too
-flask-restx==0.2.0
+flask-restx==0.5.1
     # via -r requirements.txt
-flask-security-too==4.0.0
+flask-security-too==4.1.2
     # via -r requirements.txt
-flask-wtf==0.14.3
+flask-wtf==1.0.0
     # via
     #   -r requirements.txt
     #   flask-security-too
-flask==1.1.2
+flask==2.0.2
     # via
     #   -r requirements.txt
     #   flask-login
@@ -89,65 +109,66 @@ flask==1.1.2
     #   flask-restx
     #   flask-security-too
     #   flask-wtf
-flower==0.9.7
+flower==1.0.0
     # via -r requirements.txt
-humanize==3.2.0
+greenlet==1.1.2
+    # via
+    #   -r requirements.txt
+    #   sqlalchemy
+humanize==3.13.1
     # via
     #   -r requirements.txt
     #   flower
-idna==2.10
+idna==3.3
     # via
     #   -r requirements.txt
     #   email-validator
     #   requests
-imagesize==1.2.0
+imagesize==1.3.0
     # via sphinx
-importlib-metadata==3.4.0
+importlib-resources==5.4.0
     # via
     #   -r requirements.txt
     #   jsonschema
-    #   kombu
-    #   pluggy
-    #   pytest
 iniconfig==1.1.1
     # via pytest
-itsdangerous==1.1.0
+itsdangerous==2.0.1
     # via
     #   -r requirements.txt
     #   flask
     #   flask-security-too
     #   flask-wtf
-jinja2==2.11.3
+jinja2==3.0.3
     # via
     #   -r requirements.txt
     #   flask
     #   sphinx
-jsonschema==3.2.0
+jsonschema==4.3.2
     # via
     #   -r requirements.txt
     #   flask-restx
-kombu==4.6.11
+kombu==5.2.2
     # via
     #   -r requirements.txt
     #   celery
-lxml==4.6.2
+lxml==4.7.1
     # via
     #   -r requirements.txt
     #   python-docx
-m2r2==0.2.7
+m2r2==0.3.2
     # via -r requirements-dev.in
-markupsafe==1.1.1
+markupsafe==2.0.1
     # via
     #   -r requirements.txt
     #   jinja2
     #   wtforms
-marshmallow==3.10.0
+marshmallow==3.14.1
     # via
     #   -r requirements.txt
     #   flask-marshmallow
 mistune==0.8.4
     # via m2r2
-packaging==20.9
+packaging==21.3
     # via
     #   pytest
     #   sphinx
@@ -155,63 +176,67 @@ passlib==1.7.4
     # via
     #   -r requirements.txt
     #   flask-security-too
-pbr==5.5.1
-    # via sphinx-click
-peewee==3.14.1
+peewee==3.14.8
     # via -r requirements.txt
-pip-tools==5.5.0
+pep517==0.12.0
+    # via pip-tools
+pip-tools==6.4.0
     # via -r requirements-dev.in
-pluggy==0.13.1
+pluggy==1.0.0
     # via pytest
-prometheus-client==0.8.0
+prometheus-client==0.12.0
     # via
     #   -r requirements.txt
     #   flower
-py==1.10.0
+prompt-toolkit==3.0.24
+    # via
+    #   -r requirements.txt
+    #   click-repl
+py==1.11.0
     # via pytest
-pygments==2.8.0
+pygments==2.10.0
     # via sphinx
-pyparsing==2.4.7
+pyparsing==3.0.6
     # via packaging
-pyrsistent==0.17.3
+pyrsistent==0.18.0
     # via
     #   -r requirements.txt
     #   jsonschema
-pytest==6.2.2
+pytest==6.2.5
     # via -r requirements-dev.in
-python-dateutil==2.8.1
+python-dateutil==2.8.2
     # via
     #   -r requirements.txt
     #   faker
-python-docx==0.8.10
+python-docx==0.8.11
     # via -r requirements.txt
-python-dotenv==0.15.0
+python-dotenv==0.19.2
     # via -r requirements.txt
-python-magic==0.4.22
+python-magic==0.4.24
     # via -r requirements.txt
-pytz==2021.1
+pytz==2021.3
     # via
     #   -r requirements.txt
     #   babel
     #   celery
     #   flask-restx
     #   flower
-requests==2.25.1
+requests==2.26.0
     # via sphinx
-six==1.15.0
+six==1.16.0
     # via
     #   -r requirements.txt
+    #   click-repl
     #   flask-marshmallow
     #   flask-restx
-    #   jsonschema
     #   python-dateutil
-snowballstemmer==2.1.0
+snowballstemmer==2.2.0
     # via sphinx
-sphinx-click==2.5.0
+sphinx-click==3.0.2
     # via -r requirements-dev.in
-sphinx-rtd-theme==0.5.1
+sphinx-rtd-theme==1.0.0
     # via -r requirements-dev.in
-sphinx==3.5.1
+sphinx==4.3.2
     # via
     #   -r requirements-dev.in
     #   sphinx-click
@@ -220,17 +245,17 @@ sphinxcontrib-applehelp==1.0.2
     # via sphinx
 sphinxcontrib-devhelp==1.0.2
     # via sphinx
-sphinxcontrib-htmlhelp==1.0.3
+sphinxcontrib-htmlhelp==2.0.0
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
 sphinxcontrib-qthelp==1.0.3
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.4
+sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
-sqlalchemy==1.3.23
+sqlalchemy==1.4.29
     # via -r requirements.txt
-supervisor==4.2.1
+supervisor==4.2.2
     # via
     #   -r requirements.txt
     #   supervisord-dependent-startup
@@ -242,7 +267,9 @@ text-unidecode==1.3
     #   faker
 toml==0.10.2
     # via pytest
-toposort==1.6
+tomli==2.0.0
+    # via pep517
+toposort==1.7
     # via
     #   -r requirements.txt
     #   supervisord-dependent-startup
@@ -250,35 +277,37 @@ tornado==6.1
     # via
     #   -r requirements.txt
     #   flower
-typing-extensions==3.7.4.3
-    # via
-    #   -r requirements.txt
-    #   importlib-metadata
-urllib3==1.26.3
+urllib3==1.26.7
     # via requests
-uwsgi==2.0.19.1
+uwsgi==2.0.20
     # via -r requirements.txt
-vine==1.3.0
+vine==5.0.0
     # via
     #   -r requirements.txt
     #   amqp
     #   celery
-    #   flower
-werkzeug==1.0.1
+    #   kombu
+wcwidth==0.2.5
+    # via
+    #   -r requirements.txt
+    #   prompt-toolkit
+werkzeug==2.0.2
     # via
     #   -r requirements.txt
     #   flask
     #   flask-restx
-wtforms==2.3.3
+wheel==0.37.1
+    # via pip-tools
+wtforms==3.0.1
     # via
     #   -r requirements.txt
     #   flask-wtf
-xlsxwriter==1.3.7
+xlsxwriter==3.0.2
     # via -r requirements.txt
-zipp==3.4.0
+zipp==3.6.0
     # via
     #   -r requirements.txt
-    #   importlib-metadata
+    #   importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

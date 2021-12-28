@@ -5,7 +5,6 @@ The extension and custom configurations are defined here.
 """
 import os
 
-import celery
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -119,8 +118,8 @@ class Config(metaclass=Meta):
         'SWAGGER_API_URL', f'http://{SERVER_NAME}/static/swagger.yaml'
     )
 
-    # Flask Restful
-    ERROR_404_HELP = False
+    # Flask Restx
+    RESTX_ERROR_404_HELP = False
     FLASK_RESTFUL_PREFIX = '/api'
     RESTX_MASK_SWAGGER = False
 

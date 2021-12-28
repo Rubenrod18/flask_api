@@ -103,7 +103,7 @@ class DocumentService(BaseService):
             file_extension) else f'{document.name}{file_extension}'
 
         kwargs = {
-            'filename_or_fp': document.get_filepath(),
+            'path_or_file': document.get_filepath(),
             'mimetype': mime_type,
             'as_attachment': as_attachment,
         }

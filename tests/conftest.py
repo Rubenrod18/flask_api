@@ -6,6 +6,7 @@ import pytest
 from flask import Flask
 
 from app import create_app
+from app.celery.tests.tasks import create_task_table
 from database import init_database
 from database.factories import Factory
 from database.seeds import init_seed
@@ -40,6 +41,7 @@ def app():
 
     with app.app_context():
         init_database()
+        create_task_table()
         init_seed()
         yield app
 

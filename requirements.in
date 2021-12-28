@@ -7,7 +7,7 @@ peewee
 sqlalchemy # Required by celery
 
 # Distributed Task Queue
-celery==4.4.7  # Upgrade package when flower will be compatible with Celery 5
+celery
 flower
 
 # Files
@@ -25,10 +25,6 @@ flask-security-too
 # Process control system
 supervisor
 supervisord-dependent-startup
-
-# Support for the Internationalised Domain Names in Applications (IDNA) protocol
-# as specified in RFC 5891
-idna==2.10  # Upgrade package when sphinx will be compatible with idna 3.0
 
 # Web server gateway interface
 uwsgi
