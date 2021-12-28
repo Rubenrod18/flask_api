@@ -60,8 +60,7 @@ class ContextTask(Task):
 def make_celery(app: Flask) -> Celery:
     celery = MyCelery(app.import_name)
     celery.conf.update(app.config)
-
-    logger.debug(celery.conf.table(with_defaults=True))
+    logger.debug(celery.conf.__dict__)
 
     def __call__(self, *args, **kwargs):
         with app.app_context():
