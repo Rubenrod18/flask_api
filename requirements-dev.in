@@ -12,3 +12,6 @@ pip-tools
 # Test
 coverage
 pytest
+
+# Git hooks
+pre-commit

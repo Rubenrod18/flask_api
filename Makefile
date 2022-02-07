@@ -43,6 +43,9 @@ coverage: ## Report coverage statistics on modules
 coverage-html: ## Create an HTML report of the coverage of the files
 	docker-compose exec app coverage html
 
+linter:  ## Analyzes code and detects various errors
+	docker-compose exec app pre-commit run flake8 --all-files
+
 test: ## Run tests
 	docker-compose exec app coverage run -m pytest
 

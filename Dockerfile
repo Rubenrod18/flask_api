@@ -8,10 +8,13 @@ WORKDIR /flask-api-docker-dir
 # Linux dependencies
 RUN apk add --no-cache sqlite  # Install sqlite3 database
 RUN apk add --no-cache gcc libc-dev linux-headers # uwsgi package dependencies
-RUN apk add --no-cache libmagic # python-magic package dependencies
+RUN apk add --no-cache libmagic # python-magic package dependency
+RUN apk add --no-cache git # pre-commit package dependency
 
 # Python depdendencies
 RUN pip install -r requirements-dev.txt
+
+RUN git init
 
 # Enable Flask port
 EXPOSE 5000
