@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    links:
+      - celery
+      - flower
+      - rabbitmq
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/flask-api-docker-dir:rw
+    depends_on:
+      - celery
+      - flower
+      - rabbitmq
+
+  celery:
+    build: .
+    command: flask celery
+    env_file:
+      - .env
+    volumes:
+      - .:/flask-api-docker-dir:rw
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3.9.11-alpine
+    ports:
+      - "5672:5672"
+
+  flower:
+    image: mher/flower:latest
+    depends_on:
+      - celery
+      - rabbitmq
+    ports:
+      - "5555:5555"

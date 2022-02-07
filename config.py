@@ -3,6 +3,7 @@
 The extension and custom configurations are defined here.
 
 """
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -125,6 +126,7 @@ class Config(metaclass=Meta):
 
     # Mr Developer
     HOME = os.getenv('HOME')
+    LOGGING_LEVEL = logging.INFO
 
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
     TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')
