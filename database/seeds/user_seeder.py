@@ -1,7 +1,8 @@
 import os
 
 from app.extensions import db_wrapper
-from app.models import Role as RoleModel, User as UserModel
+from app.models import Role as RoleModel
+from app.models import User as UserModel
 from database import seed_actions
 from database.factories import Factory
 
@@ -29,7 +30,8 @@ class UserSeeder:
 
     @seed_actions
     def __init__(self, rows: int = 30):
-        # save user with user_datastore and method "create_user" -> look flask_security -> datastore.py
+        # save user with user_datastore and method
+        # "create_user" -> look flask_security -> datastore.py
         with db_wrapper.database.atomic():
             self._create_admin_user()
             Factory('User', rows).save()

@@ -1,7 +1,7 @@
 """Package contains factories modules.
 
-A factory is a database model filled with fake data. The factory purposes is
-creating records in a simple way.
+A factory is a database model filled with fake data. The factory
+purposes is creating records in a simple way.
 
 The module is used in testing and seeds.
 
@@ -24,7 +24,7 @@ class Factory:
 
     Methods
     -------
-    make(self, params: dict = None, to_dict: bool = False, exclude: list = None)
+    make(self, params: dict = None, to_dict: bool = False, exclude: list = None)  # noqa
         Create instances of database models with fake data.
     save(self, params: dict = None)
         Save instances of database models in the database.
@@ -50,7 +50,8 @@ class Factory:
     >>> user.save()
     1
 
-    Factory can create a dictionary instead of an instance of database model.
+    Factory can create a dictionary instead of an instance of
+    database model.
 
     >>> user = user_factory.make(to_dict=True)
     >>> pprint(user)
@@ -58,7 +59,7 @@ class Factory:
     Also can set params too.
 
     >>> user_factory = Factory('User')
-    >>> user = user_factory.make({'name': 'Ruben', 'last_name': 'Rodriguez'})
+    >>> user = user_factory.make({'name': 'Ruben', 'last_name': 'Rodriguez'})  # noqa
     >>> user.name
     'Ruben'
     >>> user.last_name
@@ -70,8 +71,9 @@ class Factory:
     >>> users = user_factory.make()
     [<User: None>, <User: None>, <User: None>]
 
-    If you want to fill some params later then you can pass a fieldnames list
-    to the factory of thats fields that you don't want to fill yet.
+    If you want to fill some params later then you can pass a
+    fieldnames list to the factory of thats fields that you don't want
+    to fill yet.
 
     >>> user_factory = Factory('User')
     >>> user = user_factory.make(exclude=['name', 'birth_date'])
@@ -91,6 +93,7 @@ class Factory:
     [<User: 4>, <User: 5>, <User: 6>]
 
     """
+
     __models: list = None
     # FIXME: it's not the best way
     __current_module = 'database.factories'
@@ -110,8 +113,7 @@ class Factory:
             factory = factory_class()
             self.__models.append(factory)
 
-    def make(self, params: dict = None, to_dict: bool = False,
-             exclude: list = None) -> any:
+    def make(self, params: dict = None, to_dict: bool = False, exclude: list = None) -> any:
         """Create instances of database model with fake data.
 
         Parameters
@@ -119,10 +121,11 @@ class Factory:
         params : dict
             Params to set when an instance of database model is created.
         to_dict : bool
-            If is True returns a dict otherwise is an instance of database model.
-            By default is False.
+            If is True returns a dict otherwise is an instance of
+            database model. By default is False.
         exclude: list
-            Params are not going to be filled. These fields are equals to None.
+            Params are not going to be filled. These fields are equals
+            to None.
 
         Returns
         -------
@@ -167,16 +170,16 @@ class Factory:
 
         return data
 
-    def __check_exists_factory(self, factory_classname: str,
-                               model_name: str) -> None:
+    def __check_exists_factory(self, factory_classname: str, model_name: str) -> None:
         abs_path = os.path.realpath(__file__)
         dirname = os.path.dirname(abs_path)
         current_dir_files = os.listdir(dirname)
 
-        files = set(
-            file for file in current_dir_files
+        files = {
+            file
+            for file in current_dir_files
             if file.endswith('.py') and file != os.path.basename(__file__)
-        )
+        }
         factories_classnames = set()
 
         for filename in files:

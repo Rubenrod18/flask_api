@@ -23,9 +23,7 @@ def test_user_login(client: CustomFlaskClient):
         assert 401 == response.status_code
 
     def _test_inactive_user():
-        user = (UserModel.select()
-                .where(UserModel.active == False)
-                .get())
+        user = UserModel.select().where(UserModel.active == False).get()  # noqa: E712
 
         data = {
             'email': user.email,

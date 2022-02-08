@@ -3,7 +3,8 @@
 The module runs the application on differents
 configurations ( dev, prod, testing, etc ), run commands, etc.
 
-.. note:: A ".env" file must to be created before start up the application.
+.. note:: A ".env" file must to be created before start up the
+application.
 
 Examples
 --------
@@ -26,8 +27,8 @@ How to run a command::
 import os
 
 import click
-from flask import Response
 from dotenv import load_dotenv
+from flask import Response
 
 from app import create_app
 from app.extensions import db_wrapper
@@ -75,8 +76,7 @@ def migrations() -> None:
     init_migrations(False)
 
 
-@app.cli.command('migrate-rollback', help='Revert last migration saved in '
-                                          'database.')
+@app.cli.command('migrate-rollback', help='Revert last migration saved in database.')
 def migration_rollback() -> None:
     """Command line script for reverting last database schema."""
     init_migrations(True)
@@ -89,22 +89,24 @@ def seeds() -> None:
 
 
 # TODO: sphinx-click only shows Click documentation in Sphinx.
-@app.cli.command('celery',
-                 help='Run Celery with an environment configuration.')
-@click.option('--env', type=click.Choice(['config.DevConfig',
-                                          'config.TestConfig',
-                                          'config.ProdConfig'],
-                                         case_sensitive=False),
-              default='config.TestConfig',
-              show_default=True,
-              help='Environment configuration.')
+@app.cli.command('celery', help='Run Celery with an environment configuration.')
+@click.option(
+    '--env',
+    type=click.Choice(
+        ['config.DevConfig', 'config.TestConfig', 'config.ProdConfig'], case_sensitive=False
+    ),
+    default='config.TestConfig',
+    show_default=True,
+    help='Environment configuration.',
+)
 def celery(env: str) -> None:
     """Command line script for executing Celery based on FLASK_CONFIG
     environment value.
 
-    The command line script purpose is executing Celery in testing mode because
-    we don't want to do operations such as: send emails, communicate with
-    other API's, etc. You can choose another environment if you wish.
+    The command line script purpose is executing Celery in testing mode
+    because we don't want to do operations such as: send emails,
+    communicate with other API's, etc. You can choose another
+    environment if you wish.
 
     Parameters
     ----------
@@ -145,12 +147,14 @@ def celery(env: str) -> None:
 
 @app.shell_context_processor
 def make_shell_context() -> dict:
-    """Returns the shell context for an interactive shell for this application.
+    """Returns the shell context for an interactive shell for this
+    application.
+
     This runs all the registered shell context processors.
 
-    To explore the data in your application, you can start an interactive Python
-    shell with the shell command. An application context will be active,
-    and the app instance will be imported.
+    To explore the data in your application, you can start an
+    interactive Python shell with the shell command. An application
+    context will be active, and the app instance will be imported.
 
     How to usage::
 

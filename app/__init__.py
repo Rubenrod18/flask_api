@@ -1,7 +1,7 @@
 """Package for building a Flask application.
 
-The app package loads application configuration and registers middleware,
-blueprints, database models, etc.
+The app package loads application configuration and registers
+middleware, blueprints, database models, etc.
 
 """
 import logging
@@ -11,7 +11,8 @@ import pprint
 import flask
 from flask import Flask
 
-from app import extensions, exceptions
+from app import exceptions
+from app import extensions
 from app.blueprints import BLUEPRINTS
 from app.middleware import Middleware
 

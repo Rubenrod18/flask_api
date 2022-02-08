@@ -13,16 +13,28 @@ from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
 from app.extensions import celery
-from app.models import Document as DocumentModel, User as UserModel
-from app.serializers import DocumentSerializer, UserSerializer
-from app.utils import (find_longest_word, pos_to_char, to_readable)
+from app.models import Document as DocumentModel
+from app.models import User as UserModel
+from app.serializers import DocumentSerializer
+from app.serializers import UserSerializer
+from app.utils import find_longest_word
+from app.utils import pos_to_char
+from app.utils import to_readable
 from app.utils.file_storage import FileStorage
 from app.utils.request_query_operator import RequestQueryOperator as rqo
 
 logger = get_task_logger(__name__)
 
-_COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role',
-                         'created_at', 'updated_at', 'deleted_at']
+_COLUMN_DISPLAY_ORDER = [
+    'name',
+    'last_name',
+    'email',
+    'birth_date',
+    'role',
+    'created_at',
+    'updated_at',
+    'deleted_at',
+]
 _EXCLUDE_COLUMNS = ['id', 'password']
 
 
@@ -35,13 +47,13 @@ def _parse_user_data(users: list):
         }
         del user['roles']
 
-        user_dict.update({
-            k: to_readable(v)
-            for (k, v) in user.items()
-            if k in _COLUMN_DISPLAY_ORDER
-        })
+        user_dict.update(
+            {k: to_readable(v) for (k, v) in user.items() if k in _COLUMN_DISPLAY_ORDER}
+        )
 
-        user_dict = dict(sorted(user_dict.items(), key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0])))
+        user_dict = dict(
+            sorted(user_dict.items(), key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0]))
+        )
         excel_rows.append(user_dict)
 
     return excel_rows
@@ -56,11 +68,7 @@ def _get_excel_user_data(users: list, excel_rows: list) -> None:
 
 
 def _get_excel_column_names(excel_rows: list) -> None:
-    column_names = [
-        column.title().replace('_', ' ')
-        for column in _COLUMN_DISPLAY_ORDER
-        if column
-    ]
+    column_names = [column.title().replace('_', ' ') for column in _COLUMN_DISPLAY_ORDER if column]
 
     excel_rows.append(column_names)
 
@@ -82,8 +90,7 @@ def _get_user_data(request_data: dict) -> list:
 
     query = UserModel.select()
     query = rqo.create_search_query(UserModel, query, request_data)
-    query = (query.order_by(*order_by)
-             .paginate(page_number, items_per_page))
+    query = query.order_by(*order_by).paginate(page_number, items_per_page)
 
     user_serializer = UserSerializer(many=True)
     user_list = user_serializer.dump(list(query))
@@ -100,14 +107,18 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
             row_format = None
 
             if i == 1:
-                row_format = workbook.add_format({
-                    'bold': True,
-                    'bg_color': '#cccccc',
-                })
+                row_format = workbook.add_format(
+                    {
+                        'bold': True,
+                        'bg_color': '#cccccc',
+                    }
+                )
             elif i % 2 == 0:
-                row_format = workbook.add_format({
-                    'bg_color': '#f1f1f1',
-                })
+                row_format = workbook.add_format(
+                    {
+                        'bg_color': '#f1f1f1',
+                    }
+                )
 
             range_cells = 'A%s:I10' % i
 
@@ -116,11 +127,14 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
                 excel_longest_word = row_longest_word
 
             worksheet.write_row(range_cells, row, row_format)
-            self.update_state(state='PROGRESS', meta={
-                'current': i,
-                'total': self.total_progress,
-                'status': 'In progress...',
-            })
+            self.update_state(
+                state='PROGRESS',
+                meta={
+                    'current': i,
+                    'total': self.total_progress,
+                    'status': 'In progress...',
+                },
+            )
 
         return len(excel_longest_word)
 
@@ -131,11 +145,14 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
     tempfile = NamedTemporaryFile()
     excel_rows = []
 
-    self.update_state(state='PROGRESS', meta={
-        'current': 0,
-        'total': self.total_progress,
-        'status': 'In progress...',
-    })
+    self.update_state(
+        state='PROGRESS',
+        meta={
+            'current': 0,
+            'total': self.total_progress,
+            'status': 'In progress...',
+        },
+    )
 
     workbook = xlsxwriter.Workbook(tempfile.name)
     worksheet = workbook.add_worksheet()
@@ -154,7 +171,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
         mime_type = magic.from_file(tempfile.name, mime=True)
         file_extension = mimetypes.guess_extension(mime_type)
 
-        internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
+        internal_filename = f'{uuid.uuid1().hex}{file_extension}'
         directory_path = current_app.config.get('STORAGE_DIRECTORY')
         filepath = f'{directory_path}/{internal_filename}'
 

@@ -1,8 +1,12 @@
 import logging
 
 from flask_security import verify_password
-from marshmallow import validate, fields, validates, post_load
-from werkzeug.exceptions import Unauthorized, Forbidden
+from marshmallow import fields
+from marshmallow import post_load
+from marshmallow import validate
+from marshmallow import validates
+from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import Unauthorized
 
 from app.extensions import ma
 from app.managers import UserManager
@@ -17,15 +21,16 @@ class AuthUserLoginSerializer(ma.Schema):
     password = fields.Str(
         load_only=True,
         required=True,
-        validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN,
-                                 max=50),
+        validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50),
     )
     __user = None
 
     @validates('email')
     def validate_email(self, email):
-        args = (user_manager.model.active == True,
-                user_manager.model.deleted_at.is_null(),)
+        args = (
+            user_manager.model.active == True,  # noqa: E712
+            user_manager.model.deleted_at.is_null(),
+        )
         self.__user = user_manager.find_by_email(email, *args)
 
         if self.__user is None:
@@ -43,8 +48,7 @@ class AuthUserLoginSerializer(ma.Schema):
     @validates('password')
     def validate_password(self, password):
         if not verify_password(password, self.__user.password):
-            logger.debug(f'User "{self.__user.email}" password '
-                         f'does not match.')
+            logger.debug(f'User "{self.__user.email}" password does not match.')
             raise Unauthorized('Credentials invalid')
 
     @post_load
@@ -54,12 +58,11 @@ class AuthUserLoginSerializer(ma.Schema):
 
 class AuthUserConfirmResetPasswordSerializer(ma.Schema):
     token = fields.Str(required=True)
-    # TODO: It could be safer if I add "password" and "confirm_password" fields.
+    # TODO: It could be safer if I add "password" and "confirm_password" fields.  # noqa
     password = fields.Str(
         load_only=True,
         required=True,
-        validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN,
-                                 max=50),
+        validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50),
     )
 
     @validates('token')

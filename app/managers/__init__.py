@@ -1,6 +1,7 @@
 """Registers database managers.
 
-The managers are classes for managing database queries through database models.
+The managers are classes for managing database queries through
+database models.
 
 """
 from .base import BaseManager

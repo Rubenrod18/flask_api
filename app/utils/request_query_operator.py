@@ -13,14 +13,20 @@ from functools import reduce
 from typing import Type
 
 import peewee
-from peewee import (Model, Field, CharField, FixedCharField, TextField,
-                    UUIDField, ModelSelect)
+from peewee import CharField
+from peewee import Field
+from peewee import FixedCharField
+from peewee import Model
+from peewee import ModelSelect
+from peewee import TextField
+from peewee import UUIDField
 
-from app.utils.constants import (REQUEST_QUERY_DELIMITER,
-                                 STRING_QUERY_OPERATORS, QUERY_OPERATORS)
+from app.utils.constants import QUERY_OPERATORS
+from app.utils.constants import REQUEST_QUERY_DELIMITER
+from app.utils.constants import STRING_QUERY_OPERATORS
 
 
-class Helper(object):
+class Helper:
     @staticmethod
     def build_order_by(db_model: Type[Model], request_data: dict) -> list:
         """Build sorting fields with zero or more Column-like objects to
@@ -33,7 +39,7 @@ class Helper(object):
         Request fields:
         >>> from app.models.user import User
         >>> db_model = User
-        >>> request_data = {'order': [{'sorting': 'asc', 'field_name': 'created_at'}]}
+        >>> request_data = {'order': [{'sorting': 'asc', 'field_name': 'created_at'}]}  # noqa
         >>> Helper.build_order_by(db_model, request_data)
         [<peewee.Ordering object at ...>]
 
@@ -47,13 +53,13 @@ class Helper(object):
         http://docs.peewee-orm.com/en/latest/peewee/api.html#Query.order_by
 
         """
+
         def build_ordering(field_name, sorting) -> peewee.Ordering:
             field = getattr(db_model, field_name)
             return getattr(field, sorting)()
 
         order_by_values = []
-        request_order = request_data.get('order', [{'field_name': 'id',
-                                                    'sorting': 'asc'}])
+        request_order = request_data.get('order', [{'field_name': 'id', 'sorting': 'asc'}])
 
         if isinstance(request_order, list):
             order_by_values = [
@@ -62,8 +68,7 @@ class Helper(object):
             ]
         return order_by_values
 
-    def build_string_clause(self, field: Field, field_operator: str,
-                            field_value) -> tuple:
+    def build_string_clause(self, field: Field, field_operator: str, field_value) -> tuple:
         """Build string clauses.
 
         You can find next string operators:
@@ -95,28 +100,25 @@ class Helper(object):
             sql_clauses = []
 
             for item in field_value:
-                sql_clauses.append(self.build_string_clause(field,
-                                                            field_operator,
-                                                            item))
+                sql_clauses.append(self.build_string_clause(field, field_operator, item))
             sql_clause = reduce(operator.or_, sql_clauses)
         elif field_operator in STRING_QUERY_OPERATORS:
             if field_operator == 'eq':
-                sql_clause = (field == field_value)
+                sql_clause = field == field_value
             elif field_operator == 'ne':
-                sql_clause = (~(field == field_value))
+                sql_clause = ~(field == field_value)
             elif field_operator == 'contains':
-                sql_clause = (field.contains(field_value))
+                sql_clause = field.contains(field_value)
             elif field_operator == 'ncontains':
-                sql_clause = (~(field.contains(field_value)))
+                sql_clause = ~(field.contains(field_value))
             elif field_operator == 'startswith':
-                sql_clause = (field.startswith(field_value))
+                sql_clause = field.startswith(field_value)
             elif field_operator == 'endswith':
-                sql_clause = (field.endswith(field_value))
+                sql_clause = field.endswith(field_value)
 
         return sql_clause
 
-    def build_clause_operators(self, field: Field, field_operator: str,
-                               field_value) -> tuple:
+    def build_clause_operators(self, field: Field, field_operator: str, field_value) -> tuple:
         sql_clause = ()
 
         if isinstance(field_value, str) and field_value.find(REQUEST_QUERY_DELIMITER) != -1:
@@ -124,48 +126,44 @@ class Helper(object):
             sql_clauses = []
 
             for item in field_value:
-                sql_clauses.append(self.build_clause_operators(field,
-                                                               field_operator,
-                                                               item))
+                sql_clauses.append(self.build_clause_operators(field, field_operator, item))
 
             sql_clause = reduce(operator.or_, sql_clauses)
         elif field_operator in QUERY_OPERATORS:
             if field_operator == 'eq':
-                sql_clause = (field == field_value)
+                sql_clause = field == field_value
             elif field_operator == 'ne':
-                sql_clause = (field != field_value)
+                sql_clause = field != field_value
             elif field_operator == 'lt':
-                sql_clause = (field < field_value)
+                sql_clause = field < field_value
             elif field_operator == 'lte':
-                sql_clause = (field <= field_value)
+                sql_clause = field <= field_value
             elif field_operator == 'gt':
-                sql_clause = (field > field_value)
+                sql_clause = field > field_value
             elif field_operator == 'gte':
-                sql_clause = (field >= field_value)
+                sql_clause = field >= field_value
             elif field_operator == 'in':
-                sql_clause = (field.in_(field_value.split(REQUEST_QUERY_DELIMITER)))
+                sql_clause = field.in_(field_value.split(REQUEST_QUERY_DELIMITER))
             elif field_operator == 'nin':
-                sql_clause = (field.not_in(field_value))
+                sql_clause = field.not_in(field_value)
             elif field_operator == 'between':
                 values = field_value.split(REQUEST_QUERY_DELIMITER)
-                sql_clause = (field.between(lo=values[0], hi=values[1]))
+                sql_clause = field.between(lo=values[0], hi=values[1])
         return sql_clause
 
-    def build_sql_expression(self, field: Field, field_operator: str,
-                             field_value):
+    def build_sql_expression(self, field: Field, field_operator: str, field_value):
         if isinstance(field, (CharField, FixedCharField, TextField, UUIDField)):
-            sql_clause = self.build_string_clause(field, field_operator,
-                                                  field_value)
+            sql_clause = self.build_string_clause(field, field_operator, field_value)
         else:
-            sql_clause = self.build_clause_operators(field, field_operator,
-                                                     field_value)
+            sql_clause = self.build_clause_operators(field, field_operator, field_value)
         return sql_clause
 
 
-class RequestQueryOperator(object):
+class RequestQueryOperator:
     @staticmethod
-    def create_search_query(db_model: Type[Model], query: ModelSelect,
-                            data: dict = None) -> ModelSelect:
+    def create_search_query(
+        db_model: Type[Model], query: ModelSelect, data: dict = None
+    ) -> ModelSelect:
         if data is None:
             data = {}
 
@@ -180,9 +178,9 @@ class RequestQueryOperator(object):
             if isinstance(field_value, str) and not field_value.strip():
                 continue
 
-            sql_expression = helper.build_sql_expression(field,
-                                                         filter['field_operator'],
-                                                         field_value)
+            sql_expression = helper.build_sql_expression(
+                field, filter['field_operator'], field_value
+            )
             sql_expressions.append(sql_expression)
 
         if sql_expressions:
@@ -191,11 +189,11 @@ class RequestQueryOperator(object):
         return query
 
     @staticmethod
-    def get_request_query_fields(db_model: Type[Model],
-                                 request_data=None) -> tuple:
+    def get_request_query_fields(db_model: Type[Model], request_data=None) -> tuple:
         request_data = request_data or {}
 
-        # Page numbers are 1-based, so the first page of results will be page 1.
+        # Page numbers are 1-based, so the first page of results
+        # will be page 1.
         # http://docs.peewee-orm.com/en/latest/peewee/querying.html#paginating-records
         page_number = int(request_data.get('page_number', 1))
         items_per_page = int(request_data.get('items_per_page', 10))

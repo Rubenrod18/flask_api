@@ -3,13 +3,12 @@
 TODO: pending to define models with suffix "Model".
 
 There is not posible to rename the models with suffix "Model" because
-Flask-Security-Too doesn't allow it. Maybe in the next major version could be
-available.
+Flask-Security-Too doesn't allow it. Maybe in the next major version
+could be available.
 https://github.com/Flask-Middleware/flask-security/issues/395
 
 """
 import logging
-import os
 import os.path
 from pydoc import locate
 
@@ -17,7 +16,8 @@ from .base import Base
 from .document import Document
 from .role import Role
 from .user import User
-from .user_roles import UserRoles, user_datastore
+from .user_roles import user_datastore
+from .user_roles import UserRoles
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def get_db_models() -> list:
 
             if module.endswith('.py'):
                 class_name = build_model_class_name(basename)
-                class_path = '{}.{}.{}'.format(__name__, basename, class_name)
+                class_path = f'{__name__}.{basename}.{class_name}'
                 model = locate(class_path)
 
                 if model:

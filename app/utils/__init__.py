@@ -1,7 +1,8 @@
 """Collection of functions and classes which make common patterns
 shorter and easier."""
 import importlib
-from datetime import date, datetime
+from datetime import date
+from datetime import datetime
 
 from flask import request
 
@@ -14,7 +15,8 @@ def get_attr_from_module(module: str, attr: str) -> any:
     module : str
         Module absolute path.
     attr : str
-        Module's attribute. It could be any kind of variable belongs to module.
+        Module's attribute. It could be any kind of variable belongs
+        to module.
 
     Examples
     --------
@@ -59,11 +61,7 @@ def find_longest_word(word_list: list) -> str:
 
 
 def ignore_keys(data: dict, exclude: list) -> dict:
-    return dict({
-        item: data[item]
-        for item in data
-        if item not in exclude
-    })
+    return dict({item: data[item] for item in data if item not in exclude})
 
 
 def get_request_file(field_name: str = None) -> dict:
@@ -81,5 +79,4 @@ def get_request_file(field_name: str = None) -> dict:
 
 
 def filter_by_keys(data: dict, keys: list) -> dict:
-    return {key: value for key, value in data.items()
-            if key in keys}
+    return {key: value for key, value in data.items() if key in keys}

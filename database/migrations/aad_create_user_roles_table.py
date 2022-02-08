@@ -1,30 +1,46 @@
 import os
 
 from flask_login import UserMixin
-from playhouse.migrate import (migrate, ForeignKeyField, CharField,
-                               FixedCharField, DateField, BooleanField,
-                               TimestampField)
+from playhouse.migrate import BooleanField
+from playhouse.migrate import CharField
+from playhouse.migrate import DateField
+from playhouse.migrate import FixedCharField
+from playhouse.migrate import ForeignKeyField
+from playhouse.migrate import migrate
+from playhouse.migrate import TimestampField
 from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
-from app.models import (Base as BaseModel, Role as RoleModel, User as UserModel,
-                        UserRoles as UserRolesModel)
-from database.migrations import migrate_actions, rollback_actions, migrator
+from app.models import Base as BaseModel
+from app.models import Role as RoleModel
+from app.models import User as UserModel
+from app.models import UserRoles as UserRolesModel
+from database.migrations import migrate_actions
+from database.migrations import migrator
+from database.migrations import rollback_actions
 
 
 class _OldUser(BaseModel, UserMixin):
     class Meta:
         table_name = 'users'
 
-    created_by = ForeignKeyField('self', null=True, backref='children',
-                                 column_name='created_by')
+    created_by = ForeignKeyField('self', null=True, backref='children', column_name='created_by')
     role = ForeignKeyField(RoleModel, backref='roles')
     name = CharField()
     last_name = CharField()
     email = CharField(unique=True)
     password = CharField(null=False)
-    genre = FixedCharField(max_length=1,
-                           choices=(('m', 'male',), ('f', 'female')), null=True)
+    genre = FixedCharField(
+        max_length=1,
+        choices=(
+            (
+                'm',
+                'male',
+            ),
+            ('f', 'female'),
+        ),
+        null=True,
+    )
     birth_date = DateField()
     active = BooleanField(default=True)
     created_at = TimestampField(default=None)
@@ -33,7 +49,6 @@ class _OldUser(BaseModel, UserMixin):
 
 
 class CreateUserRolesTable:
-
     def __init__(self):
         self.name = os.path.basename(__file__)[:-3]
         self.table = 'users_roles_through'
@@ -51,7 +66,7 @@ class CreateUserRolesTable:
 
     @staticmethod
     def _drop_foreign_key_constraint_users_table() -> list:
-        """ https://www.sqlite.org/lang_altertable.html """
+        """https://www.sqlite.org/lang_altertable.html"""
         users = []
         user_roles_relations = []
 
@@ -61,10 +76,12 @@ class CreateUserRolesTable:
             new_user = model_to_dict(item, recurse=False)
             role_id = new_user.get('role')
 
-            user_roles_relations.append({
-                'user_id': new_user.get('id'),
-                'role_id': role_id,
-            })
+            user_roles_relations.append(
+                {
+                    'user_id': new_user.get('id'),
+                    'role_id': role_id,
+                }
+            )
             if 'role' in new_user:
                 del new_user['role']
 
@@ -81,7 +98,7 @@ class CreateUserRolesTable:
 
     @staticmethod
     def _add_foreign_key_constraint_users_table() -> None:
-        """ https://www.sqlite.org/lang_altertable.html """
+        """https://www.sqlite.org/lang_altertable.html"""
         users = []
 
         user_data = UserModel.select()
@@ -119,7 +136,7 @@ class CreateUserRolesTable:
     @migrate_actions
     def up(self):
         if not self._exists_table():
-            # TODO: peewee 3.13.3 doesn't have implemented "drop_foreign_key_constraint" method
+            # TODO: peewee 3.13.3 doesn't have implemented "drop_foreign_key_constraint" method  # noqa
             user_roles_relations = self._drop_foreign_key_constraint_users_table()
 
             db_wrapper.database.create_tables([UserRolesModel])
@@ -129,5 +146,5 @@ class CreateUserRolesTable:
     @rollback_actions
     def down(self):
         if self._exists_table():
-            # TODO: peewee 3.13.3 doesn't have implemented "add_foreign_key_constraint" method
+            # TODO: peewee 3.13.3 doesn't have implemented "add_foreign_key_constraint" method  # noqa
             self._add_foreign_key_constraint_users_table()

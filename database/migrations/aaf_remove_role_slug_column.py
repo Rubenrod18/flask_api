@@ -1,12 +1,18 @@
 import os
 
 from flask_security import RoleMixin
-from playhouse.migrate import migrate, CharField, TimestampField, TextField
+from playhouse.migrate import CharField
+from playhouse.migrate import migrate
+from playhouse.migrate import TextField
+from playhouse.migrate import TimestampField
 from playhouse.shortcuts import model_to_dict
 
 from app.extensions import db_wrapper
-from app.models import Base as BaseModel, Role as RoleModel
-from database.migrations import migrate_actions, rollback_actions, migrator
+from app.models import Base as BaseModel
+from app.models import Role as RoleModel
+from database.migrations import migrate_actions
+from database.migrations import migrator
+from database.migrations import rollback_actions
 
 
 class _OldRole(BaseModel, RoleMixin):
@@ -22,7 +28,6 @@ class _OldRole(BaseModel, RoleMixin):
 
 
 class RemoveRoleSlugColumn:
-
     def __init__(self):
         self.name = os.path.basename(__file__)[:-3]
         self.table = 'roles'
@@ -42,7 +47,7 @@ class RemoveRoleSlugColumn:
 
     @staticmethod
     def _drop_unique_constraint_roles_table() -> None:
-        """ https://www.sqlite.org/lang_altertable.html """
+        """https://www.sqlite.org/lang_altertable.html"""
         roles = []
 
         role_data = _OldRole.select()
@@ -64,7 +69,7 @@ class RemoveRoleSlugColumn:
 
     @staticmethod
     def _add_unique_constraint_roles_table() -> None:
-        """ https://www.sqlite.org/lang_altertable.html """
+        """https://www.sqlite.org/lang_altertable.html"""
         roles = []
 
         role_data = RoleModel.select()
@@ -93,11 +98,11 @@ class RemoveRoleSlugColumn:
     @migrate_actions
     def up(self):
         if self._exists_column():
-            # TODO: peewee 3.13.3 doesn't have implemented "drop_foreign_key_constraint" method
+            # TODO: peewee 3.13.3 doesn't have implemented "drop_foreign_key_constraint" method  # noqa
             self._drop_unique_constraint_roles_table()
 
     @rollback_actions
     def down(self):
         if not self._exists_column():
-            # TODO: peewee 3.13.3 doesn't have implemented "add_foreign_key_constraint" method
+            # TODO: peewee 3.13.3 doesn't have implemented "add_foreign_key_constraint" method  # noqa
             self._add_unique_constraint_roles_table()

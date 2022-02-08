@@ -1,15 +1,16 @@
 """Package for managing the database.
 
-The database package can creates and migrates tables and it can fills them
-with fake data.
+The database package can creates and migrates tables and it can
+fills them with fake data.
 
 """
 import functools
 import time
 
 from faker import Faker
-from faker.providers import person, file
 from faker.providers import date_time
+from faker.providers import file
+from faker.providers import person
 
 from app.extensions import db_wrapper
 from app.models import get_db_models
@@ -49,7 +50,7 @@ def seed_actions(fnc):
             res = fnc(*args, **kwargs)
             exec_time = round((time.time() - start), 2)
         finally:
-            print(' Seeded:  %s ( %s seconds )' % (seeder.name, exec_time))
+            print(f' Seeded:  {seeder.name} ( {exec_time} seconds )')
         return res
 
     return message

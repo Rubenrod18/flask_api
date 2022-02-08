@@ -2,8 +2,8 @@
 
 Serializers are modules based on Marshmallow.
 
-Marshmallow is an ORM/ODM/framework-agnostic library for converting complex
-datatypes, such as objects, to and from native Python datatypes.
+Marshmallow is an ORM/ODM/framework-agnostic library for converting
+complex datatypes, such as objects, to and from native Python datatypes.
 
 In short, marshmallow schemas can be used to:
 
@@ -16,10 +16,12 @@ In short, marshmallow schemas can be used to:
 References
 ----------
 Pre-/Post-processor Invocation Order:
-https://marshmallow.readthedocs.io/en/stable/extending.html?highlight=step1#pre-post-processor-invocation-order
+https://marshmallow.readthedocs.io/en/stable/extending.html?highlight=step1#pre-post-processor-invocation-order  # noqa
 
 """
 from .core import SearchSerializer
-from .document import DocumentSerializer, DocumentAttachmentSerializer
+from .document import DocumentAttachmentSerializer
+from .document import DocumentSerializer
 from .role import RoleSerializer
-from .user import UserSerializer, UserExportWordSerializer
+from .user import UserExportWordSerializer
+from .user import UserSerializer
