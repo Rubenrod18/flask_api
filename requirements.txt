@@ -109,7 +109,7 @@ python-docx==1.1.2
     # via -r requirements.in
 python-dotenv==1.0.1
     # via -r requirements.in
-python-magic==0.4.24
+python-magic==0.4.27
     # via -r requirements.in
 pytz==2021.3
     # via
