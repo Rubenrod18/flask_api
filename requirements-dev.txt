@@ -109,7 +109,7 @@ flask-principal==0.4.0
     # via
     #   -r requirements.txt
     #   flask-security-too
-flask-restx==0.5.1
+flask-restx==1.3.0
     # via -r requirements.txt
 flask-security-too==4.1.2
     # via -r requirements.txt
@@ -141,6 +141,7 @@ importlib-metadata==8.4.0
 importlib-resources==5.4.0
     # via
     #   -r requirements.txt
+    #   flask-restx
     #   jsonschema
 iniconfig==1.1.1
     # via pytest
@@ -251,7 +252,6 @@ six==1.16.0
     #   -r requirements.txt
     #   click-repl
     #   flask-marshmallow
-    #   flask-restx
     #   python-dateutil
     #   virtualenv
 snowballstemmer==2.2.0
