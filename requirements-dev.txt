@@ -231,7 +231,7 @@ python-dateutil==2.8.2
     #   faker
 python-docx==0.8.11
     # via -r requirements.txt
-python-dotenv==0.19.2
+python-dotenv==1.0.1
     # via -r requirements.txt
 python-magic==0.4.24
     # via -r requirements.txt
