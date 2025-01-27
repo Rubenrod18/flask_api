@@ -229,7 +229,7 @@ python-dateutil==2.8.2
     # via
     #   -r requirements.txt
     #   faker
-python-docx==0.8.11
+python-docx==1.1.2
     # via -r requirements.txt
 python-dotenv==1.0.1
     # via -r requirements.txt
@@ -305,6 +305,7 @@ typing-extensions==4.12.2
     # via
     #   -r requirements.txt
     #   faker
+    #   python-docx
 urllib3==1.26.7
     # via requests
 uwsgi==2.0.20

@@ -105,7 +105,7 @@ pyrsistent==0.18.0
     # via jsonschema
 python-dateutil==2.8.2
     # via faker
-python-docx==0.8.11
+python-docx==1.1.2
     # via -r requirements.in
 python-dotenv==1.0.1
     # via -r requirements.in
@@ -135,7 +135,9 @@ toposort==1.7
 tornado==6.1
     # via flower
 typing-extensions==4.12.2
-    # via faker
+    # via
+    #   faker
+    #   python-docx
 uwsgi==2.0.20
     # via -r requirements.in
 vine==5.0.0
