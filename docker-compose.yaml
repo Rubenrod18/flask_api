@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   app:
     build: .
@@ -15,26 +13,42 @@ services:
       - celery
       - flower
       - rabbitmq
+    networks:
+      - flask_api_network
 
   celery:
     build: .
-    command: flask celery
+    command: flask celery --env config.DevConfig
     env_file:
       - .env
     volumes:
       - .:/flask-api-docker-dir:rw
     depends_on:
       - rabbitmq
+    networks:
+      - flask_api_network
 
   rabbitmq:
-    image: rabbitmq:3.9.11-alpine
+    image: rabbitmq:4-alpine
+    env_file:
+      - .env
     ports:
       - "5672:5672"
+    networks:
+      - flask_api_network
 
   flower:
     image: mher/flower:latest
+    env_file:
+      - .env
     depends_on:
       - celery
       - rabbitmq
     ports:
       - "5555:5555"
+    networks:
+      - flask_api_network
+
+networks:
+  flask_api_network:
+    driver: bridge
