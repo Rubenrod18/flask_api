@@ -142,7 +142,7 @@ def celery(env: str) -> None:
 
     """
     os.environ['FLASK_CONFIG'] = env
-    os.system('celery -A app.celery worker -l info')
+    os.system('celery -A app.celery worker -l info --events')
 
 
 @app.shell_context_processor

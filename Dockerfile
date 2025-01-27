@@ -1,15 +1,17 @@
 # syntax=docker/dockerfile:1
-FROM python:3.8-alpine3.14
+FROM python:3.13-slim
 
 # Workspace
 ADD . /flask-api-docker-dir
 WORKDIR /flask-api-docker-dir
 
 # Linux dependencies
-RUN apk add --no-cache sqlite  # Install sqlite3 database
-RUN apk add --no-cache gcc libc-dev linux-headers # uwsgi package dependencies
-RUN apk add --no-cache libmagic # python-magic package dependency
-RUN apk add --no-cache git # pre-commit package dependency
+RUN apt-get update && apt-get install --assume-yes \
+  build-essential gcc \
+  sqlite3 \
+  libsqlite3-dev \
+  libmagic-dev \
+  git
 
 # Python depdendencies
 RUN pip install -r requirements-dev.txt
