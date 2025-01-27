@@ -101,7 +101,7 @@ flask-login==0.5.0
     # via
     #   -r requirements.txt
     #   flask-security-too
-flask-mail==0.9.1
+flask-mail==0.10.0
     # via -r requirements.txt
 flask-marshmallow==1.0.0
     # via -r requirements.txt
