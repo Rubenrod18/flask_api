@@ -21,10 +21,3 @@ flask-mail
 flask-marshmallow
 flask-restx
 flask-security-too
-
-# Process control system
-supervisor
-supervisord-dependent-startup
-
-# Web server gateway interface
-uwsgi
