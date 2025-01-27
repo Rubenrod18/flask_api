@@ -153,7 +153,7 @@ werkzeug==2.0.2
     #   flask-restx
 wtforms==3.0.1
     # via flask-wtf
-xlsxwriter==3.0.2
+xlsxwriter==3.2.1
     # via -r requirements.in
 zipp==3.6.0
     # via importlib-resources
