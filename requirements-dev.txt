@@ -117,7 +117,7 @@ flask-wtf==1.0.0
     # via
     #   -r requirements.txt
     #   flask-security-too
-flower==1.0.0
+flower==2.0.1
     # via -r requirements.txt
 greenlet==1.1.2
     # via

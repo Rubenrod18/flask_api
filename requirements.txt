@@ -64,7 +64,7 @@ flask-security-too==4.1.2
     # via -r requirements.in
 flask-wtf==1.0.0
     # via flask-security-too
-flower==1.0.0
+flower==2.0.1
     # via -r requirements.in
 greenlet==1.1.2
     # via sqlalchemy
