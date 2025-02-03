@@ -56,7 +56,7 @@ class UserSerializer(ma.Schema):
 
     @validates('id')
     def validate_id(self, user_id: int):
-        args = (user_manager.model.deleted_at.is_null(),)
+        args = (user_manager.model.deleted_at.is_(None),)
         user = user_manager.find(user_id, *args)
 
         if user is None:

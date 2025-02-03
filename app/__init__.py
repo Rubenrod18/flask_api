@@ -55,6 +55,7 @@ def _init_logging(app: Flask) -> None:
         logger.setLevel(app.config.get('LOGGING_LEVEL'))
 
     app.logger.debug(pprint.pformat(app.config, indent=4))
+    # logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
 def _register_blueprints(app: Flask) -> None:

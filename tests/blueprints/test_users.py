@@ -1,23 +1,22 @@
 """Module for testing users blueprint."""
 import os
 
-from peewee import fn
+from sqlalchemy import func
 
-from app.extensions import db_wrapper
+from app.extensions import db
 from app.models import Role as RoleModel, User as UserModel
 from tests.custom_flask_client import CustomFlaskClient
 
 
 def test_create_user_endpoint(client: CustomFlaskClient, auth_header: any,
                               factory: any):
-    role = RoleModel.get_by_id(1)
+    role = db.session.get(RoleModel, 1)
 
     ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at',
                      'created_by', 'fs_uniquifier']
     data = factory('User').make(exclude=ignore_fields, to_dict=True)
     data['password'] = os.getenv('TEST_USER_PASSWORD')
     data['role_id'] = role.id
-    db_wrapper.database.close()
 
     response = client.post('/api/users', json=data, headers=auth_header())
     json_response = response.get_json()
@@ -56,25 +55,15 @@ def test_create_invalid_user_endpoint(client: CustomFlaskClient,
 
 def test_update_user_endpoint(client: CustomFlaskClient, auth_header: any,
                               factory: any):
-    user_id = (UserModel.select(UserModel.id)
-               .where(UserModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get()
-               .id)
+    user_id = (db.session.query(UserModel.id).filter(UserModel.deleted_at.is_(None)).order_by(func.random()).limit(1).scalar())
 
     ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at',
                      'created_by']
     data = factory('User').make(to_dict=True, exclude=ignore_fields)
 
     data['password'] = os.getenv('TEST_USER_PASSWORD')
-    role = (RoleModel.select()
-            .where(RoleModel.deleted_at.is_null())
-            .order_by(fn.Random())
-            .limit(1)
-            .get())
+    role = (db.session.query(RoleModel).filter(RoleModel.deleted_at.is_(None)).order_by(func.random()).limit(1).first())
     data['role_id'] = role.id
-    db_wrapper.database.close()
 
     response = client.put('/api/users/%s' % user_id, json=data,
                           headers=auth_header())
@@ -98,16 +87,10 @@ def test_update_user_endpoint(client: CustomFlaskClient, auth_header: any,
 
 
 def test_get_user_endpoint(client: CustomFlaskClient, auth_header: any):
-    user_id = (UserModel.select(UserModel.id)
-               .where(UserModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get()
-               .id)
+    user_id = (db.session.query(UserModel.id).filter(UserModel.deleted_at.is_(None)).order_by(func.random()).limit(1).scalar())
 
-    user = UserModel.get(UserModel.id == user_id)
+    user = db.session.query(UserModel).filter(UserModel.id == user_id).first()
     role = user.roles[0]
-    db_wrapper.database.close()
 
     response = client.get('/api/users/%s' % user_id, json={},
                           headers=auth_header())
@@ -119,9 +102,9 @@ def test_get_user_endpoint(client: CustomFlaskClient, auth_header: any):
     assert user.name == json_data.get('name')
     assert user.last_name == json_data.get('last_name')
     assert user.birth_date.strftime('%Y-%m-%d') == json_data.get('birth_date')
-    assert user.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
-    assert user.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
-    assert user.deleted_at == json_data.get('deleted_at')
+    assert user.get_created_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+    assert user.get_updated_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
+    assert user.get_deleted_at() == json_data.get('deleted_at')
 
     role_data = json_data.get('roles')[0]
 
@@ -130,13 +113,7 @@ def test_get_user_endpoint(client: CustomFlaskClient, auth_header: any):
 
 
 def test_delete_user_endpoint(client: CustomFlaskClient, auth_header: any):
-    user_id = (UserModel.select(UserModel.id)
-               .where(UserModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get()
-               .id)
-    db_wrapper.database.close()
+    user_id = (db.session.query(UserModel.id).filter(UserModel.deleted_at.is_(None)).order_by(func.random()).limit(1).scalar())
 
     response = client.delete('/api/users/%s' % user_id, json={},
                              headers=auth_header())
@@ -150,13 +127,7 @@ def test_delete_user_endpoint(client: CustomFlaskClient, auth_header: any):
 
 
 def test_search_users_endpoint(client: CustomFlaskClient, auth_header: any):
-    user_name = (UserModel.select(UserModel.name)
-                 .where(UserModel.deleted_at.is_null())
-                 .order_by(fn.Random())
-                 .limit(1)
-                 .get()
-                 .name)
-    db_wrapper.database.close()
+    user_name = (db.session.query(UserModel.name).filter(UserModel.deleted_at.is_(None)).order_by(func.random()).limit(1).scalar())
 
     json_body = {
         'search': [

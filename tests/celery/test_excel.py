@@ -3,18 +3,21 @@ from urllib.parse import urlparse
 
 from flask import Flask
 from peewee import fn
+from sqlalchemy import func
 
 from app.celery.excel.tasks import export_user_data_in_excel_task
+from app.extensions import db
 from app.models.user import User as UserModel
 from app.utils.constants import MS_EXCEL_MIME_TYPE
 
 
 def test_export_excel_task(app: Flask):
-    user = (UserModel.select(UserModel.id)
-            .where(UserModel.email == app.config.get('TEST_USER_EMAIL'))
-            .order_by(fn.Random())
-            .limit(1)
-            .get())
+    user = (
+        db.session.query(UserModel.id).filter(UserModel.email == app.config.get('TEST_USER_EMAIL'))
+        .order_by(func.random())
+        .limit(1)
+        .scalar()
+    )
 
     request_data = {
         'search': [],

@@ -2,9 +2,9 @@
 from urllib.parse import urlparse
 
 from flask import current_app
-from peewee import fn
+from sqlalchemy import func
 
-from app.extensions import db_wrapper
+from app.extensions import db
 from app.models.document import Document as DocumentModel
 from app.utils.file_storage import FileStorage
 from tests.custom_flask_client import CustomFlaskClient
@@ -38,12 +38,13 @@ def test_save_document(client: CustomFlaskClient, auth_header: any):
 
 def test_update_document(client: CustomFlaskClient, auth_header: any):
     pdf_file = '%s/example.pdf' % current_app.config.get('MOCKUP_DIRECTORY')
-    document = (DocumentModel.select()
-                .where(DocumentModel.deleted_at.is_null())
-                .order_by(fn.Random())
-                .limit(1)
-                .get())
-    db_wrapper.database.close()
+    document = (
+        db.session.query(DocumentModel)
+        .filter(DocumentModel.deleted_at.is_(None))
+        .order_by(func.random())
+        .limit(1)
+        .one_or_none()
+    )
     document_id = document.id
 
     data = {
@@ -65,18 +66,19 @@ def test_update_document(client: CustomFlaskClient, auth_header: any):
     assert document.mime_type == json_data.get('mime_type')
     assert FileStorage.get_filesize(pdf_file) == json_data.get('size')
     assert parse_url.scheme and parse_url.netloc
-    assert document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+    assert document.get_created_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
     assert json_data.get('updated_at') > json_data.get('created_at')
     assert json_data.get('deleted_at') is None
 
 
 def test_get_document_data(client: CustomFlaskClient, auth_header: any):
-    document = (DocumentModel.select()
-                .where(DocumentModel.deleted_at.is_null())
-                .order_by(fn.Random())
-                .limit(1)
-                .get())
-    db_wrapper.database.close()
+    document = (
+        db.session.query(DocumentModel)
+        .filter(DocumentModel.deleted_at.is_(None))
+        .order_by(func.random())
+        .limit(1)
+        .one_or_none()
+    )
     document_id = document.id
 
     response = client.get(f'/api/documents/{document_id}', json={}, headers=auth_header())
@@ -86,24 +88,25 @@ def test_get_document_data(client: CustomFlaskClient, auth_header: any):
     parse_url = urlparse(json_data.get('url'))
 
     assert 200 == response.status_code
-    assert document.created_by.id == json_data.get('created_by').get('id')
+    assert document.created_by == json_data.get('created_by').get('id')
     assert document.name == json_data.get('name')
     assert document.mime_type == json_data.get('mime_type')
     assert document.size == json_data.get('size')
     assert parse_url.scheme and parse_url.netloc
-    assert document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
-    assert document.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
+    assert document.get_created_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+    assert document.get_updated_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
     assert document.deleted_at == json_data.get('deleted_at')
 
 
 def test_get_document_file(client: CustomFlaskClient, auth_header: any):
-    document = (DocumentModel.select()
-                .where(DocumentModel.deleted_at.is_null())
-                .order_by(fn.Random())
-                .limit(1)
-                .get())
+    document = (
+        db.session.query(DocumentModel)
+        .filter(DocumentModel.deleted_at.is_(None))
+        .order_by(func.random())
+        .limit(1)
+        .one_or_none()
+    )
     document_id = document.id
-    db_wrapper.database.close()
 
     headers = auth_header()
     headers['Content-Type'] = 'application/octet-stream'
@@ -115,13 +118,13 @@ def test_get_document_file(client: CustomFlaskClient, auth_header: any):
 
 
 def test_delete_document(client: CustomFlaskClient, auth_header: any):
-    document_id = (DocumentModel.select(DocumentModel.id)
-                   .where(DocumentModel.deleted_at.is_null())
-                   .order_by(fn.Random())
-                   .limit(1)
-                   .get()
-                   .id)
-    db_wrapper.database.close()
+    document_id = (
+        db.session.query(DocumentModel.id)
+        .filter(DocumentModel.deleted_at.is_(None))
+        .order_by(func.random())
+        .limit(1)
+        .scalar()
+    )
 
     response = client.delete('/api/documents/%s' % document_id, json={}, headers=auth_header())
     json_response = response.get_json()
@@ -134,13 +137,7 @@ def test_delete_document(client: CustomFlaskClient, auth_header: any):
 
 
 def test_search_document(client: CustomFlaskClient, auth_header: any):
-    document_name = (DocumentModel.select(DocumentModel.name)
-                     .where(DocumentModel.deleted_at.is_null())
-                     .order_by(fn.Random())
-                     .limit(1)
-                     .get()
-                     .name)
-    db_wrapper.database.close()
+    document_name = db.session.query(DocumentModel.name).filter(DocumentModel.deleted_at.is_(None)).order_by(func.random()).limit(1).scalar()
 
     json_body = {
         'search': [

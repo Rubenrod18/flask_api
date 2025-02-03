@@ -32,9 +32,7 @@ from flask import Response
 
 from app import create_app
 from app.extensions import db_wrapper
-from database import init_database
 from database.factories import Factory
-from database.migrations import init_migrations
 from database.seeds import init_seed
 
 load_dotenv()
@@ -62,24 +60,6 @@ def after_request(response: Response) -> Response:
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
     response.headers.add('Cache-Control', 'no-cache')
     return response
-
-
-@app.cli.command('init-db', help='Create database tables.')
-def db() -> None:
-    """Command line script for creating database tables."""
-    init_database()
-
-
-@app.cli.command('migrate', help='Update database schema.')
-def migrations() -> None:
-    """Command line script for updating database schema."""
-    init_migrations(False)
-
-
-@app.cli.command('migrate-rollback', help='Revert last migration saved in database.')
-def migration_rollback() -> None:
-    """Command line script for reverting last database schema."""
-    init_migrations(True)
 
 
 @app.cli.command('seed', help='Fill database with fake data.')

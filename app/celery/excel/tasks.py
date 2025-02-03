@@ -1,7 +1,7 @@
 import mimetypes
 import os
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from tempfile import NamedTemporaryFile
 
 import magic
@@ -179,7 +179,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
         fs = FileStorage()
         fs.save_bytes(data, filepath)
 
-        file_prefix = datetime.utcnow().strftime('%Y%m%d')
+        file_prefix = datetime.now(UTC).strftime('%Y%m%d')
         basename = f'{file_prefix}_users'
         filename = f'{basename}{file_extension}'
 

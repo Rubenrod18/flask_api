@@ -1,22 +1,25 @@
 import mimetypes
 import uuid
-from datetime import timedelta, datetime
+from datetime import UTC, timedelta, datetime
 from random import randint
 from shutil import copyfile
 
 from flask import current_app
 from peewee import fn
+from sqlalchemy import func
 
+from app.extensions import db
 from app.models import Document as DocumentModel, User as UserModel
 from app.utils import ignore_keys
 from app.utils.constants import PDF_MIME_TYPE
 from database import fake
+from database.factories import serialize_dict
 
 
 class _DocumentFactory:
     @staticmethod
     def _fill(params: dict, exclude: list) -> dict:
-        current_date = datetime.utcnow()
+        current_date = datetime.now(UTC)
 
         created_at = current_date - timedelta(days=randint(31, 100),
                                               minutes=randint(0, 60))
@@ -24,17 +27,13 @@ class _DocumentFactory:
         deleted_at = None
 
         if randint(0, 1) and 'deleted_at' not in params:
-            deleted_at = created_at + timedelta(days=randint(1, 30),
-                                                minutes=randint(0, 60))
+            deleted_at = int((created_at + timedelta(days=randint(1, 30),
+                                                minutes=randint(0, 60))).timestamp())
         else:
             updated_at = created_at + timedelta(days=randint(1, 30),
                                                 minutes=randint(0, 60))
 
-        created_by = (UserModel.select()
-                      .order_by(fn.Random())
-                      .limit(1)
-                      .get()
-                      .id)
+        created_by = db.session.query(UserModel.id).order_by(func.random()).limit(1).scalar()
 
         mime_type = fake.random_element([
             PDF_MIME_TYPE,
@@ -57,8 +56,8 @@ class _DocumentFactory:
             'directory_path': current_app.config.get('STORAGE_DIRECTORY'),
             # Between 2MB to 10MB
             'size': params.get('size', fake.random_int(2000000, 10000000)),
-            'created_at': created_at,
-            'updated_at': updated_at,
+            'created_at': int(created_at.timestamp()),
+            'updated_at': int(updated_at.timestamp()),
             'deleted_at': deleted_at,
         }
 
@@ -68,7 +67,7 @@ class _DocumentFactory:
         data = self._fill(params, exclude)
 
         if to_dict:
-            document = data
+            document = serialize_dict(data)
         else:
             model_data = {
                 item: data.get(item)
@@ -80,7 +79,7 @@ class _DocumentFactory:
 
     def create(self, params: dict) -> DocumentModel:
         data = self._fill(params, exclude=[])
-        return DocumentModel.create(**data)
+        return DocumentModel(**data)
 
     def bulk_create(self, total: int, params: dict) -> bool:
         data = []
@@ -88,5 +87,5 @@ class _DocumentFactory:
         for item in range(total):
             data.append(self.make(params, to_dict=False, exclude=[]))
 
-        DocumentModel.bulk_create(data)
+        db.session.add_all(data)
         return True

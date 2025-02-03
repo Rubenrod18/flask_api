@@ -21,3 +21,7 @@ flask-mail
 flask-marshmallow
 flask-restx
 flask-security-too
+flask-sqlalchemy
+flask-migrate
+
+marshmallow-sqlalchemy  # Required by flask-sqlalchemy

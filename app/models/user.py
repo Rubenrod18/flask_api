@@ -1,23 +1,35 @@
+import enum
 import logging
 
 from flask import current_app
-from flask_security import hash_password
+from flask_security import SQLAlchemyUserDatastore, hash_password
 from flask_security import UserMixin
 from itsdangerous import TimestampSigner
 from itsdangerous import URLSafeSerializer
-from peewee import BooleanField
-from peewee import CharField
-from peewee import DateField
-from peewee import FixedCharField
-from peewee import ForeignKeyField
-from peewee import ManyToManyField
-from peewee import TextField
-from peewee import TimestampField
+import sqlalchemy as sa
+from sqlalchemy.orm import backref, mapped_column, relationship
 
 from .base import Base as BaseModel
-from .role import Role as RoleModel
+from .role import Role
+from ..extensions import db
 
 logger = logging.getLogger(__name__)
+
+
+class Genre(str, enum.Enum):
+    MALE = 'm'
+    FEMALE = 'f'
+
+    def __str__(self):
+        """Returns str instead Genre object.
+
+        References
+        ----------
+        how to serialise an enum property in sqlalchemy using marshmallow
+        https://stackoverflow.com/questions/44717768/how-to-serialise-a-enum-property-in-sqlalchemy-using-marshmallow
+
+        """
+        return self.value
 
 
 class User(BaseModel, UserMixin):
@@ -30,38 +42,27 @@ class User(BaseModel, UserMixin):
 
     """
 
-    class Meta:
-        table_name = 'users'
+    __tablename__ = 'users'
 
-    fs_uniquifier = TextField(null=False)
-    created_by = ForeignKeyField('self', null=True, backref='children', column_name='created_by')
-    name = CharField()
-    last_name = CharField()
-    email = CharField(unique=True)
-    password = CharField(null=False)
-    genre = FixedCharField(
-        max_length=1,
-        choices=(
-            (
-                'm',
-                'male',
-            ),
-            ('f', 'female'),
-        ),
-        null=True,
-    )
-    birth_date = DateField()
-    active = BooleanField(default=True)
-    created_at = TimestampField(default=None)
-    updated_at = TimestampField()
-    deleted_at = TimestampField(default=None, null=True)
-    roles = ManyToManyField(RoleModel, backref='users')
+    fs_uniquifier = sa.Column(sa.Text, nullable=False)
+    created_by = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=True)
+
+    name = mapped_column(sa.String(255), nullable=False, use_existing_column=True)
+    last_name = sa.Column(sa.String(255), nullable=False)
+    email = sa.Column(sa.String(255), nullable=False, unique=True)
+    password = sa.Column(sa.String(255), nullable=False)
+    genre = sa.Column(sa.String(1))
+    birth_date = sa.Column(sa.Date, nullable=False)
+    active = sa.Column(sa.Boolean, nullable=False)
+
+    created_by_user = relationship('User', remote_side='User.id')
+    roles = relationship('Role', secondary='users_roles_through', backref=backref('users', lazy='dynamic'))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def save(self, *args: list, **kwargs: dict) -> int:
-        if self.password and 'password' in self._dirty:
+        if self.password and 'password' in self.__dict__:
             self.password = self.ensure_password(self.password)
 
         return super().save(*args, **kwargs)
@@ -92,8 +93,18 @@ class User(BaseModel, UserMixin):
         except:  # noqa: E722
             # TODO: what kind of exception throws here?
             return None
-        return User.get_or_none(user_id)
+        return db.session.query(User).filter_by(id=user_id).first()
 
     @staticmethod
     def ensure_password(plain_text: str) -> str:
         return hash_password(plain_text) if plain_text else None
+
+
+class UsersRolesThrough(BaseModel):
+    __tablename__ = 'users_roles_through'
+
+    user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'))
+    role_id = sa.Column(sa.Integer, sa.ForeignKey('roles.id'))
+
+
+user_datastore = SQLAlchemyUserDatastore(db, User, Role)

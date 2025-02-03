@@ -32,7 +32,7 @@ def _remove_test_files(storage_path: str) -> None:
 def app():
     """Create an app with testing environment."""
     app = create_app('config.TestConfig')
-    test_db = app.config.get('DATABASE').get('name')
+    test_db = app.config.get('SQLALCHEMY_DATABASE_URI')
 
     if os.path.exists(test_db):
         logger.info(' Deleting test database...')

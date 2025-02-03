@@ -4,7 +4,7 @@ import os
 from flask import Flask
 from flask_login import current_user
 
-from app.extensions import db_wrapper
+from app.extensions import db
 from app.models.user import User as UserModel
 from tests.custom_flask_client import CustomFlaskClient
 
@@ -23,13 +23,12 @@ def test_user_login(client: CustomFlaskClient):
         assert 401 == response.status_code
 
     def _test_inactive_user():
-        user = UserModel.select().where(UserModel.active == False).get()  # noqa: E712
+        user = db.session.query(UserModel).filter(UserModel.active.is_(False)).first()
 
         data = {
             'email': user.email,
             'password': os.getenv('TEST_USER_PASSWORD'),
         }
-        db_wrapper.database.close()
 
         response = client.post('/api/auth/login', json=data)
 
@@ -87,11 +86,10 @@ def test_request_reset_password(client: CustomFlaskClient):
 def test_validate_reset_password(client: CustomFlaskClient, app: Flask):
     email = os.getenv('TEST_USER_EMAIL')
 
-    user = UserModel.get(email=email)
+    user = db.session.query(UserModel).filter_by(email=email).first()
 
     with app.app_context():
         token = user.get_reset_token()
-        db_wrapper.database.close()
 
     response = client.get(f'/api/auth/reset_password/{token}', json={})
 
@@ -101,9 +99,8 @@ def test_validate_reset_password(client: CustomFlaskClient, app: Flask):
 def test_reset_password(client: CustomFlaskClient):
     email = os.getenv('TEST_USER_EMAIL')
 
-    user = UserModel.get(email=email)
+    user = db.session.query(UserModel).filter_by(email=email).first()
     token = user.get_reset_token()
-    db_wrapper.database.close()
 
     data = {
         'password': os.getenv('TEST_USER_PASSWORD'),

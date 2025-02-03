@@ -1,14 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from random import randint
 from typing import TypeVar, List
 
 from flask import current_app
-from peewee import fn
-from playhouse.shortcuts import model_to_dict
+from sqlalchemy import func
 
+from app.extensions import db
 from app.models import Role as RoleModel, User as UserModel, user_datastore
 from app.utils import ignore_keys
 from database import fake
+from database.factories import serialize_dict
 
 T = TypeVar('T', UserModel, dict)
 UserList = List[UserModel]
@@ -25,7 +26,7 @@ class _UserFactory:
             return f'%s_{fake_email}' % randint(1, 9999)
 
         birth_date = fake.date_between(start_date='-50y', end_date='-5y')
-        current_date = datetime.utcnow()
+        current_date = datetime.now(UTC)
 
         created_at = current_date - timedelta(days=randint(31, 100),
                                               minutes=randint(0, 60))
@@ -40,19 +41,19 @@ class _UserFactory:
                                                 minutes=randint(0, 60))
 
         if 'created_by' not in params:
-            created_by = (UserModel.select()
-                          .where(UserModel.created_by.is_null())
-                          .order_by(fn.Random())
-                          .limit(1)
-                          .get()
-                          .id)
+            created_by = (
+                db.session.query(UserModel).filter(UserModel.created_by.is_(None)).order_by(func.random()).limit(1).first()
+                .id
+            )
         else:
             created_by = None
 
-        user = (UserModel.select()
-                .order_by(UserModel.id.desc())
-                .limit(1)
-                .first())
+        user = (
+            db.session.query(UserModel)
+            .order_by(UserModel.id.desc())
+            .limit(1)
+            .first()
+        )
         fs_uniquifier = 1 if user is None else user.id + 1
 
         data = {
@@ -63,7 +64,7 @@ class _UserFactory:
             'email': params.get('email') or generate_fake_user_email(),
             'genre': params.get('genre') or fake.random_element(['m', 'f']),
             'password': params.get('password') or current_app.config.get('TEST_USER_PASSWORD'),
-            'birth_date': params.get('birth_date') or birth_date.strftime('%Y-%m-%d'),
+            'birth_date': params.get('birth_date') or birth_date,
             'active': params.get('active') or fake.boolean(),
             'created_at': created_at,
             'updated_at': updated_at,
@@ -82,7 +83,7 @@ class _UserFactory:
         data = self._fill(params, to_dict, exclude)
 
         if to_dict:
-            user = data
+            user = serialize_dict(data)
         else:
             model_data = {
                 item: data.get(item)
@@ -93,18 +94,23 @@ class _UserFactory:
         return user
 
     def create(self, params: dict) -> UserModel:
-        data = model_to_dict(self.make(params, to_dict=False, exclude=[]),
-                             recurse=False)
+        def model_to_dict(instance):
+            """Convert an SQLAlchemy model instance into a dictionary."""
+            return {column.name: getattr(instance, column.name) for column in instance.__table__.columns}
+
+        data = model_to_dict(self.make(params, to_dict=False, exclude=[]))
 
         # Roles are required for flask_security.datastore
         if 'roles' in params:
             roles = params['roles']
         else:
-            role = (RoleModel.select()
-                    .where(RoleModel.deleted_at.is_null())
-                    .order_by(fn.Random())
-                    .limit(1)
-                    .get())
+            role = (
+                db.session.query(RoleModel)
+                .filter(RoleModel.deleted_at.is_(None))
+                .order_by(func.random())
+                .limit(1)
+                .first()
+            )
             roles = [role]
         data['roles'] = roles
 

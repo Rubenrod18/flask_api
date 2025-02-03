@@ -85,6 +85,11 @@ class Config(metaclass=Meta):
         },
     }
 
+    # Flask SQLAlchemy
+    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ECHO = False
+
     # Flask-Mail
     MAIL_SERVER = os.getenv('MAIL_SERVER')
     MAIL_PORT = os.getenv('MAIL_PORT')
@@ -168,19 +173,9 @@ class TestConfig(Config):
     DEBUG = True
     TESTING = True
 
-    # Peewee
-    DATABASE = {
-        'name': 'test.db',
-        'engine': 'peewee.SqliteDatabase',
-        # Sqlite3 recommended settings
-        'pragmas': {
-            'journal_mode': 'wal',
-            'cache_size': -1 * 64000,  # 64MB
-            'foreign_keys': 1,
-            'ignore_check_constraints': 0,
-            'synchronous': 0,
-        },
-    }
+    # Flask SQLAlchemy
+    SQLALCHEMY_DATABASE_URI = os.getenv('TEST_SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_RECORD_QUERIES = True
 
     # Mr Developer
     STORAGE_DIRECTORY = f'{Config.STORAGE_DIRECTORY}/tests'

@@ -1,7 +1,8 @@
 """Module for testing roles blueprint."""
 from peewee import fn
+from sqlalchemy import func
 
-from app.extensions import db_wrapper
+from app.extensions import db, db_wrapper
 from app.models.role import Role as RoleModel
 from tests.custom_flask_client import CustomFlaskClient
 
@@ -23,13 +24,13 @@ def test_save_role_endpoint(client: CustomFlaskClient, auth_header: any, factory
 
 
 def test_update_role_endpoint(client: CustomFlaskClient, auth_header: any, factory: any):
-    role_id = (RoleModel.select(RoleModel.id)
-               .where(RoleModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get()
-               .id)
-    db_wrapper.database.close()
+    role_id = (
+        db.session.query(RoleModel.id)
+        .filter(RoleModel.deleted_at.is_(None))
+        .order_by(func.random())
+        .limit(1)
+        .scalar()
+    )
 
     ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at', 'name']
     data = factory('Role').make(exclude=ignore_fields, to_dict=True)
@@ -49,15 +50,15 @@ def test_update_role_endpoint(client: CustomFlaskClient, auth_header: any, facto
 
 
 def test_get_role_endpoint(client: CustomFlaskClient, auth_header: any):
-    role_id = (RoleModel.select(RoleModel.id)
-               .where(RoleModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get()
-               .id)
+    role_id = (
+        db.session.query(RoleModel.id)
+        .filter(RoleModel.deleted_at.is_(None))
+        .order_by(func.random())
+        .limit(1)
+        .scalar()
+    )
 
-    role = RoleModel.get(RoleModel.id == role_id)
-    db_wrapper.database.close()
+    role = db.session.query(RoleModel).filter(RoleModel.id == role_id).one_or_none()
 
     response = client.get('/api/roles/%s' % role_id, json={}, headers=auth_header())
     json_response = response.get_json()
@@ -67,19 +68,19 @@ def test_get_role_endpoint(client: CustomFlaskClient, auth_header: any):
     assert role_id == json_data.get('id')
     assert role.name == json_data.get('name')
     assert role.name.lower() == json_data.get('name').lower().replace('-', ' ')
-    assert role.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
-    assert role.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
-    assert role.deleted_at == json_data.get('deleted_at')
+    assert role.get_created_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+    assert role.get_updated_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
+    assert role.get_deleted_at() == json_data.get('deleted_at')
 
 
 def test_delete_role_endpoint(client: CustomFlaskClient, auth_header: any):
-    role_id = (RoleModel.select(RoleModel.id)
-               .where(RoleModel.deleted_at.is_null())
-               .order_by(fn.Random())
-               .limit(1)
-               .get()
-               .id)
-    db_wrapper.database.close()
+    role_id = (
+        db.session.query(RoleModel.id)
+        .filter(RoleModel.deleted_at.is_(None))
+        .order_by(func.random())
+        .limit(1)
+        .scalar()
+    )
 
     response = client.delete('/api/roles/%s' % role_id, json={}, headers=auth_header())
     json_response = response.get_json()
@@ -92,13 +93,11 @@ def test_delete_role_endpoint(client: CustomFlaskClient, auth_header: any):
 
 
 def test_search_roles_endpoint(client: CustomFlaskClient, auth_header: any):
-    role_name = (RoleModel.select(RoleModel.name)
-                 .where(RoleModel.deleted_at.is_null())
-                 .order_by(fn.Random())
-                 .limit(1)
-                 .get()
-                 .name)
-    db_wrapper.database.close()
+    role_name = (db.session.query(RoleModel.name)
+          .filter(RoleModel.deleted_at.is_(None))
+          .order_by(func.random())
+          .limit(1)
+          .scalar())
 
     json_body = {
         'search': [

@@ -36,7 +36,7 @@ class RoleSerializer(ma.Schema):
 
     @validates('id')
     def validate_id(self, role_id):
-        args = (role_manager.model.deleted_at.is_null(),)
+        args = (role_manager.model.deleted_at.is_(None),)
         role = role_manager.find(role_id, *args)
 
         if role is None:

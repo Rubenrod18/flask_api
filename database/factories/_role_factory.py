@@ -1,15 +1,16 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from random import randint
 
 from app.models.role import Role as RoleModel
 from app.utils import ignore_keys
 from database import fake
+from database.factories import serialize_dict
 
 
 class _RoleFactory:
     @staticmethod
     def _fill(params: dict, exclude: list) -> dict:
-        current_date = datetime.utcnow()
+        current_date = datetime.now(UTC)
 
         created_at = current_date - timedelta(days=randint(31, 100),
                                               minutes=randint(0, 60))
@@ -41,7 +42,7 @@ class _RoleFactory:
         data = self._fill(params, exclude)
 
         if to_dict:
-            role = data
+            role = serialize_dict(data)
         else:
             model_data = {
                 item: data.get(item)
@@ -53,7 +54,7 @@ class _RoleFactory:
 
     def create(self, params: dict) -> RoleModel:
         data = self._fill(params, exclude=[])
-        return RoleModel.create(**data)
+        return RoleModel(**data)
 
     def bulk_create(self, total: int, params: dict) -> bool:
         data = []

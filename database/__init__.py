@@ -11,10 +11,9 @@ from faker import Faker
 from faker.providers import date_time
 from faker.providers import file
 from faker.providers import person
+from sqlalchemy import inspect
 
-from app.extensions import db_wrapper
-from app.models import get_db_models
-from database.migrations import Migration
+from app.extensions import db
 
 fake = Faker()
 fake.add_provider(person)
@@ -24,17 +23,12 @@ fake.add_provider(file)
 
 def init_database() -> None:
     print(' Creating tables...')
-    table_names = db_wrapper.database.get_tables()
+    inspector = inspect(db.engine)
+    table_names = inspector.get_table_names()
 
     if not table_names:
-        models = get_db_models()
-        db_wrapper.database.create_tables(models)
+        db.create_all()
 
-    table_name = Migration._meta.table_name
-    exists = db_wrapper.database.table_exists(table_name)
-
-    if not exists:
-        db_wrapper.database.create_tables([Migration])
     print(' Tables created!')
 
 

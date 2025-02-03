@@ -15,9 +15,7 @@ from pydoc import locate
 from .base import Base
 from .document import Document
 from .role import Role
-from .user import User
-from .user_roles import user_datastore
-from .user_roles import UserRoles
+from .user import User, user_datastore, UsersRolesThrough
 
 logger = logging.getLogger(__name__)
 

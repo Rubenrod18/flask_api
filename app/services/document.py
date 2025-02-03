@@ -8,6 +8,7 @@ from flask_login import current_user
 from marshmallow import EXCLUDE
 from werkzeug.exceptions import InternalServerError
 
+from app.extensions import db
 from app.managers import DocumentManager
 from app.serializers import DocumentSerializer, DocumentAttachmentSerializer
 from app.services.base import BaseService
@@ -46,6 +47,8 @@ class DocumentService(BaseService):
                 'size': self.file_storage.get_filesize(filepath),
             }
             document = self.manager.create(**data)
+            db.session.add(document)
+            db.session.flush()
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
@@ -75,7 +78,9 @@ class DocumentService(BaseService):
                 'mime_type': data.get('mime_type'),
                 'size': fs.get_filesize(filepath),
             }
-            self.manager.save(document_id, **data)
+            document = self.manager.save(document_id, **data)
+            db.session.add(document)
+            db.session.flush()
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)

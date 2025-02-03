@@ -1,3 +1,4 @@
+from app.extensions import db
 from app.managers.base import BaseManager
 from app.models.user import User as UserModel
 
@@ -12,10 +13,7 @@ class UserManager(BaseManager):
         query = (self.model.email == email,)
         if args:
             query = query + args
-        return self.model.get_or_none(*query)
+        return db.session.query(self.model).filter(*query).first()
 
     def get_last_record(self):
-        return (self.model.select()
-                .order_by(UserModel.id.desc())
-                .limit(1)
-                .first())
+        return db.session.query(self.model).order_by(self.model.id.desc()).limit(1).first()

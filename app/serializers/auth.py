@@ -28,8 +28,8 @@ class AuthUserLoginSerializer(ma.Schema):
     @validates('email')
     def validate_email(self, email):
         args = (
-            user_manager.model.active == True,  # noqa: E712
-            user_manager.model.deleted_at.is_null(),
+            user_manager.model.active == True,
+            user_manager.model.deleted_at == None,
         )
         self.__user = user_manager.find_by_email(email, *args)
 

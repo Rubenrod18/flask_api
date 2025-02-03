@@ -37,7 +37,6 @@ class NewUserResource(UserBaseResource):
         self.task_service.send_create_user_email(**user_data)
         return user_data, 201
 
-
 @api.route('/<int:user_id>')
 class UserResource(UserBaseResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden',
@@ -45,7 +44,7 @@ class UserResource(UserBaseResource):
              security='auth_token')
     @api.marshal_with(user_sw_model, envelope='data')
     @token_required
-    @roles_accepted('admin', 'team_leader')
+    @roles_accepted('admin')
     def get(self, user_id: int) -> tuple:
         user = self.user_service.find(user_id)
         return self.user_serializer.dump(user), 200

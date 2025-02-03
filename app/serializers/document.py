@@ -7,6 +7,7 @@ from werkzeug.exceptions import UnprocessableEntity, NotFound
 
 from app.extensions import ma
 from app.managers import DocumentManager
+from app.models import Document
 from app.serializers.core import TimestampField
 from config import Config
 
@@ -14,25 +15,27 @@ logger = logging.getLogger(__name__)
 document_manager = DocumentManager()
 
 
-class DocumentSerializer(ma.Schema):
+class DocumentSerializer(ma.SQLAlchemySchema):
     class Meta:
+        model = Document
         ordered = True
 
-    id = fields.Int()
-    created_by = fields.Nested('UserSerializer', only=('id', 'name', 'last_name',
-                                                       'email'))
-    name = fields.Str()
-    internal_filename = fields.Str()
-    mime_type = fields.Str()
-    directory_path = fields.Str(load_only=True)
-    size = fields.Integer()
+    id = ma.auto_field()
+    name = ma.auto_field()
+    internal_filename = ma.auto_field()
+    mime_type = ma.auto_field()
+    size = ma.auto_field()
+
+    directory_path = ma.auto_field(load_only=True)
+
+    created_by_user = fields.Nested('UserSerializer', only=('id', 'name', 'last_name', 'email'), dump_only=True)
     created_at = TimestampField(dump_only=True)
     updated_at = TimestampField(dump_only=True)
     deleted_at = TimestampField(dump_only=True)
 
     @validates('id')
     def validate_id(self, document_id):
-        args = (document_manager.model.deleted_at.is_null(),)
+        args = (document_manager.model.deleted_at.is_(None),)
         document = document_manager.find(document_id, *args)
 
         if document is None:
@@ -45,9 +48,8 @@ class DocumentSerializer(ma.Schema):
 
     @post_dump()
     def wrap(self, data, **kwargs):
-        data['url'] = url_for('documents_document_resource',
-                              document_id=data['id'],
-                              _external=True)
+        data['url'] = url_for('documents_document_resource', document_id=data['id'], _external=True)
+        data['created_by'] = data.pop('created_by_user')
         return data
 
     @staticmethod

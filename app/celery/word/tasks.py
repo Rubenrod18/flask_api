@@ -1,7 +1,7 @@
 import mimetypes
 import os
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from tempfile import NamedTemporaryFile
 
 import docx
@@ -130,7 +130,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
     filepath = '%s/%s' % (directory_path, internal_filename)
 
     try:
-        file_prefix = datetime.utcnow().strftime('%Y%m%d')
+        file_prefix = datetime.now(UTC).strftime('%Y%m%d')
         basename = f'{file_prefix}_users'
         filename = f'{basename}{file_extension}'
 

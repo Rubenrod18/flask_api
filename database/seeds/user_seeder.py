@@ -1,6 +1,6 @@
 import os
 
-from app.extensions import db_wrapper
+from app.extensions import db
 from app.models import Role as RoleModel
 from app.models import User as UserModel
 from database import seed_actions
@@ -13,10 +13,10 @@ class UserSeeder:
     @staticmethod
     def _create_admin_user():
         test_user_email = os.getenv('TEST_USER_EMAIL')
-        test_user = UserModel.get_or_none(email=test_user_email)
+        test_user = db.session.query(UserModel).filter(UserModel.email == test_user_email).first()
 
         if test_user is None:
-            role = RoleModel.get_by_id(1)
+            role = db.session.get(RoleModel, 1)
 
             params = {
                 'email': test_user_email,
@@ -32,6 +32,5 @@ class UserSeeder:
     def __init__(self, rows: int = 30):
         # save user with user_datastore and method
         # "create_user" -> look flask_security -> datastore.py
-        with db_wrapper.database.atomic():
-            self._create_admin_user()
-            Factory('User', rows).save()
+        self._create_admin_user()
+        Factory('User', rows).save()

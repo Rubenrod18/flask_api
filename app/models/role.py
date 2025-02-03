@@ -1,7 +1,8 @@
 import logging
 
 from flask_security import RoleMixin
-from peewee import CharField, TimestampField, TextField
+import sqlalchemy as sa
+from sqlalchemy.orm import mapped_column
 
 from .base import Base as BaseModel
 
@@ -9,15 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 class Role(BaseModel, RoleMixin):
-    class Meta:
-        table_name = 'roles'
+    __tablename__ = 'roles'
 
-    name = CharField(unique=True)
-    description = TextField(null=True)
-    label = CharField()
-    created_at = TimestampField(default=None)
-    updated_at = TimestampField()
-    deleted_at = TimestampField(default=None, null=True)
+    name = mapped_column(sa.String(255), nullable=False, use_existing_column=True)
+    description = sa.Column(sa.Text, nullable=True)
+    label = sa.Column(sa.String(255), nullable=False)
 
     def __init__(self, *args, **kwargs):
         super(Role, self).__init__(*args, **kwargs)

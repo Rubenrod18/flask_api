@@ -4,6 +4,8 @@
 #
 #    pip-compile
 #
+alembic==1.14.1
+    # via flask-migrate
 amqp==5.3.1
     # via kombu
 aniso8601==10.0.0
@@ -48,9 +50,11 @@ flask==3.1.0
     #   flask-login
     #   flask-mail
     #   flask-marshmallow
+    #   flask-migrate
     #   flask-principal
     #   flask-restx
     #   flask-security-too
+    #   flask-sqlalchemy
     #   flask-wtf
 flask-login==0.6.3
     # via flask-security-too
@@ -58,12 +62,18 @@ flask-mail==0.10.0
     # via -r requirements.in
 flask-marshmallow==1.3.0
     # via -r requirements.in
+flask-migrate==4.1.0
+    # via -r requirements.in
 flask-principal==0.4.0
     # via flask-security-too
 flask-restx==1.3.0
     # via -r requirements.in
 flask-security-too==5.5.2
     # via -r requirements.in
+flask-sqlalchemy==3.1.1
+    # via
+    #   -r requirements.in
+    #   flask-migrate
 flask-wtf==1.2.2
     # via flask-security-too
 flower==2.0.1
@@ -92,14 +102,21 @@ kombu==5.4.2
     # via celery
 lxml==5.3.0
     # via python-docx
+mako==1.3.8
+    # via alembic
 markupsafe==3.0.2
     # via
     #   flask-security-too
     #   jinja2
+    #   mako
     #   werkzeug
     #   wtforms
 marshmallow==3.26.0
-    # via flask-marshmallow
+    # via
+    #   flask-marshmallow
+    #   marshmallow-sqlalchemy
+marshmallow-sqlalchemy==1.4.0
+    # via -r requirements.in
 packaging==24.2
     # via marshmallow
 passlib==1.7.4
@@ -135,11 +152,16 @@ rpds-py==0.22.3
 six==1.17.0
     # via python-dateutil
 sqlalchemy==2.0.37
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   alembic
+    #   flask-sqlalchemy
+    #   marshmallow-sqlalchemy
 tornado==6.4.2
     # via flower
 typing-extensions==4.12.2
     # via
+    #   alembic
     #   faker
     #   python-docx
     #   sqlalchemy

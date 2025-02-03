@@ -11,8 +11,11 @@ The factory concept is based on `Laravel factories
 <https://laravel.com/docs/8.x/database-testing#using-factories>`_
 
 """
+from datetime import date, datetime
+from decimal import Decimal
 import os
 
+from app.extensions import db
 from app.utils import get_attr_from_module
 
 
@@ -193,3 +196,17 @@ class Factory:
 
         if factory_classname not in factories_classnames:
             raise NameError(f'model \'{model_name}\' is not registered')
+
+
+def serialize_dict(data):
+    return {key: serialize_value(value) for key, value in data.items()}
+
+
+def serialize_value(value):
+    if isinstance(value, datetime):
+        return value.isoformat()
+    elif isinstance(value, date):
+        return value.strftime('%Y-%m-%d')
+    elif isinstance(value, Decimal):
+        return float(value)
+    return value

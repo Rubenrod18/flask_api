@@ -1,7 +1,7 @@
 from flask_login import current_user
 from marshmallow import EXCLUDE
 
-from app.extensions import db_wrapper
+from app.extensions import db
 from app.managers import UserManager, RoleManager
 from app.models import user_datastore
 from app.serializers import UserSerializer
@@ -19,16 +19,23 @@ class UserService(BaseService):
     def create(self, user_data):
         deserialized_data = self.user_serializer.load(user_data)
 
-        with db_wrapper.database.atomic():
-            role = self.role_manager.find(deserialized_data['role_id'])
+        role = self.role_manager.find(deserialized_data.pop('role_id'))
 
-            user = self.manager.get_last_record()
-            fs_uniquifier = 1 if user is None else user.id + 1
+        user = self.manager.get_last_record()
+        fs_uniquifier = 1 if user is None else user.id + 1
 
-            deserialized_data.update({'created_by': current_user.id,
-                                      'roles': [role],
-                                      'fs_uniquifier': fs_uniquifier})
-            user = user_datastore.create_user(**deserialized_data)
+        deserialized_data.update({'created_by': current_user.id,
+                                  'roles': [role],
+                                  'fs_uniquifier': fs_uniquifier})
+        user = user_datastore.create_user(**deserialized_data)
+
+        # TODO: Temporal code until I migrate the factories and seeders to SQLALchemy.
+        if self.is_transaction_active:
+            db.session.add(user)
+            db.session.flush()
+        else:
+            with db.session.begin():
+                pass
 
         return user
 
@@ -41,13 +48,20 @@ class UserService(BaseService):
         data = self.user_serializer.load(kwargs, unknown=EXCLUDE)
 
         user = self.manager.find(user_id)
-        with db_wrapper.database.atomic():
-            self.manager.save(user_id, **data)
+        self.manager.save(user_id, **data)
 
-            if 'role_id' in data:
-                user_datastore.remove_role_from_user(user, user.roles[0])
-                role = self.role_manager.find(data['role_id'])
-                user_datastore.add_role_to_user(user, role)
+        if 'role_id' in data:
+            user_datastore.remove_role_from_user(user, user.roles[0])
+            role = self.role_manager.find(data['role_id'])
+            user_datastore.add_role_to_user(user, role)
+
+        # TODO: Temporal code until I migrate the factories and seeders to SQLALchemy.
+        if self.is_transaction_active:
+            db.session.add(user)
+            db.session.flush()
+        else:
+            with db.session.begin():
+                pass
 
         return user.reload()
 
