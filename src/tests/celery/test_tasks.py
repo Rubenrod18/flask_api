@@ -7,11 +7,12 @@ from app.celery.tasks import (create_user_email_task, reset_password_email_task,
                               send_email_with_attachments_task)
 from app.extensions import db
 from app.models import Document as DocumentModel, User as UserModel
+from database.factories.user_factory import UserFactory
 
 
-def test_create_user_email_task(factory: any):
-    ignore_fields = ['role', 'created_by']
-    data = factory('User').make(exclude=ignore_fields, to_dict=True)
+def test_create_user_email_task():
+    ignore_fields = {'role', 'created_by'}
+    data = UserFactory.build_dict(exclude=ignore_fields)
     assert create_user_email_task(data) is True
 
 

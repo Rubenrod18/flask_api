@@ -2,17 +2,18 @@ import logging
 
 from flask_security import RoleMixin
 import sqlalchemy as sa
-from sqlalchemy.orm import mapped_column
 
 from .base import Base as BaseModel
 
 logger = logging.getLogger(__name__)
 
+ROLE_NAME_DELIMITER = '_'
+
 
 class Role(BaseModel, RoleMixin):
     __tablename__ = 'roles'
 
-    name = mapped_column(sa.String(255), nullable=False, use_existing_column=True)
+    name = sa.Column(sa.String(255), nullable=False, unique=True)
     description = sa.Column(sa.Text, nullable=True)
     label = sa.Column(sa.String(255), nullable=False)
 

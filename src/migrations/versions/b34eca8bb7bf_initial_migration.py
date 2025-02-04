@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 77ea326a9ed9
+Revision ID: b34eca8bb7bf
 Revises: 
-Create Date: 2025-02-04 08:59:37.083601
+Create Date: 2025-02-04 12:03:00.712575
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '77ea326a9ed9'
+revision = 'b34eca8bb7bf'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -26,10 +26,11 @@ def upgrade():
     sa.Column('created_at', sa.TIMESTAMP(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.TIMESTAMP(), server_default=sa.text('now()'), nullable=False),
     sa.Column('deleted_at', sa.TIMESTAMP(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
     op.create_table('users',
-    sa.Column('fs_uniquifier', sa.Text(), nullable=False),
+    sa.Column('fs_uniquifier', sa.String(length=64), nullable=False),
     sa.Column('created_by', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('last_name', sa.String(length=255), nullable=False),
@@ -44,7 +45,8 @@ def upgrade():
     sa.Column('deleted_at', sa.TIMESTAMP(), nullable=True),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('fs_uniquifier')
     )
     op.create_table('documents',
     sa.Column('created_by', sa.Integer(), nullable=True),

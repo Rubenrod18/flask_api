@@ -1,5 +1,6 @@
 import enum
 import logging
+import uuid
 
 from flask import current_app
 from flask_security import SQLAlchemyUserDatastore, hash_password
@@ -7,7 +8,7 @@ from flask_security import UserMixin
 from itsdangerous import TimestampSigner
 from itsdangerous import URLSafeSerializer
 import sqlalchemy as sa
-from sqlalchemy.orm import backref, mapped_column, relationship
+from sqlalchemy.orm import backref, relationship
 
 from .base import Base as BaseModel
 from .role import Role
@@ -31,6 +32,13 @@ class Genre(str, enum.Enum):
         """
         return self.value
 
+    @classmethod
+    def to_list(cls, get_values=True):
+        attr = 'name'
+        if get_values:
+            attr = 'value'
+        return [getattr(_, attr) for _ in list(cls)]
+
 
 class User(BaseModel, UserMixin):
     """User database model.
@@ -44,10 +52,10 @@ class User(BaseModel, UserMixin):
 
     __tablename__ = 'users'
 
-    fs_uniquifier = sa.Column(sa.Text, nullable=False)
+    fs_uniquifier = sa.Column(sa.String(64), unique=True, nullable=False, default=lambda: uuid.uuid4())
     created_by = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=True)
 
-    name = mapped_column(sa.String(255), nullable=False, use_existing_column=True)
+    name = sa.Column(sa.String(255), nullable=False)
     last_name = sa.Column(sa.String(255), nullable=False)
     email = sa.Column(sa.String(255), nullable=False, unique=True)
     password = sa.Column(sa.String(255), nullable=False)

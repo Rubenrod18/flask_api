@@ -5,16 +5,15 @@ from sqlalchemy import func
 
 from app.extensions import db
 from app.models import Role as RoleModel, User as UserModel
+from database.factories.user_factory import UserFactory
 from tests.custom_flask_client import CustomFlaskClient
 
 
-def test_create_user_endpoint(client: CustomFlaskClient, auth_header: any,
-                              factory: any):
+def test_create_user_endpoint(client: CustomFlaskClient, auth_header: any):
     role = db.session.get(RoleModel, 1)
 
-    ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at',
-                     'created_by', 'fs_uniquifier']
-    data = factory('User').make(exclude=ignore_fields, to_dict=True)
+    ignore_fields = {'id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'fs_uniquifier'}
+    data = UserFactory.build_dict(exclude=ignore_fields)
     data['password'] = os.getenv('TEST_USER_PASSWORD')
     data['role_id'] = role.id
 
@@ -53,13 +52,12 @@ def test_create_invalid_user_endpoint(client: CustomFlaskClient,
     assert 422 == response.status_code
 
 
-def test_update_user_endpoint(client: CustomFlaskClient, auth_header: any,
-                              factory: any):
+def test_update_user_endpoint(client: CustomFlaskClient, auth_header: any):
     user_id = (db.session.query(UserModel.id).filter(UserModel.deleted_at.is_(None)).order_by(func.random()).limit(1).scalar())
 
-    ignore_fields = ['id', 'active', 'created_at', 'updated_at', 'deleted_at',
-                     'created_by']
-    data = factory('User').make(to_dict=True, exclude=ignore_fields)
+    ignore_fields = {'id', 'active', 'created_at', 'updated_at', 'deleted_at',
+                     'created_by'}
+    data = UserFactory.build_dict(exclude=ignore_fields)
 
     data['password'] = os.getenv('TEST_USER_PASSWORD')
     role = (db.session.query(RoleModel).filter(RoleModel.deleted_at.is_(None)).order_by(func.random()).limit(1).first())

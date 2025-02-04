@@ -17,20 +17,6 @@ class BaseMixin:
     deleted_at = sa.Column(sa.TIMESTAMP, nullable=True)
 
 
-@event.listens_for(db.session, 'before_flush')
-def before_flush(session, flush_context, instances):
-    for instance in session.dirty:
-        if isinstance(instance, BaseMixin):  # Ensure we're working with the right model
-            if instance.id and instance.updated_at:
-                instance.updated_at = int(datetime.now(UTC).timestamp())  # Set updated_at before flush
-
-            elif not instance.id:  # New record
-                if not instance.created_at:
-                    instance.created_at = int(datetime.now(UTC).timestamp())  # Set created_at if it's not set yet
-                if not instance.updated_at:
-                    instance.updated_at = instance.created_at  # Set updated_at to created_at initially
-
-
 class Base(db.Model, BaseMixin):
     __abstract__ = True
 

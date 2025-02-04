@@ -32,7 +32,6 @@ from flask import Response
 
 from app import create_app
 from app.extensions import db
-from database.factories import Factory
 from database.seeds import init_seed
 
 load_dotenv()
@@ -150,7 +149,7 @@ def make_shell_context() -> dict:
         Imports available in Python shell.
 
     """
-    return {'app': app, 'db': db, 'Factory': Factory}
+    return {'app': app, 'db': db}
 
 
 if __name__ == '__main__':
