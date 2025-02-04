@@ -1,0 +1,17 @@
+# ============================
+# Dockerfile for Local Environment
+# ============================
+
+# -------------------------------------------
+# Base Image Configuration
+# -------------------------------------------
+# This base image includes Python 3.13 and essential Python packages, configured for efficiency.
+FROM rubenrod18/flask_api:cache_python_3.13_pip
+
+# -------------------------------------------
+# Add Custom Executable Scripts
+# -------------------------------------------
+# Copy any local development scripts into the container.
+# These scripts are placed in the /usr/local/bin directory, which is part of the system's $PATH.
+# This makes the scripts accessible globally within the container.
+COPY docker/local/bin/* /usr/local/bin/
