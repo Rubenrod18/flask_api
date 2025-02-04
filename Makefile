@@ -1,60 +1,52 @@
-.PHONY: run component shell migrate migrate-rollback linter coverage coverage-html test test-parallel
-VENV := venv
+.PHONY: help prod.build _build local.build local.start local.stop local.down local.logs
+
+# Docker
+REGISTRY = rubenrod18/flask_api
+CACHE_KEY = cache_python_3.13_pip
+LOCAL_VERSION ?= local
 
 help:
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make COMMAND\033[36m\033[0m\n\n  A general utility script.\n\n  Provides commands to run the application, database migrations, tests, etc.\n  Next command start up the application:\n\n    \44 make run\n\nCommands:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-14s\033[0m \t%s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
-# =============================
-# ==== DOCKER COMMANDS ========
-# =============================
-build:  ## Build Docker app
+# Builds a Docker image with cache tags.
+prod.build:
+	docker build . \
+		--build-arg ENVIRONMENT=production \
+		--tag $(REGISTRY):$(LOCAL_VERSION) \
+		--tag $(REGISTRY):$(CACHE_KEY) \
+		--file docker/Dockerfile \
+		--cache-from python:3.13-slim \
+		--cache-from $(REGISTRY):$(LOCAL_VERSION) \
+		--cache-from $(REGISTRY):$(CACHE_KEY)
+
+## === LOCAL ENVIRONMENT ===
+
+_build: # TODO: Temporal solution. I need to find the way to pass ENVIRONMENT in a dynamic way
+	docker build . \
+		--build-arg ENVIRONMENT=local \
+		--tag $(REGISTRY):$(LOCAL_VERSION) \
+		--tag $(REGISTRY):$(CACHE_KEY) \
+		--file docker/Dockerfile \
+		--cache-from python:3.13-slim \
+		--cache-from $(REGISTRY):$(LOCAL_VERSION) \
+		--cache-from $(REGISTRY):$(CACHE_KEY)
+
+## Build the Docker images without using the cache.
+local.build: _build
 	docker compose build --no-cache
 
-run:  ## Run web server
-	docker compose up
+## Create and start Docker containers in detached mode, rebuilding images if necessary.
+local.start:
+	docker compose up --build --detach
 
-# ================================
-# ==== APPLICATION COMMANDS ======
-# ================================
-shell:  ## Shell context for an interactive shell for this application
-	docker compose exec app flask shell
+## Stop running Docker containers without removing them.
+local.stop:
+	docker compose stop
 
-# =============================
-# ==== DATABASE COMMANDS ======
-# =============================
-init-db:  ## Create database tables
-	docker compose exec app flask init-db
+## Stop and remove Docker containers, networks, volumes, and orphaned containers.
+local.down:
+	docker compose down --volumes --remove-orphans
 
-migrate:  ## Upgrade to a later database migration
-	docker compose exec app flask migrate
-
-migrate-rollback:  ## Revert to a previous database migration
-	docker compose exec app flask migrate-rollback
-
-seed:  ## Fill database with fake data
-	docker compose exec app flask seed
-
-# ==============================================
-# ==== COVERAGE, LINTER AND TEST COMMANDS ======
-# ==============================================
-coverage: ## Report coverage statistics on modules
-	docker compose exec app coverage report -m
-
-coverage-html: ## Create an HTML report of the coverage of the files
-	docker compose exec app coverage html
-
-linter:  ## Analyzes code and detects various errors
-	docker compose exec app pre-commit run flake8 --all-files
-
-test: ## Run tests
-	docker compose exec app coverage run -m pytest
-
-test-one: ## Run only one test by name
-	docker compose exec app coverage run -m pytest -k '$(test)'
-
-test-path: ## Run only one test by path
-	docker compose exec app coverage run -m pytest '$(path)'
-
-# TODO: this command is not available yet
-# test-parallel:  ## Run tests in parallel
-#	docker compose exec app nosetests -w app --processes=-1
+## View logs from all Docker containers (following logs in real-time).
+local.logs:
+	docker compose logs -f

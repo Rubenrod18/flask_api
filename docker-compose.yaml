@@ -1,53 +1,97 @@
+x-app-common:
+  &app-common
+  image: flask_api:local
+  volumes:
+    - ".:/flask-api-docker-dir"
+  env_file:
+    - .env
+
 services:
   app:
-    build: .
-    links:
-      - celery
-      - flower
-      - rabbitmq
+    << : *app-common
+    container_name: flask_api_app
+    build:
+      context: .
+      dockerfile: ./docker/local/Dockerfile.local
     ports:
       - "5000:5000"
-    volumes:
-      - .:/flask-api-docker-dir:rw
     depends_on:
-      - celery
-      - flower
+      - db
       - rabbitmq
+      - celery
+    networks:
+      - flask_api_network
+    command: 'runserver.sh'
+
+  db:
+    << : *app-common
+    image: mysql:8.4
+    container_name: flask_api_db
+    ports:
+      - "3406:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "--silent"]
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - flask_api_network
 
   celery:
-    build: .
-    command: flask celery --env config.DevConfig
-    env_file:
-      - .env
-    volumes:
-      - .:/flask-api-docker-dir:rw
+    << : *app-common
+    container_name: flask_api_celery
+    command: 'celery.sh'
     depends_on:
       - rabbitmq
     networks:
       - flask_api_network
+    healthcheck:
+      test: ["CMD", "celery", "-A", "app.celery", "status"]  # Replace with the actual command for your app's Celery
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   rabbitmq:
-    image: rabbitmq:4-alpine
-    env_file:
-      - .env
+    image: rabbitmq:4-management
+    container_name: flask_api_rabbitmq
     ports:
-      - "5672:5672"
+      - "15672:15672"  # RabbitMQ management console (optional)
+      - "5672:5672"    # RabbitMQ AMQP protocol port (Celery will use this)
+    command: bash -c "rabbitmq-plugins enable rabbitmq_management && rabbitmq-server"
+    restart: always
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
     networks:
       - flask_api_network
 
   flower:
+    << : *app-common
     image: mher/flower:latest
-    env_file:
-      - .env
+    container_name: flask_api_flower
     depends_on:
       - celery
-      - rabbitmq
     ports:
       - "5555:5555"
     networks:
       - flask_api_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555/health"]
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  mysql_data:
+    driver: local
 
 networks:
   flask_api_network:
