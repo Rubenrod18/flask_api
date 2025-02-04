@@ -1,5 +1,5 @@
 from database import seed_actions
-from database.factories import Factory
+from database.factories.document_factory import DocumentFactory
 
 
 class DocumentSeeder:
@@ -7,4 +7,4 @@ class DocumentSeeder:
 
     @seed_actions
     def __init__(self, rows: int = 30):
-        Factory('Document', rows).save()
+        DocumentFactory.create_batch(rows)

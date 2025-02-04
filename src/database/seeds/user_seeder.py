@@ -4,7 +4,7 @@ from app.extensions import db
 from app.models import Role as RoleModel
 from app.models import User as UserModel
 from database import seed_actions
-from database.factories import Factory
+from database.factories.user_factory import UserFactory
 
 
 class UserSeeder:
@@ -16,21 +16,21 @@ class UserSeeder:
         test_user = db.session.query(UserModel).filter(UserModel.email == test_user_email).first()
 
         if test_user is None:
-            role = db.session.get(RoleModel, 1)
+            role = db.session.query(RoleModel).filter(RoleModel.name == 'admin').first()
 
             params = {
                 'email': test_user_email,
-                'password': os.getenv('TEST_USER_PASSWORD'),
+                'password': UserModel.ensure_password(os.getenv('TEST_USER_PASSWORD')),
                 'deleted_at': None,
                 'active': True,
                 'created_by': None,
                 'roles': [role],
             }
-            Factory('User').save(params)
+            UserFactory.create(**params)
 
     @seed_actions
-    def __init__(self, rows: int = 30):
+    def __init__(self, rows: int = 20):
         # save user with user_datastore and method
         # "create_user" -> look flask_security -> datastore.py
         self._create_admin_user()
-        # Factory('User', rows).save()
+        UserFactory.create_batch(rows)

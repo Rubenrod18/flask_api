@@ -1,4 +1,3 @@
-from app.extensions import db
 from database.seeds.role_seeder import RoleSeeder
 from database.seeds.user_seeder import UserSeeder
 from database.seeds.document_seeder import DocumentSeeder
@@ -17,5 +16,4 @@ def init_seed() -> None:
 
     for seed in seeders:
         seed()
-        db.session.commit()
     print(' Database seeding completed successfully.')

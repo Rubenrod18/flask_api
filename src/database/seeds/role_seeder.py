@@ -1,7 +1,7 @@
 from app.extensions import db
 from app.models.role import Role as RoleModel
 from database import seed_actions
-from database.factories import Factory
+from database.factories.role_factory import RoleFactory
 
 
 class RoleSeeder:
@@ -18,7 +18,7 @@ class RoleSeeder:
                 'label': 'Admin',
                 'deleted_at': None,
             }
-            db.session.add(Factory('Role').save(params))
+            RoleFactory.create(**params)
 
     @staticmethod
     def _create_team_leader() -> None:
@@ -31,7 +31,7 @@ class RoleSeeder:
                 'label': 'Team leader',
                 'deleted_at': None,
             }
-            db.session.add(Factory('Role').save(params))
+            RoleFactory.create(**params)
 
     @staticmethod
     def _create_worker_role() -> None:
@@ -44,11 +44,10 @@ class RoleSeeder:
                 'label': 'Worker',
                 'deleted_at': None,
             }
-            db.session.add(Factory('Role').save(params))
+            RoleFactory.create(**params)
 
     @seed_actions
     def __init__(self):
         self._create_admin_role()
         self._create_team_leader()
         self._create_worker_role()
-        db.session.flush()

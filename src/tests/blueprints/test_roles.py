@@ -4,12 +4,13 @@ from sqlalchemy import func
 
 from app.extensions import db
 from app.models.role import Role as RoleModel
+from database.factories.role_factory import RoleFactory
 from tests.custom_flask_client import CustomFlaskClient
 
 
-def test_save_role_endpoint(client: CustomFlaskClient, auth_header: any, factory: any):
-    ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at', 'name']
-    data = factory('Role').make(exclude=ignore_fields, to_dict=True)
+def test_save_role_endpoint(client: CustomFlaskClient, auth_header: any):
+    ignore_fields = {'id', 'created_at', 'updated_at', 'deleted_at', 'name'}
+    data = RoleFactory.build_dict(exclude=ignore_fields)
 
     response = client.post('/api/roles', json=data, headers=auth_header())
     json_response = response.get_json()
@@ -23,7 +24,7 @@ def test_save_role_endpoint(client: CustomFlaskClient, auth_header: any, factory
     assert json_data.get('deleted_at') is None
 
 
-def test_update_role_endpoint(client: CustomFlaskClient, auth_header: any, factory: any):
+def test_update_role_endpoint(client: CustomFlaskClient, auth_header: any):
     role_id = (
         db.session.query(RoleModel.id)
         .filter(RoleModel.deleted_at.is_(None))
@@ -32,8 +33,8 @@ def test_update_role_endpoint(client: CustomFlaskClient, auth_header: any, facto
         .scalar()
     )
 
-    ignore_fields = ['id', 'created_at', 'updated_at', 'deleted_at', 'name']
-    data = factory('Role').make(exclude=ignore_fields, to_dict=True)
+    ignore_fields = {'id', 'created_at', 'updated_at', 'deleted_at', 'name'}
+    data = RoleFactory.build_dict(exclude=ignore_fields)
 
     response = client.put('/api/roles/%s' % role_id, json=data, headers=auth_header())
 

@@ -6,6 +6,7 @@ faker
 peewee
 sqlalchemy # Required by celery
 mysql-connector-python
+factory-boy
 
 # Distributed Task Queue
 celery
