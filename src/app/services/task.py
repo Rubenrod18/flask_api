@@ -1,4 +1,4 @@
-from celery.local import PromiseProxy
+from celery.result import AsyncResult
 from flask_login import current_user
 from marshmallow import EXCLUDE
 from werkzeug.exceptions import NotFound
@@ -20,7 +20,7 @@ class TaskService(object):
         self.search_serializer = SearchSerializer()
         self.user_word_export_serializer = UserExportWordSerializer()
 
-    def find_by_id(self, task_id: str) -> PromiseProxy:
+    def find_by_id(self, task_id: str) -> AsyncResult:
         def build_task_import(task_path: str) -> tuple:
             """Build a task import path.
 
@@ -62,7 +62,7 @@ class TaskService(object):
         except TypeError:
             raise NotFound('Task not found')
         else:
-            return task
+            return task.AsyncResult(task_id)
 
     def send_create_user_email(self, **kwargs):
         # TODO: Pending to add fields validation
@@ -100,8 +100,7 @@ class TaskService(object):
         )
 
     def check_task_status(self, task_id: str) -> dict:
-        task = self.find_by_id(task_id)
-        task_data = task.AsyncResult(task_id)
+        task_data = self.find_by_id(task_id)
         response = {'state': task_data.state}
 
         if task_data.state == 'PENDING':

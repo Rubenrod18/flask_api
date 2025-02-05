@@ -318,6 +318,9 @@ sqlalchemy==2.0.37
     #   alembic
     #   flask-sqlalchemy
     #   marshmallow-sqlalchemy
+    #   sqlalchemy-utils
+sqlalchemy-utils==0.41.2
+    # via -r requirements-dev.in
 tornado==6.4.2
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt

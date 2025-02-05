@@ -14,7 +14,7 @@ class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         abstract = True
         sqlalchemy_session = db.session
-        sqlalchemy_session_persistence = 'commit'
+        sqlalchemy_session_persistence = 'flush'
 
     @classmethod
     def build_dict(cls, exclude: set = None, **kwargs):
@@ -22,7 +22,7 @@ class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
 
         Args
         ----
-            exclude (list):
+            exclude: set
                 List of field names to exclude.
             kwargs:
                 Additional fields to override.

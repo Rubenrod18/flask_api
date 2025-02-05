@@ -9,7 +9,7 @@ from celery.utils.log import get_task_logger
 from flask import current_app
 
 from app.celery import ContextTask
-from app.extensions import celery
+from app.extensions import celery, db
 from app.models import Document as DocumentModel, User as UserModel
 from app.utils import to_readable
 from app.utils.constants import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
@@ -64,10 +64,10 @@ def _get_user_data(request_data: dict) -> list:
     page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel,
                                                                          request_data)
 
-    query = UserModel.select()
-    query = rqo.create_search_query(UserModel, query, request_data)
-    query = (query.order_by(*order_by)
-             .paginate(page_number, items_per_page))
+    query = db.session.query(UserModel).limit(5)
+    # TODO: pending to refactor
+    # query = rqo.create_search_query(UserModel, query, request_data)
+    # query = query.order_by(*order_by).paginate(page_number, items_per_page)
 
     user_serializer = UserSerializer(many=True)
     user_list = user_serializer.dump(list(query))
@@ -130,7 +130,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
     filepath = '%s/%s' % (directory_path, internal_filename)
 
     try:
-        file_prefix = datetime.now(UTC).strftime('%Y%m%d')
+        file_prefix = datetime.now(UTC).strftime('%Y%m%d_%H%M%S')
         basename = f'{file_prefix}_users'
         filename = f'{basename}{file_extension}'
 
@@ -146,7 +146,9 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
             'size': FileStorage.get_filesize(filepath),
         }
 
-        document = DocumentModel.create(**data)
+        document = DocumentModel(**data)
+        db.session.add(document)
+        db.session.flush()
     except Exception as e:
         if os.path.exists(filepath):
             os.remove(filepath)

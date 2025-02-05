@@ -1,5 +1,7 @@
 -r requirements.txt
 
+sqlalchemy-utils
+
 # Documentation
 m2r2
 sphinx

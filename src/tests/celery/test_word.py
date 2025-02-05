@@ -1,14 +1,19 @@
 """Module for testing word module."""
 from urllib.parse import urlparse
 
-from flask import Flask
-
 from app.celery.word.tasks import export_user_data_in_word_task
-from app.models.user import User as UserModel
+from app.extensions import db
 from app.utils.constants import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
+from database.factories.role_factory import RoleFactory
+from database.factories.user_factory import UserFactory
+from tests.base.base_test import TestBase
 
 
-def test_export_word_task(app: Flask):
+class TestWordTask(TestBase):
+    def setUp(self):
+        super(TestWordTask, self).setUp()
+
+    @staticmethod
     def run_task(created_by: int, request_data: dict, to_pdf: int = 0):
         result = export_user_data_in_word_task(created_by, request_data, to_pdf)
 
@@ -28,18 +33,46 @@ def test_export_word_task(app: Flask):
         assert document_data.get('created_at') == document_data.get('updated_at')
         assert document_data.get('deleted_at') is None
 
-    user = UserModel.get(UserModel.email == app.config.get('TEST_USER_EMAIL'))
+    def test_export_word_task(self):
+        role = RoleFactory()
+        user = UserFactory(roles=[role])
 
-    request_data = {
-        'search': [],
-        'order': [
-            {'field_name': 'name', 'sorting': 'asc'},
-        ],
-        'items_per_page': 100,
-        'page_number': 1,
-    }
+        request_data = {
+            'search': [],
+            'order': [
+                {'field_name': 'name', 'sorting': 'asc'},
+            ],
+            'items_per_page': 100,
+            'page_number': 1,
+        }
 
-    run_task(user.id, request_data)
-    run_task(**{'created_by': user.id, 'request_data': request_data,
-                'to_pdf': 1})
-    run_task(created_by=user.id, request_data=request_data, to_pdf=0)
+        self.run_task(user.id, request_data)
+
+    def test_export_word_task_1(self):
+        role = RoleFactory()
+        user = UserFactory(roles=[role])
+
+        request_data = {
+            'search': [],
+            'order': [
+                {'field_name': 'name', 'sorting': 'asc'},
+            ],
+            'items_per_page': 100,
+            'page_number': 1,
+        }
+
+        self.run_task(**{'created_by': user.id, 'request_data': request_data, 'to_pdf': 1})
+
+    def test_export_word_task_2(self):
+        role = RoleFactory()
+        user = UserFactory(roles=[role])
+
+        request_data = {
+            'search': [],
+            'order': [
+                {'field_name': 'name', 'sorting': 'asc'},
+            ],
+            'items_per_page': 100,
+            'page_number': 1,
+        }
+        self.run_task(created_by=user.id, request_data=request_data, to_pdf=0)

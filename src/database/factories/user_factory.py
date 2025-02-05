@@ -13,6 +13,7 @@ from app.models import User as UserModel, Role as RoleModel
 from app.models.user import Genre
 
 from database.factories.base_factory import BaseFactory, faker
+from database.factories.role_factory import AdminRoleFactory
 
 UserList = List[UserModel]
 _user_manager = UserManager()
@@ -27,7 +28,7 @@ class UserFactory(BaseFactory):
     last_name = factory.Faker('last_name')
     email = factory.Faker('email')
     genre = factory.Iterator(Genre.to_list())
-    birth_date = faker.date_time_between(start_date='-30y', end_date='-5y').strftime('%Y-%m-%d')
+    birth_date = faker.date_time_between(start_date='-30y', end_date='-5y')
     active = factory.Faker('boolean')
 
     @factory.lazy_attribute
@@ -71,3 +72,9 @@ class UserFactory(BaseFactory):
         else:
             updated_at = self.created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
         return updated_at
+
+
+class AdminUserFactory(UserFactory):
+    @factory.lazy_attribute
+    def roles(self):
+        return [AdminRoleFactory()]
