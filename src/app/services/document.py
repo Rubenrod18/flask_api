@@ -95,8 +95,7 @@ class DocumentService(BaseService):
 
     def get_document_content(self, document_id: int, **kwargs):
         self.serializer.load({'id': document_id}, partial=True)
-        request_args = DocumentAttachmentSerializer().load(kwargs,
-                                                           unknown=EXCLUDE)
+        request_args = DocumentAttachmentSerializer().load(kwargs, unknown=EXCLUDE)
 
         as_attachment = request_args.get('as_attachment', 0)
         document = self.manager.find(document_id)
@@ -104,8 +103,7 @@ class DocumentService(BaseService):
         mime_type = document.mime_type
         file_extension = mimetypes.guess_extension(mime_type)
 
-        attachment_filename = document.name if document.name.find(
-            file_extension) else f'{document.name}{file_extension}'
+        attachment_filename = document.name if document.name.find(file_extension) else f'{document.name}{file_extension}'
 
         kwargs = {
             'path_or_file': document.get_filepath(),

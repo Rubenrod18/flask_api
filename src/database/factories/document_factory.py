@@ -33,8 +33,7 @@ class DocumentFactory(BaseFactory):
 
     @factory.lazy_attribute
     def mime_type(self):
-        mime_type = fake.random_element([PDF_MIME_TYPE])
-        return mimetypes.guess_extension(mime_type).replace('.', '')
+        return fake.random_element([PDF_MIME_TYPE])
 
     @factory.lazy_attribute
     def created_by_user(self):

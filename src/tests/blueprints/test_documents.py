@@ -1,169 +1,137 @@
 """Module for testing documents blueprint."""
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlparse
 
 from flask import current_app
-from sqlalchemy import func
 
-from app.extensions import db
-from app.models.document import Document as DocumentModel
 from app.utils.file_storage import FileStorage
-from tests.custom_flask_client import CustomFlaskClient
+from database.factories.document_factory import DocumentFactory
+
+from tests.base.base_api_test import TestBaseApi
 
 
-def test_save_document(client: CustomFlaskClient, auth_header: any):
-    pdf_file = '%s/example.pdf' % current_app.config.get('MOCKUP_DIRECTORY')
-    data = {
-        'document': open(pdf_file, 'rb'),
-    }
+class TestDocumentEndpoints(TestBaseApi):
+    def setUp(self):
+        super(TestDocumentEndpoints, self).setUp()
+        self.base_path = f'{self.base_path}/documents'
+        self.document = DocumentFactory(
+            deleted_at=None,
+            internal_filename='example.pdf',
+            directory_path=self.app.config['MOCKUP_DIRECTORY'],
+            created_at=datetime.now(UTC) - timedelta(days=1),
+        )
 
-    headers = auth_header()
-    headers['Content-Type'] = 'multipart/form-data'
+    def test_save_document(self):
+        pdf_file = '%s/example.pdf' % current_app.config.get('MOCKUP_DIRECTORY')
+        data = {
+            'document': open(pdf_file, 'rb'),
+        }
 
-    response = client.post('/api/documents', data=data, headers=headers)
-    json_response = response.get_json()
-    json_data = json_response.get('data')
+        headers = self.build_headers()
+        headers['Content-Type'] = 'multipart/form-data'
 
-    parse_url = urlparse(json_data.get('url'))
+        response = self.client.post(f'{self.base_path}', data=data, headers=headers)
+        json_response = response.get_json()
+        json_data = json_response.get('data')
 
-    assert 201 == response.status_code
-    assert 1 == json_data.get('created_by').get('id')
-    assert pdf_file == json_data.get('name')
-    assert 'application/pdf' == json_data.get('mime_type')
-    assert FileStorage.get_filesize(pdf_file) == json_data.get('size')
-    assert parse_url.scheme and parse_url.netloc
-    assert json_data.get('created_at')
-    assert json_data.get('updated_at') == json_data.get('created_at')
-    assert json_data.get('deleted_at') is None
+        parse_url = urlparse(json_data.get('url'))
 
+        assert 201 == response.status_code
+        assert 1 == json_data.get('created_by').get('id')
+        assert pdf_file == json_data.get('name')
+        assert 'application/pdf' == json_data.get('mime_type')
+        assert FileStorage.get_filesize(pdf_file) == json_data.get('size')
+        assert parse_url.scheme and parse_url.netloc
+        assert json_data.get('created_at')
+        assert json_data.get('updated_at') == json_data.get('created_at')
+        assert json_data.get('deleted_at') is None
 
-def test_update_document(client: CustomFlaskClient, auth_header: any):
-    pdf_file = '%s/example.pdf' % current_app.config.get('MOCKUP_DIRECTORY')
-    document = (
-        db.session.query(DocumentModel)
-        .filter(DocumentModel.deleted_at.is_(None))
-        .order_by(func.random())
-        .limit(1)
-        .one_or_none()
-    )
-    document_id = document.id
+    def test_update_document(self):
+        pdf_file = '%s/example.pdf' % current_app.config.get('MOCKUP_DIRECTORY')
+        data = {'document': open(pdf_file, 'rb')}
 
-    data = {
-        'document': open(pdf_file, 'rb'),
-    }
+        response = self.client.put(
+            f'{self.base_path}/{self.document.id}',
+            headers=self.build_headers(extra_headers={'Content-Type': 'multipart/form-data'}),
+            data=data,
+        )
+        json_response = response.get_json()
+        json_data = json_response.get('data')
 
-    headers = auth_header()
-    headers['Content-Type'] = 'multipart/form-data'
+        parse_url = urlparse(json_data.get('url'))
 
-    response = client.put(f'/api/documents/{document_id}', data=data, headers=headers)
-    json_response = response.get_json()
-    json_data = json_response.get('data')
+        assert 200 == response.status_code
+        assert isinstance(json_data.get('created_by').get('id'), int)
+        assert pdf_file == json_data.get('name')
+        assert self.document.mime_type == json_data.get('mime_type')
+        assert FileStorage.get_filesize(pdf_file) == json_data.get('size')
+        assert parse_url.scheme and parse_url.netloc
+        assert self.document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+        assert json_data.get('updated_at') > json_data.get('created_at')
+        assert json_data.get('deleted_at') is None
 
-    parse_url = urlparse(json_data.get('url'))
+    def test_get_document_data(self):
+        response = self.client.get(f'{self.base_path}/{self.document.id}', json={}, headers=self.build_headers())
+        json_response = response.get_json()
+        json_data = json_response.get('data')
 
-    assert 200 == response.status_code
-    assert isinstance(json_data.get('created_by').get('id'), int)
-    assert pdf_file == json_data.get('name')
-    assert document.mime_type == json_data.get('mime_type')
-    assert FileStorage.get_filesize(pdf_file) == json_data.get('size')
-    assert parse_url.scheme and parse_url.netloc
-    assert document.get_created_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
-    assert json_data.get('updated_at') > json_data.get('created_at')
-    assert json_data.get('deleted_at') is None
+        parse_url = urlparse(json_data.get('url'))
 
+        assert 200 == response.status_code
+        assert self.document.created_by == json_data.get('created_by').get('id')
+        assert self.document.name == json_data.get('name')
+        assert self.document.mime_type == json_data.get('mime_type')
+        assert self.document.size == json_data.get('size')
+        assert parse_url.scheme and parse_url.netloc
+        assert self.document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+        assert self.document.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
+        assert self.document.deleted_at == json_data.get('deleted_at')
 
-def test_get_document_data(client: CustomFlaskClient, auth_header: any):
-    document = (
-        db.session.query(DocumentModel)
-        .filter(DocumentModel.deleted_at.is_(None))
-        .order_by(func.random())
-        .limit(1)
-        .one_or_none()
-    )
-    document_id = document.id
+    def test_get_document_file(self):
+        response = self.client.get(
+            f'{self.base_path}/{self.document.id}',
+            headers=self.build_headers(extra_headers={'Content-Type': 'application/octet-stream'})
+        )
 
-    response = client.get(f'/api/documents/{document_id}', json={}, headers=auth_header())
-    json_response = response.get_json()
-    json_data = json_response.get('data')
+        assert 200 == response.status_code
+        assert isinstance(response.get_data(), bytes)
 
-    parse_url = urlparse(json_data.get('url'))
+    def test_delete_document(self):
+        response = self.client.delete(f'{self.base_path}/{self.document.id}', json={}, headers=self.build_headers())
+        json_response = response.get_json()
+        json_data = json_response.get('data')
 
-    assert 200 == response.status_code
-    assert document.created_by == json_data.get('created_by').get('id')
-    assert document.name == json_data.get('name')
-    assert document.mime_type == json_data.get('mime_type')
-    assert document.size == json_data.get('size')
-    assert parse_url.scheme and parse_url.netloc
-    assert document.get_created_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
-    assert document.get_updated_at().strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
-    assert document.deleted_at == json_data.get('deleted_at')
+        assert 200 == response.status_code
+        assert self.document.id == json_data.get('id')
+        assert json_data.get('deleted_at') is not None
+        assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
+    def test_search_document(self):
+        json_body = {
+            'search': [
+                {
+                    'field_name': 'name',
+                    'field_operator': 'eq',
+                    'field_value': self.document.name,
+                },
+            ],
+            'order': [
+                {
+                    'field_name': 'name',
+                    'sorting': 'desc',
+                },
+            ],
+        }
 
-def test_get_document_file(client: CustomFlaskClient, auth_header: any):
-    document = (
-        db.session.query(DocumentModel)
-        .filter(DocumentModel.deleted_at.is_(None))
-        .order_by(func.random())
-        .limit(1)
-        .one_or_none()
-    )
-    document_id = document.id
+        response = self.client.post(f'{self.base_path}/search', json=json_body, headers=self.build_headers())
+        json_response = response.get_json()
 
-    headers = auth_header()
-    headers['Content-Type'] = 'application/octet-stream'
+        document_data = json_response.get('data')
+        records_total = json_response.get('records_total')
+        records_filtered = json_response.get('records_filtered')
 
-    response = client.get(f'/api/documents/{document_id}', headers=headers)
-
-    assert 200 == response.status_code
-    assert isinstance(response.get_data(), bytes)
-
-
-def test_delete_document(client: CustomFlaskClient, auth_header: any):
-    document_id = (
-        db.session.query(DocumentModel.id)
-        .filter(DocumentModel.deleted_at.is_(None))
-        .order_by(func.random())
-        .limit(1)
-        .scalar()
-    )
-
-    response = client.delete('/api/documents/%s' % document_id, json={}, headers=auth_header())
-    json_response = response.get_json()
-    json_data = json_response.get('data')
-
-    assert 200 == response.status_code
-    assert document_id == json_data.get('id')
-    assert json_data.get('deleted_at') is not None
-    assert json_data.get('deleted_at') >= json_data.get('updated_at')
-
-
-def test_search_document(client: CustomFlaskClient, auth_header: any):
-    document_name = db.session.query(DocumentModel.name).filter(DocumentModel.deleted_at.is_(None)).order_by(func.random()).limit(1).scalar()
-
-    json_body = {
-        'search': [
-            {
-                'field_name': 'name',
-                'field_operator': 'eq',
-                'field_value': document_name,
-            },
-        ],
-        'order': [
-            {
-                'field_name': 'name',
-                'sorting': 'desc',
-            },
-        ],
-    }
-
-    response = client.post('/api/documents/search', json=json_body, headers=auth_header())
-    json_response = response.get_json()
-
-    document_data = json_response.get('data')
-    records_total = json_response.get('records_total')
-    records_filtered = json_response.get('records_filtered')
-
-    assert 200 == response.status_code
-    assert isinstance(document_data, list)
-    assert records_total > 0
-    assert 0 < records_filtered <= records_total
-    assert document_data[0].get('name').find(document_name) != -1
+        assert 200 == response.status_code
+        assert isinstance(document_data, list)
+        assert records_total > 0
+        assert 0 < records_filtered <= records_total
+        assert document_data[0].get('name').find(self.document.name) != -1

@@ -12,7 +12,7 @@ from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
-from app.extensions import celery
+from app.extensions import celery, db
 from app.models import Document as DocumentModel
 from app.models import User as UserModel
 from app.serializers import DocumentSerializer
@@ -88,9 +88,10 @@ def _add_excel_autofilter(worksheet: Worksheet):
 def _get_user_data(request_data: dict) -> list:
     page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel, request_data)
 
-    query = UserModel.select()
-    query = rqo.create_search_query(UserModel, query, request_data)
-    query = query.order_by(*order_by).paginate(page_number, items_per_page)
+    query = db.session.query(UserModel).limit(5)
+    # TODO: pending to refactor
+    # query = rqo.create_search_query(UserModel, query, request_data)
+    # query = query.order_by(*order_by).paginate(page_number, items_per_page)
 
     user_serializer = UserSerializer(many=True)
     user_list = user_serializer.dump(list(query))
@@ -192,8 +193,11 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
             'size': fs.get_filesize(filepath),
         }
 
-        document = DocumentModel.create(**data)
+        document = DocumentModel(**data)
+        db.session.add(document)
+        db.session.flush()
     except Exception:
+        db.session.rollback()
         if os.path.exists(filepath):
             os.remove(filepath)
         raise
