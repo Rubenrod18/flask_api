@@ -8,6 +8,7 @@ import logging
 import os
 
 from dotenv import load_dotenv
+from kombu import Exchange, Queue
 
 load_dotenv()
 
@@ -67,6 +68,11 @@ class Config(metaclass=Meta):
     broker_url = os.getenv('CELERY_BROKER_URL', 'pyamqp://')
     result_backend = os.getenv('CELERY_RESULT_BACKEND', 'rpc://')
     include = ['app.celery.tasks']
+    task_default_queue = 'default'
+    task_queues = (
+        Queue('default', Exchange('default'), routing_key='default'),
+        Queue('fast', Exchange('tasks'), routing_key='fast'),
+    ),
     task_track_started = True
     result_expires = 3600
     worker_log_format = '%(asctime)s - %(levelname)s - %(processName)s - %(message)s'
