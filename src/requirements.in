@@ -5,7 +5,7 @@ python-dotenv
 faker
 peewee
 sqlalchemy # Required by celery
-mysql-connector-python
+mysqlclient
 factory-boy
 
 # Distributed Task Queue

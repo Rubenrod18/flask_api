@@ -41,7 +41,7 @@ RUN apt-get update && apt-get install --assume-yes \
   build-essential gcc \
   libmagic-dev \
   git \
-  default-mysql-client \
+  python3-dev default-libmysqlclient-dev pkg-config \
   && rm -rf /var/lib/apt/lists/*
 
 # -------------------------------------------

@@ -126,7 +126,7 @@ marshmallow==3.26.0
     #   marshmallow-sqlalchemy
 marshmallow-sqlalchemy==1.4.0
     # via -r requirements.in
-mysql-connector-python==9.2.0
+mysqlclient==2.2.7
     # via -r requirements.in
 packaging==24.2
     # via
