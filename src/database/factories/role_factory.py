@@ -1,4 +1,5 @@
 import unicodedata
+import uuid
 
 import factory
 
@@ -11,7 +12,7 @@ class RoleFactory(BaseFactory):
     class Meta:
         model = Role
 
-    name = factory.Sequence(lambda n: f'role_name_{n}')
+    name = factory.Sequence(lambda n: f'role_name_{uuid.uuid4().hex}')
     description = factory.Faker('sentence')
 
     @factory.lazy_attribute
