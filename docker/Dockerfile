@@ -17,7 +17,7 @@ FROM python:3.13-slim
 # - HOMEDIR: Specifies the directory where the application will reside within the container.
 # - PYTHONPATH: Ensures /src is included in Python's module search path, simplifying imports.
 ENV HOMEDIR=/flask-api-docker-dir/ \
-    PYTHONPATH=/src
+    PYTHONPATH="/flask-api-docker-dir:/flask-api-docker-dir/src"
 
 # Accept an argument for the environment (e.g., "prod" or "local").
 ARG ENVIRONMENT
