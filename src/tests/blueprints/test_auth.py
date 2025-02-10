@@ -2,7 +2,7 @@
 import os
 from unittest import mock
 
-from flask_login import current_user
+import flask_security
 
 from database.factories.role_factory import RoleFactory
 from database.factories.user_factory import UserFactory
@@ -27,7 +27,7 @@ class TestAuthEndpoints(TestBaseApi):
 
             assert 200 == response.status_code
             assert token
-            assert current_user.is_authenticated
+            assert flask_security.current_user.is_authenticated
 
     def test_invalid_user(self):
         data = {
@@ -68,10 +68,11 @@ class TestAuthEndpoints(TestBaseApi):
         auth_header = self.build_headers()
 
         response = self.client.post(f'{self.base_path}/logout', json={}, headers=auth_header)
+        json_response = response.get_json()
 
         assert 200 == response.status_code
-        # TODO: check if the logout works well
-        assert current_user is None
+        assert not json_response
+        assert flask_security.current_user == None
 
     @mock.patch('app.services.task.TaskService.reset_password_email')
     def test_request_reset_password(self, mock_reset_password_email):

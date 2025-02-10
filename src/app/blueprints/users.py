@@ -1,4 +1,5 @@
 from flask import Blueprint, request, url_for
+from flask_jwt_extended import jwt_required
 from flask_security import roles_accepted
 
 from app.blueprints.base import BaseResource
@@ -8,7 +9,6 @@ from app.services.task import TaskService
 from app.services.user import UserService
 from app.swagger import (user_input_sw_model, user_sw_model,
                          user_search_output_sw_model, search_input_sw_model)
-from app.utils.decorators import token_required
 
 _API_DESCRIPTION = ('Users with role admin or team_leader can manage '
                     'these endpoints.')
@@ -29,7 +29,7 @@ class NewUserResource(UserBaseResource):
              security='auth_token')
     @api.expect(user_input_sw_model)
     @api.marshal_with(user_sw_model, envelope='data', code=201)
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
         user = self.user_service.create(request.get_json())
@@ -44,7 +44,7 @@ class UserResource(UserBaseResource):
                         422: 'Unprocessable Entity'},
              security='auth_token')
     @api.marshal_with(user_sw_model, envelope='data')
-    @token_required
+    @jwt_required()
     @roles_accepted('admin')
     def get(self, user_id: int) -> tuple:
         user = self.user_service.find(user_id)
@@ -55,7 +55,7 @@ class UserResource(UserBaseResource):
              security='auth_token')
     @api.expect(user_input_sw_model)
     @api.marshal_with(user_sw_model, envelope='data')
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader')
     def put(self, user_id: int) -> tuple:
         user = self.user_service.save(user_id, **request.get_json())
@@ -65,7 +65,7 @@ class UserResource(UserBaseResource):
                         403: 'Forbidden', 422: 'Unprocessable Entity'},
              security='auth_token')
     @api.marshal_with(user_sw_model, envelope='data')
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader')
     def delete(self, user_id: int) -> tuple:
         user = self.user_service.delete(user_id)
@@ -79,7 +79,7 @@ class UsersSearchResource(UserBaseResource):
              security='auth_token')
     @api.expect(search_input_sw_model)
     @api.marshal_with(user_search_output_sw_model)
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader')
     def post(self) -> tuple:
         user_data = self.user_service.get(**request.get_json())
@@ -97,7 +97,7 @@ class ExportUsersExcelResource(UserBaseResource):
                         422: 'Unprocessable Entity'},
              security='auth_token')
     @api.expect(search_input_sw_model)
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         task = self.task_service.export_user_data_in_excel(request.get_json())
@@ -113,7 +113,7 @@ class ExportUsersWordResource(UserBaseResource):
                         422: 'Unprocessable Entity'},
              security='auth_token')
     @api.expect(search_input_sw_model)
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()
@@ -130,7 +130,7 @@ class ExportUsersExcelAndWordResource(UserBaseResource):
                         422: 'Unprocessable Entity'},
              security='auth_token')
     @api.expect(search_input_sw_model)
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()

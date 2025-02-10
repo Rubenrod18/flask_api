@@ -25,6 +25,7 @@ flask-restx
 flask-security-too
 flask-sqlalchemy
 flask-migrate
+flask-jwt-extended
 
 marshmallow-sqlalchemy  # Required by flask-sqlalchemy
 

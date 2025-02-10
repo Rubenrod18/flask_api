@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from flask_restx import Api
 from flask_security import Security
 from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager
 
 from app.celery import MyCelery
 from config import Config
@@ -16,6 +17,7 @@ security = Security()
 mail = Mail()
 migrate = Migrate()
 celery = MyCelery()
+jwt = JWTManager()
 
 authorizations = {
     'auth_token': {
@@ -40,6 +42,7 @@ def init_app(app: Flask) -> None:
     mail.init_app(app)
     migrate.init_app(app, db, compare_type=True)
     _init_flask_security_too_app(app)
+    jwt.init_app(app)
 
     @app.teardown_request
     def teardown_request_context(_) -> None:

@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from flask_security import roles_accepted
 from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
 
@@ -9,7 +10,6 @@ from app.services.document import DocumentService
 from app.swagger import (document_sw_model, document_search_output_sw_model,
                          search_input_sw_model)
 from app.utils import get_request_file
-from app.utils.decorators import token_required
 
 _API_DESCRIPTION = ('Users with role admin, team_leader or worker can '
                     'manage these endpoints.')
@@ -36,7 +36,7 @@ class NewDocumentResource(DocumentBaseResource):
              security='auth_token')
     @api.expect(parser)
     @api.marshal_with(document_sw_model, envelope='data', code=201)
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         document = self.doc_service.create(**get_request_file())
@@ -55,7 +55,7 @@ class DocumentResource(DocumentBaseResource):
              security='auth_token')
     @api.expect(_parser)
     @api.marshal_with(document_sw_model, envelope='data')
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def get(self, document_id: int) -> tuple:
         if request.headers.get('Content-Type') == 'application/json':
@@ -72,7 +72,7 @@ class DocumentResource(DocumentBaseResource):
              security='auth_token')
     @api.expect(NewDocumentResource.parser)
     @api.marshal_with(document_sw_model, envelope='data')
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def put(self, document_id: int) -> tuple:
         document = self.doc_service.save(document_id)
@@ -82,7 +82,7 @@ class DocumentResource(DocumentBaseResource):
                         403: 'Forbidden', 404: 'Not Found'},
              security='auth_token')
     @api.marshal_with(document_sw_model, envelope='data')
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def delete(self, document_id: int) -> tuple:
         document = self.doc_service.delete(document_id)
@@ -96,7 +96,7 @@ class SearchDocumentResource(DocumentBaseResource):
              security='auth_token')
     @api.expect(search_input_sw_model)
     @api.marshal_with(document_search_output_sw_model)
-    @token_required
+    @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
         doc_data = self.doc_service.get(**request.get_json())

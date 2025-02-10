@@ -3,6 +3,7 @@
 The extension and custom configurations are defined here.
 
 """
+from datetime import timedelta
 import logging
 import os
 
@@ -11,7 +12,25 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class Config:
+class Meta(type):
+    """Metaclass for updating Config options."""
+    def __new__(cls, name: str, bases: tuple, dict: dict):
+        config = super().__new__(cls, name, bases, dict)
+        cls.new_settings(config)
+        return config
+
+    @classmethod
+    def new_settings(cls, config: type) -> None:
+        new_settings_names = {
+            'SECRET_KEY': 'JWT_SECRET_KEY',
+        }
+
+        for current_name, new_name in new_settings_names.items():
+            if hasattr(config, current_name):
+                setattr(config, new_name, getattr(config, current_name))
+
+
+class Config(metaclass=Meta):
     """Default configuration options."""
     # Flask
     DEVELOPMENT = False
@@ -21,14 +40,15 @@ class Config:
     LOGIN_DISABLED = False
 
     # Flask-Security-Too
-    # generated using: secrets.token_urlsafe()
     SECRET_KEY = os.getenv('SECRET_KEY')
-    # generated using: secrets.SystemRandom().getrandbits(128)
     SECURITY_PASSWORD_SALT = os.getenv('SECURITY_PASSWORD_SALT')
     SECURITY_PASSWORD_HASH = 'pbkdf2_sha512'
-    SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authorization'
-    SECURITY_TOKEN_MAX_AGE = None
     SECURITY_PASSWORD_LENGTH_MIN = 8
+    # Enable JWT-based authentication
+    SECURITY_TOKEN_AUTHENTICATION_HEADER = 'Authorization'
+
+    #  Flask-JWT-Extended
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 
     # Flask SQLAlchemy
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')

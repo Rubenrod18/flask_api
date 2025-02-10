@@ -1,11 +1,11 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from flask_security import roles_required
 
 from app.extensions import api as root_api
 from app.serializers import RoleSerializer
 from app.swagger import (role_input_sw_model, role_sw_model,
                          search_input_sw_model, role_search_output_sw_model)
-from app.utils.decorators import token_required
 from .base import BaseResource
 from ..services.role import RoleService
 
@@ -26,7 +26,7 @@ class NewRoleResource(RoleBaseResource):
              security='auth_token')
     @api.expect(role_input_sw_model)
     @api.marshal_with(role_sw_model, envelope='data', code=201)
-    @token_required
+    @jwt_required()
     @roles_required('admin')
     def post(self) -> tuple:
         role = self.role_service.create(**request.get_json())
@@ -38,7 +38,7 @@ class RoleResource(RoleBaseResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found'},
              security='auth_token')
     @api.marshal_with(role_sw_model, envelope='data')
-    @token_required
+    @jwt_required()
     @roles_required('admin')
     def get(self, role_id: int) -> tuple:
         role = self.role_service.find(role_id)
@@ -49,7 +49,7 @@ class RoleResource(RoleBaseResource):
              security='auth_token')
     @api.expect(role_input_sw_model)
     @api.marshal_with(role_sw_model, envelope='data')
-    @token_required
+    @jwt_required()
     @roles_required('admin')
     def put(self, role_id: int) -> tuple:
         role = self.role_service.save(role_id, **request.get_json())
@@ -59,7 +59,7 @@ class RoleResource(RoleBaseResource):
                         403: 'Forbidden'},
              security='auth_token')
     @api.marshal_with(role_sw_model, envelope='data')
-    @token_required
+    @jwt_required()
     @roles_required('admin')
     def delete(self, role_id: int) -> tuple:
         role = self.role_service.delete(role_id)
@@ -73,7 +73,7 @@ class RolesSearchResource(RoleBaseResource):
              security='auth_token')
     @api.expect(search_input_sw_model)
     @api.marshal_with(role_search_output_sw_model)
-    @token_required
+    @jwt_required()
     @roles_required('admin')
     def post(self) -> tuple:
         role_data = self.role_service.get(**request.get_json())

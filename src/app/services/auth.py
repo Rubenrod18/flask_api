@@ -1,6 +1,8 @@
+from flask_jwt_extended import create_access_token
 import flask_security
 from flask import url_for
 from flask_security.passwordless import generate_login_token
+from werkzeug.exceptions import HTTPException
 
 from app.managers import UserManager
 from app.serializers.auth import AuthUserConfirmResetPasswordSerializer
@@ -21,16 +23,19 @@ class AuthService:
     def login_user(self, **kwargs) -> str:
         data = filter_by_keys(kwargs, auth_login_sw_model.keys())
         user = self.auth_user_login_serializer.load(data)
-
-        token = generate_login_token(user)
-        # TODO: Pending to testing whats happen if add a new field in user model when a user is logged  # noqa
         flask_security.login_user(user)
+        token = create_access_token(identity=str(user.id))
         return token
 
     @staticmethod
     def logout_user():
-        # TODO: check if the user is logged
-        flask_security.logout_user()
+        if flask_security.current_user.is_authenticated:
+            flask_security.logout_user()
+            response = {}
+        else:
+            response = {'message': 'Already logged out'}
+
+        return response
 
     def request_reset_password(self, **kwargs):
         data = filter_by_keys(kwargs, auth_user_reset_password_sw_model.keys())

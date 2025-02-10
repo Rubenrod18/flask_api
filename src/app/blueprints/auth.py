@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
 from flask_restx import Resource
 
 from app.extensions import api as root_api
@@ -6,7 +7,6 @@ from app.services.auth import AuthService
 from app.swagger import (auth_login_sw_model, auth_token_sw_model,
                          auth_user_reset_password_sw_model,
                          auth_user_reset_password_token_sw_model)
-from app.utils.decorators import token_required
 
 blueprint = Blueprint('auth', __name__)
 api = root_api.namespace('auth', description='Authentication endpoints')
@@ -31,10 +31,9 @@ class AuthUserLoginResource(AuthBaseResource):
 class AuthUserLogoutResource(AuthBaseResource):
     @api.doc(responses={200: 'Success', 401: 'Unauthorized'},
              security='auth_token')
-    @token_required
+    @jwt_required()
     def post(self) -> tuple:
-        self.auth_service.logout_user()
-        return {}, 200
+        return self.auth_service.logout_user(), 200
 
 
 @api.route('/reset_password')
