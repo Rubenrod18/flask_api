@@ -11,9 +11,10 @@ from app.extensions import db
 from app.managers import UserManager
 from app.models import User as UserModel, Role as RoleModel
 from app.models.user import Genre
+from app.serializers import UserSerializer
 
 from database.factories.base_factory import BaseFactory, faker
-from database.factories.role_factory import AdminRoleFactory
+from database.factories.role_factory import AdminRoleFactory, RoleFactory
 
 UserList = List[UserModel]
 _user_manager = UserManager()
@@ -30,6 +31,12 @@ class UserFactory(BaseFactory):
     genre = factory.Iterator(Genre.to_list())
     birth_date = faker.date_time_between(start_date='-30y', end_date='-5y')
     active = factory.Faker('boolean')
+
+    @classmethod
+    def build_dict(cls, exclude: set = None, **kwargs):
+        data = super().build_dict(exclude=exclude, **kwargs)
+        user_serializer = UserSerializer()
+        return user_serializer.dump(data)
 
     @factory.lazy_attribute
     def password(self):
@@ -49,13 +56,7 @@ class UserFactory(BaseFactory):
 
     @factory.lazy_attribute
     def roles(self):
-        return [
-            db.session.query(RoleModel)
-            .filter(RoleModel.deleted_at.is_(None))
-            .order_by(func.random())
-            .limit(1)
-            .first()
-        ]
+        return [RoleFactory()]
 
     @factory.lazy_attribute
     def created_at(self):

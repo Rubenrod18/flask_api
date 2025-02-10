@@ -2,7 +2,6 @@
 from urllib.parse import urlparse
 
 from app.celery.word.tasks import export_user_data_in_word_task
-from app.extensions import db
 from app.utils.constants import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
 from database.factories.role_factory import RoleFactory
 from database.factories.user_factory import UserFactory
@@ -15,7 +14,7 @@ class TestWordTask(TestBase):
 
     @staticmethod
     def run_task(created_by: int, request_data: dict, to_pdf: int = 0):
-        result = export_user_data_in_word_task(created_by, request_data, to_pdf)
+        result = export_user_data_in_word_task.apply(args=(created_by, request_data, to_pdf)).get()
 
         document_data = result.get('result')
         parse_url = urlparse(document_data.get('url'))

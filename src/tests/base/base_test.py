@@ -88,8 +88,8 @@ class TestBase(unittest.TestCase):
 
     def tearDown(self) -> None:
         with self.app.app_context():
-            db.session.rollback()
             db.session.close()
+            db.drop_all()
 
     @property
     def plain_engine_url(self):

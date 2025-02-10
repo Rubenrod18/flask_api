@@ -19,7 +19,7 @@ class TestCeleryTasks(TestBase):
     def test_create_user_email_task(self):
         ignore_fields = {'role', 'created_by'}
         data = UserFactory.build_dict(exclude=ignore_fields)
-        assert create_user_email_task(data) is True
+        assert create_user_email_task.apply(args=(data,)).get() is True
 
     def test_reset_password_email_task(self):
         role = RoleFactory()
@@ -30,7 +30,7 @@ class TestCeleryTasks(TestBase):
             reset_password_url = url_for('auth_reset_password_resource', token=token,
                                          _external=True)
         email_data = {'email': user.email, 'reset_password_url': reset_password_url}
-        assert reset_password_email_task(email_data) is True
+        assert reset_password_email_task.apply(args=(email_data,)).get() is True
 
     def test_send_email_with_attachments_task(self):
         document = DocumentFactory(
@@ -55,7 +55,7 @@ class TestCeleryTasks(TestBase):
             }
         ]
 
-        assert send_email_with_attachments_task(args) is True
+        assert send_email_with_attachments_task.apply(args=(args,)).get() is True
 
     # TODO: pending to add Redis as CELERY_RESULT_BACKEND config value
     def xtest_create_word_and_excel_documents(self):
