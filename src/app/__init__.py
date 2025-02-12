@@ -14,6 +14,7 @@ from flask import Flask
 from app import exceptions
 from app import extensions
 from app.blueprints import BLUEPRINTS
+from app.cli import cli_register
 from app.middleware import Middleware
 
 
@@ -90,6 +91,7 @@ def create_app(env_config: str) -> Flask:
     app.wsgi_app = Middleware(app)
 
     _init_logging(app)
+    cli_register.init_app(app)
     extensions.init_app(app)
     _register_blueprints(app)
     exceptions.init_app(app)

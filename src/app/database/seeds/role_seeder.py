@@ -4,8 +4,9 @@ from app.database import seed_actions
 from app.database.factories.role_factory import RoleFactory
 
 
-class RoleSeeder:
+class Seeder:
     name = 'RoleSeeder'
+    priority = 0
 
     @staticmethod
     def _create_admin_role() -> None:

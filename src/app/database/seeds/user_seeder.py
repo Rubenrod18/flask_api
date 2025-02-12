@@ -7,8 +7,9 @@ from app.database import seed_actions
 from app.database.factories.user_factory import UserFactory
 
 
-class UserSeeder:
+class Seeder:
     name = 'UserSeeder'
+    priority = 1
 
     @staticmethod
     def _create_admin_user():

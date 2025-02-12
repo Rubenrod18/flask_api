@@ -105,6 +105,7 @@ class Config(metaclass=Meta):
 
     ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
     STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
+    MOCKUP_DIRECTORY = f'{ROOT_DIRECTORY}/storage/mockups'
     LOG_DIRECTORY = '%s/log' % ROOT_DIRECTORY
 
     RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
@@ -148,5 +149,4 @@ class TestConfig(Config):
     result_backend = os.getenv('TEST_CELERY_RESULT_BACKEND')
 
     # Mr Developer
-    MOCKUP_DIRECTORY = f'{Config.ROOT_DIRECTORY}/storage/mockups'
     STORAGE_DIRECTORY = f'{Config.STORAGE_DIRECTORY}/tests'
