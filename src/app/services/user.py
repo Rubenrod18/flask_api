@@ -2,14 +2,13 @@ from flask_login import current_user
 from marshmallow import EXCLUDE
 
 from app.extensions import db
-from app.managers import UserManager, RoleManager
+from app.managers import RoleManager, UserManager
 from app.models import user_datastore
 from app.serializers import UserSerializer
 from app.services.base import BaseService
 
 
 class UserService(BaseService):
-
     def __init__(self, *args, **kwargs):
         super(UserService, self).__init__(*args, **kwargs)
         self.manager = UserManager()
@@ -24,9 +23,7 @@ class UserService(BaseService):
         user = self.manager.get_last_record()
         fs_uniquifier = 1 if user is None else user.id + 1
 
-        deserialized_data.update({'created_by': current_user.id,
-                                  'roles': [role],
-                                  'fs_uniquifier': fs_uniquifier})
+        deserialized_data.update({'created_by': current_user.id, 'roles': [role], 'fs_uniquifier': fs_uniquifier})
         user = user_datastore.create_user(**deserialized_data)
 
         # TODO: Temporal code until I migrate the factories and seeders to SQLALchemy.

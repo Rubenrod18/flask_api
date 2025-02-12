@@ -5,6 +5,7 @@ References
 flask-restx: https://flask-restx.readthedocs.io/en/latest/errors.html
 
 """
+
 import traceback
 
 from flask import current_app, Flask

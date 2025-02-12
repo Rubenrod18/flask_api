@@ -24,6 +24,7 @@ How to run a command::
     flask init-db
 
 """
+
 import os
 
 from dotenv import load_dotenv

@@ -1,4 +1,5 @@
 """Registers Flask blueprints."""
+
 import os
 
 from app.utils import get_attr_from_module
@@ -6,6 +7,7 @@ from app.utils import get_attr_from_module
 
 def get_blueprints() -> list:
     """Get Blueprints via dynamic way."""
+
     def get_bp_modules() -> list:
         """Get Blueprints modules."""
         abs_path = os.path.abspath(__file__)

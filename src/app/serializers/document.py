@@ -2,8 +2,8 @@ import logging
 
 import magic
 from flask import url_for
-from marshmallow import fields, validate, pre_load, post_dump, validates
-from werkzeug.exceptions import UnprocessableEntity, NotFound
+from marshmallow import fields, post_dump, pre_load, validate, validates
+from werkzeug.exceptions import NotFound, UnprocessableEntity
 
 from app.extensions import ma
 from app.managers import DocumentManager
@@ -54,10 +54,10 @@ class DocumentSerializer(ma.SQLAlchemySchema):
 
     @staticmethod
     def valid_request_file(data):
-        is_valid_mime_type = (data.get('mime_type') in Config.ALLOWED_MIME_TYPES)
+        is_valid_mime_type = data.get('mime_type') in Config.ALLOWED_MIME_TYPES
 
         file_content_type = magic.from_buffer(data.get('file_data'), mime=True)
-        is_valid_file_content_type = (file_content_type in Config.ALLOWED_MIME_TYPES)
+        is_valid_file_content_type = file_content_type in Config.ALLOWED_MIME_TYPES
 
         if not is_valid_mime_type or not is_valid_file_content_type:
             raise UnprocessableEntity('mime_type not valid')

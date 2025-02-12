@@ -1,7 +1,7 @@
 import mimetypes
 import os
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 from tempfile import NamedTemporaryFile
 
 import magic
@@ -13,13 +13,9 @@ from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
 from app.extensions import celery, db
-from app.models import Document as DocumentModel
-from app.models import User as UserModel
-from app.serializers import DocumentSerializer
-from app.serializers import UserSerializer
-from app.utils import find_longest_word
-from app.utils import pos_to_char
-from app.utils import to_readable
+from app.models import Document as DocumentModel, User as UserModel
+from app.serializers import DocumentSerializer, UserSerializer
+from app.utils import find_longest_word, pos_to_char, to_readable
 from app.utils.file_storage import FileStorage
 from app.utils.request_query_operator import RequestQueryOperator as rqo
 
@@ -47,13 +43,9 @@ def _parse_user_data(users: list):
         }
         del user['roles']
 
-        user_dict.update(
-            {k: to_readable(v) for (k, v) in user.items() if k in _COLUMN_DISPLAY_ORDER}
-        )
+        user_dict.update({k: to_readable(v) for (k, v) in user.items() if k in _COLUMN_DISPLAY_ORDER})
 
-        user_dict = dict(
-            sorted(user_dict.items(), key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0]))
-        )
+        user_dict = dict(sorted(user_dict.items(), key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0])))
         excel_rows.append(user_dict)
 
     return excel_rows

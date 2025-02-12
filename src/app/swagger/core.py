@@ -57,12 +57,8 @@ _search_search_input_sw_model = api.model(
     'SearchSearch',
     {
         'field_name': fields.String(required=True, example='name'),
-        'field_operator': fields.String(
-            required=True, description=_field_operator_description, example='contains'
-        ),
-        'field_value': fields.String(
-            required=True, description='Could be string or integer.', example='n'
-        ),
+        'field_operator': fields.String(required=True, description=_field_operator_description, example='contains'),
+        'field_value': fields.String(required=True, description='Could be string or integer.', example='n'),
     },
 )
 
@@ -74,7 +70,7 @@ _order_input_sw_model = api.model(
     },
 )
 
-_order_description = 'First value is the field name, second value is the ' 'sort ( asc or desc ).'
+_order_description = 'First value is the field name, second value is the sort ( asc or desc ).'
 
 search_input_sw_model = api.model(
     'SearchInput',

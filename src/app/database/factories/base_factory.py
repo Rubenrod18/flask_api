@@ -4,7 +4,6 @@ from faker.providers import date_time, person
 
 from app.extensions import db
 
-
 faker = Faker()
 faker.add_provider(person)
 faker.add_provider(date_time)
@@ -35,7 +34,5 @@ class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
         exclude_fields = set(exclude or [])
         instance = cls.build(**kwargs)
         return {
-            field: getattr(instance, field)
-            for field in cls._meta.declarations.keys()
-            if field not in exclude_fields
+            field: getattr(instance, field) for field in cls._meta.declarations.keys() if field not in exclude_fields
         }

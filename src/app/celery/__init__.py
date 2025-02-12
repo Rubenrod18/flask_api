@@ -1,6 +1,6 @@
 """Runs Celery and registers Celery tasks."""
-from celery import Celery
-from celery import Task
+
+from celery import Celery, Task
 from celery.utils.log import get_task_logger
 from flask import Flask
 

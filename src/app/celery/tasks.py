@@ -1,14 +1,12 @@
-import logging
-
 from celery import chain, chord
 from celery.utils.log import get_task_logger
 from flask import render_template
 from flask_mail import Message
 
 from app.celery import ContextTask
-from app.celery.word.tasks import export_user_data_in_word_task
 from app.celery.excel.tasks import export_user_data_in_excel_task
-from app.extensions import db, mail, celery
+from app.celery.word.tasks import export_user_data_in_word_task
+from app.extensions import celery, db, mail
 from app.managers import DocumentManager
 
 logger = get_task_logger(__name__)
@@ -66,8 +64,7 @@ def send_email_with_attachments_task(task_data: list) -> bool:
     for item in task_data:
         document = document_manager.find(item.get('result')['id'])
         with open(document.get_filepath(), 'rb') as fp:
-            msg.attach(document.name, document.mime_type,
-                       fp.read())
+            msg.attach(document.name, document.mime_type, fp.read())
 
     mail.send(msg)
     return True

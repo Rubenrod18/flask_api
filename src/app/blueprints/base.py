@@ -1,5 +1,5 @@
-from flask_restx import Resource
 from flask import Blueprint
+from flask_restx import Resource
 
 from ..extensions import api as root_api
 

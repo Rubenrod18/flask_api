@@ -3,9 +3,10 @@
 The extension and custom configurations are defined here.
 
 """
-from datetime import timedelta
+
 import logging
 import os
+from datetime import timedelta
 
 from dotenv import load_dotenv
 from kombu import Exchange, Queue
@@ -15,6 +16,7 @@ load_dotenv()
 
 class Meta(type):
     """Metaclass for updating Config options."""
+
     def __new__(cls, name: str, bases: tuple, dict: dict):
         config = super().__new__(cls, name, bases, dict)
         cls.new_settings(config)
@@ -33,6 +35,7 @@ class Meta(type):
 
 class Config(metaclass=Meta):
     """Default configuration options."""
+
     # Flask
     DEVELOPMENT = False
     DEBUG = False
@@ -87,9 +90,7 @@ class Config(metaclass=Meta):
 
     # Flask Swagger UI
     SWAGGER_URL = os.getenv('SWAGGER_URL', '/docs')
-    SWAGGER_API_URL = os.getenv(
-        'SWAGGER_API_URL', f'http://{SERVER_NAME}/static/swagger.yaml'
-    )
+    SWAGGER_API_URL = os.getenv('SWAGGER_API_URL', f'http://{SERVER_NAME}/static/swagger.yaml')
 
     # Flask Restx
     RESTX_ERROR_404_HELP = False
@@ -123,11 +124,13 @@ class Config(metaclass=Meta):
 
 class ProdConfig(Config):
     """Production configuration options."""
+
     pass
 
 
 class DevConfig(Config):
     """Development configuration options."""
+
     # Flask
     DEVELOPMENT = True
     DEBUG = True
@@ -135,6 +138,7 @@ class DevConfig(Config):
 
 class TestConfig(Config):
     """Testing configuration options."""
+
     # Flask
     DEVELOPMENT = True
     DEBUG = True

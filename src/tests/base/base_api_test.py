@@ -1,8 +1,8 @@
 import os
 
+from app.database.factories.user_factory import AdminUserFactory
 from app.extensions import db
 from app.models import User
-from app.database.factories.user_factory import AdminUserFactory
 from tests.base.base_test import TestBase
 
 
@@ -17,7 +17,12 @@ class TestBaseApi(TestBase):
         user = db.session.query(User).filter_by(email=os.getenv('TEST_USER_EMAIL')).first()
 
         if user is None:
-            return AdminUserFactory(active=True, deleted_at=None, email=os.getenv('TEST_USER_EMAIL'), password=os.getenv('TEST_USER_PASSWORD'))
+            return AdminUserFactory(
+                active=True,
+                deleted_at=None,
+                email=os.getenv('TEST_USER_EMAIL'),
+                password=os.getenv('TEST_USER_PASSWORD'),
+            )
 
         return user
 

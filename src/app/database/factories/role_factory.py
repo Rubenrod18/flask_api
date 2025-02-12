@@ -3,9 +3,9 @@ import uuid
 
 import factory
 
+from app.database.factories.base_factory import BaseFactory
 from app.models import Role
 from app.models.role import ROLE_NAME_DELIMITER
-from app.database.factories.base_factory import BaseFactory
 
 
 class RoleFactory(BaseFactory):

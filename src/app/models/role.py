@@ -1,7 +1,7 @@
 import logging
 
-from flask_security import RoleMixin
 import sqlalchemy as sa
+from flask_security import RoleMixin
 
 from .base import Base as BaseModel
 

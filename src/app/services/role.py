@@ -4,7 +4,6 @@ from app.services.base import BaseService
 
 
 class RoleService(BaseService):
-
     def __init__(self):
         super(RoleService, self).__init__()
         self.manager = RoleManager()

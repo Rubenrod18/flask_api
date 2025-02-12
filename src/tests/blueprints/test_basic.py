@@ -1,4 +1,5 @@
 """Module for testing basic blueprint."""
+
 from tests.base.base_api_test import TestBaseApi
 
 

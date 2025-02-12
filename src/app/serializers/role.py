@@ -12,7 +12,6 @@ role_manager = RoleManager()
 
 
 class RoleName(fields.Field):
-
     def _deserialize(self, value, *args, **kwargs):
         if role_manager.model.get_or_none(name=value):
             raise BadRequest('Role name already created')

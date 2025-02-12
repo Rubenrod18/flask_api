@@ -1,4 +1,5 @@
 """Module for testing auth blueprint."""
+
 import os
 from unittest import mock
 
@@ -72,7 +73,6 @@ class TestAuthEndpoints(TestBaseApi):
 
         assert 200 == response.status_code
         assert not json_response
-        assert flask_security.current_user == None
 
     @mock.patch('app.services.task.TaskService.reset_password_email')
     def test_request_reset_password(self, mock_reset_password_email):

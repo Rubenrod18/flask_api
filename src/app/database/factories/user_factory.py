@@ -1,20 +1,19 @@
-from datetime import timedelta
 import os
 import random
+from datetime import timedelta
 from random import randint
 from typing import List
 
 import factory
 from sqlalchemy import func
 
-from app.extensions import db
-from app.managers import UserManager
-from app.models import User as UserModel, Role as RoleModel
-from app.models.user import Genre
-from app.serializers import UserSerializer
-
 from app.database.factories.base_factory import BaseFactory, faker
 from app.database.factories.role_factory import AdminRoleFactory, RoleFactory
+from app.extensions import db
+from app.managers import UserManager
+from app.models import Role as RoleModel, User as UserModel
+from app.models.user import Genre
+from app.serializers import UserSerializer
 
 UserList = List[UserModel]
 _user_manager = UserManager()

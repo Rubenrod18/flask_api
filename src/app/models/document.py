@@ -1,11 +1,11 @@
 import logging
 
+import sqlalchemy as sa
 from flask import url_for
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base as BaseModel
 from app.models.user import User as UserModel
-import sqlalchemy as sa
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,7 @@ class Document(BaseModel):
 
     @property
     def url(self):
-        return url_for('documents_document_resource', document_id=self.id,
-                       _external=True)
+        return url_for('documents_document_resource', document_id=self.id, _external=True)
 
     def get_filepath(self):
         return '%s/%s' % (self.directory_path, self.internal_filename)

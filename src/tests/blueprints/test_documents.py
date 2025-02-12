@@ -1,12 +1,12 @@
 """Module for testing documents blueprint."""
-from datetime import UTC, datetime, timedelta
+
+from datetime import datetime, timedelta, UTC
 from urllib.parse import urlparse
 
 from flask import current_app
 
-from app.utils.file_storage import FileStorage
 from app.database.factories.document_factory import DocumentFactory
-
+from app.utils.file_storage import FileStorage
 from tests.base.base_api_test import TestBaseApi
 
 
@@ -88,7 +88,7 @@ class TestDocumentEndpoints(TestBaseApi):
     def test_get_document_file(self):
         response = self.client.get(
             f'{self.base_path}/{self.document.id}',
-            headers=self.build_headers(extra_headers={'Content-Type': 'application/octet-stream'})
+            headers=self.build_headers(extra_headers={'Content-Type': 'application/octet-stream'}),
         )
 
         assert 200 == response.status_code

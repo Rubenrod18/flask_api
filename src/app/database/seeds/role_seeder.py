@@ -1,7 +1,7 @@
-from app.extensions import db
-from app.models.role import Role as RoleModel
 from app.database import seed_actions
 from app.database.factories.role_factory import RoleFactory
+from app.extensions import db
+from app.models.role import Role as RoleModel
 
 
 class Seeder:

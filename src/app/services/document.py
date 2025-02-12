@@ -10,7 +10,7 @@ from werkzeug.exceptions import InternalServerError
 
 from app.extensions import db
 from app.managers import DocumentManager
-from app.serializers import DocumentSerializer, DocumentAttachmentSerializer
+from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
 from app.services.base import BaseService
 from app.utils import get_request_file
 from app.utils.file_storage import FileStorage
@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 
 class DocumentService(BaseService):
-
     def __init__(self):
         super(DocumentService, self).__init__()
         self.manager = DocumentManager()
@@ -31,9 +30,7 @@ class DocumentService(BaseService):
 
         file_extension = mimetypes.guess_extension(data.get('mime_type'))
         internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
-        filepath = '%s/%s' % (
-            current_app.config.get('STORAGE_DIRECTORY'), internal_filename
-        )
+        filepath = '%s/%s' % (current_app.config.get('STORAGE_DIRECTORY'), internal_filename)
 
         try:
             self.file_storage.save_bytes(data.get('file_data'), filepath)
@@ -103,7 +100,9 @@ class DocumentService(BaseService):
         mime_type = document.mime_type
         file_extension = mimetypes.guess_extension(mime_type)
 
-        attachment_filename = document.name if document.name.find(file_extension) else f'{document.name}{file_extension}'
+        attachment_filename = (
+            document.name if document.name.find(file_extension) else f'{document.name}{file_extension}'
+        )
 
         kwargs = {
             'path_or_file': document.get_filepath(),

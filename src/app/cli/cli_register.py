@@ -52,9 +52,7 @@ def init_app(app: Flask):
     @app.cli.command('celery', help='Run Celery with an environment configuration.')
     @click.option(
         '--env',
-        type=click.Choice(
-            ['config.DevConfig', 'config.TestConfig', 'config.ProdConfig'], case_sensitive=False
-        ),
+        type=click.Choice(['config.DevConfig', 'config.TestConfig', 'config.ProdConfig'], case_sensitive=False),
         default='config.TestConfig',
         show_default=True,
         help='Environment configuration.',

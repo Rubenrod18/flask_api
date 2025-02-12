@@ -19,9 +19,8 @@ Pre-/Post-processor Invocation Order:
 https://marshmallow.readthedocs.io/en/stable/extending.html?highlight=step1#pre-post-processor-invocation-order  # noqa
 
 """
+
 from .core import SearchSerializer
-from .document import DocumentAttachmentSerializer
-from .document import DocumentSerializer
+from .document import DocumentAttachmentSerializer, DocumentSerializer
 from .role import RoleSerializer
-from .user import UserExportWordSerializer
-from .user import UserSerializer
+from .user import UserExportWordSerializer, UserSerializer

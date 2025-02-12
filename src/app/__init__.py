@@ -4,6 +4,7 @@ The app package loads application configuration and registers
 middleware, blueprints, database models, etc.
 
 """
+
 import logging
 import os
 import pprint
@@ -11,8 +12,7 @@ import pprint
 import flask
 from flask import Flask
 
-from app import exceptions
-from app import extensions
+from app import exceptions, extensions
 from app.blueprints import BLUEPRINTS
 from app.cli import cli_register
 from app.middleware import Middleware

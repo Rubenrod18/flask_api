@@ -1,10 +1,10 @@
 import logging
 
-from marshmallow import fields, validate, pre_load, validates
+from marshmallow import fields, pre_load, validate, validates
 from werkzeug.exceptions import BadRequest, NotFound
 
 from app.extensions import ma
-from app.managers import UserManager, RoleManager
+from app.managers import RoleManager, UserManager
 from app.serializers import RoleSerializer
 from app.serializers.core import TimestampField
 from config import Config
@@ -15,7 +15,6 @@ role_manager = RoleManager()
 
 
 class VerifyRoleId(fields.Field):
-
     def _deserialize(self, value, *args, **kwargs):
         role = role_manager.find(value)
         if role is None:
@@ -36,21 +35,14 @@ class UserSerializer(ma.Schema):
     name = fields.Str()
     last_name = fields.Str()
     email = fields.Email(required=True)
-    password = fields.Str(
-        validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN,
-                                 max=50),
-        load_only=True
-    )
+    password = fields.Str(validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50), load_only=True)
     genre = fields.Str(validate=validate.OneOf(['m', 'f']))
     birth_date = fields.Date()
     active = fields.Bool()
     created_at = TimestampField(dump_only=True)
     updated_at = TimestampField(dump_only=True)
     deleted_at = TimestampField(dump_only=True)
-    roles = fields.List(
-        fields.Nested(RoleSerializer, only=('name', 'label')),
-        dump_only=True
-    )
+    roles = fields.List(fields.Nested(RoleSerializer, only=('name', 'label')), dump_only=True)
 
     role_id = VerifyRoleId(load_only=True)
 

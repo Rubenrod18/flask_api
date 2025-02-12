@@ -1,21 +1,21 @@
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 
 from app.extensions import db
 from app.models import Base as BaseModel
-from app.utils.request_query_operator import RequestQueryOperator as rqo
 
 
 class BaseManager(object):
-
     def __init__(self, *args, **kwargs):
         self.model = BaseModel
 
     def create(self, **kwargs):
         current_date = datetime.now(UTC)
-        kwargs.update({
-            'created_at': current_date,
-            'updated_at': current_date,
-        })
+        kwargs.update(
+            {
+                'created_at': current_date,
+                'updated_at': current_date,
+            }
+        )
 
         record = self.model(**kwargs)
         return record
@@ -35,7 +35,7 @@ class BaseManager(object):
         query = db.session.query(self.model).limit(5)
         records_total = db.session.query(self.model).count()
 
-        #query = rqo.create_search_query(self.model, query, kwargs)
+        # query = rqo.create_search_query(self.model, query, kwargs)
         # query = query.order_by(*order).paginate(page, items)
 
         return {

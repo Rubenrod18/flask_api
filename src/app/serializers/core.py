@@ -21,9 +21,7 @@ class TimestampField(fields.Field):
 
 class _SearchValueSerializer(ma.Schema):
     field_name = fields.Str()
-    field_operator = fields.Str(
-        validate=validate.OneOf(set(QUERY_OPERATORS + STRING_QUERY_OPERATORS))
-    )
+    field_operator = fields.Str(validate=validate.OneOf(set(QUERY_OPERATORS + STRING_QUERY_OPERATORS)))
     field_value = fields.Raw()
 
 

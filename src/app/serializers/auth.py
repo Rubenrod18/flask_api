@@ -1,12 +1,8 @@
 import logging
 
 from flask_security import verify_password
-from marshmallow import fields
-from marshmallow import post_load
-from marshmallow import validate
-from marshmallow import validates
-from werkzeug.exceptions import Forbidden
-from werkzeug.exceptions import Unauthorized
+from marshmallow import fields, post_load, validate, validates
+from werkzeug.exceptions import Forbidden, Unauthorized
 
 from app.extensions import ma
 from app.managers import UserManager
@@ -28,8 +24,8 @@ class AuthUserLoginSerializer(ma.Schema):
     @validates('email')
     def validate_email(self, email):
         args = (
-            user_manager.model.active == True,
-            user_manager.model.deleted_at == None,
+            user_manager.model.active.is_(True),
+            user_manager.model.deleted_at.is_(None),
         )
         self.__user = user_manager.find_by_email(email, *args)
 

@@ -4,7 +4,6 @@ from app.serializers import SearchSerializer
 
 
 class BaseService(object):
-
     def __init__(self, *args, **kwargs):
         self.manager = BaseManager()
 
@@ -30,5 +29,5 @@ class BaseService(object):
     @property
     def is_transaction_active(self):
         # TODO: This property is temporal until I migrate the factories and seeders to SQLALchemy.
-        conn = db.session.connection(execution_options={"isolation_level": "AUTOCOMMIT"})
+        conn = db.session.connection(execution_options={'isolation_level': 'AUTOCOMMIT'})
         return conn.get_transaction() is not None

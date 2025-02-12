@@ -1,9 +1,5 @@
-from abc import abstractmethod
-from datetime import UTC, datetime
-
-from sqlalchemy import event, func
 import sqlalchemy as sa
-from sqlalchemy.orm import validates
+from sqlalchemy import func
 
 from app.extensions import db
 
@@ -21,9 +17,7 @@ class Base(db.Model, BaseMixin):
     __abstract__ = True
 
     @classmethod
-    def get_fields(
-        cls, exclude: list = None, include: list = None, sort_order: list = None
-    ) -> set:
+    def get_fields(cls, exclude: list = None, include: list = None, sort_order: list = None) -> set:
         exclude = exclude or []
         include = include or []
         sort_order = sort_order or []

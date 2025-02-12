@@ -1,15 +1,12 @@
-from flask_jwt_extended import create_access_token
 import flask_security
 from flask import url_for
+from flask_jwt_extended import create_access_token
 from flask_security.passwordless import generate_login_token
-from werkzeug.exceptions import HTTPException
 
 from app.managers import UserManager
-from app.serializers.auth import AuthUserConfirmResetPasswordSerializer
-from app.serializers.auth import AuthUserLoginSerializer
+from app.serializers.auth import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
 from app.services.task import TaskService
-from app.swagger import auth_login_sw_model
-from app.swagger import auth_user_reset_password_sw_model
+from app.swagger import auth_login_sw_model, auth_user_reset_password_sw_model
 from app.utils import filter_by_keys
 
 
@@ -55,9 +52,7 @@ class AuthService:
         self.auth_user_confirm_reset_password.load(data, partial=True)
 
     def confirm_request_reset_password(self, token: str, password: str) -> str:
-        data = filter_by_keys(
-            data={'token': token, 'password': password}, keys=['token', 'password']
-        )
+        data = filter_by_keys(data={'token': token, 'password': password}, keys=['token', 'password'])
         user = self.auth_user_confirm_reset_password.load(data)
 
         self.user_manager.save(user.id, **{'password': password})

@@ -1,19 +1,23 @@
 """Module for testing task module."""
-from datetime import UTC, datetime, timedelta
+
+from datetime import datetime, timedelta, UTC
 from unittest.mock import MagicMock, patch
-import uuid
 
 from celery import chain, chord
 from flask import url_for
 
-from app.celery.tasks import (create_user_email_task, create_word_and_excel_documents_task,
-                              reset_password_email_task, send_email_with_attachments_task, )
-from app.extensions import db, mail
+from app.celery.excel.tasks import export_user_data_in_excel_task
+from app.celery.tasks import (
+    create_user_email_task,
+    create_word_and_excel_documents_task,
+    reset_password_email_task,
+    send_email_with_attachments_task,
+)
+from app.celery.word.tasks import export_user_data_in_word_task
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
-from app.celery.word.tasks import export_user_data_in_word_task
-from app.celery.excel.tasks import export_user_data_in_excel_task
+from app.extensions import db, mail
 from tests.base.base_test import TestBase
 
 
@@ -29,8 +33,7 @@ class TestCeleryTasks(TestBase):
 
         with self.app.app_context():
             token = user.get_reset_token()
-            reset_password_url = url_for('auth_reset_password_resource', token=token,
-                                         _external=True)
+            reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
         email_data = {'email': user.email, 'reset_password_url': reset_password_url}
         assert reset_password_email_task.apply(args=(email_data,)).get() is True
 
@@ -49,7 +52,7 @@ class TestCeleryTasks(TestBase):
                     'created_by': {
                         'email': self.app.config.get('TEST_USER_EMAIL'),
                         'name': 'admin',
-                    }
+                    },
                 }
             }
         ]
@@ -71,13 +74,13 @@ class TestCeleryTasks(TestBase):
 
         mock_callback_result = MagicMock()
         mock_callback_result.successful.return_value = True
-        mock_callback_result.result = "Success"
+        mock_callback_result.result = 'Success'
         mock_callback_result.traceback = None
 
         with (
-            patch("app.celery.tasks.chord") as mock_chord,
-            patch.object(db.session, "commit") as mock_commit,
-            patch.object(db.session, "close") as mock_close
+            patch('app.celery.tasks.chord') as mock_chord,
+            patch.object(db.session, 'commit') as mock_commit,
+            patch.object(db.session, 'close') as mock_close,
         ):
             mock_chord.return_value = lambda x: mock_callback_result
 
@@ -106,9 +109,9 @@ class TestCeleryTasks(TestBase):
         mock_callback_result.traceback = None
 
         with (
-            patch("app.celery.tasks.chord") as mock_chord,
-            patch.object(db.session, "rollback") as mock_rollback,
-            patch.object(db.session, "close") as mock_close,
+            patch('app.celery.tasks.chord') as mock_chord,
+            patch.object(db.session, 'rollback') as mock_rollback,
+            patch.object(db.session, 'close') as mock_close,
         ):
             mock_chord.return_value = lambda x: mock_callback_result
 
@@ -133,7 +136,7 @@ class TestCeleryTasks(TestBase):
 
         mock_callback_result = MagicMock()
         mock_callback_result.successful.return_value = True
-        mock_callback_result.result = "Success"
+        mock_callback_result.result = 'Success'
         mock_callback_result.traceback = None
 
         with (
@@ -163,9 +166,9 @@ class TestCeleryTasks(TestBase):
         kwargs = {'created_by': user.id, 'request_data': request_data, 'to_pdf': 1}
 
         with (
-            #patch.object(export_user_data_in_word_task, 'apply_async') as mock_word_task,
-            #patch.object(export_user_data_in_excel_task, 'apply_async') as mock_excel_task,
-            #patch.object(send_email_with_attachments_task, 'apply_async') as mock_callback,
+            # patch.object(export_user_data_in_word_task, 'apply_async') as mock_word_task,
+            # patch.object(export_user_data_in_excel_task, 'apply_async') as mock_excel_task,
+            # patch.object(send_email_with_attachments_task, 'apply_async') as mock_callback,
             mail.record_messages() as outbox
         ):
             # mock_callback.return_value.get.return_value = {'status': 'SUCCESS'}
@@ -190,7 +193,7 @@ class TestCeleryTasks(TestBase):
             # print(f"Callback status: {mock_callback.called}")
             # print(f"Callback call arguments: {mock_callback.call_args}")
 
-            print(f"Task results: {task_results}")
+            # print(f'Task results: {task_results}')
 
             assert len(outbox) == 1
             # mock_callback.assert_called_once()

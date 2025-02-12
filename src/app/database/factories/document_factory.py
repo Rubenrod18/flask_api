@@ -1,17 +1,16 @@
+import shutil
 import uuid
 
 import factory
 from flask import current_app
 from sqlalchemy import func
 
+from app.database import fake
+from app.database.factories.base_factory import BaseFactory
 from app.extensions import db
 from app.managers import UserManager
 from app.models import Document as DocumentModel, User as UserModel
 from app.utils.constants import PDF_MIME_TYPE
-from app.database import fake
-from app.database.factories.base_factory import BaseFactory
-import shutil
-
 
 _user_manager = UserManager()
 
@@ -31,8 +30,8 @@ class DocumentFactory(BaseFactory):
     def internal_filename(self):
         filename = f'{uuid.uuid1().hex}.pdf'
         shutil.copy(
-            src=f'{current_app.config.get('MOCKUP_DIRECTORY')}/example.pdf',
-            dst=f'{current_app.config.get('STORAGE_DIRECTORY')}/{filename}'
+            src=f'{current_app.config.get("MOCKUP_DIRECTORY")}/example.pdf',
+            dst=f'{current_app.config.get("STORAGE_DIRECTORY")}/{filename}',
         )
         return filename
 
@@ -43,9 +42,5 @@ class DocumentFactory(BaseFactory):
     @factory.lazy_attribute
     def created_by_user(self):
         return (
-            db.session.query(UserModel)
-            .filter(UserModel.deleted_at.is_(None))
-            .order_by(func.random())
-            .limit(1)
-            .first()
+            db.session.query(UserModel).filter(UserModel.deleted_at.is_(None)).order_by(func.random()).limit(1).first()
         )

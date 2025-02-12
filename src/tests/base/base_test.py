@@ -112,9 +112,8 @@ class TestBase(unittest.TestCase):
         return app.test_client()
 
     def __create_database(self):
-        database_uri = os.getenv("TEST_SQLALCHEMY_DATABASE_URI")
+        database_uri = os.getenv('TEST_SQLALCHEMY_DATABASE_URI')
         self.__engine = create_engine(database_uri)
         if not database_exists(self.plain_engine_url):
             create_database(self.plain_engine_url)
         assert database_exists(self.plain_engine_url)
-

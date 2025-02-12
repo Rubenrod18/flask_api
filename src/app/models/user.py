@@ -2,17 +2,15 @@ import enum
 import logging
 import uuid
 
-from flask import current_app
-from flask_security import SQLAlchemyUserDatastore, hash_password
-from flask_security import UserMixin
-from itsdangerous import TimestampSigner
-from itsdangerous import URLSafeSerializer
 import sqlalchemy as sa
+from flask import current_app
+from flask_security import hash_password, SQLAlchemyUserDatastore, UserMixin
+from itsdangerous import TimestampSigner, URLSafeSerializer
 from sqlalchemy.orm import backref, relationship
 
+from ..extensions import db
 from .base import Base as BaseModel
 from .role import Role
-from ..extensions import db
 
 logger = logging.getLogger(__name__)
 

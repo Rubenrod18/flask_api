@@ -8,22 +8,15 @@ Query operators
 http://docs.peewee-orm.com/en/latest/peewee/query_operators.html
 
 """
+
 import operator
 from functools import reduce
 from typing import Type
 
 import peewee
-from peewee import CharField
-from peewee import Field
-from peewee import FixedCharField
-from peewee import Model
-from peewee import ModelSelect
-from peewee import TextField
-from peewee import UUIDField
+from peewee import CharField, Field, FixedCharField, Model, ModelSelect, TextField, UUIDField
 
-from app.utils.constants import QUERY_OPERATORS
-from app.utils.constants import REQUEST_QUERY_DELIMITER
-from app.utils.constants import STRING_QUERY_OPERATORS
+from app.utils.constants import QUERY_OPERATORS, REQUEST_QUERY_DELIMITER, STRING_QUERY_OPERATORS
 
 
 class Helper:
@@ -62,10 +55,7 @@ class Helper:
         request_order = request_data.get('order', [{'field_name': 'id', 'sorting': 'asc'}])
 
         if isinstance(request_order, list):
-            order_by_values = [
-                build_ordering(item.get('field_name'), item.get('sorting'))
-                for item in request_order
-            ]
+            order_by_values = [build_ordering(item.get('field_name'), item.get('sorting')) for item in request_order]
         return order_by_values
 
     def build_string_clause(self, field: Field, field_operator: str, field_value) -> tuple:
@@ -161,9 +151,7 @@ class Helper:
 
 class RequestQueryOperator:
     @staticmethod
-    def create_search_query(
-        db_model: Type[Model], query: ModelSelect, data: dict = None
-    ) -> ModelSelect:
+    def create_search_query(db_model: Type[Model], query: ModelSelect, data: dict = None) -> ModelSelect:
         if data is None:
             data = {}
 
@@ -178,9 +166,7 @@ class RequestQueryOperator:
             if isinstance(field_value, str) and not field_value.strip():
                 continue
 
-            sql_expression = helper.build_sql_expression(
-                field, filter['field_operator'], field_value
-            )
+            sql_expression = helper.build_sql_expression(field, filter['field_operator'], field_value)
             sql_expressions.append(sql_expression)
 
         if sql_expressions:

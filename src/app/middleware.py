@@ -1,7 +1,6 @@
 """WSGI middleware for validating requests content type."""
-from flask import Flask
-from flask import Request
-from flask import Response
+
+from flask import Flask, Request, Response
 
 
 class Middleware:
@@ -43,9 +42,7 @@ class Middleware:
         if content_type is None:
             parsed_content_type = ''
         else:
-            parsed_content_type = (
-                content_type.split(';')[0] if content_type.find(';') else content_type
-            )
+            parsed_content_type = content_type.split(';')[0] if content_type.find(';') else content_type
 
         return parsed_content_type
 

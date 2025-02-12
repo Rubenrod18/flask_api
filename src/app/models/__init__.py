@@ -8,6 +8,7 @@ could be available.
 https://github.com/Flask-Middleware/flask-security/issues/395
 
 """
+
 import logging
 import os.path
 from pydoc import locate

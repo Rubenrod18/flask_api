@@ -1,7 +1,7 @@
 import mimetypes
 import os
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 from tempfile import NamedTemporaryFile
 
 import docx
@@ -11,17 +11,16 @@ from flask import current_app
 from app.celery import ContextTask
 from app.extensions import celery, db
 from app.models import Document as DocumentModel, User as UserModel
+from app.serializers import DocumentSerializer, UserSerializer
 from app.utils import to_readable
-from app.utils.constants import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
+from app.utils.constants import MS_WORD_MIME_TYPE, PDF_MIME_TYPE
 from app.utils.file_storage import FileStorage
 from app.utils.libreoffice import convert_to
 from app.utils.request_query_operator import RequestQueryOperator as rqo
-from app.serializers import DocumentSerializer, UserSerializer
 
 logger = get_task_logger(__name__)
 
-_COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role',
-                         'created_at', 'updated_at', 'deleted_at']
+_COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role', 'created_at', 'updated_at', 'deleted_at']
 
 
 def _add_table_user_data(users_query: list, rows: list) -> None:
@@ -33,16 +32,9 @@ def _add_table_user_data(users_query: list, rows: list) -> None:
         }
         del user['roles']
 
-        user_dict.update({
-            k: to_readable(v)
-            for (k, v) in user.items()
-            if k in _COLUMN_DISPLAY_ORDER
-        })
+        user_dict.update({k: to_readable(v) for (k, v) in user.items() if k in _COLUMN_DISPLAY_ORDER})
 
-        user_dict = dict(
-            sorted(user_dict.items(),
-                   key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0]))
-        )
+        user_dict = dict(sorted(user_dict.items(), key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0])))
         user_list.append(user_dict)
 
     for i, user_dict in enumerate(user_list):
@@ -51,18 +43,13 @@ def _add_table_user_data(users_query: list, rows: list) -> None:
 
 
 def _add_table_column_names(rows: list, original_column_names: set) -> None:
-    formatted_column_names = [
-        column.title().replace('_', ' ')
-        for column in original_column_names
-        if column
-    ]
+    formatted_column_names = [column.title().replace('_', ' ') for column in original_column_names if column]
 
     rows.append(formatted_column_names)
 
 
 def _get_user_data(request_data: dict) -> list:
-    page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel,
-                                                                         request_data)
+    page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel, request_data)
 
     query = db.session.query(UserModel).limit(5)
     # TODO: pending to refactor
@@ -88,11 +75,14 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
             for j, table_cell in enumerate(rows[i]):
                 row.cells[j].text = str(table_cell)
 
-            self.update_state(state='PROGRESS', meta={
-                'current': i,
-                'total': self.total_progress,
-                'status': 'In progress...',
-            })
+            self.update_state(
+                state='PROGRESS',
+                meta={
+                    'current': i,
+                    'total': self.total_progress,
+                    'status': 'In progress...',
+                },
+            )
 
     user_list = _get_user_data(request_data)
 
@@ -103,11 +93,14 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
     table_data = []
     mime_type = PDF_MIME_TYPE if to_pdf else MS_WORD_MIME_TYPE
 
-    self.update_state(state='PROGRESS', meta={
-        'current': 0,
-        'total': self.total_progress,
-        'status': 'In progress...',
-    })
+    self.update_state(
+        state='PROGRESS',
+        meta={
+            'current': 0,
+            'total': self.total_progress,
+            'status': 'In progress...',
+        },
+    )
 
     _add_table_column_names(table_data, set(_COLUMN_DISPLAY_ORDER))
     _add_table_user_data(user_list, table_data)
