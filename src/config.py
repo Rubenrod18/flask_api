@@ -65,20 +65,24 @@ class Config(metaclass=Meta):
     MAIL_USE_SSL = os.getenv('MAIL_USE_SSL', False)
 
     # Celery
-    broker_url = os.getenv('CELERY_BROKER_URL', 'pyamqp://')
-    result_backend = os.getenv('CELERY_RESULT_BACKEND', 'rpc://')
-    include = ['app.celery.tasks']
-    task_default_queue = 'default'
+    broker_url = os.getenv('CELERY_BROKER_URL')
+    result_backend = os.getenv('CELERY_RESULT_BACKEND')
+    include = [
+        'app.celery.tasks',
+        'app.celery.excel.tasks',
+        'app.celery.word.tasks',
+    ]
     task_queues = (
         Queue('default', Exchange('default'), routing_key='default'),
         Queue('fast', Exchange('tasks'), routing_key='fast'),
-    ),
+    )
     task_track_started = True
     result_expires = 3600
     worker_log_format = '%(asctime)s - %(levelname)s - %(processName)s - %(message)s'
     worker_task_log_format = '%(asctime)s - %(levelname)s - %(processName)s - %(task_name)s - %(task_id)s - %(message)s'
     result_extended = True
     task_default_rate_limit = 3
+    task_max_retries = 5
     task_always_eager = False
 
     # Flask Swagger UI
