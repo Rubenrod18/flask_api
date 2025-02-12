@@ -1,4 +1,6 @@
-from celery import chord
+import logging
+
+from celery import chain, chord
 from celery.utils.log import get_task_logger
 from flask import render_template
 from flask_mail import Message
@@ -6,7 +8,7 @@ from flask_mail import Message
 from app.celery import ContextTask
 from app.celery.word.tasks import export_user_data_in_word_task
 from app.celery.excel.tasks import export_user_data_in_excel_task
-from app.extensions import mail, celery
+from app.extensions import db, mail, celery
 from app.managers import DocumentManager
 
 logger = get_task_logger(__name__)
@@ -72,14 +74,18 @@ def send_email_with_attachments_task(task_data: list) -> bool:
 
 
 @celery.task(base=ContextTask)
-def create_word_and_excel_documents_task(created_by: int, request_data: dict,
-                                         to_pdf: int) -> bool:
+def create_word_and_excel_documents_task(created_by: int, request_data: dict, to_pdf: int) -> bool:
     group_tasks = [
         export_user_data_in_word_task.s(created_by, request_data, to_pdf),
         export_user_data_in_excel_task.s(created_by, request_data),
     ]
     callback_task = send_email_with_attachments_task.s()
+    callback_result = chord(chain(*group_tasks))(callback_task)
 
-    chord(group_tasks, callback_task)()
+    if callback_result.successful():
+        db.session.commit()
+    else:
+        db.session.rollback()
 
+    db.session.close()
     return True

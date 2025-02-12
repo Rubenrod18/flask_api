@@ -48,17 +48,6 @@ class MyCelery(Celery):
 class ContextTask(Task):
     abstract = True
 
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        """Runs after the task finishes, regardless of success or failure."""
-        from app.extensions import db
-
-        if einfo:
-            db.session.rollback()
-        else:
-            db.session.commit()
-
-        db.session.remove()
-
     def on_failure(self, exc, task_id, args, kwargs, einfo) -> None:
         logger.info(
             f"""

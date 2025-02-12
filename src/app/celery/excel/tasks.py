@@ -204,6 +204,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
 
     document_serializer = DocumentSerializer(exclude=('internal_filename',))
     document_data = document_serializer.dump(document)
+    db.session.commit()
 
     return {
         'current': self.total_progress,
