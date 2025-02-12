@@ -14,7 +14,12 @@ class TestBaseApi(TestBase):
 
     @staticmethod
     def get_active_admin_user():
-        return AdminUserFactory(active=True, deleted_at=None, email=os.getenv('TEST_USER_EMAIL'), password=os.getenv('TEST_USER_PASSWORD'))
+        user = db.session.query(User).filter_by(email=os.getenv('TEST_USER_EMAIL')).first()
+
+        if user is None:
+            return AdminUserFactory(active=True, deleted_at=None, email=os.getenv('TEST_USER_EMAIL'), password=os.getenv('TEST_USER_PASSWORD'))
+
+        return user
 
     def build_headers(self, user_email: str = None, extra_headers: dict = None):
         """Create an auth header from a given user that can be added to http requests."""

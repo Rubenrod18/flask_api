@@ -16,8 +16,6 @@ class TestDocumentEndpoints(TestBaseApi):
         self.base_path = f'{self.base_path}/documents'
         self.document = DocumentFactory(
             deleted_at=None,
-            internal_filename='example.pdf',
-            directory_path=self.app.config['MOCKUP_DIRECTORY'],
             created_at=datetime.now(UTC) - timedelta(days=1),
         )
 
@@ -37,7 +35,7 @@ class TestDocumentEndpoints(TestBaseApi):
         parse_url = urlparse(json_data.get('url'))
 
         assert 201 == response.status_code
-        assert 1 == json_data.get('created_by').get('id')
+        assert self.admin_user.id == json_data.get('created_by').get('id')
         assert pdf_file == json_data.get('name')
         assert 'application/pdf' == json_data.get('mime_type')
         assert FileStorage.get_filesize(pdf_file) == json_data.get('size')

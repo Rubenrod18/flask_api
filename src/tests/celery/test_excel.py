@@ -1,17 +1,13 @@
 """Module for testing excel module."""
-import pdb
 from urllib.parse import urlparse
 
-from app.celery.excel.tasks import export_user_data_in_excel_task
 from app.utils.constants import MS_EXCEL_MIME_TYPE
 from database.factories.user_factory import UserFactory
+from app.celery.excel.tasks import export_user_data_in_excel_task
 from tests.base.base_test import TestBase
 
 
 class TestExcelTask(TestBase):
-    def setUp(self):
-        super(TestExcelTask, self).setUp()
-
     def test_export_excel_task(self):
         user = UserFactory()
         user_id = user.id
@@ -25,7 +21,7 @@ class TestExcelTask(TestBase):
             'page_number': 1,
         }
 
-        result = export_user_data_in_excel_task.apply(args=(user.id, request_data)).get()
+        result = export_user_data_in_excel_task.apply(args=(user.id, request_data), kwargs={}).get()
 
         document_data = result.get('result')
         parse_url = urlparse(document_data.get('url'))

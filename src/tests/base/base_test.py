@@ -89,7 +89,9 @@ class TestBase(unittest.TestCase):
     def tearDown(self) -> None:
         with self.app.app_context():
             db.session.close()
-            db.drop_all()
+            # TODO: Temporal solution.
+            #   The celery tests are async so if next line is uncommented then the Celery tests will fail.
+            # db.drop_all()
 
     @property
     def plain_engine_url(self):

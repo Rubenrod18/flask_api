@@ -1,4 +1,3 @@
-import mimetypes
 import uuid
 
 import factory
@@ -11,6 +10,7 @@ from app.models import Document as DocumentModel, User as UserModel
 from app.utils.constants import PDF_MIME_TYPE
 from database import fake
 from database.factories.base_factory import BaseFactory
+import shutil
 
 
 _user_manager = UserManager()
@@ -29,7 +29,12 @@ class DocumentFactory(BaseFactory):
 
     @factory.lazy_attribute
     def internal_filename(self):
-        return '%s.%s' % (uuid.uuid1().hex, self.mime_type)
+        filename = f'{uuid.uuid1().hex}.pdf'
+        shutil.copy(
+            src=f'{current_app.config.get('MOCKUP_DIRECTORY')}/example.pdf',
+            dst=f'{current_app.config.get('STORAGE_DIRECTORY')}/{filename}'
+        )
+        return filename
 
     @factory.lazy_attribute
     def mime_type(self):
