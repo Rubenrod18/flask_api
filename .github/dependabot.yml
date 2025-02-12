@@ -1,0 +1,13 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/src"
+  schedule:
+    interval: daily
+    time: "01:00"
+    timezone: Europe/Madrid
+  open-pull-requests-limit: 10
+  commit-message:
+    prefix: "[Dep][pip] "
+  labels:
+    - dependabot
