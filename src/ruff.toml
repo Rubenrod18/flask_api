@@ -1,0 +1,122 @@
+# Ruff Configuration File
+# Documentation: https://docs.astral.sh/ruff/
+# Settings: https://docs.astral.sh/ruff/settings/
+
+# --- Global Settings ---
+
+# Exclude a variety of commonly ignored directories and files to optimize linting performance.
+exclude = [
+    ".bzr",               # Bazaar version control
+    ".direnv",            # Environment directory
+    ".eggs",              # Python eggs
+    ".git",               # Git repository files
+    ".git-rewrite",       # Git rewrite logs
+    ".hg",                # Mercurial version control
+    ".ipynb_checkpoints", # Jupyter notebook checkpoints
+    ".mypy_cache",        # mypy type-checking cache
+    ".nox",               # nox virtualenvs
+    ".pants.d",           # Pants build files
+    ".pyenv",             # pyenv environment directory
+    ".pytest_cache",      # pytest cache files
+    ".pytype",            # pytype analysis files
+    ".ruff_cache",        # Ruff cache files
+    ".svn",               # Subversion version control
+    ".tox",               # tox virtualenvs
+    ".venv",              # Python virtual environments
+    ".vscode",            # VSCode configurations
+    "__pypackages__",     # PEP 582 local packages
+    "_build",             # Sphinx documentation builds
+    "buck-out",           # Buck build files
+    "build",              # General build directory
+    "dist",               # Distribution files
+    "node_modules",       # Node.js modules
+    "site-packages",      # Installed Python packages
+    "venv",               # Python virtual environments
+    ".ipython/profile_default/ipython_config.py", # IPython config
+    "migrations", # Application's database migrations
+]
+
+# Set maximum line length (matches Black's default).
+line-length = 120
+
+# Indentation width (matches Black's default).
+indent-width = 4
+
+# Target Python version for linting.
+target-version = "py313" # Python 3.13
+
+# --- Linting Configuration ---
+
+[lint]
+# Rules to enable:
+# - `I`: isort integration for import sorting
+# - `E4`: Errors related to missing imports and module-level docstrings
+# - `E7`: Errors related to common syntax issues
+# - `F401`: Unused imports
+# - `W2`, `W3`: Whitespace-related warnings
+# - `T201`: Disallow `print` statements
+select = [
+    "I", "E4", "E701", "E711", "E712", "E713", "E714", "E721", "E722", "E731", "F401",
+    "W291", "W292", "W293", "W605", "T201"
+]
+
+# Rules to ignore:
+# - `E1`, `E2`: Whitespace and indentation errors
+# - `E501`: Line too long (handled by Black)
+# - `E722`: Bare exceptions
+# - `F821`, `F841`: Undefined and unused variable issues
+# - `W1`, `W5`: Other whitespace and deprecation warnings
+ignore = ["E1", "E2", "E501", "E722", "F821", "F841", "W1", "W5"]
+
+# Allow auto-fix for all enabled rules.
+fixable = ["ALL"]
+
+# No rules are permanently unfixable.
+unfixable = []
+
+# Allow underscore-prefixed variables to be ignored (common for dummy variables).
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Per-file ignores for specific rules:
+# - Ignore unused imports (`F401`) in `__init__.py` files, as these are often used to expose modules.
+[lint.per-file-ignores]
+"*/__init__.py" = ["F401"]
+
+# --- isort Configuration ---
+
+[lint.isort]
+# Treat these as first-party modules.
+known-first-party = ["app"]
+
+# Combine `as` imports into a single line.
+combine-as-imports = true
+
+# Do not order imports by type (e.g., functions vs. classes).
+order-by-type = false
+
+# --- Formatting Configuration ---
+
+[format]
+# Use single quotes for string literals (like Black).
+quote-style = "single"
+
+# Indent using spaces (like Black).
+indent-style = "space"
+
+# Respect magic trailing commas (like Black).
+skip-magic-trailing-comma = false
+
+# Automatically detect line endings.
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings.
+docstring-code-format = false
+
+# Dynamic line-length formatting for code snippets in docstrings.
+docstring-code-line-length = "dynamic"
+
+# --- Pydocstyle Configuration ---
+
+[lint.pydocstyle]
+# Use the "numpy" convention for docstring formatting.
+convention = "numpy"
