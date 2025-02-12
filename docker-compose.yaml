@@ -89,6 +89,16 @@ services:
       timeout: 5s
       retries: 3
 
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    ports:
+      - "1025:1025"  # SMTP server port
+      - "8025:8025"  # Web UI port for Mailpit
+    networks:
+      - flask_api_network
+    restart: always
+
 volumes:
   mysql_data:
     driver: local
