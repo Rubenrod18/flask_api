@@ -105,9 +105,9 @@ class Config(metaclass=Meta):
     TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')
 
     ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-    STORAGE_DIRECTORY = '%s/storage' % ROOT_DIRECTORY
+    STORAGE_DIRECTORY = f'{ROOT_DIRECTORY}/storage'
     MOCKUP_DIRECTORY = f'{ROOT_DIRECTORY}/storage/mockups'
-    LOG_DIRECTORY = '%s/log' % ROOT_DIRECTORY
+    LOG_DIRECTORY = f'{ROOT_DIRECTORY}/src/log'
 
     RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
 
