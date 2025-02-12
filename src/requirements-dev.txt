@@ -87,6 +87,8 @@ email-validator==2.2.0
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   flask-security-too
+execnet==2.1.1
+    # via pytest-xdist
 factory-boy==3.3.3
     # via -r /home/ruben/workspace/flask_api/src/requirements.txt
 faker==35.0.0
@@ -258,6 +260,10 @@ pyproject-hooks==1.2.0
     #   build
     #   pip-tools
 pytest==8.3.4
+    # via
+    #   -r requirements-dev.in
+    #   pytest-xdist
+pytest-xdist==3.6.1
     # via -r requirements-dev.in
 python-dateutil==2.9.0.post0
     # via
