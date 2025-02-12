@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from flask import current_app
 
 from app.utils.file_storage import FileStorage
-from database.factories.document_factory import DocumentFactory
+from app.database.factories.document_factory import DocumentFactory
 
 from tests.base.base_api_test import TestBaseApi
 

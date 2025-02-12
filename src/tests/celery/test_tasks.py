@@ -9,9 +9,9 @@ from flask import url_for
 from app.celery.tasks import (create_user_email_task, create_word_and_excel_documents_task,
                               reset_password_email_task, send_email_with_attachments_task, )
 from app.extensions import db, mail
-from database.factories.document_factory import DocumentFactory
-from database.factories.role_factory import RoleFactory
-from database.factories.user_factory import UserFactory
+from app.database.factories.document_factory import DocumentFactory
+from app.database.factories.role_factory import RoleFactory
+from app.database.factories.user_factory import UserFactory
 from app.celery.word.tasks import export_user_data_in_word_task
 from app.celery.excel.tasks import export_user_data_in_excel_task
 from tests.base.base_test import TestBase

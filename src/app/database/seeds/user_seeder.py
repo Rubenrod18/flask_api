@@ -3,8 +3,8 @@ import os
 from app.extensions import db
 from app.models import Role as RoleModel
 from app.models import User as UserModel
-from database import seed_actions
-from database.factories.user_factory import UserFactory
+from app.database import seed_actions
+from app.database.factories.user_factory import UserFactory
 
 
 class UserSeeder:

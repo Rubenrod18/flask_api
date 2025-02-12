@@ -13,8 +13,8 @@ from app.models import User as UserModel, Role as RoleModel
 from app.models.user import Genre
 from app.serializers import UserSerializer
 
-from database.factories.base_factory import BaseFactory, faker
-from database.factories.role_factory import AdminRoleFactory, RoleFactory
+from app.database.factories.base_factory import BaseFactory, faker
+from app.database.factories.role_factory import AdminRoleFactory, RoleFactory
 
 UserList = List[UserModel]
 _user_manager = UserManager()

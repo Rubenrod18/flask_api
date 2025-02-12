@@ -3,7 +3,7 @@ from sqlalchemy import func
 
 from app.extensions import db
 from app.models.role import Role as RoleModel
-from database.factories.role_factory import RoleFactory
+from app.database.factories.role_factory import RoleFactory
 from tests.base.base_api_test import TestBaseApi
 
 

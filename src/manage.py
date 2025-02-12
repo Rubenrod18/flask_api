@@ -32,7 +32,7 @@ from flask import Response
 
 from app import create_app
 from app.extensions import db
-from database.seeds import init_seed
+from app.database.seeds import init_seed
 
 load_dotenv()
 

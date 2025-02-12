@@ -2,8 +2,8 @@
 from urllib.parse import urlparse
 
 from app.utils.constants import PDF_MIME_TYPE, MS_WORD_MIME_TYPE
-from database.factories.role_factory import RoleFactory
-from database.factories.user_factory import UserFactory
+from app.database.factories.role_factory import RoleFactory
+from app.database.factories.user_factory import UserFactory
 
 from tests.base.base_test import TestBase
 from app.celery.word.tasks import export_user_data_in_word_task

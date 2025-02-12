@@ -2,7 +2,7 @@
 from urllib.parse import urlparse
 
 from app.utils.constants import MS_EXCEL_MIME_TYPE
-from database.factories.user_factory import UserFactory
+from app.database.factories.user_factory import UserFactory
 from app.celery.excel.tasks import export_user_data_in_excel_task
 from tests.base.base_test import TestBase
 

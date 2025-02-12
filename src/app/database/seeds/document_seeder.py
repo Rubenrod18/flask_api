@@ -1,5 +1,5 @@
-from database import seed_actions
-from database.factories.document_factory import DocumentFactory
+from app.database import seed_actions
+from app.database.factories.document_factory import DocumentFactory
 
 
 class DocumentSeeder:

@@ -8,8 +8,8 @@ from app.extensions import db
 from app.managers import UserManager
 from app.models import Document as DocumentModel, User as UserModel
 from app.utils.constants import PDF_MIME_TYPE
-from database import fake
-from database.factories.base_factory import BaseFactory
+from app.database import fake
+from app.database.factories.base_factory import BaseFactory
 import shutil
 
 

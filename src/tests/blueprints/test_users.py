@@ -2,8 +2,8 @@
 import os
 
 from app.extensions import db
-from database.factories.role_factory import RoleFactory
-from database.factories.user_factory import UserFactory
+from app.database.factories.role_factory import RoleFactory
+from app.database.factories.user_factory import UserFactory
 from tests.base.base_api_test import TestBaseApi
 
 

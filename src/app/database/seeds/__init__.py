@@ -1,7 +1,7 @@
 from app.extensions import db
-from database.seeds.role_seeder import RoleSeeder
-from database.seeds.user_seeder import UserSeeder
-from database.seeds.document_seeder import DocumentSeeder
+from app.database.seeds.role_seeder import RoleSeeder
+from app.database.seeds.user_seeder import UserSeeder
+from app.database.seeds.document_seeder import DocumentSeeder
 
 
 def get_seeders() -> list:

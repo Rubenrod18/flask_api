@@ -2,7 +2,7 @@ import os
 
 from app.extensions import db
 from app.models import User
-from database.factories.user_factory import AdminUserFactory
+from app.database.factories.user_factory import AdminUserFactory
 from tests.base.base_test import TestBase
 
 
