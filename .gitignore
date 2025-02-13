@@ -30,6 +30,7 @@ pip-log.txt
 *.db*
 *.xlsx
 *.pdf
+!src/storage/mockups/example.pdf
 uwsgi.ini
 supervisord.conf
 
