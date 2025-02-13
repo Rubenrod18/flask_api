@@ -73,7 +73,7 @@ jobs:
 
       - name: Run tests with make
         run: |
-          make test-parallel
+          make test
         working-directory: ${{ env.working-directory }}
 
     env:
