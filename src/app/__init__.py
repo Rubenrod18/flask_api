@@ -6,7 +6,6 @@ middleware, blueprints, database models, etc.
 """
 
 import logging
-import os
 import pprint
 
 import flask
@@ -18,20 +17,6 @@ from app.cli import cli_register
 from app.middleware import Middleware
 
 
-def _create_logging_file(app: Flask) -> str:
-    log_basename = os.path.basename(app.config.get('ROOT_DIRECTORY'))
-    log_dirname = '{}/app'.format(app.config.get('LOG_DIRECTORY'))
-    log_filename = f'{log_dirname}/{log_basename}.log'
-
-    log_directories = [app.config.get('LOG_DIRECTORY'), log_dirname]
-
-    for log_dir in log_directories:
-        if not os.path.exists(log_dir):
-            os.mkdir(log_dir)
-
-    return log_filename
-
-
 def _init_logging(app: Flask) -> None:
     del app.logger.handlers[:]
     loggers = [
@@ -39,7 +24,7 @@ def _init_logging(app: Flask) -> None:
     ]
     handlers = []
 
-    console_handler = logging.FileHandler(filename=_create_logging_file(app))
+    console_handler = logging.StreamHandler()
     console_handler.setLevel(app.config.get('LOGGING_LEVEL'))
     console_handler.setFormatter(
         logging.Formatter(
