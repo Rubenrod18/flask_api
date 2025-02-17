@@ -34,4 +34,4 @@ class SearchSerializer(ma.Schema):
     search = fields.List(fields.Nested(_SearchValueSerializer))
     order = fields.List(fields.Nested(_SearchOrderSerializer))
     items_per_page = fields.Integer(min=1)
-    page_number = fields.Integer(min=0)
+    page_number = fields.Integer(min=1)

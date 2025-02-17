@@ -35,7 +35,7 @@ class BaseManager(object):
         query = db.session.query(self.model)
         records_total = db.session.query(self.model).count()
 
-        # query = rqo.create_search_query(self.model, query, kwargs)
+        query = rqo.create_search_query(self.model, query, kwargs)
         query = query.order_by(*order).offset(page * items_per_page).limit(items_per_page)
 
         return {
