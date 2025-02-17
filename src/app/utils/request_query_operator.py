@@ -1,11 +1,11 @@
-"""Module for creating a Peewee filter query via dynamic way.
+"""Module for creating a SQLAlchemy filter query via dynamic way.
 
-Next module is used for creating a Peewee query based on request fields.
+Next module is used for creating a SQLAlchemy query based on request fields.
 
 References
 ----------
 Query operators
-http://docs.peewee-orm.com/en/latest/peewee/query_operators.html
+https://docs.sqlalchemy.org/en/20/core/operators.html
 
 """
 
@@ -16,7 +16,38 @@ from typing import Type
 import peewee
 from peewee import CharField, Field, FixedCharField, Model, ModelSelect, TextField, UUIDField
 
-from app.utils.constants import QUERY_OPERATORS, REQUEST_QUERY_DELIMITER, STRING_QUERY_OPERATORS
+# Request query operator
+"""
+    REQUEST_QUERY_DELIMITER is used for converting requests field
+    values to a list, for example:
+        Request send these values:
+            field_operator: contains
+            field_values: valueA;valueB;valueC
+
+        The delimiter operator splits values to a list of values:
+            field_values: [valueA, valueB, valueC]
+"""
+REQUEST_QUERY_DELIMITER = ';'
+STRING_QUERY_OPERATORS = [
+    'eq',
+    'ne',
+    'contains',
+    'ncontains',
+    'startswith',
+    'endswith',
+]
+# https://docs.sqlalchemy.org/en/20/core/operators.html#comparison-operators
+QUERY_OPERATORS = [
+    'eq',
+    'ne',
+    'lt',
+    'lte',
+    'gt',
+    'gte',
+    'in',
+    'nin',
+    'between',
+]
 
 
 class Helper:
@@ -27,23 +58,18 @@ class Helper:
 
         Example
         -------
-        Peewee query: User.select().order_by(User.created_at.asc())
+        SQLAlchemy query: db.session.query(User).order_by(User.created_at.desc())
 
         Request fields:
         >>> from app.models.user import User
         >>> db_model = User
         >>> request_data = {'order': [{'sorting': 'asc', 'field_name': 'created_at'}]}  # noqa
         >>> Helper.build_order_by(db_model, request_data)
-        [<peewee.Ordering object at ...>]
-
-        Notes
-        -----
-        Actually is not posible to order across joins.
+        <flask_sqlalchemy.query.Query object at 0x7f9edf6954f0>
 
         References
         ----------
-        http://docs.peewee-orm.com/en/latest/peewee/querying.html#sorting-records
-        http://docs.peewee-orm.com/en/latest/peewee/api.html#Query.order_by
+        https://docs.sqlalchemy.org/en/20/orm/queryguide/query.html#sqlalchemy.orm.Query.order_by
 
         """
 
@@ -178,10 +204,7 @@ class RequestQueryOperator:
     def get_request_query_fields(db_model: Type[Model], request_data=None) -> tuple:
         request_data = request_data or {}
 
-        # Page numbers are 1-based, so the first page of results
-        # will be page 1.
-        # http://docs.peewee-orm.com/en/latest/peewee/querying.html#paginating-records
-        page_number = int(request_data.get('page_number', 1))
+        page_number = int(request_data.get('page_number', 0))
         items_per_page = int(request_data.get('items_per_page', 10))
         order_by = Helper.build_order_by(db_model, request_data)
         return page_number, items_per_page, order_by
