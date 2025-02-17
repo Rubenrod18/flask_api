@@ -80,7 +80,7 @@ def _add_excel_autofilter(worksheet: Worksheet):
 def _get_user_data(request_data: dict) -> list:
     page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel, request_data)
 
-    query = db.session.query(UserModel).limit(5)
+    query = db.session.query(UserModel)
     query = rqo.create_search_query(UserModel, query, request_data)
     query = query.order_by(*order_by).offset(page_number * items_per_page).limit(items_per_page)
 
