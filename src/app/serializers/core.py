@@ -3,7 +3,7 @@ from datetime import datetime
 from marshmallow import fields, validate
 
 from app.extensions import ma
-from app.utils.constants import QUERY_OPERATORS, STRING_QUERY_OPERATORS
+from app.utils.request_query_operator import QUERY_OPERATORS, STRING_QUERY_OPERATORS
 
 
 class TimestampField(fields.Field):
@@ -33,5 +33,5 @@ class _SearchOrderSerializer(ma.Schema):
 class SearchSerializer(ma.Schema):
     search = fields.List(fields.Nested(_SearchValueSerializer))
     order = fields.List(fields.Nested(_SearchOrderSerializer))
-    items_per_page = fields.Integer()
-    page_number = fields.Integer()
+    items_per_page = fields.Integer(min=1)
+    page_number = fields.Integer(min=1)

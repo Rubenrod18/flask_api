@@ -1,53 +1,81 @@
-"""Module for creating a Peewee filter query via dynamic way.
+"""Module for creating a SQLAlchemy filter query via dynamic way.
 
-Next module is used for creating a Peewee query based on request fields.
+Next module is used for creating a SQLAlchemy query based on request fields.
+
+Notes
+-----
+    REQUEST_QUERY_DELIMITER is used for converting requests field
+    values to a list, for example:
+        Request send these values:
+            field_operator: contains
+            field_values: valueA;valueB;valueC
+
+        The delimiter operator splits values to a list of values:
+            field_values: [valueA, valueB, valueC]
 
 References
 ----------
-Query operators
-http://docs.peewee-orm.com/en/latest/peewee/query_operators.html
+Query operators: https://docs.sqlalchemy.org/en/20/core/operators.html
+Comparison Operators: https://docs.sqlalchemy.org/en/20/core/operators.html#comparison-operators
 
 """
 
+import logging
 import operator
 from functools import reduce
 from typing import Type
 
-import peewee
-from peewee import CharField, Field, FixedCharField, Model, ModelSelect, TextField, UUIDField
+import sqlalchemy as sa
+from flask_sqlalchemy.query import Query as FlaskQuery
 
-from app.utils.constants import QUERY_OPERATORS, REQUEST_QUERY_DELIMITER, STRING_QUERY_OPERATORS
+from app.extensions import db
+
+REQUEST_QUERY_DELIMITER = ';'
+STRING_QUERY_OPERATORS = [
+    'eq',
+    'ne',
+    'contains',
+    'ncontains',
+    'startswith',
+    'endswith',
+]
+QUERY_OPERATORS = [
+    'eq',
+    'ne',
+    'lt',
+    'lte',
+    'gt',
+    'gte',
+    'in',
+    'nin',
+    'between',
+]
 
 
 class Helper:
     @staticmethod
-    def build_order_by(db_model: Type[Model], request_data: dict) -> list:
+    def build_order_by(db_model: Type[db.Model], request_data: dict) -> list:
         """Build sorting fields with zero or more Column-like objects to
         order by.
 
         Example
         -------
-        Peewee query: User.select().order_by(User.created_at.asc())
+        SQLAlchemy query: db.session.query(User).order_by(User.created_at.desc())
 
         Request fields:
         >>> from app.models.user import User
         >>> db_model = User
         >>> request_data = {'order': [{'sorting': 'asc', 'field_name': 'created_at'}]}  # noqa
         >>> Helper.build_order_by(db_model, request_data)
-        [<peewee.Ordering object at ...>]
-
-        Notes
-        -----
-        Actually is not posible to order across joins.
+        <flask_sqlalchemy.query.Query object at 0x7f9edf6954f0>
 
         References
         ----------
-        http://docs.peewee-orm.com/en/latest/peewee/querying.html#sorting-records
-        http://docs.peewee-orm.com/en/latest/peewee/api.html#Query.order_by
+        https://docs.sqlalchemy.org/en/20/orm/queryguide/query.html#sqlalchemy.orm.Query.order_by
 
         """
 
-        def build_ordering(field_name, sorting) -> peewee.Ordering:
+        def build_ordering(field_name, sorting) -> sa.UnaryExpression:
             field = getattr(db_model, field_name)
             return getattr(field, sorting)()
 
@@ -58,7 +86,7 @@ class Helper:
             order_by_values = [build_ordering(item.get('field_name'), item.get('sorting')) for item in request_order]
         return order_by_values
 
-    def build_string_clause(self, field: Field, field_operator: str, field_value) -> tuple:
+    def build_string_clause(self, field: sa.Column, field_operator: str, field_value) -> tuple:
         """Build string clauses.
 
         You can find next string operators:
@@ -78,6 +106,10 @@ class Helper:
         | endswith   | Search for values ending with suffix    |
         +------------+-----------------------------------------+
 
+        References
+        ----------
+        https://docs.sqlalchemy.org/en/20/core/operators.html#string-comparisons
+
         Example
         -------
         TODO: Pending to define
@@ -96,19 +128,20 @@ class Helper:
             if field_operator == 'eq':
                 sql_clause = field == field_value
             elif field_operator == 'ne':
-                sql_clause = ~(field == field_value)
+                sql_clause = field != field_value
             elif field_operator == 'contains':
-                sql_clause = field.contains(field_value)
+                logging.info(f' ===> ENTRA AQUI : {field_value}')
+                sql_clause = field.like(f'%{field_value}%')
             elif field_operator == 'ncontains':
-                sql_clause = ~(field.contains(field_value))
+                sql_clause = sa.not_(field.like(f'%{field_value}%'))
             elif field_operator == 'startswith':
-                sql_clause = field.startswith(field_value)
+                sql_clause = field.like(f'{field_value}%')
             elif field_operator == 'endswith':
-                sql_clause = field.endswith(field_value)
+                sql_clause = field.like(f'%{field_value}')
 
         return sql_clause
 
-    def build_clause_operators(self, field: Field, field_operator: str, field_value) -> tuple:
+    def build_clause_operators(self, field: sa.Column, field_operator: str, field_value) -> tuple:
         sql_clause = ()
 
         if isinstance(field_value, str) and field_value.find(REQUEST_QUERY_DELIMITER) != -1:
@@ -135,14 +168,14 @@ class Helper:
             elif field_operator == 'in':
                 sql_clause = field.in_(field_value.split(REQUEST_QUERY_DELIMITER))
             elif field_operator == 'nin':
-                sql_clause = field.not_in(field_value)
+                sql_clause = ~field.in_(field_value.split(REQUEST_QUERY_DELIMITER))
             elif field_operator == 'between':
                 values = field_value.split(REQUEST_QUERY_DELIMITER)
-                sql_clause = field.between(lo=values[0], hi=values[1])
+                sql_clause = field.between(values[0], values[1])
         return sql_clause
 
-    def build_sql_expression(self, field: Field, field_operator: str, field_value):
-        if isinstance(field, (CharField, FixedCharField, TextField, UUIDField)):
+    def build_sql_expression(self, field: sa.Column, field_operator: str, field_value):
+        if isinstance(field.type, (sa.String, sa.Text, sa.UUID)):
             sql_clause = self.build_string_clause(field, field_operator, field_value)
         else:
             sql_clause = self.build_clause_operators(field, field_operator, field_value)
@@ -151,7 +184,7 @@ class Helper:
 
 class RequestQueryOperator:
     @staticmethod
-    def create_search_query(db_model: Type[Model], query: ModelSelect, data: dict = None) -> ModelSelect:
+    def create_search_query(db_model: Type[db.Model], query: FlaskQuery, data: dict = None) -> FlaskQuery:
         if data is None:
             data = {}
 
@@ -175,13 +208,10 @@ class RequestQueryOperator:
         return query
 
     @staticmethod
-    def get_request_query_fields(db_model: Type[Model], request_data=None) -> tuple:
+    def get_request_query_fields(db_model: Type[db.Model], request_data=None) -> tuple:
         request_data = request_data or {}
 
-        # Page numbers are 1-based, so the first page of results
-        # will be page 1.
-        # http://docs.peewee-orm.com/en/latest/peewee/querying.html#paginating-records
-        page_number = int(request_data.get('page_number', 1))
+        page_number = int(request_data.get('page_number', 1)) - 1
         items_per_page = int(request_data.get('items_per_page', 10))
         order_by = Helper.build_order_by(db_model, request_data)
         return page_number, items_per_page, order_by
