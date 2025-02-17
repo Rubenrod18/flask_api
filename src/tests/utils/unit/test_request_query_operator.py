@@ -17,4 +17,4 @@ class TestCreateSearchQueryStrings(TestBase):
         query = db.session.query(User)
         query = rqo.create_search_query(User, query, kwargs)
 
-        self.assertEqual(query.all(), 1)
+        self.assertEqual(query.count(), 1)
