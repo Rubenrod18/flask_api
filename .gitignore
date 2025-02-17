@@ -45,3 +45,4 @@ source/_static
 source/templates
 supervisor
 venv
+.env.test

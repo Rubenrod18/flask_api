@@ -145,12 +145,7 @@ class TestConfig(Config):
     TESTING = True
 
     # Flask SQLAlchemy
-    SQLALCHEMY_DATABASE_URI = os.getenv('TEST_SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_RECORD_QUERIES = True
-
-    # Celery
-    broker_url = os.getenv('TEST_CELERY_BROKER_URL')
-    result_backend = os.getenv('TEST_CELERY_RESULT_BACKEND')
 
     # Mr Developer
     STORAGE_DIRECTORY = f'{Config.STORAGE_DIRECTORY}/tests'

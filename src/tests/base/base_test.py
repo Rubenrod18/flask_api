@@ -1,12 +1,14 @@
 import logging
 import os
 import unittest
+import uuid
 
+from dotenv import find_dotenv, load_dotenv
 from faker import Faker
 from faker.providers import date_time, person
 from flask import Flask, Response
 from flask.testing import FlaskClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy_utils import create_database, database_exists
 
 from app.extensions import db
@@ -74,8 +76,13 @@ class TestBase(unittest.TestCase):
         self.runner = None
         self.session = None
 
+    @classmethod
+    def setUpClass(cls):
+        """Load environment variables before running any test."""
+        load_dotenv(find_dotenv('.env.test'), override=True)
+
     def setUp(self) -> None:
-        self.__create_database()
+        self.__create_databases()
         app = self.__create_app()
         app_context = app.app_context()
         app_context.push()
@@ -88,10 +95,9 @@ class TestBase(unittest.TestCase):
 
     def tearDown(self) -> None:
         with self.app.app_context():
-            db.session.close()
-            # TODO: Temporal solution.
-            #   The celery tests are async so if next line is uncommented then the Celery tests will fail.
-            # db.drop_all()
+            db.session.remove()
+            db.engine.dispose()
+            self.__drop_database()
 
     @property
     def plain_engine_url(self):
@@ -103,7 +109,7 @@ class TestBase(unittest.TestCase):
         from config import TestConfig
 
         TestConfig.SQLALCHEMY_DATABASE_URI = self.plain_engine_url
-        return create_app(TestConfig)
+        return create_app('config.TestConfig')
 
     @staticmethod
     def __create_test_client(app: Flask):
@@ -111,9 +117,56 @@ class TestBase(unittest.TestCase):
         app.test_client_class = _CustomFlaskClient
         return app.test_client()
 
-    def __create_database(self):
-        database_uri = os.getenv('TEST_SQLALCHEMY_DATABASE_URI')
+    def __create_databases(self):
+        database_uri = f'{os.getenv("SQLALCHEMY_DATABASE_URI")}_{uuid.uuid4().hex}'
         self.__engine = create_engine(database_uri)
         if not database_exists(self.plain_engine_url):
             create_database(self.plain_engine_url)
+
+        if not database_exists(os.getenv('SQLALCHEMY_DATABASE_URI')):
+            create_database(os.getenv('SQLALCHEMY_DATABASE_URI'))
+
         assert database_exists(self.plain_engine_url)
+
+    def __drop_database(self) -> None:
+        """Kill active processes connected to the database and drop the database.
+
+        Gracefully handle the deletion of the database by terminating active connections
+        and dropping the database. This approach avoids issues that arise when attempting
+        to delete the database using the same connection.
+
+        Notes
+        -----
+        In previous versions, utilities like `sqlalchemy_utils.drop_database` were used
+        to simplify database deletion. However, these utilities operate on the same
+        connection used to interact with the target database. SQLAlchemy 2.0+ no longer
+        allows implicit execution, and using the same connection for the `DROP DATABASE`
+        command can lead to deadlocks or operational errors. This function implements a
+        safer alternative.
+
+        Steps:
+        1. Establish a neutral connection (e.g., to the 'mysql' database) to avoid being
+           connected to the target database during the DROP operation.
+        2. Identify and terminate active connections to the target database using the
+           `information_schema.processlist` table.
+        3. Execute the `DROP DATABASE` SQL command.
+        4. Use `neutral_engine.dispose()` to release resources associated with the engine,
+           such as connection pools, ensuring no resources are leaked after the operation.
+
+        """
+        database = self.__engine.url.database
+        neutral_engine_url = self.__engine.url.set(database='mysql')
+        neutral_engine = create_engine(neutral_engine_url)
+
+        try:
+            with neutral_engine.connect() as conn:
+                kill_query = (
+                    f"SELECT CONCAT('KILL ', id, ';') FROM information_schema.processlist WHERE db = '{database}';"
+                )
+                result = conn.execute(text(kill_query))
+                for row in result:
+                    conn.execute(text(row[0]))
+
+                conn.execute(text(f'DROP DATABASE IF EXISTS `{database}`;'))
+        finally:
+            neutral_engine.dispose()

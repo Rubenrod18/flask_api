@@ -49,8 +49,7 @@ def init_app(app: Flask) -> None:
     def teardown_request_context(_) -> None:
         if not app.config['TESTING']:
             db.session.commit()
-
-        db.session.remove()
+            db.session.remove()
 
 
 def _init_flask_security_too_app(flask_app: Flask):
