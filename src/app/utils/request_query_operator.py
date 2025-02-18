@@ -30,24 +30,45 @@ from flask_sqlalchemy.query import Query as FlaskQuery
 from app.extensions import db
 
 REQUEST_QUERY_DELIMITER = ';'
+
+# General operators
+EQUAL_OP = 'eq'
+NOT_EQUAL_OP = 'ne'
+
+# Strings query operators
+CONTAINS_OP = 'contains'
+NOT_CONTAINS_OP = 'ncontains'
+STARTS_WITH_OP = 'startswith'
+ENDS_WITH_OP = 'endswith'
+
 STRING_QUERY_OPERATORS = [
-    'eq',
-    'ne',
-    'contains',
-    'ncontains',
-    'startswith',
-    'endswith',
+    EQUAL_OP,
+    NOT_EQUAL_OP,
+    CONTAINS_OP,
+    NOT_CONTAINS_OP,
+    STARTS_WITH_OP,
+    ENDS_WITH_OP,
 ]
+
+# No-String query operators
+LESS_THAN_OP = 'lt'
+LESS_THAN_OR_EQUAL_TO_OP = 'lte'
+GREATER_THAN_OP = 'gt'
+GREATER_THAN_OR_EQUAL_TO_OP = 'gte'
+IN_OP = 'in'
+NOT_IN_OP = 'nin'
+BETWEEN_OP = 'between'
+
 QUERY_OPERATORS = [
-    'eq',
-    'ne',
-    'lt',
-    'lte',
-    'gt',
-    'gte',
-    'in',
-    'nin',
-    'between',
+    EQUAL_OP,
+    NOT_EQUAL_OP,
+    LESS_THAN_OP,
+    LESS_THAN_OR_EQUAL_TO_OP,
+    GREATER_THAN_OP,
+    GREATER_THAN_OR_EQUAL_TO_OP,
+    IN_OP,
+    NOT_IN_OP,
+    BETWEEN_OP,
 ]
 
 
@@ -124,17 +145,17 @@ class Helper:
                 sql_clauses.append(self.build_string_clause(field, field_operator, item))
             sql_clause = reduce(operator.or_, sql_clauses)
         elif field_operator in STRING_QUERY_OPERATORS:
-            if field_operator == 'eq':
+            if field_operator == EQUAL_OP:
                 sql_clause = field == field_value
-            elif field_operator == 'ne':
+            elif field_operator == NOT_EQUAL_OP:
                 sql_clause = field != field_value
-            elif field_operator == 'contains':
+            elif field_operator == CONTAINS_OP:
                 sql_clause = field.like(f'%{field_value}%')
-            elif field_operator == 'ncontains':
+            elif field_operator == NOT_CONTAINS_OP:
                 sql_clause = sa.not_(field.like(f'%{field_value}%'))
-            elif field_operator == 'startswith':
+            elif field_operator == STARTS_WITH_OP:
                 sql_clause = field.like(f'{field_value}%')
-            elif field_operator == 'endswith':
+            elif field_operator == ENDS_WITH_OP:
                 sql_clause = field.like(f'%{field_value}')
 
         return sql_clause
@@ -145,7 +166,7 @@ class Helper:
         if (
             isinstance(field_value, str)
             and field_value.find(REQUEST_QUERY_DELIMITER) != -1
-            and field_operator not in ['between', 'in', 'nin']
+            and field_operator not in [BETWEEN_OP, IN_OP, NOT_IN_OP]
         ):
             field_value = field_value.split(REQUEST_QUERY_DELIMITER)
             sql_clauses = []
@@ -155,23 +176,23 @@ class Helper:
 
             sql_clause = reduce(operator.or_, sql_clauses)
         elif field_operator in QUERY_OPERATORS:
-            if field_operator == 'eq':
+            if field_operator == EQUAL_OP:
                 sql_clause = field == field_value
-            elif field_operator == 'ne':
+            elif field_operator == NOT_EQUAL_OP:
                 sql_clause = field != field_value
-            elif field_operator == 'lt':
+            elif field_operator == LESS_THAN_OP:
                 sql_clause = field < field_value
-            elif field_operator == 'lte':
+            elif field_operator == LESS_THAN_OR_EQUAL_TO_OP:
                 sql_clause = field <= field_value
-            elif field_operator == 'gt':
+            elif field_operator == GREATER_THAN_OP:
                 sql_clause = field > field_value
-            elif field_operator == 'gte':
+            elif field_operator == GREATER_THAN_OR_EQUAL_TO_OP:
                 sql_clause = field >= field_value
-            elif field_operator == 'in':
+            elif field_operator == IN_OP:
                 sql_clause = field.in_(field_value.split(REQUEST_QUERY_DELIMITER))
-            elif field_operator == 'nin':
+            elif field_operator == NOT_IN_OP:
                 sql_clause = ~field.in_(field_value.split(REQUEST_QUERY_DELIMITER))
-            elif field_operator == 'between':
+            elif field_operator == BETWEEN_OP:
                 values = field_value.split(REQUEST_QUERY_DELIMITER)
                 sql_clause = field.between(values[0], values[1])
         return sql_clause
