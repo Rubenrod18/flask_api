@@ -5,6 +5,7 @@ from datetime import datetime, UTC
 from tempfile import NamedTemporaryFile
 
 import docx
+from celery import states
 from celery.utils.log import get_task_logger
 from flask import current_app
 
@@ -74,14 +75,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
             for j, table_cell in enumerate(rows[i]):
                 row.cells[j].text = str(table_cell)
 
-            self.update_state(
-                state='PROGRESS',
-                meta={
-                    'current': i,
-                    'total': self.total_progress,
-                    'status': 'In progress...',
-                },
-            )
+            self.update_state(state=states.STARTED, meta={'current': i, 'total': self.total_progress})
 
     user_list = _get_user_data(request_data)
 
@@ -92,14 +86,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
     table_data = []
     mime_type = PDF_MIME_TYPE if to_pdf else MS_WORD_MIME_TYPE
 
-    self.update_state(
-        state='PROGRESS',
-        meta={
-            'current': 0,
-            'total': self.total_progress,
-            'status': 'In progress...',
-        },
-    )
+    self.update_state(state=states.STARTED, meta={'current': 0, 'total': self.total_progress})
 
     _add_table_column_names(table_data, set(_COLUMN_DISPLAY_ORDER))
     _add_table_user_data(user_list, table_data)
@@ -150,7 +137,12 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
     document_serializer = DocumentSerializer(exclude=('internal_filename',))
     document_data = document_serializer.dump(document)
     db.session.commit()
-
+    """
+    'result': {
+            'filename': document_data['name'],
+            'url': document_data['url'],
+        }
+    """
     return {
         'current': self.total_progress,
         'total': self.total_progress,

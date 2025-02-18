@@ -26,15 +26,11 @@ pip-log.txt
 
 # Mr Developer
 .env
+.env.test
 *.pyc
-*.db*
-*.xlsx
-*.pdf
 !src/storage/mockups/example.pdf
 !src/storage/tests
 !src/storage/.gitignore
-uwsgi.ini
-supervisord.conf
 
 .idea
 coverage_html_report
@@ -43,6 +39,4 @@ node_modules
 source/_autosummary
 source/_static
 source/templates
-supervisor
 venv
-.env.test

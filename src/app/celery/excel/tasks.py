@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 
 import magic
 import xlsxwriter
+from celery import states
 from celery.utils.log import get_task_logger
 from flask import current_app
 from xlsxwriter import Workbook
@@ -119,14 +120,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
                 excel_longest_word = row_longest_word
 
             worksheet.write_row(range_cells, row, row_format)
-            self.update_state(
-                state='PROGRESS',
-                meta={
-                    'current': i,
-                    'total': self.total_progress,
-                    'status': 'In progress...',
-                },
-            )
+            self.update_state(state=states.STARTED, meta={'current': i, 'total': self.total_progress})
 
         return len(excel_longest_word)
 
@@ -137,14 +131,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
     tempfile = NamedTemporaryFile()
     excel_rows = []
 
-    self.update_state(
-        state='PROGRESS',
-        meta={
-            'current': 0,
-            'total': self.total_progress,
-            'status': 'In progress...',
-        },
-    )
+    self.update_state(state=states.STARTED, meta={'current': 0, 'total': self.total_progress})
 
     workbook = xlsxwriter.Workbook(tempfile.name)
     worksheet = workbook.add_worksheet()

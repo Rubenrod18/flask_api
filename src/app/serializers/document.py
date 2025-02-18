@@ -8,7 +8,6 @@ from werkzeug.exceptions import NotFound, UnprocessableEntity
 from app.extensions import ma
 from app.managers import DocumentManager
 from app.models import Document
-from app.serializers.core import TimestampField
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -29,9 +28,9 @@ class DocumentSerializer(ma.SQLAlchemySchema):
     directory_path = ma.auto_field(load_only=True)
 
     created_by_user = fields.Nested('UserSerializer', only=('id', 'name', 'last_name', 'email'), dump_only=True)
-    created_at = TimestampField(dump_only=True)
-    updated_at = TimestampField(dump_only=True)
-    deleted_at = TimestampField(dump_only=True)
+    created_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
+    updated_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
+    deleted_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
 
     @validates('id')
     def validate_id(self, document_id):
