@@ -16,9 +16,10 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - db
-      - rabbitmq
-      - celery
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - flask_api_network
     command: 'runserver.sh'
@@ -45,7 +46,7 @@ services:
     container_name: flask_api_celery
     command: 'celery.sh'
     depends_on:
-      - rabbitmq
+      - app
     networks:
       - flask_api_network
     healthcheck:
@@ -77,7 +78,8 @@ services:
     image: mher/flower:latest
     container_name: flask_api_flower
     depends_on:
-      - celery
+      celery:
+        condition: service_healthy
     ports:
       - "5555:5555"
     networks:
