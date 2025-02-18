@@ -8,6 +8,7 @@ from faker import Faker
 from faker.providers import date_time, person
 from flask import Flask, Response
 from flask.testing import FlaskClient
+from flask_sqlalchemy.record_queries import get_recorded_queries
 from sqlalchemy import create_engine, text
 from sqlalchemy_utils import create_database, database_exists
 
@@ -116,6 +117,23 @@ class TestBase(unittest.TestCase):
         """Create a test client for making http requests."""
         app.test_client_class = _CustomFlaskClient
         return app.test_client()
+
+    @staticmethod
+    def show_last_sql_query() -> None:
+        """Print the most recently executed SQL query for debugging purposes.
+
+        This method retrieves the last recorded query from SQLAlchemy's query recorder
+        and prints its statement, parameters, and execution duration.
+
+        Notes
+        -----
+        - This method should only be used for debugging purposes and not in production code.
+        - Ensure that Flask's query recording is enabled (`SQLALCHEMY_RECORD_QUERIES` set to True)
+          to use this functionality.
+
+        """
+        info = get_recorded_queries()[-1]
+        print(info.statement, info.parameters, info.duration, sep='\n')  # noqa
 
     def __create_databases(self):
         database_uri = f'{os.getenv("SQLALCHEMY_DATABASE_URI")}_{uuid.uuid4().hex}'

@@ -140,6 +140,8 @@ flask-wtf==1.2.2
     #   flask-security-too
 flower==2.0.1
     # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+freezegun==1.5.1
+    # via -r requirements-dev.in
 greenlet==3.1.1
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -270,6 +272,7 @@ python-dateutil==2.9.0.post0
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   celery
     #   faker
+    #   freezegun
 python-docx==1.1.2
     # via -r /home/ruben/workspace/flask_api/src/requirements.txt
 python-dotenv==1.0.1

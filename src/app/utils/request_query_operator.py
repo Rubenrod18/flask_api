@@ -20,7 +20,6 @@ Comparison Operators: https://docs.sqlalchemy.org/en/20/core/operators.html#comp
 
 """
 
-import logging
 import operator
 from functools import reduce
 from typing import Type
@@ -130,7 +129,6 @@ class Helper:
             elif field_operator == 'ne':
                 sql_clause = field != field_value
             elif field_operator == 'contains':
-                logging.info(f' ===> ENTRA AQUI : {field_value}')
                 sql_clause = field.like(f'%{field_value}%')
             elif field_operator == 'ncontains':
                 sql_clause = sa.not_(field.like(f'%{field_value}%'))
@@ -144,7 +142,11 @@ class Helper:
     def build_clause_operators(self, field: sa.Column, field_operator: str, field_value) -> tuple:
         sql_clause = ()
 
-        if isinstance(field_value, str) and field_value.find(REQUEST_QUERY_DELIMITER) != -1:
+        if (
+            isinstance(field_value, str)
+            and field_value.find(REQUEST_QUERY_DELIMITER) != -1
+            and field_operator not in ['between', 'in', 'nin']
+        ):
             field_value = field_value.split(REQUEST_QUERY_DELIMITER)
             sql_clauses = []
 
