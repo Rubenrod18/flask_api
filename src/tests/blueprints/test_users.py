@@ -122,8 +122,7 @@ class TestUserEndpoints(TestBaseApi):
         assert json_data.get('deleted_at') is not None
         assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
-    # TODO: pending to integrate sqlalchemy
-    def xtest_search_users_endpoint(self):
+    def test_search_users_endpoint(self):
         json_body = {
             'search': [
                 {
@@ -153,8 +152,7 @@ class TestUserEndpoints(TestBaseApi):
         assert 0 < records_filtered <= records_total
         assert user_data[0]['name'].find(self.user.name) != -1
 
-    # TODO: pending to refactor the arquitecture
-    def xtest_export_word_endpoint(self):
+    def test_export_word_endpoint(self):
         def _request(uri: str, headers: str, json: dict) -> None:
             response = self.client.post(uri, json=json, headers=headers)
             json_response = response.get_json()
@@ -177,8 +175,7 @@ class TestUserEndpoints(TestBaseApi):
         _request(f'{self.base_path}/word?to_pdf=1', self.build_headers(), json)
         _request(f'{self.base_path}/word?to_pdf=0', self.build_headers(), json)
 
-    # TODO: pending to refactor the arquitecture
-    def xtest_export_excel_endpoint(self):
+    def test_export_excel_endpoint(self):
         response = self.client.post(f'{self.base_path}/xlsx', json={}, headers=self.build_headers())
         json_response = response.get_json()
 
@@ -186,8 +183,7 @@ class TestUserEndpoints(TestBaseApi):
         assert json_response.get('task')
         assert json_response.get('url')
 
-    # TODO: pending to refactor the arquitecture
-    def xtest_export_excel_and_word_endpoint(self):
+    def test_export_excel_and_word_endpoint(self):
         response = self.client.post(f'{self.base_path}/word_and_xlsx', json={}, headers=self.build_headers())
 
         assert 202 == response.status_code
