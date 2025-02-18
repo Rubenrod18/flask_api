@@ -47,6 +47,7 @@ class MyCelery(Celery):
 
 class ContextTask(Task):
     abstract = True
+    queue = 'default'
 
     def on_failure(self, exc, task_id, args, kwargs, einfo) -> None:
         logger.info(

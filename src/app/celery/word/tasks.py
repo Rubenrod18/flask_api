@@ -61,7 +61,7 @@ def _get_user_data(request_data: dict) -> list:
     return user_list
 
 
-@celery.task(bind=True, base=ContextTask)
+@celery.task(bind=True, base=ContextTask, queue='fast')
 def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_pdf: int):
     def _write_docx_content(rows: list, document: docx.Document) -> None:
         header_fields = rows[0]

@@ -70,7 +70,7 @@ def send_email_with_attachments_task(task_data: list) -> bool:
     return True
 
 
-@celery.task(base=ContextTask)
+@celery.task(base=ContextTask, queue='fast')
 def create_word_and_excel_documents_task(created_by: int, request_data: dict, to_pdf: int) -> bool:
     group_tasks = [
         export_user_data_in_word_task.s(created_by, request_data, to_pdf),

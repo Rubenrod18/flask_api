@@ -90,7 +90,7 @@ def _get_user_data(request_data: dict) -> list:
     return user_list
 
 
-@celery.task(bind=True, base=ContextTask)
+@celery.task(bind=True, base=ContextTask, queue='fast')
 def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
     def _write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> int:
         excel_longest_word = ''

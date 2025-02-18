@@ -75,6 +75,7 @@ class Config(metaclass=Meta):
         'app.celery.excel.tasks',
         'app.celery.word.tasks',
     ]
+    task_default_queue = 'default'
     task_queues = (
         Queue('default', Exchange('default'), routing_key='default'),
         Queue('fast', Exchange('tasks'), routing_key='fast'),
