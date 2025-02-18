@@ -16,7 +16,7 @@ class CreateDatabaseCli(_BaseCli, ABC):
             result = conn.execute(text(f"SHOW DATABASES LIKE '{dbname}';")).fetchone()
 
             if not result:
-                conn.execute(text(f"CREATE DATABASE IF NOT EXISTS '{dbname}';"))
+                conn.execute(text(f'CREATE DATABASE IF NOT EXISTS `{dbname}`;'))
 
             result = conn.execute(text(f"SHOW DATABASES LIKE '{dbname}';")).fetchone()
 
