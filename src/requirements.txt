@@ -134,8 +134,6 @@ packaging==24.2
     #   marshmallow
 passlib==1.7.4
     # via flask-security-too
-peewee==3.17.8
-    # via -r requirements.in
 prometheus-client==0.21.1
     # via flower
 prompt-toolkit==3.0.50

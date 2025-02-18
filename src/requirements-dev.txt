@@ -233,8 +233,6 @@ passlib==1.7.4
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   flask-security-too
-peewee==3.17.8
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
 pip-tools==7.4.1
     # via -r requirements-dev.in
 platformdirs==4.3.6

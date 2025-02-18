@@ -3,7 +3,6 @@ python-dotenv
 
 # Database
 faker
-peewee
 sqlalchemy # Required by celery
 mysqlclient
 factory-boy
