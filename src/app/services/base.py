@@ -1,4 +1,3 @@
-from app.extensions import db
 from app.managers import BaseManager
 from app.serializers import SearchSerializer
 
@@ -25,9 +24,3 @@ class BaseService(object):
 
     def delete(self, record_id: int):
         return self.manager.delete(record_id)
-
-    @property
-    def is_transaction_active(self):
-        # TODO: This property is temporal until I migrate the factories and seeders to SQLALchemy.
-        conn = db.session.connection(execution_options={'isolation_level': 'AUTOCOMMIT'})
-        return conn.get_transaction() is not None

@@ -25,14 +25,8 @@ class UserService(BaseService):
 
         deserialized_data.update({'created_by': current_user.id, 'roles': [role], 'fs_uniquifier': fs_uniquifier})
         user = user_datastore.create_user(**deserialized_data)
-
-        # TODO: Temporal code until I migrate the factories and seeders to SQLALchemy.
-        if self.is_transaction_active:
-            db.session.add(user)
-            db.session.flush()
-        else:
-            with db.session.begin():
-                pass
+        db.session.add(user)
+        db.session.flush()
 
         return user
 
@@ -52,13 +46,8 @@ class UserService(BaseService):
             role = self.role_manager.find(data['role_id'])
             user_datastore.add_role_to_user(user, role)
 
-        # TODO: Temporal code until I migrate the factories and seeders to SQLALchemy.
-        if self.is_transaction_active:
-            db.session.add(user)
-            db.session.flush()
-        else:
-            with db.session.begin():
-                pass
+        db.session.add(user)
+        db.session.flush()
 
         return user.reload()
 
