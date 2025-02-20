@@ -62,13 +62,13 @@ jobs:
       - name: Ruff linter
         uses: astral-sh/ruff-action@v3
         with:
-          version: "0.9.5"
+          version: "latest"
           args: 'check --config=./src/ruff.toml'
 
       - name: Ruff format
         uses: astral-sh/ruff-action@v3
         with:
-          version: "0.9.5"
+          version: "latest"
           args: 'format --check --config=./src/ruff.toml'
 
       - name: Run tests with make
