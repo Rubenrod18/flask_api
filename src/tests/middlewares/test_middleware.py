@@ -9,9 +9,9 @@ class TestMiddleware(TestBaseApi):
         response = self.client.post('/api/auth/logout', headers=self.build_headers())
         json_response = response.get_json()
 
-        assert 400 == response.status_code
-        assert 'Content type no valid' == json_response.get('message')
+        self.assertEqual(400, response.status_code)
+        self.assertEqual('Content type no valid', json_response.get('message'))
 
     def test_no_api_middleware(self):
         response = self.client.post('/welcome')
-        assert 404 == response.status_code
+        self.assertEqual(404, response.status_code)

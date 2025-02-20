@@ -25,5 +25,5 @@ class TestMail(TestBase):
                 recipients=[self.app.config.get('TEST_USER_EMAIL')],
             )
 
-            assert len(outbox) == 1
-            assert outbox[0].subject == 'testing'
+            self.assertEqual(len(outbox), 1)
+            self.assertEqual(outbox[0].subject, 'testing')

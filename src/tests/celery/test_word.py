@@ -10,8 +10,7 @@ from tests.base.base_test import TestBase
 
 
 class TestWordTask(TestBase):
-    @staticmethod
-    def run_task(created_by: int, request_data: dict, to_pdf: int = 0):
+    def run_task(self, created_by: int, request_data: dict, to_pdf: int = 0):
         result = export_user_data_in_word_task.apply(args=(created_by, request_data, to_pdf)).get()
 
         document_data = result.get('result')
@@ -19,16 +18,16 @@ class TestWordTask(TestBase):
 
         mime_type = PDF_MIME_TYPE if to_pdf else MS_WORD_MIME_TYPE
 
-        assert result.get('current') == result.get('total')
-        assert result.get('status') == 'Task completed!'
+        self.assertEqual(result.get('current'), result.get('total'))
+        self.assertEqual(result.get('status'), 'Task completed!')
 
-        assert created_by == document_data.get('created_by').get('id')
-        assert document_data.get('name')
-        assert mime_type == document_data.get('mime_type')
-        assert document_data.get('size') > 0
-        assert parse_url.scheme and parse_url.netloc
-        assert document_data.get('created_at') == document_data.get('updated_at')
-        assert document_data.get('deleted_at') is None
+        self.assertEqual(created_by, document_data.get('created_by').get('id'))
+        self.assertTrue(document_data.get('name'))
+        self.assertEqual(mime_type, document_data.get('mime_type'))
+        self.assertGreater(document_data.get('size'), 0)
+        self.assertTrue(parse_url.scheme and parse_url.netloc)
+        self.assertEqual(document_data.get('created_at'), document_data.get('updated_at'))
+        self.assertIsNone(document_data.get('deleted_at'))
 
     def test_export_word_task(self):
         role = RoleFactory()

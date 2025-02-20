@@ -27,13 +27,13 @@ class TestExcelTask(TestBase):
         document_data = result.get('result')
         parse_url = urlparse(document_data.get('url'))
 
-        assert result.get('current') == result.get('total')
-        assert result.get('status') == 'Task completed!'
+        self.assertEqual(result.get('current'), result.get('total'))
+        self.assertEqual(result.get('status'), 'Task completed!')
 
-        assert user_id == document_data.get('created_by').get('id')
-        assert document_data.get('name')
-        assert MS_EXCEL_MIME_TYPE == document_data.get('mime_type')
-        assert document_data.get('size') > 0
-        assert parse_url.scheme and parse_url.netloc
-        assert document_data.get('created_at') == document_data.get('updated_at')
-        assert document_data.get('deleted_at') is None
+        self.assertEqual(user_id, document_data.get('created_by').get('id'))
+        self.assertTrue(document_data.get('name'))
+        self.assertEqual(MS_EXCEL_MIME_TYPE, document_data.get('mime_type'))
+        self.assertGreater(document_data.get('size'), 0)
+        self.assertTrue(parse_url.scheme and parse_url.netloc)
+        self.assertEqual(document_data.get('created_at'), document_data.get('updated_at'))
+        self.assertIsNone(document_data.get('deleted_at'))

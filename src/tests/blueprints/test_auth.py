@@ -26,9 +26,9 @@ class TestAuthEndpoints(TestBaseApi):
             json_response = response.get_json()
             token = json_response.get('token')
 
-            assert 200 == response.status_code
-            assert token
-            assert flask_security.current_user.is_authenticated
+            self.assertEqual(200, response.status_code)
+            self.assertTrue(token)
+            self.assertTrue(flask_security.current_user.is_authenticated)
 
     def test_invalid_user(self):
         data = {
@@ -39,8 +39,8 @@ class TestAuthEndpoints(TestBaseApi):
         response = self.client.post(f'{self.base_path}/login', json=data)
         json_response = response.get_json()
 
-        assert json_response.get('message')
-        assert 401 == response.status_code
+        self.assertTrue(json_response.get('message'))
+        self.assertEqual(401, response.status_code)
 
     def test_inactive_user(self):
         role = RoleFactory()
@@ -53,8 +53,8 @@ class TestAuthEndpoints(TestBaseApi):
 
         response = self.client.post(f'{self.base_path}/login', json=data)
 
-        assert user.active is False
-        assert 401 == response.status_code
+        self.assertFalse(user.active)
+        self.assertEqual(401, response.status_code)
 
     def test_invalid_password(self):
         data = {
@@ -63,7 +63,8 @@ class TestAuthEndpoints(TestBaseApi):
         }
 
         response = self.client.post(f'{self.base_path}/login', json=data)
-        assert 401 == response.status_code
+
+        self.assertEqual(401, response.status_code)
 
     def test_user_logout(self):
         auth_header = self.build_headers()
@@ -71,8 +72,8 @@ class TestAuthEndpoints(TestBaseApi):
         response = self.client.post(f'{self.base_path}/logout', json={}, headers=auth_header)
         json_response = response.get_json()
 
-        assert 200 == response.status_code
-        assert not json_response
+        self.assertEqual(200, response.status_code)
+        self.assertFalse(json_response)
 
     @mock.patch('app.services.task.TaskService.reset_password_email')
     def test_request_reset_password(self, mock_reset_password_email):
@@ -82,7 +83,7 @@ class TestAuthEndpoints(TestBaseApi):
 
         response = self.client.post(f'{self.base_path}/reset_password', json=data)
 
-        assert 202 == response.status_code
+        self.assertEqual(202, response.status_code)
 
     def test_validate_reset_password(self):
         with self.app.app_context():
@@ -90,7 +91,7 @@ class TestAuthEndpoints(TestBaseApi):
 
         response = self.client.get(f'{self.base_path}/reset_password/{token}', json={})
 
-        assert 200 == response.status_code
+        self.assertEqual(200, response.status_code)
 
     def test_reset_password(self):
         token = self.admin_user.get_reset_token()
@@ -99,5 +100,5 @@ class TestAuthEndpoints(TestBaseApi):
         response = self.client.post(f'{self.base_path}/reset_password/{token}', json=data)
         json_response = response.get_json()
 
-        assert 200 == response.status_code
-        assert json_response.get('token')
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(json_response.get('token'))
