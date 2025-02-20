@@ -15,6 +15,4 @@ celery multi start ${CELERYD_NODES} \
     --app=app.celery \
     ${CELERYD_OPTS//\"}
 
-
-
 tail -F /var/log/celeryd/*.log
