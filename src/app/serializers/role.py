@@ -5,7 +5,7 @@ from werkzeug.exceptions import BadRequest, NotFound
 
 from app.extensions import ma
 from app.managers import RoleManager
-from app.serializers.core import TimestampField
+from app.models import Role
 
 logger = logging.getLogger(__name__)
 role_manager = RoleManager()
@@ -21,17 +21,18 @@ class RoleName(fields.Field):
         return str(value)
 
 
-class RoleSerializer(ma.Schema):
+class RoleSerializer(ma.SQLAlchemySchema):
     class Meta:
+        model = Role
         ordered = True
 
     id = fields.Int()
     name = fields.Str(dump_only=True)
     description = fields.Str()
     label = fields.Str()
-    created_at = TimestampField(dump_only=True)
-    updated_at = TimestampField(dump_only=True)
-    deleted_at = TimestampField(dump_only=True)
+    created_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
+    updated_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
+    deleted_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
 
     @validates('id')
     def validate_id(self, role_id):

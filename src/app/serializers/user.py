@@ -5,8 +5,8 @@ from werkzeug.exceptions import BadRequest, NotFound
 
 from app.extensions import ma
 from app.managers import RoleManager, UserManager
+from app.models import User
 from app.serializers import RoleSerializer
-from app.serializers.core import TimestampField
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -26,8 +26,9 @@ class VerifyRoleId(fields.Field):
         return value
 
 
-class UserSerializer(ma.Schema):
+class UserSerializer(ma.SQLAlchemySchema):
     class Meta:
+        model = User
         ordered = True
 
     id = fields.Int()
@@ -39,9 +40,9 @@ class UserSerializer(ma.Schema):
     genre = fields.Str(validate=validate.OneOf(['m', 'f']))
     birth_date = fields.Date()
     active = fields.Bool()
-    created_at = TimestampField(dump_only=True)
-    updated_at = TimestampField(dump_only=True)
-    deleted_at = TimestampField(dump_only=True)
+    created_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
+    updated_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
+    deleted_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     roles = fields.List(fields.Nested(RoleSerializer, only=('name', 'label')), dump_only=True)
 
     role_id = VerifyRoleId(load_only=True)

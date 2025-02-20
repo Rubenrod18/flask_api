@@ -1,22 +1,7 @@
-from datetime import datetime
-
 from marshmallow import fields, validate
 
 from app.extensions import ma
 from app.utils.request_query_operator import QUERY_OPERATORS, STRING_QUERY_OPERATORS
-
-
-class TimestampField(fields.Field):
-    """Field that serializes to timestamp integer and deserializes to a
-    datetime.datetime class."""
-
-    def _serialize(self, value, attr, obj, **kwargs):
-        if not isinstance(value, int):
-            return value
-        return datetime.fromtimestamp(value).strftime('%Y-%m-%d %H:%M:%S')
-
-    def _deserialize(self, value, attr, data, **kwargs):
-        return datetime.timestamp(value)
 
 
 class _SearchValueSerializer(ma.Schema):
