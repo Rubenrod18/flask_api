@@ -9,7 +9,7 @@ from app.database import fake
 from app.database.factories.base_factory import BaseFactory
 from app.extensions import db
 from app.managers import UserManager
-from app.models import Document as DocumentModel, User as UserModel
+from app.models import Document, User
 from app.utils.constants import PDF_MIME_TYPE
 
 _user_manager = UserManager()
@@ -17,7 +17,7 @@ _user_manager = UserManager()
 
 class DocumentFactory(BaseFactory):
     class Meta:
-        model = DocumentModel
+        model = Document
 
     name = factory.Sequence(lambda n: f'document_name_{n}')
     size = fake.random_int(2_000_000, 10_000_000)
@@ -41,6 +41,4 @@ class DocumentFactory(BaseFactory):
 
     @factory.lazy_attribute
     def created_by_user(self):
-        return (
-            db.session.query(UserModel).filter(UserModel.deleted_at.is_(None)).order_by(func.random()).limit(1).first()
-        )
+        return db.session.query(User).filter(User.deleted_at.is_(None)).order_by(func.random()).limit(1).first()

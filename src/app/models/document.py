@@ -4,17 +4,17 @@ import sqlalchemy as sa
 from flask import url_for
 from sqlalchemy.orm import relationship
 
-from app.models.base import Base as BaseModel
-from app.models.user import User as UserModel
+from app.models.base import Base
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
 
-class Document(BaseModel):
+class Document(Base):
     __tablename__ = 'documents'
 
     created_by = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=True)
-    created_by_user = relationship(UserModel, backref='documents')
+    created_by_user = relationship(User, backref='documents')
 
     name = sa.Column(sa.String(255), nullable=False)
     internal_filename = sa.Column(sa.String(255), nullable=False, unique=True)

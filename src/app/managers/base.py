@@ -1,13 +1,13 @@
 from datetime import datetime, UTC
 
 from app.extensions import db
-from app.models import Base as BaseModel
+from app.models import Base
 from app.utils.request_query_operator import RequestQueryOperator as rqo
 
 
 class BaseManager(object):
     def __init__(self, *args, **kwargs):
-        self.model = BaseModel
+        self.model = Base
 
     def create(self, **kwargs):
         current_date = datetime.now(UTC)

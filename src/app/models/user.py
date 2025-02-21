@@ -9,7 +9,7 @@ from itsdangerous import TimestampSigner, URLSafeSerializer
 from sqlalchemy.orm import backref, relationship
 
 from ..extensions import db
-from .base import Base as BaseModel
+from .base import Base
 from .role import Role
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class Genre(str, enum.Enum):
         return [getattr(_, attr) for _ in list(cls)]
 
 
-class User(BaseModel, UserMixin):
+class User(Base, UserMixin):
     """User database model.
 
     References
@@ -106,7 +106,7 @@ class User(BaseModel, UserMixin):
         return hash_password(plain_text) if plain_text else None
 
 
-class UsersRolesThrough(BaseModel):
+class UsersRolesThrough(Base):
     __tablename__ = 'users_roles_through'
 
     user_id = sa.Column(sa.Integer, sa.ForeignKey('users.id'))

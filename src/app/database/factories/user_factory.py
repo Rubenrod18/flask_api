@@ -11,17 +11,17 @@ from app.database.factories.base_factory import BaseFactory, faker
 from app.database.factories.role_factory import AdminRoleFactory, RoleFactory
 from app.extensions import db
 from app.managers import UserManager
-from app.models import Role as RoleModel, User as UserModel
+from app.models import Role, User
 from app.models.user import Genre
 from app.serializers import UserSerializer
 
-UserList = List[UserModel]
+UserList = List[User]
 _user_manager = UserManager()
 
 
 class UserFactory(BaseFactory):
     class Meta:
-        model = UserModel
+        model = User
 
     fs_uniquifier = factory.Faker('uuid4')
     name = factory.Faker('name')
@@ -39,14 +39,14 @@ class UserFactory(BaseFactory):
 
     @factory.lazy_attribute
     def password(self):
-        return UserModel.ensure_password(os.getenv('TEST_USER_PASSWORD'))
+        return User.ensure_password(os.getenv('TEST_USER_PASSWORD'))
 
     @factory.lazy_attribute
     def created_by(self):
         user = (
-            db.session.query(UserModel)
-            .join(UserModel.roles)
-            .filter(UserModel.deleted_at.is_(None), RoleModel.name == 'admin')
+            db.session.query(User)
+            .join(User.roles)
+            .filter(User.deleted_at.is_(None), Role.name == 'admin')
             .order_by(func.random())
             .limit(1)
             .one_or_none()

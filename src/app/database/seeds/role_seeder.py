@@ -1,7 +1,7 @@
 from app.database import seed_actions
 from app.database.factories.role_factory import RoleFactory
 from app.extensions import db
-from app.models.role import Role as RoleModel
+from app.models.role import Role
 
 
 class Seeder:
@@ -10,7 +10,7 @@ class Seeder:
 
     @staticmethod
     def _create_admin_role() -> None:
-        admin_role = db.session.query(RoleModel).filter(RoleModel.name == 'admin').first()
+        admin_role = db.session.query(Role).filter(Role.name == 'admin').first()
 
         if admin_role is None:
             params = {
@@ -23,7 +23,7 @@ class Seeder:
 
     @staticmethod
     def _create_team_leader() -> None:
-        team_leader_role = db.session.query(RoleModel).filter(RoleModel.name == 'team_leader').first()
+        team_leader_role = db.session.query(Role).filter(Role.name == 'team_leader').first()
 
         if team_leader_role is None:
             params = {
@@ -36,7 +36,7 @@ class Seeder:
 
     @staticmethod
     def _create_worker_role() -> None:
-        worker_role = db.session.query(RoleModel).filter(RoleModel.name == 'worker').first()
+        worker_role = db.session.query(Role).filter(Role.name == 'worker').first()
 
         if worker_role is None:
             params = {

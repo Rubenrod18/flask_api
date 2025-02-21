@@ -11,7 +11,7 @@ from flask import current_app
 
 from app.celery import ContextTask
 from app.extensions import celery, db
-from app.models import Document as DocumentModel, User as UserModel
+from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
 from app.utils import to_readable
 from app.utils.constants import MS_WORD_MIME_TYPE, PDF_MIME_TYPE
@@ -50,10 +50,10 @@ def _add_table_column_names(rows: list, original_column_names: set) -> None:
 
 
 def _get_user_data(request_data: dict) -> list:
-    page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel, request_data)
+    page_number, items_per_page, order_by = rqo.get_request_query_fields(User, request_data)
 
-    query = db.session.query(UserModel)
-    query = rqo.create_search_query(UserModel, query, request_data)
+    query = db.session.query(User)
+    query = rqo.create_search_query(User, query, request_data)
     query = query.order_by(*order_by).offset(page_number * items_per_page).limit(items_per_page)
 
     user_serializer = UserSerializer(many=True)
@@ -125,10 +125,11 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
             'size': FileStorage.get_filesize(filepath),
         }
 
-        document = DocumentModel(**data)
+        document = Document(**data)
         db.session.add(document)
         db.session.flush()
     except Exception as e:
+        db.session.rollback()
         if os.path.exists(filepath):
             os.remove(filepath)
         logger.debug(e)
@@ -137,12 +138,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
     document_serializer = DocumentSerializer(exclude=('internal_filename',))
     document_data = document_serializer.dump(document)
     db.session.commit()
-    """
-    'result': {
-            'filename': document_data['name'],
-            'url': document_data['url'],
-        }
-    """
+
     return {
         'current': self.total_progress,
         'total': self.total_progress,

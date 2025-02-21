@@ -4,7 +4,7 @@ from sqlalchemy import func
 
 from app.database.factories.role_factory import RoleFactory
 from app.extensions import db
-from app.models.role import Role as RoleModel
+from app.models.role import Role
 from tests.base.base_api_test import TestBaseApi
 
 
@@ -30,13 +30,7 @@ class TestRoleEndpoints(TestBaseApi):
         self.assertIsNone(json_data.get('deleted_at'))
 
     def test_update_role_endpoint(self):
-        role_id = (
-            db.session.query(RoleModel.id)
-            .filter(RoleModel.deleted_at.is_(None))
-            .order_by(func.random())
-            .limit(1)
-            .scalar()
-        )
+        role_id = db.session.query(Role.id).filter(Role.deleted_at.is_(None)).order_by(func.random()).limit(1).scalar()
 
         ignore_fields = {'id', 'created_at', 'updated_at', 'deleted_at', 'name'}
         data = RoleFactory.build_dict(exclude=ignore_fields)
@@ -55,15 +49,9 @@ class TestRoleEndpoints(TestBaseApi):
         self.assertIsNone(json_data.get('deleted_at'))
 
     def test_get_role_endpoint(self):
-        role_id = (
-            db.session.query(RoleModel.id)
-            .filter(RoleModel.deleted_at.is_(None))
-            .order_by(func.random())
-            .limit(1)
-            .scalar()
-        )
+        role_id = db.session.query(Role.id).filter(Role.deleted_at.is_(None)).order_by(func.random()).limit(1).scalar()
 
-        role = db.session.query(RoleModel).filter(RoleModel.id == role_id).one_or_none()
+        role = db.session.query(Role).filter(Role.id == role_id).one_or_none()
 
         response = self.client.get(f'{self.base_path}/{role_id}', json={}, headers=self.build_headers())
         json_response = response.get_json()

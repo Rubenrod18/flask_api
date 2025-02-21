@@ -3,7 +3,7 @@ import os
 from app.database import seed_actions
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
-from app.models import Role as RoleModel, User as UserModel
+from app.models import Role, User
 
 
 class Seeder:
@@ -13,14 +13,14 @@ class Seeder:
     @staticmethod
     def _create_admin_user():
         test_user_email = os.getenv('TEST_USER_EMAIL')
-        test_user = db.session.query(UserModel).filter(UserModel.email == test_user_email).first()
+        test_user = db.session.query(User).filter(User.email == test_user_email).first()
 
         if test_user is None:
-            role = db.session.query(RoleModel).filter(RoleModel.name == 'admin').first()
+            role = db.session.query(Role).filter(Role.name == 'admin').first()
 
             params = {
                 'email': test_user_email,
-                'password': UserModel.ensure_password(os.getenv('TEST_USER_PASSWORD')),
+                'password': User.ensure_password(os.getenv('TEST_USER_PASSWORD')),
                 'deleted_at': None,
                 'active': True,
                 'created_by': None,

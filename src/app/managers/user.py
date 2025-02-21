@@ -1,12 +1,12 @@
 from app.extensions import db
 from app.managers.base import BaseManager
-from app.models.user import User as UserModel
+from app.models.user import User
 
 
 class UserManager(BaseManager):
     def __init__(self):
         super(BaseManager, self).__init__()
-        self.model = UserModel
+        self.model = User
 
     def find_by_email(self, email: str, *args):
         query = (self.model.email == email,)

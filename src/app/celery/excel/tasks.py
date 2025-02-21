@@ -14,7 +14,7 @@ from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
 from app.extensions import celery, db
-from app.models import Document as DocumentModel, User as UserModel
+from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
 from app.utils import find_longest_word, pos_to_char, to_readable
 from app.utils.file_storage import FileStorage
@@ -79,10 +79,10 @@ def _add_excel_autofilter(worksheet: Worksheet):
 
 
 def _get_user_data(request_data: dict) -> list:
-    page_number, items_per_page, order_by = rqo.get_request_query_fields(UserModel, request_data)
+    page_number, items_per_page, order_by = rqo.get_request_query_fields(User, request_data)
 
-    query = db.session.query(UserModel)
-    query = rqo.create_search_query(UserModel, query, request_data)
+    query = db.session.query(User)
+    query = rqo.create_search_query(User, query, request_data)
     query = query.order_by(*order_by).offset(page_number * items_per_page).limit(items_per_page)
 
     user_serializer = UserSerializer(many=True)
@@ -171,13 +171,14 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
             'size': fs.get_filesize(filepath),
         }
 
-        document = DocumentModel(**data)
+        document = Document(**data)
         db.session.add(document)
         db.session.flush()
-    except Exception:
+    except Exception as e:
         db.session.rollback()
         if os.path.exists(filepath):
             os.remove(filepath)
+        logger.debug(e)
         raise
 
     document_serializer = DocumentSerializer(exclude=('internal_filename',))
