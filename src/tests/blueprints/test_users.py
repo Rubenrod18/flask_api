@@ -153,15 +153,7 @@ class TestUserEndpoints(TestBaseApi):
         self.assertTrue(user_data[0]['name'].find(self.user.name) != -1)
 
     def test_export_word_endpoint(self):
-        # TODO: move this logic to subtest
-        def _request(uri: str, headers: str, json: dict) -> None:
-            response = self.client.post(uri, json=json, headers=headers)
-            json_response = response.get_json()
-
-            self.assertEqual(202, response.status_code)
-            self.assertTrue(json_response.get('task'))
-            self.assertTrue(json_response.get('url'))
-
+        auth_headers = self.build_headers()
         json = {
             'search': [],
             'order': [
@@ -171,10 +163,20 @@ class TestUserEndpoints(TestBaseApi):
                 },
             ],
         }
+        test_cases = [
+            (f'{self.base_path}/word', auth_headers, json),
+            (f'{self.base_path}/word?to_pdf=1', auth_headers, json),
+            (f'{self.base_path}/word?to_pdf=0', auth_headers, json),
+        ]
 
-        _request(f'{self.base_path}/word', self.build_headers(), json)
-        _request(f'{self.base_path}/word?to_pdf=1', self.build_headers(), json)
-        _request(f'{self.base_path}/word?to_pdf=0', self.build_headers(), json)
+        for uri, auth_headers, payload in test_cases:
+            with self.subTest(msg=uri):
+                response = self.client.post(uri, json=payload, headers=auth_headers)
+                json_response = response.get_json()
+
+                self.assertEqual(202, response.status_code)
+                self.assertTrue(json_response.get('task'))
+                self.assertTrue(json_response.get('url'))
 
     def test_export_excel_endpoint(self):
         response = self.client.post(f'{self.base_path}/xlsx', json={}, headers=self.build_headers())
