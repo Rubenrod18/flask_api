@@ -56,6 +56,3 @@ class BaseManager(object):
             query = query.filter(arg)
 
         return query.first()
-
-    def raw(self, query: str):
-        return self.model.raw(query)
