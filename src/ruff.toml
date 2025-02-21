@@ -33,7 +33,7 @@ exclude = [
     "site-packages",      # Installed Python packages
     "venv",               # Python virtual environments
     ".ipython/profile_default/ipython_config.py", # IPython config
-    "migrations", # Application's database migrations
+    "app/database/migrations", # Application's database migrations
 ]
 
 # Set maximum line length (matches Black's default).
