@@ -17,7 +17,7 @@ from app.utils import to_readable
 from app.utils.constants import MS_WORD_MIME_TYPE, PDF_MIME_TYPE
 from app.utils.file_storage import FileStorage
 from app.utils.libreoffice import convert_to
-from app.utils.request_query_operator import RequestQueryOperator as rqo
+from app.utils.request_query_operator import RequestQueryOperator
 
 logger = get_task_logger(__name__)
 
@@ -50,6 +50,7 @@ def _add_table_column_names(rows: list, original_column_names: set) -> None:
 
 
 def _get_user_data(request_data: dict) -> list:
+    rqo = RequestQueryOperator()
     page_number, items_per_page, order_by = rqo.get_request_query_fields(User, request_data)
 
     query = db.session.query(User)

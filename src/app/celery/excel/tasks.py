@@ -18,7 +18,7 @@ from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
 from app.utils import find_longest_word, pos_to_char, to_readable
 from app.utils.file_storage import FileStorage
-from app.utils.request_query_operator import RequestQueryOperator as rqo
+from app.utils.request_query_operator import RequestQueryOperator
 
 logger = get_task_logger(__name__)
 
@@ -79,6 +79,7 @@ def _add_excel_autofilter(worksheet: Worksheet):
 
 
 def _get_user_data(request_data: dict) -> list:
+    rqo = RequestQueryOperator()
     page_number, items_per_page, order_by = rqo.get_request_query_fields(User, request_data)
 
     query = db.session.query(User)

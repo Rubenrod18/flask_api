@@ -20,8 +20,6 @@ Comparison Operators: https://docs.sqlalchemy.org/en/20/core/operators.html#comp
 
 """
 
-import operator
-from functools import reduce
 from typing import Type
 
 import sqlalchemy as sa
@@ -72,9 +70,9 @@ QUERY_OPERATORS = [
 ]
 
 
-class Helper:
+class OrderingHelper:
     @staticmethod
-    def build_order_by(db_model: Type[db.Model], request_data: dict) -> list:
+    def build_order_by(db_model: Type[db.Model], request_data: dict) -> list[sa.UnaryExpression]:
         """Build sorting fields with zero or more Column-like objects to
         order by.
 
@@ -86,7 +84,7 @@ class Helper:
         >>> from app.models.user import User
         >>> db_model = User
         >>> request_data = {'order': [{'sorting': 'asc', 'field_name': 'created_at'}]}  # noqa
-        >>> Helper.build_order_by(db_model, request_data)
+        >>> OrderingHelper.build_order_by(db_model, request_data)
         <flask_sqlalchemy.query.Query object at 0x7f9edf6954f0>
 
         References
@@ -94,135 +92,196 @@ class Helper:
         https://docs.sqlalchemy.org/en/20/orm/queryguide/query.html#sqlalchemy.orm.Query.order_by
 
         """
-
-        def build_ordering(field_name, sorting) -> sa.UnaryExpression:
-            field = getattr(db_model, field_name)
-            return getattr(field, sorting)()
-
         order_by_values = []
         request_order = request_data.get('order', [{'field_name': 'id', 'sorting': 'asc'}])
 
-        if isinstance(request_order, list):
-            order_by_values = [build_ordering(item.get('field_name'), item.get('sorting')) for item in request_order]
+        for item in request_order:
+            field_name = item.get('field_name')
+            sorting = item.get('sorting', 'asc')
+
+            field = getattr(db_model, field_name, None)
+            if field is not None:
+                if sorting == 'desc':
+                    order_by_values.append(field.desc())
+                else:
+                    order_by_values.append(field.asc())
+
         return order_by_values
 
-    def build_string_clause(self, field: sa.Column, field_operator: str, field_value) -> tuple:
-        """Build string clauses.
 
-        You can find next string operators:
-        +------------+-----------------------------------------+
-        | Name       | Description                             |
-        +============+=========================================+
-        | eq         | x equals y                              |
-        +------------+-----------------------------------------+
-        | ne         | x is not equal to y                     |
-        +------------+-----------------------------------------+
-        | contains   | Wild-card search for substring          |
-        +------------+-----------------------------------------+
-        | ncontains  | Wild-card not search for substring      |
-        +------------+-----------------------------------------+
-        | startswith | Search for values beginning with prefix |
-        +------------+-----------------------------------------+
-        | endswith   | Search for values ending with suffix    |
-        +------------+-----------------------------------------+
+class StringClauseHelper:
+    def __init__(self):
+        self.operator_map = {
+            'eq': self._eq,
+            'ne': self._ne,
+            'contains': self._contains,
+            'ncontains': self._ncontains,
+            'startswith': self._startswith,
+            'endswith': self._endswith,
+        }
 
-        References
-        ----------
-        https://docs.sqlalchemy.org/en/20/core/operators.html#string-comparisons
+    @staticmethod
+    def _eq(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field == field_value
 
-        Example
-        -------
-        TODO: Pending to define
+    @staticmethod
+    def _ne(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field != field_value
 
-        """
-        sql_clause = ()
+    @staticmethod
+    def _contains(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field.like(f'%{field_value}%')
 
-        if field_value.find(REQUEST_QUERY_DELIMITER) != -1:
-            field_value = field_value.split(REQUEST_QUERY_DELIMITER)
-            sql_clauses = []
+    @staticmethod
+    def _ncontains(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return ~field.like(f'%{field_value}%')
 
-            for item in field_value:
-                sql_clauses.append(self.build_string_clause(field, field_operator, item))
-            sql_clause = reduce(operator.or_, sql_clauses)
-        elif field_operator in STRING_QUERY_OPERATORS:
-            if field_operator == EQUAL_OP:
-                sql_clause = field == field_value
-            elif field_operator == NOT_EQUAL_OP:
-                sql_clause = field != field_value
-            elif field_operator == CONTAINS_OP:
-                sql_clause = field.like(f'%{field_value}%')
-            elif field_operator == NOT_CONTAINS_OP:
-                sql_clause = sa.not_(field.like(f'%{field_value}%'))
-            elif field_operator == STARTS_WITH_OP:
-                sql_clause = field.like(f'{field_value}%')
-            elif field_operator == ENDS_WITH_OP:
-                sql_clause = field.like(f'%{field_value}')
+    @staticmethod
+    def _startswith(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field.like(f'{field_value}%')
+
+    @staticmethod
+    def _endswith(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field.like(f'%{field_value}')
+
+    def build_clause(
+        self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: str
+    ) -> sa.BinaryExpression:
+        if field_operator not in self.operator_map:
+            raise ValueError(f'Unsupported operator: {field_operator}')
+
+        return self.operator_map[field_operator](field, field_value)
+
+    def build_clause_with_multiple_values(
+        self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: str
+    ) -> sa.BinaryExpression:
+        if REQUEST_QUERY_DELIMITER in field_value:
+            values = field_value.split(REQUEST_QUERY_DELIMITER)
+            sql_clause = sa.or_(*(self.build_clause(field, field_operator, value) for value in values))
+        else:
+            sql_clause = self.build_clause(field, field_operator, field_value)
 
         return sql_clause
 
-    def build_clause_operators(self, field: sa.Column, field_operator: str, field_value) -> tuple:
-        sql_clause = ()
 
+class OperatorClauseHelper:
+    def __init__(self):
+        self.operator_map = {
+            'eq': self._eq,
+            'ne': self._ne,
+            'lt': self._lt,
+            'lte': self._lte,
+            'gt': self._gt,
+            'gte': self._gte,
+            'in': self._in,
+            'nin': self._nin,
+            'between': self._between,
+        }
+
+    @staticmethod
+    def _eq(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field == field_value
+
+    @staticmethod
+    def _ne(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field != field_value
+
+    @staticmethod
+    def _lt(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field < field_value
+
+    @staticmethod
+    def _lte(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field <= field_value
+
+    @staticmethod
+    def _gt(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field > field_value
+
+    @staticmethod
+    def _gte(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field >= field_value
+
+    @staticmethod
+    def _in(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return field.in_(field_value.split(REQUEST_QUERY_DELIMITER))
+
+    @staticmethod
+    def _nin(field: sa.orm.InstrumentedAttribute, field_value: str) -> sa.BinaryExpression:
+        return ~field.in_(field_value.split(REQUEST_QUERY_DELIMITER))
+
+    @staticmethod
+    def _between(field: sa.orm.InstrumentedAttribute, field_value: any) -> sa.BinaryExpression:
+        values = field_value.split(REQUEST_QUERY_DELIMITER)
+        return field.between(values[0], values[1])
+
+    def build_clause(
+        self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: any
+    ) -> sa.BinaryExpression:
+        if field_operator not in self.operator_map:
+            raise ValueError(f'Unsupported operator: {field_operator}')
+
+        return self.operator_map[field_operator](field, field_value)
+
+    def build_clause_with_multiple_values(
+        self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: any
+    ) -> sa.BinaryExpression:
         if (
             isinstance(field_value, str)
-            and field_value.find(REQUEST_QUERY_DELIMITER) != -1
+            and REQUEST_QUERY_DELIMITER in field_value
             and field_operator not in [BETWEEN_OP, IN_OP, NOT_IN_OP]
         ):
-            field_value = field_value.split(REQUEST_QUERY_DELIMITER)
-            sql_clauses = []
+            values = field_value.split(REQUEST_QUERY_DELIMITER)
+            sql_clause = sa.or_(*(self.build_clause(field, field_operator, value) for value in values))
+        else:
+            sql_clause = self.build_clause(field, field_operator, field_value)
 
-            for item in field_value:
-                sql_clauses.append(self.build_clause_operators(field, field_operator, item))
-
-            sql_clause = reduce(operator.or_, sql_clauses)
-        elif field_operator in QUERY_OPERATORS:
-            if field_operator == EQUAL_OP:
-                sql_clause = field == field_value
-            elif field_operator == NOT_EQUAL_OP:
-                sql_clause = field != field_value
-            elif field_operator == LESS_THAN_OP:
-                sql_clause = field < field_value
-            elif field_operator == LESS_THAN_OR_EQUAL_TO_OP:
-                sql_clause = field <= field_value
-            elif field_operator == GREATER_THAN_OP:
-                sql_clause = field > field_value
-            elif field_operator == GREATER_THAN_OR_EQUAL_TO_OP:
-                sql_clause = field >= field_value
-            elif field_operator == IN_OP:
-                sql_clause = field.in_(field_value.split(REQUEST_QUERY_DELIMITER))
-            elif field_operator == NOT_IN_OP:
-                sql_clause = ~field.in_(field_value.split(REQUEST_QUERY_DELIMITER))
-            elif field_operator == BETWEEN_OP:
-                values = field_value.split(REQUEST_QUERY_DELIMITER)
-                sql_clause = field.between(values[0], values[1])
         return sql_clause
 
-    def build_sql_expression(self, field: sa.Column, field_operator: str, field_value):
+
+class QueryHelper:
+    def __init__(self):
+        self.string_clause_helper = StringClauseHelper()
+        self.operator_clause_helper = OperatorClauseHelper()
+
+    def build_sql_expression(
+        self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: any
+    ) -> sa.sql.expression.ClauseElement:
         if isinstance(field.type, (sa.String, sa.Text, sa.UUID)):
-            sql_clause = self.build_string_clause(field, field_operator, field_value)
+            sql_clause = self.string_clause_helper.build_clause_with_multiple_values(field, field_operator, field_value)
         else:
-            sql_clause = self.build_clause_operators(field, field_operator, field_value)
+            sql_clause = self.operator_clause_helper.build_clause_with_multiple_values(
+                field, field_operator, field_value
+            )
+
         return sql_clause
 
 
 class RequestQueryOperator:
-    @staticmethod
-    def create_search_query(db_model: Type[db.Model], query: FlaskQuery, data: dict = None) -> FlaskQuery:
+    def __init__(self, query_helper: QueryHelper = None, ordering_helper: OrderingHelper = None):
+        self.query_helper = query_helper or QueryHelper()
+        self.ordering_helper = ordering_helper or OrderingHelper()
+
+    def create_search_query(self, db_model: Type[db.Model], query: FlaskQuery, data: dict = None) -> FlaskQuery:
         if data is None:
             data = {}
 
-        filters = data.get('search', {})
+        search_criteria = data.get('search', {})
         sql_expressions = []
-        helper = Helper()
 
-        for filter in filters:
-            field = getattr(db_model, filter['field_name'])
-            field_value = filter['field_value']
+        for criteria in search_criteria:
+            field_name = criteria.get('field_name')
+            field = getattr(db_model, field_name, None)
+
+            if field is None:
+                raise ValueError(f'Invalid field name: {field_name}')
+
+            field_value = criteria['field_value']
 
             if isinstance(field_value, str) and not field_value.strip():
                 continue
 
-            sql_expression = helper.build_sql_expression(field, filter['field_operator'], field_value)
+            sql_expression = self.query_helper.build_sql_expression(field, criteria['field_operator'], field_value)
             sql_expressions.append(sql_expression)
 
         if sql_expressions:
@@ -230,11 +289,13 @@ class RequestQueryOperator:
 
         return query
 
-    @staticmethod
-    def get_request_query_fields(db_model: Type[db.Model], request_data=None) -> tuple:
+    def get_request_query_fields(
+        self, db_model: Type[db.Model], request_data=None
+    ) -> tuple[int, int, list[sa.UnaryExpression]]:
         request_data = request_data or {}
-
         page_number = int(request_data.get('page_number', 1)) - 1
         items_per_page = int(request_data.get('items_per_page', 10))
-        order_by = Helper.build_order_by(db_model, request_data)
+
+        order_by = self.ordering_helper.build_order_by(db_model, request_data)
+
         return page_number, items_per_page, order_by

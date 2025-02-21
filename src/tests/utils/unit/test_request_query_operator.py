@@ -1,19 +1,20 @@
 import typing
 from datetime import datetime, UTC
 
+import sqlalchemy as sa
 from freezegun import freeze_time
 from sqlalchemy.orm import Query
 
+import app.utils.request_query_operator as rqo
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Document, Role, User
-from app.utils.request_query_operator import REQUEST_QUERY_DELIMITER, RequestQueryOperator as rqo
 from tests.base.base_test import TestBase
 
 
-class TestBaseCreateSearchQuery:
+class _TestBaseCreateSearchQuery:
     @staticmethod
     def _search_request(
         field_name: typing.Union[str, list[str]],
@@ -35,7 +36,283 @@ class TestBaseCreateSearchQuery:
         return {item[0] for item in query.all()}
 
 
-class TestCreateSearchQueryStrings(TestBase, TestBaseCreateSearchQuery):
+class TestOrderingHelper(TestBase):
+    def test_ordering_asc_and_desc(self):
+        doc = DocumentFactory(name='Invoice 2024-01')
+        doc_2 = DocumentFactory(name='Employee Contract John Doe')
+
+        test_cases = [
+            ('asc', 'name', doc_2.name),
+            ('desc', 'name', doc.name),
+        ]
+
+        for sorting, field_name, expected_record in test_cases:
+            with self.subTest(msg=sorting):
+                order = rqo.OrderingHelper.build_order_by(
+                    Document, request_data={'order': [{'sorting': sorting, 'field_name': field_name}]}
+                )
+                query = db.session.query(Document).order_by(*order)
+
+                self.assertEqual(query.first().name, expected_record)
+
+    def test_ordering_with_more_than_one_criteria(self):
+        with freeze_time('2020-01-01'):
+            doc = DocumentFactory(name='Invoice 2024-01')
+
+        with freeze_time('2015-01-01'):
+            doc_2 = DocumentFactory(name='Employee Contract John Doe')
+
+        test_cases = [
+            ([{'sorting': 'asc', 'field_name': 'name'}, {'sorting': 'desc', 'field_name': 'created_at'}], doc_2.name),
+            ([{'sorting': 'desc', 'field_name': 'name'}, {'sorting': 'asc', 'field_name': 'created_at'}], doc.name),
+        ]
+
+        for sorting, expected_record in test_cases:
+            with self.subTest(msg=sorting):
+                order = rqo.OrderingHelper.build_order_by(Document, request_data={'order': sorting})
+                query = db.session.query(Document).order_by(*order)
+
+                self.assertEqual(query.first().name, expected_record)
+
+
+class TestStringClauseHelper(TestBase):
+    def setUp(self):
+        super().setUp()
+        self.string_clause_helper = rqo.StringClauseHelper()
+
+    def test_create_search_query_str(self):
+        user = UserFactory(name='Alice', last_name='Johnson')
+        user_2 = UserFactory(name='John', last_name='Smith')
+        user_3 = UserFactory(name='Michael', last_name='Williams')
+
+        test_cases = (
+            ('equals', (User.name, rqo.EQUAL_OP, user.name), User.name == user.name, None),
+            ('not equals', (User.name, rqo.NOT_EQUAL_OP, user_2.name), User.name != user_2.name, None),
+            ('contains', (User.name, rqo.CONTAINS_OP, user_3.name), User.name.like(f'%{user_3.name}%'), None),
+            ('not contains', (User.name, rqo.NOT_CONTAINS_OP, user_3.name), ~User.name.like(f'%{user_3.name}%'), None),
+            ('starts with', (User.name, rqo.STARTS_WITH_OP, user_2.name), User.name.like(f'{user_2.name}%'), None),
+            ('ends with', (User.name, rqo.ENDS_WITH_OP, user_2.name), User.name.like(f'%{user_2.name}'), None),
+            (
+                'multiple values',
+                (User.name, rqo.ENDS_WITH_OP, f'{user_2.name}{rqo.REQUEST_QUERY_DELIMITER}{user_3.name}'),
+                sa.or_(*(User.name.like(f'%{user_2.name}'), User.name.like(f'%{user_3.name}'))),
+                (f'%{user_2.name}', f'%{user_3.name}'),
+            ),
+        )
+
+        for str_operator, test_case, expected, expected_clauses in test_cases:
+            field, field_operator, field_value = test_case
+            with self.subTest(msg=str_operator):
+                sql_clause = self.string_clause_helper.build_clause_with_multiple_values(
+                    field, field_operator, field_value
+                )
+                self.assertEqual(sql_clause.operator, expected.operator)
+                if str_operator == 'multiple values':
+                    for index in range(len(sql_clause.clauses)):
+                        self.assertEqual(
+                            sql_clause.clauses[index].right.value, expected_clauses[index], msg=str_operator
+                        )
+                else:
+                    self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
+
+
+class TestOperatorClauseHelper(TestBase):
+    def setUp(self):
+        super().setUp()
+        self.operator_clause_helper = rqo.OperatorClauseHelper()
+
+    def test_create_search_query_datetime(self):
+        with freeze_time('2020-01-01'):
+            doc = DocumentFactory(name='Invoice 2024-01', created_at=datetime.now(UTC))
+
+        with freeze_time('2015-01-01'):
+            doc_2 = DocumentFactory(name='Employee Contract John Doe', created_at=datetime.now(UTC))
+
+        with freeze_time('2010-01-01'):
+            doc_3 = DocumentFactory(name='Monthly Sales Report March', created_at=datetime.now(UTC))
+
+        test_cases = (
+            (
+                'equal',
+                (Document.created_at, rqo.EQUAL_OP, doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                Document.created_at == doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                None,
+            ),
+            (
+                'not equal',
+                (Document.created_at, rqo.NOT_EQUAL_OP, doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                Document.created_at != doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                None,
+            ),
+            (
+                'less than',
+                (Document.created_at, rqo.LESS_THAN_OP, doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                Document.created_at < doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                None,
+            ),
+            (
+                'less than or equal',
+                (Document.created_at, rqo.LESS_THAN_OR_EQUAL_TO_OP, doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                Document.created_at <= doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                None,
+            ),
+            (
+                'great than',
+                (Document.created_at, rqo.GREATER_THAN_OP, doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                Document.created_at > doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                None,
+            ),
+            (
+                'great than or equal',
+                (Document.created_at, rqo.GREATER_THAN_OR_EQUAL_TO_OP, doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                Document.created_at >= doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                None,
+            ),
+            (
+                'between',
+                (
+                    Document.created_at,
+                    rqo.BETWEEN_OP,
+                    f'{doc_2.created_at.strftime("%Y-%m-%d %H:%M:%S")}{rqo.REQUEST_QUERY_DELIMITER}{doc_3.created_at.strftime("%Y-%m-%d %H:%M:%S")}',
+                ),
+                Document.created_at.between(doc_2.created_at, doc_3.created_at),
+                (doc_2.created_at.strftime('%Y-%m-%d %H:%M:%S'), doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+            ),
+            (
+                'multiple values',
+                (
+                    Document.created_at,
+                    rqo.GREATER_THAN_OP,
+                    f'{doc_3.created_at.strftime("%Y-%m-%d %H:%M:%S")}{rqo.REQUEST_QUERY_DELIMITER}{doc.created_at.strftime("%Y-%m-%d %H:%M:%S")}',
+                ),
+                sa.or_(
+                    *(
+                        Document.created_at > doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                        Document.created_at > doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    )
+                ),
+                (doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'), doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+            ),
+        )
+
+        for str_operator, test_case, expected, expected_clauses in test_cases:
+            field, field_operator, field_value = test_case
+            with self.subTest(msg=str_operator):
+                sql_clause = self.operator_clause_helper.build_clause_with_multiple_values(
+                    field, field_operator, field_value
+                )
+                self.assertEqual(sql_clause.operator, expected.operator)
+                if str_operator == 'multiple values':
+                    for index in range(len(sql_clause.clauses)):
+                        self.assertEqual(
+                            sql_clause.clauses[index].right.value, expected_clauses[index], msg=str_operator
+                        )
+                elif str_operator == 'between':
+                    for index in range(len(sql_clause.right.clauses)):
+                        self.assertEqual(
+                            sql_clause.right.clauses[index].value, expected_clauses[index], msg=str_operator
+                        )
+                else:
+                    self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
+
+    def test_create_search_query_integer(self):
+        doc = DocumentFactory(name='Invoice 2024-01', size=1_000_000)
+        doc_2 = DocumentFactory(name='Employee Contract John Doe', size=2_000_000)
+        doc_3 = DocumentFactory(name='Monthly Sales Report March', size=3_000_000)
+
+        test_cases = (
+            (
+                'equals',
+                (Document.size, rqo.EQUAL_OP, doc.size),
+                Document.size == doc.size,
+                None,
+            ),
+            (
+                'not equals',
+                (Document.size, rqo.NOT_EQUAL_OP, doc.size),
+                Document.size != doc.size,
+                None,
+            ),
+            (
+                'less than',
+                (Document.size, rqo.LESS_THAN_OP, doc_2.size),
+                Document.size < doc_2.size,
+                None,
+            ),
+            (
+                'less than or equal',
+                (Document.size, rqo.LESS_THAN_OR_EQUAL_TO_OP, doc_2.size),
+                Document.size <= doc_2.size,
+                None,
+            ),
+            (
+                'great than',
+                (Document.size, rqo.GREATER_THAN_OP, doc_2.size),
+                Document.size > doc_2.size,
+                None,
+            ),
+            (
+                'great than or equal',
+                (Document.size, rqo.GREATER_THAN_OR_EQUAL_TO_OP, doc_2.size),
+                Document.size >= doc_2.size,
+                None,
+            ),
+            (
+                'in',
+                (
+                    Document.size,
+                    rqo.IN_OP,
+                    f'{doc_3.size}{rqo.REQUEST_QUERY_DELIMITER}{doc_2.size}{rqo.REQUEST_QUERY_DELIMITER}{doc.size}',
+                ),
+                Document.size.in_([f'{doc_3.size}', f'{doc_2.size}', f'{doc.size}']),
+                None,
+            ),
+            (
+                'not in',
+                (
+                    Document.size,
+                    rqo.NOT_IN_OP,
+                    f'{doc_3.size}{rqo.REQUEST_QUERY_DELIMITER}{doc_2.size}{rqo.REQUEST_QUERY_DELIMITER}{doc.size}',
+                ),
+                ~Document.size.in_([f'{doc_3.size}', f'{doc_2.size}', f'{doc.size}']),
+                None,
+            ),
+            (
+                'multiple values',
+                (Document.size, rqo.GREATER_THAN_OP, f'{doc_3.size}{rqo.REQUEST_QUERY_DELIMITER}{doc.size}'),
+                sa.or_(*(Document.size > doc_3.size, Document.size > doc.size)),
+                (f'{doc_3.size}', f'{doc.size}'),
+            ),
+        )
+
+        for str_operator, test_case, expected, expected_clauses in test_cases:
+            field, field_operator, field_value = test_case
+            with self.subTest(msg=str_operator):
+                sql_clause = self.operator_clause_helper.build_clause_with_multiple_values(
+                    field, field_operator, field_value
+                )
+                self.assertEqual(sql_clause.operator, expected.operator)
+                if str_operator == 'multiple values':
+                    for index in range(len(sql_clause.clauses)):
+                        self.assertEqual(
+                            sql_clause.clauses[index].right.value, expected_clauses[index], msg=str_operator
+                        )
+                elif str_operator == 'between':
+                    for index in range(len(sql_clause.right.clauses)):
+                        self.assertEqual(
+                            sql_clause.right.clauses[index].value, expected_clauses[index], msg=str_operator
+                        )
+                else:
+                    self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
+
+
+class TestCreateSearchQueryStrings(TestBase, _TestBaseCreateSearchQuery):
+    def setUp(self):
+        super().setUp()
+        self.query_helper = rqo.QueryHelper()
+        self.ordering_helper = rqo.OrderingHelper()
+        self.rqo = rqo.RequestQueryOperator(self.query_helper, self.ordering_helper)
+
     def test_create_search_query_str(self):
         user = UserFactory(name='Alice', last_name='Johnson')
         user_2 = UserFactory(name='John', last_name='Smith')
@@ -61,7 +338,7 @@ class TestCreateSearchQueryStrings(TestBase, TestBaseCreateSearchQuery):
 
         for str_operator, test_case, expected in test_cases:
             with self.subTest(msg=str_operator):
-                query = rqo.create_search_query(User, db.session.query(User.id), test_case)
+                query = self.rqo.create_search_query(User, db.session.query(User.id), test_case)
                 self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
     def test_create_search_query_text(self):
@@ -99,7 +376,7 @@ class TestCreateSearchQueryStrings(TestBase, TestBaseCreateSearchQuery):
 
         for str_operator, test_case, expected in test_cases:
             with self.subTest(msg=str_operator):
-                query = rqo.create_search_query(Role, db.session.query(Role.id), test_case)
+                query = self.rqo.create_search_query(Role, db.session.query(Role.id), test_case)
                 self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
     def test_create_search_query_uuid(self):
@@ -114,11 +391,17 @@ class TestCreateSearchQueryStrings(TestBase, TestBaseCreateSearchQuery):
 
         for str_operator, test_case, expected in test_cases:
             with self.subTest(msg=str_operator):
-                query = rqo.create_search_query(User, db.session.query(User.id), test_case)
+                query = self.rqo.create_search_query(User, db.session.query(User.id), test_case)
                 self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
 
-class TestCreateSearchQueryNoStrings(TestBase, TestBaseCreateSearchQuery):
+class TestCreateSearchQueryNoStrings(TestBase, _TestBaseCreateSearchQuery):
+    def setUp(self):
+        super().setUp()
+        self.query_helper = rqo.QueryHelper()
+        self.ordering_helper = rqo.OrderingHelper()
+        self.rqo = rqo.RequestQueryOperator(self.query_helper, self.ordering_helper)
+
     def test_create_search_query_datetime(self):
         with freeze_time('2020-01-01'):
             doc = DocumentFactory(name='Invoice 2024-01', created_at=datetime.now(UTC))
@@ -167,7 +450,7 @@ class TestCreateSearchQueryNoStrings(TestBase, TestBaseCreateSearchQuery):
                     field_op='between',
                     field_value=(
                         f'{doc_3.created_at.strftime("%Y-%m-%d %H:%M:%S")}'
-                        f'{REQUEST_QUERY_DELIMITER}'
+                        f'{rqo.REQUEST_QUERY_DELIMITER}'
                         f'{doc_2.created_at.strftime("%Y-%m-%d %H:%M:%S")}'
                     ),
                 ),
@@ -191,7 +474,7 @@ class TestCreateSearchQueryNoStrings(TestBase, TestBaseCreateSearchQuery):
 
         for str_operator, test_case, expected in test_cases:
             with self.subTest(msg=str_operator):
-                query = rqo.create_search_query(Document, db.session.query(Document.id), test_case)
+                query = self.rqo.create_search_query(Document, db.session.query(Document.id), test_case)
                 self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
     def test_create_search_query_date(self):
@@ -238,7 +521,7 @@ class TestCreateSearchQueryNoStrings(TestBase, TestBaseCreateSearchQuery):
                     field_op='between',
                     field_value=(
                         f'{user_3.birth_date.strftime("%Y-%m-%d")}'
-                        f'{REQUEST_QUERY_DELIMITER}'
+                        f'{rqo.REQUEST_QUERY_DELIMITER}'
                         f'{user_2.birth_date.strftime("%Y-%m-%d")}'
                     ),
                 ),
@@ -259,7 +542,7 @@ class TestCreateSearchQueryNoStrings(TestBase, TestBaseCreateSearchQuery):
 
         for str_operator, test_case, expected in test_cases:
             with self.subTest(msg=str_operator):
-                query = rqo.create_search_query(User, db.session.query(User.id), test_case)
+                query = self.rqo.create_search_query(User, db.session.query(User.id), test_case)
                 self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
     def test_create_search_query_integer(self):
@@ -279,14 +562,16 @@ class TestCreateSearchQueryNoStrings(TestBase, TestBaseCreateSearchQuery):
                 self._search_request(
                     field_name='size',
                     field_op='in',
-                    field_value=f'{doc_3.size}{REQUEST_QUERY_DELIMITER}{doc_2.size}{REQUEST_QUERY_DELIMITER}{doc.size}',
+                    field_value=f'{doc_3.size}{rqo.REQUEST_QUERY_DELIMITER}{doc_2.size}{rqo.REQUEST_QUERY_DELIMITER}{doc.size}',
                 ),
                 {doc.id, doc_2.id, doc_3.id},
             ),
             (
                 'nin',
                 self._search_request(
-                    field_name='size', field_op='nin', field_value=f'{doc_3.size}{REQUEST_QUERY_DELIMITER}{doc_2.size}'
+                    field_name='size',
+                    field_op='nin',
+                    field_value=f'{doc_3.size}{rqo.REQUEST_QUERY_DELIMITER}{doc_2.size}',
                 ),
                 {doc.id},
             ),
@@ -303,5 +588,5 @@ class TestCreateSearchQueryNoStrings(TestBase, TestBaseCreateSearchQuery):
 
         for str_operator, test_case, expected in test_cases:
             with self.subTest(msg=str_operator):
-                query = rqo.create_search_query(Document, db.session.query(Document.id), test_case)
+                query = self.rqo.create_search_query(Document, db.session.query(Document.id), test_case)
                 self.assertEqual(self._get_values(query), expected, msg=str_operator)
