@@ -48,7 +48,7 @@ def init_app(app: Flask):
         """
         return {'app': app, 'db': db}
 
-    # TODO: sphinx-click only shows Click documentation in Sphinx.
+    # NOTE: sphinx-click only shows Click documentation in Sphinx.
     @app.cli.command('celery', help='Run Celery with an environment configuration.')
     @click.option(
         '--env',

@@ -38,7 +38,6 @@ def convert_to(folder: str, source: str) -> str:
 
 
 def libreoffice_exec() -> str:
-    # TODO: Provide support for more platforms
     if sys.platform == 'darwin':
         return '/Applications/LibreOffice.app/Contents/MacOS/soffice'
     return 'libreoffice'

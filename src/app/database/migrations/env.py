@@ -92,7 +92,7 @@ def run_migrations_online():
 
     connectable = get_engine()
 
-    # TODO: Next config has been added by me.
+    # NOTE: Next config has been added by me.
     conf_args.update(
         {
             'compare_type': True,
