@@ -3,7 +3,7 @@ from abc import ABC
 
 from app.cli._base_cli import _BaseCli
 from app.extensions import db
-from app.helpers.module_helper import ModuleHelper
+from app.utils import exists_attr_in_module, get_attr_from_module
 
 
 class SeederCli(_BaseCli, ABC):
@@ -12,8 +12,8 @@ class SeederCli(_BaseCli, ABC):
         """Get Seeder instances."""
         seeders = {}
         for item in modules:
-            if ModuleHelper.exists_attr_in_module(item, 'Seeder'):
-                seeder_instance = ModuleHelper.get_attr_from_module(item, 'Seeder')
+            if exists_attr_in_module(item, 'Seeder'):
+                seeder_instance = get_attr_from_module(item, 'Seeder')
                 seeders[seeder_instance.priority] = seeder_instance
         return seeders
 
