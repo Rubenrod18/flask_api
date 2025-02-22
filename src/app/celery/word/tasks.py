@@ -11,13 +11,13 @@ from flask import current_app
 
 from app.celery import ContextTask
 from app.extensions import celery, db
+from app.helpers.file_storage import FileStorage
+from app.helpers.libreoffice import convert_to
+from app.helpers.request_query_operator import RequestQueryOperator
 from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
 from app.utils import to_readable
 from app.utils.constants import MS_WORD_MIME_TYPE, PDF_MIME_TYPE
-from app.utils.file_storage import FileStorage
-from app.utils.libreoffice import convert_to
-from app.utils.request_query_operator import RequestQueryOperator
 
 logger = get_task_logger(__name__)
 

@@ -14,11 +14,11 @@ from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
 from app.extensions import celery, db
+from app.helpers.file_storage import FileStorage
+from app.helpers.request_query_operator import RequestQueryOperator
 from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
 from app.utils import find_longest_word, pos_to_char, to_readable
-from app.utils.file_storage import FileStorage
-from app.utils.request_query_operator import RequestQueryOperator
 
 logger = get_task_logger(__name__)
 

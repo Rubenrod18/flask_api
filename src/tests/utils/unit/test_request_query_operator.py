@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from freezegun import freeze_time
 from sqlalchemy.orm import Query
 
-import app.utils.request_query_operator as rqo
+import app.helpers.request_query_operator as rqo
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory

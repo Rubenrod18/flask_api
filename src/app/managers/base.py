@@ -1,8 +1,8 @@
 from datetime import datetime, UTC
 
 from app.extensions import db
+from app.helpers.request_query_operator import RequestQueryOperator
 from app.models import Base
-from app.utils.request_query_operator import RequestQueryOperator
 
 
 class BaseManager(object):

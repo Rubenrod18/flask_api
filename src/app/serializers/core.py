@@ -1,7 +1,7 @@
 from marshmallow import fields, validate
 
 from app.extensions import ma
-from app.utils.request_query_operator import QUERY_OPERATORS, STRING_QUERY_OPERATORS
+from app.helpers.request_query_operator import QUERY_OPERATORS, STRING_QUERY_OPERATORS
 
 
 class _SearchValueSerializer(ma.Schema):

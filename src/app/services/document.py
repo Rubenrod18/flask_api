@@ -9,11 +9,11 @@ from marshmallow import EXCLUDE
 from werkzeug.exceptions import InternalServerError
 
 from app.extensions import db
+from app.helpers.file_storage import FileStorage
 from app.managers import DocumentManager
 from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
 from app.services.base import BaseService
 from app.utils import get_request_file
-from app.utils.file_storage import FileStorage
 
 logger = logging.getLogger(__name__)
 
