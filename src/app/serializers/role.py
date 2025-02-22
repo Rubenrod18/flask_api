@@ -11,16 +11,6 @@ logger = logging.getLogger(__name__)
 role_manager = RoleManager()
 
 
-class RoleName(fields.Field):
-    def _deserialize(self, value, *args, **kwargs):
-        if role_manager.model.get_or_none(name=value):
-            raise BadRequest('Role name already created')
-        return value
-
-    def _serialize(self, value, *args, **kwargs):
-        return str(value)
-
-
 class RoleSerializer(ma.SQLAlchemySchema):
     class Meta:
         model = Role
