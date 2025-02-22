@@ -106,15 +106,15 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
         FileStorage.copy_file(tempfile.name, dst)
 
     file_extension = mimetypes.guess_extension(mime_type)
-    internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
-    filepath = '%s/%s' % (directory_path, internal_filename)
+    internal_filename = f'{uuid.uuid1().hex}{file_extension}'
+    filepath = f'{directory_path}/{internal_filename}'
 
     try:
         file_prefix = datetime.now(UTC).strftime('%Y%m%d_%H%M%S')
         basename = f'{file_prefix}_users'
         filename = f'{basename}{file_extension}'
 
-        src = '%s/%s%s' % (directory_path, temp_filename, file_extension)
+        src = f'{directory_path}/{temp_filename}{file_extension}'
         FileStorage.rename(src, filepath)
 
         data = {

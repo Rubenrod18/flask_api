@@ -18,4 +18,4 @@ class Role(Base, RoleMixin):
     label = sa.Column(sa.String(255), nullable=False)
 
     def __init__(self, *args, **kwargs):
-        super(Role, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
