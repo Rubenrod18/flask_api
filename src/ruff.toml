@@ -60,6 +60,10 @@ select = [
     "W291", "W292", "W293", "W605", "T201"
 ]
 
+extend-select = [
+  "UP",  # pyupgrade
+]
+
 # Rules to ignore:
 # - `E1`, `E2`: Whitespace and indentation errors
 # - `E501`: Line too long (handled by Black)
