@@ -2,7 +2,7 @@
 
 import os
 
-from app.utils import get_attr_from_module
+from app.utils.dynamic_imports import get_attr_from_module
 
 
 def get_blueprints() -> list:

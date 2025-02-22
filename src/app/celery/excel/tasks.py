@@ -18,7 +18,7 @@ from app.helpers.file_storage import FileStorage
 from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
 from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
-from app.utils import find_longest_word, pos_to_char, to_readable
+from app.utils import pos_to_char, to_readable
 
 logger = get_task_logger(__name__)
 
@@ -92,6 +92,12 @@ def _get_user_data(request_data: dict) -> list:
     return user_list
 
 
+def _find_longest_word(word_list: list) -> str:
+    str_list = [str(item) for item in word_list]
+    longest_word = max(str_list, key=len)
+    return str(longest_word)
+
+
 @celery.task(bind=True, base=ContextTask, queue='fast')
 def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
     def _write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> int:
@@ -116,7 +122,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
 
             range_cells = 'A%s:I10' % i
 
-            row_longest_word = find_longest_word(row)
+            row_longest_word = _find_longest_word(row)
             if len(row_longest_word) > len(excel_longest_word):
                 excel_longest_word = row_longest_word
 

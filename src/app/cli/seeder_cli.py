@@ -3,7 +3,7 @@ from abc import ABC
 
 from app.cli._base_cli import _BaseCli
 from app.extensions import db
-from app.utils import exists_attr_in_module, get_attr_from_module
+from app.utils.dynamic_imports import exists_attr_in_module, get_attr_from_module
 
 
 class SeederCli(_BaseCli, ABC):

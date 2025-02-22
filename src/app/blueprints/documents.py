@@ -5,10 +5,10 @@ from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
 
 from app.blueprints.base import BaseResource
 from app.extensions import api as root_api
+from app.helpers.request_helpers import get_request_file
 from app.serializers import DocumentSerializer
 from app.services.document import DocumentService
 from app.swagger import document_search_output_sw_model, document_sw_model, search_input_sw_model
-from app.utils import get_request_file
 
 _API_DESCRIPTION = 'Users with role admin, team_leader or worker can manage these endpoints.'
 blueprint = Blueprint('documents', __name__)

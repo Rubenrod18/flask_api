@@ -10,10 +10,10 @@ from werkzeug.exceptions import InternalServerError
 
 from app.extensions import db
 from app.helpers.file_storage import FileStorage
+from app.helpers.request_helpers import get_request_file
 from app.managers import DocumentManager
 from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
 from app.services.base import BaseService
-from app.utils import get_request_file
 
 logger = logging.getLogger(__name__)
 
