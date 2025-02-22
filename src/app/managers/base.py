@@ -1,27 +1,21 @@
 from datetime import datetime, UTC
 
+from flask_sqlalchemy.model import DefaultMeta
+
 from app.extensions import db
 from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
-from app.models import Base
 
 
 class BaseManager:
-    def __init__(self, *args, **kwargs):
-        self.model = Base
+    def __init__(self, model: type[DefaultMeta]):
+        self.model = model
 
-    def create(self, **kwargs):
+    def create(self, **kwargs) -> db.Model:
         current_date = datetime.now(UTC)
-        kwargs.update(
-            {
-                'created_at': current_date,
-                'updated_at': current_date,
-            }
-        )
+        kwargs.update({'created_at': current_date, 'updated_at': current_date})
+        return self.model(**kwargs)
 
-        record = self.model(**kwargs)
-        return record
-
-    def save(self, record_id: int, **kwargs):
+    def save(self, record_id: int, **kwargs) -> db.Model:
         record = db.session.query(self.model).filter_by(id=record_id).first()
 
         for key, value in kwargs.items():
@@ -29,7 +23,7 @@ class BaseManager:
 
         return record
 
-    def get(self, **kwargs):
+    def get(self, **kwargs) -> dict:
         rqo = SQLAlchemyQueryBuilder()
         page, items_per_page, order = rqo.get_request_query_fields(self.model, kwargs)
 
@@ -45,12 +39,12 @@ class BaseManager:
             'records_filtered': query.count(),
         }
 
-    def delete(self, record_id: int):
+    def delete(self, record_id: int) -> db.Model:
         record = self.find(record_id)
         record.deleted_at = datetime.now(UTC)
         return record
 
-    def find(self, record_id: int, *args):
+    def find(self, record_id: int, *args) -> db.Model | None:
         query = db.session.query(self.model).filter(self.model.id == record_id)
 
         for arg in args:
