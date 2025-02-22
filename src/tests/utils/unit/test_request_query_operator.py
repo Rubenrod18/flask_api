@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from freezegun import freeze_time
 from sqlalchemy.orm import Query
 
-import app.helpers.request_query_operator as rqo
+import app.helpers.sqlalchemy_query_builder as rqo
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
@@ -48,7 +48,7 @@ class TestOrderingHelper(TestBase):
 
         for sorting, field_name, expected_record in test_cases:
             with self.subTest(msg=sorting):
-                order = rqo.OrderingHelper.build_order_by(
+                order = rqo.OrderByClauseBuilder.build_order_by(
                     Document, request_data={'order': [{'sorting': sorting, 'field_name': field_name}]}
                 )
                 query = db.session.query(Document).order_by(*order)
@@ -69,7 +69,7 @@ class TestOrderingHelper(TestBase):
 
         for sorting, expected_record in test_cases:
             with self.subTest(msg=sorting):
-                order = rqo.OrderingHelper.build_order_by(Document, request_data={'order': sorting})
+                order = rqo.OrderByClauseBuilder.build_order_by(Document, request_data={'order': sorting})
                 query = db.session.query(Document).order_by(*order)
 
                 self.assertEqual(query.first().name, expected_record)
@@ -78,7 +78,7 @@ class TestOrderingHelper(TestBase):
 class TestStringClauseHelper(TestBase):
     def setUp(self):
         super().setUp()
-        self.string_clause_helper = rqo.StringClauseHelper()
+        self.string_clause_helper = rqo.StringQueryClauseBuilder()
 
     def test_create_search_query_str(self):
         user = UserFactory(name='Alice', last_name='Johnson')
@@ -119,7 +119,7 @@ class TestStringClauseHelper(TestBase):
 class TestOperatorClauseHelper(TestBase):
     def setUp(self):
         super().setUp()
-        self.operator_clause_helper = rqo.OperatorClauseHelper()
+        self.operator_clause_helper = rqo.ComparisonClauseBuilder()
 
     def test_create_search_query_datetime(self):
         with freeze_time('2020-01-01'):
@@ -309,9 +309,9 @@ class TestOperatorClauseHelper(TestBase):
 class TestCreateSearchQueryStrings(TestBase, _TestBaseCreateSearchQuery):
     def setUp(self):
         super().setUp()
-        self.query_helper = rqo.QueryHelper()
-        self.ordering_helper = rqo.OrderingHelper()
-        self.rqo = rqo.RequestQueryOperator(self.query_helper, self.ordering_helper)
+        self.query_helper = rqo.QueryClauseBuilder()
+        self.ordering_helper = rqo.OrderByClauseBuilder()
+        self.rqo = rqo.SQLAlchemyQueryBuilder(self.query_helper, self.ordering_helper)
 
     def test_create_search_query_str(self):
         user = UserFactory(name='Alice', last_name='Johnson')
@@ -398,9 +398,9 @@ class TestCreateSearchQueryStrings(TestBase, _TestBaseCreateSearchQuery):
 class TestCreateSearchQueryNoStrings(TestBase, _TestBaseCreateSearchQuery):
     def setUp(self):
         super().setUp()
-        self.query_helper = rqo.QueryHelper()
-        self.ordering_helper = rqo.OrderingHelper()
-        self.rqo = rqo.RequestQueryOperator(self.query_helper, self.ordering_helper)
+        self.query_helper = rqo.QueryClauseBuilder()
+        self.ordering_helper = rqo.OrderByClauseBuilder()
+        self.rqo = rqo.SQLAlchemyQueryBuilder(self.query_helper, self.ordering_helper)
 
     def test_create_search_query_datetime(self):
         with freeze_time('2020-01-01'):

@@ -1,7 +1,7 @@
 from datetime import datetime, UTC
 
 from app.extensions import db
-from app.helpers.request_query_operator import RequestQueryOperator
+from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
 from app.models import Base
 
 
@@ -30,7 +30,7 @@ class BaseManager(object):
         return record
 
     def get(self, **kwargs):
-        rqo = RequestQueryOperator()
+        rqo = SQLAlchemyQueryBuilder()
         page, items_per_page, order = rqo.get_request_query_fields(self.model, kwargs)
 
         query = db.session.query(self.model)

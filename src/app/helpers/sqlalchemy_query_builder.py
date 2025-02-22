@@ -70,7 +70,7 @@ QUERY_OPERATORS = [
 ]
 
 
-class OrderingHelper:
+class OrderByClauseBuilder:
     @staticmethod
     def build_order_by(db_model: Type[db.Model], request_data: dict) -> list[sa.UnaryExpression]:
         """Build sorting fields with zero or more Column-like objects to
@@ -84,7 +84,7 @@ class OrderingHelper:
         >>> from app.models.user import User
         >>> db_model = User
         >>> request_data = {'order': [{'sorting': 'asc', 'field_name': 'created_at'}]}  # noqa
-        >>> OrderingHelper.build_order_by(db_model, request_data)
+        >>> OrderByClauseBuilder.build_order_by(db_model, request_data)
         <flask_sqlalchemy.query.Query object at 0x7f9edf6954f0>
 
         References
@@ -109,7 +109,7 @@ class OrderingHelper:
         return order_by_values
 
 
-class StringClauseHelper:
+class StringQueryClauseBuilder:
     def __init__(self):
         self.operator_map = {
             'eq': self._eq,
@@ -164,7 +164,7 @@ class StringClauseHelper:
         return sql_clause
 
 
-class OperatorClauseHelper:
+class ComparisonClauseBuilder:
     def __init__(self):
         self.operator_map = {
             'eq': self._eq,
@@ -239,10 +239,10 @@ class OperatorClauseHelper:
         return sql_clause
 
 
-class QueryHelper:
+class QueryClauseBuilder:
     def __init__(self):
-        self.string_clause_helper = StringClauseHelper()
-        self.operator_clause_helper = OperatorClauseHelper()
+        self.string_clause_helper = StringQueryClauseBuilder()
+        self.operator_clause_helper = ComparisonClauseBuilder()
 
     def build_sql_expression(
         self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: any
@@ -257,10 +257,10 @@ class QueryHelper:
         return sql_clause
 
 
-class RequestQueryOperator:
-    def __init__(self, query_helper: QueryHelper = None, ordering_helper: OrderingHelper = None):
-        self.query_helper = query_helper or QueryHelper()
-        self.ordering_helper = ordering_helper or OrderingHelper()
+class SQLAlchemyQueryBuilder:
+    def __init__(self, query_helper: QueryClauseBuilder = None, ordering_helper: OrderByClauseBuilder = None):
+        self.query_helper = query_helper or QueryClauseBuilder()
+        self.ordering_helper = ordering_helper or OrderByClauseBuilder()
 
     def create_search_query(self, db_model: Type[db.Model], query: FlaskQuery, data: dict = None) -> FlaskQuery:
         if data is None:
