@@ -5,7 +5,7 @@ from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
 from app.models import Base
 
 
-class BaseManager(object):
+class BaseManager:
     def __init__(self, *args, **kwargs):
         self.model = Base
 

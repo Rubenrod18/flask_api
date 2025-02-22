@@ -2,7 +2,7 @@ from app.managers import BaseManager
 from app.serializers import SearchSerializer
 
 
-class BaseService(object):
+class BaseService:
     def __init__(self, *args, **kwargs):
         self.manager = BaseManager()
 

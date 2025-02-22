@@ -10,7 +10,7 @@ from app.managers import BaseManager
 from app.serializers import SearchSerializer, UserExportWordSerializer
 
 
-class TaskService(object):
+class TaskService:
     def __init__(self):
         self.manager = BaseManager()
         self.search_serializer = SearchSerializer()

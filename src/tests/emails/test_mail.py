@@ -6,7 +6,7 @@ from tests.base.base_test import TestBase
 
 class TestMail(TestBase):
     def setUp(self):
-        super(TestMail, self).setUp()
+        super().setUp()
 
     def test_mail_record_messages(self):
         """Check if an email is sent.

@@ -1,4 +1,3 @@
-import typing
 from datetime import datetime, UTC
 
 import sqlalchemy as sa
@@ -17,9 +16,9 @@ from tests.base.base_test import TestBase
 class _TestBaseCreateSearchQuery:
     @staticmethod
     def _search_request(
-        field_name: typing.Union[str, list[str]],
-        field_op: typing.Union[str, list[str]],
-        field_value: typing.Union[str, list[str]],
+        field_name: str | list[str],
+        field_op: str | list[str],
+        field_value: str | list[str],
     ):
         if isinstance(field_name, list) and isinstance(field_op, list) and isinstance(field_value, list):
             search_value = [

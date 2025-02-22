@@ -8,7 +8,7 @@ from tests.base.base_test import TestBase
 
 class TestBaseApi(TestBase):
     def setUp(self):
-        super(TestBaseApi, self).setUp()
+        super().setUp()
         self.base_path = '/api'
         self.admin_user = self.get_active_admin_user()
 

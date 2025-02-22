@@ -10,7 +10,7 @@ from tests.base.base_api_test import TestBaseApi
 
 class TestUserEndpoints(TestBaseApi):
     def setUp(self):
-        super(TestUserEndpoints, self).setUp()
+        super().setUp()
         self.base_path = f'{self.base_path}/users'
         self.role = RoleFactory()
         self.user = UserFactory(active=True, deleted_at=None, roles=[self.role])

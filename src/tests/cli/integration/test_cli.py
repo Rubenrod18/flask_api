@@ -7,7 +7,7 @@ from tests.base.base_test import TestBase
 
 class TestCli(TestBase):
     def setUp(self):
-        super(TestCli, self).setUp()
+        super().setUp()
 
     def test_is_cli_seeder_ok_execute_all_seeders_process_executed_successfully(  # noqa
         self,

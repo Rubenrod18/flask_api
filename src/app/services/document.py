@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class DocumentService(BaseService):
     def __init__(self):
-        super(DocumentService, self).__init__()
+        super().__init__()
         self.manager = DocumentManager()
         self.serializer = DocumentSerializer()
         self.file_storage = FileStorage()
@@ -29,8 +29,8 @@ class DocumentService(BaseService):
         data = self.serializer.valid_request_file(kwargs)
 
         file_extension = mimetypes.guess_extension(data.get('mime_type'))
-        internal_filename = '%s%s' % (uuid.uuid1().hex, file_extension)
-        filepath = '%s/%s' % (current_app.config.get('STORAGE_DIRECTORY'), internal_filename)
+        internal_filename = f'{uuid.uuid1().hex}{file_extension}'
+        filepath = f'{current_app.config.get("STORAGE_DIRECTORY")}/{internal_filename}'
 
         try:
             self.file_storage.save_bytes(data.get('file_data'), filepath)

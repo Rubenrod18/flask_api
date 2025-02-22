@@ -10,7 +10,7 @@ from tests.base.base_api_test import TestBaseApi
 
 class TestRoleEndpoints(TestBaseApi):
     def setUp(self):
-        super(TestRoleEndpoints, self).setUp()
+        super().setUp()
         self.base_path = f'{self.base_path}/roles'
         self.role = RoleFactory(deleted_at=None)
 

@@ -70,7 +70,7 @@ class _CustomFlaskClient(FlaskClient):
 
 class TestBase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(TestBase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__engine = None
         self.app = None
         self.client = None

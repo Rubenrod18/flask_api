@@ -12,7 +12,7 @@ from tests.base.base_api_test import TestBaseApi
 
 class TestDocumentEndpoints(TestBaseApi):
     def setUp(self):
-        super(TestDocumentEndpoints, self).setUp()
+        super().setUp()
         self.base_path = f'{self.base_path}/documents'
         self.document = DocumentFactory(
             deleted_at=None,
@@ -20,7 +20,7 @@ class TestDocumentEndpoints(TestBaseApi):
         )
 
     def test_save_document(self):
-        pdf_file = '%s/example.pdf' % current_app.config.get('MOCKUP_DIRECTORY')
+        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/example.pdf'
         data = {
             'document': open(pdf_file, 'rb'),
         }
@@ -45,7 +45,7 @@ class TestDocumentEndpoints(TestBaseApi):
         self.assertIsNone(json_data.get('deleted_at'))
 
     def test_update_document(self):
-        pdf_file = '%s/example.pdf' % current_app.config.get('MOCKUP_DIRECTORY')
+        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/example.pdf'
         data = {'document': open(pdf_file, 'rb')}
 
         response = self.client.put(

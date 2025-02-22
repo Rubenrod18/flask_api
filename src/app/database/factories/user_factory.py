@@ -2,7 +2,6 @@ import os
 import random
 from datetime import timedelta
 from random import randint
-from typing import List
 
 import factory
 from sqlalchemy import func
@@ -15,7 +14,7 @@ from app.models import Role, User
 from app.models.user import Genre
 from app.serializers import UserSerializer
 
-UserList = List[User]
+UserList = list[User]
 _user_manager = UserManager()
 
 

@@ -12,7 +12,7 @@ from tests.base.base_api_test import TestBaseApi
 
 class TestAuthEndpoints(TestBaseApi):
     def setUp(self):
-        super(TestAuthEndpoints, self).setUp()
+        super().setUp()
         self.base_path = f'{self.base_path}/auth'
 
     def test_user_login(self):

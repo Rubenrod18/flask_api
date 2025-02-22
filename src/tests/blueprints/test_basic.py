@@ -5,7 +5,7 @@ from tests.base.base_api_test import TestBaseApi
 
 class TestBasicEndpoints(TestBaseApi):
     def setUp(self):
-        super(TestBasicEndpoints, self).setUp()
+        super().setUp()
 
     def test_welcome_api(self):
         response = self.client.get(f'{self.base_path}/welcome', json={})

@@ -10,7 +10,7 @@ from app.services.base import BaseService
 
 class UserService(BaseService):
     def __init__(self, *args, **kwargs):
-        super(UserService, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.manager = UserManager()
         self.role_manager = RoleManager()
         self.user_serializer = UserSerializer()

@@ -20,8 +20,6 @@ Comparison Operators: https://docs.sqlalchemy.org/en/20/core/operators.html#comp
 
 """
 
-from typing import Type
-
 import sqlalchemy as sa
 from flask_sqlalchemy.query import Query as FlaskQuery
 
@@ -72,7 +70,7 @@ QUERY_OPERATORS = [
 
 class OrderByClauseBuilder:
     @staticmethod
-    def build_order_by(db_model: Type[db.Model], request_data: dict) -> list[sa.UnaryExpression]:
+    def build_order_by(db_model: type[db.Model], request_data: dict) -> list[sa.UnaryExpression]:
         """Build sorting fields with zero or more Column-like objects to
         order by.
 
@@ -247,7 +245,7 @@ class QueryClauseBuilder:
     def build_sql_expression(
         self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: any
     ) -> sa.sql.expression.ClauseElement:
-        if isinstance(field.type, (sa.String, sa.Text, sa.UUID)):
+        if isinstance(field.type, (sa.String | sa.Text | sa.UUID)):
             sql_clause = self.string_clause_helper.build_clause_with_multiple_values(field, field_operator, field_value)
         else:
             sql_clause = self.operator_clause_helper.build_clause_with_multiple_values(
@@ -262,7 +260,7 @@ class SQLAlchemyQueryBuilder:
         self.query_helper = query_helper or QueryClauseBuilder()
         self.ordering_helper = ordering_helper or OrderByClauseBuilder()
 
-    def create_search_query(self, db_model: Type[db.Model], query: FlaskQuery, data: dict = None) -> FlaskQuery:
+    def create_search_query(self, db_model: type[db.Model], query: FlaskQuery, data: dict = None) -> FlaskQuery:
         if data is None:
             data = {}
 
@@ -290,7 +288,7 @@ class SQLAlchemyQueryBuilder:
         return query
 
     def get_request_query_fields(
-        self, db_model: Type[db.Model], request_data=None
+        self, db_model: type[db.Model], request_data=None
     ) -> tuple[int, int, list[sa.UnaryExpression]]:
         request_data = request_data or {}
         page_number = int(request_data.get('page_number', 1)) - 1

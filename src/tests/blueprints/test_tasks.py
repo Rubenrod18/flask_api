@@ -8,7 +8,7 @@ from tests.base.base_api_test import TestBaseApi
 
 class TestTaskEndpoints(TestBaseApi):
     def setUp(self):
-        super(TestTaskEndpoints, self).setUp()
+        super().setUp()
         self.base_path = f'{self.base_path}/tasks'
 
     @patch('app.services.task.AsyncResult')
