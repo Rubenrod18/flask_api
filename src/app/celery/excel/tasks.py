@@ -1,5 +1,4 @@
 import mimetypes
-import os
 import uuid
 from datetime import datetime, UTC
 from tempfile import NamedTemporaryFile
@@ -14,7 +13,7 @@ from xlsxwriter.worksheet import Worksheet
 
 from app.celery import ContextTask
 from app.extensions import celery, db
-from app.helpers.file_storage import FileStorage
+from app.helpers.file_storage.local_storage import LocalStorage
 from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
 from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
@@ -74,7 +73,7 @@ def _adjust_each_column_width(rows: list, worksheet: Worksheet, excel_longest_wo
 
 def _add_excel_autofilter(worksheet: Worksheet):
     total_fields = len(_COLUMN_DISPLAY_ORDER)
-    columns = 'A1:%s10' % pos_to_char(total_fields).upper()
+    columns = f'A1:{pos_to_char(total_fields).upper()}10'
     worksheet.autofilter(columns)
 
 
@@ -120,7 +119,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
                     }
                 )
 
-            range_cells = 'A%s:I10' % i
+            range_cells = f'A{i}:I10'
 
             row_longest_word = _find_longest_word(row)
             if len(row_longest_word) > len(excel_longest_word):
@@ -131,6 +130,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
 
         return len(excel_longest_word)
 
+    local_storage = LocalStorage()
     user_list = _get_user_data(request_data)
 
     # Excel rows + 2 (Excel header row and save data in database)
@@ -162,8 +162,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
         filepath = f'{directory_path}/{internal_filename}'
 
         data = tempfile.file.read()
-        fs = FileStorage()
-        fs.save_bytes(data, filepath)
+        local_storage.save_bytes(data, filepath)
 
         file_prefix = datetime.now(UTC).strftime('%Y%m%d')
         basename = f'{file_prefix}_users'
@@ -175,7 +174,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
             'internal_filename': internal_filename,
             'mime_type': mime_type,
             'directory_path': directory_path,
-            'size': fs.get_filesize(filepath),
+            'size': local_storage.get_filesize(filepath),
         }
 
         document = Document(**data)
@@ -183,8 +182,7 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
         db.session.flush()
     except Exception as e:
         db.session.rollback()
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        local_storage.delete_file(filepath)
         logger.debug(e)
         raise
 

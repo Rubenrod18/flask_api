@@ -1,26 +1,31 @@
+from abc import ABC, abstractmethod
+
+from app.extensions import db, ma
 from app.managers import BaseManager
-from app.serializers import SearchSerializer
 
 
-class BaseService:
-    def __init__(self, *args, **kwargs):
-        self.manager = BaseManager()
+class BaseService(ABC):
+    def __init__(self, manager: BaseManager, serializer: ma.SQLAlchemySchema, search_serializer: ma.Schema):
+        self.manager = manager
+        self.serializer = serializer
+        self.search_serializer = search_serializer
 
-    def create(self, **kwargs):
-        return self.manager.create(**kwargs)
+    @abstractmethod
+    def create(self, **kwargs) -> db.Model:
+        raise NotImplementedError
 
-    def find(self, record_id: int, *args):
-        return self.manager.find(record_id, *args)
+    @abstractmethod
+    def find(self, record_id: int, *args) -> db.Model | None:
+        raise NotImplementedError
 
-    def save(self, record_id: int, **kwargs):
-        self.manager.save(record_id, **kwargs)
+    @abstractmethod
+    def save(self, record_id: int, **kwargs) -> db.Model:
+        raise NotImplementedError
 
-        args = (self.manager.model.deleted_at.is_(None),)
-        return self.manager.find(record_id, *args)
+    @abstractmethod
+    def get(self, **kwargs) -> dict:
+        raise NotImplementedError
 
-    def get(self, **kwargs):
-        data = SearchSerializer().load(kwargs)
-        return self.manager.get(**data)
-
-    def delete(self, record_id: int):
-        return self.manager.delete(record_id)
+    @abstractmethod
+    def delete(self, record_id: int) -> db.Model:
+        raise NotImplementedError

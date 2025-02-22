@@ -1,31 +1,32 @@
 import logging
 import mimetypes
-import os
 import uuid
+from abc import ABC
 
-from flask import current_app, send_file
+from flask import current_app, Response, send_file
 from flask_login import current_user
 from marshmallow import EXCLUDE
 from werkzeug.exceptions import InternalServerError
 
 from app.extensions import db
-from app.helpers.file_storage import FileStorage
+from app.helpers.file_storage.local_storage import LocalStorage
 from app.helpers.request_helpers import get_request_file
 from app.managers import DocumentManager
-from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
+from app.models import Document
+from app.serializers import DocumentAttachmentSerializer, DocumentSerializer, SearchSerializer
 from app.services.base import BaseService
 
 logger = logging.getLogger(__name__)
 
 
-class DocumentService(BaseService):
-    def __init__(self):
-        super().__init__()
-        self.manager = DocumentManager()
-        self.serializer = DocumentSerializer()
-        self.file_storage = FileStorage()
+class DocumentService(BaseService, ABC):
+    def __init__(self, file_storage: LocalStorage = None):
+        super().__init__(
+            manager=DocumentManager(), serializer=DocumentSerializer(), search_serializer=SearchSerializer()
+        )
+        self.file_storage = file_storage or LocalStorage()
 
-    def create(self, **kwargs):
+    def create(self, **kwargs) -> Document:
         data = self.serializer.valid_request_file(kwargs)
 
         file_extension = mimetypes.guess_extension(data.get('mime_type'))
@@ -47,18 +48,21 @@ class DocumentService(BaseService):
             db.session.add(document)
             db.session.flush()
         except Exception as e:
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            self.file_storage.delete_file(filepath)
             logger.debug(e)
             raise InternalServerError()
         else:
             return document
 
-    def find(self, document_id: int, *args):
+    def find(self, document_id: int, *args) -> Document | None:
         self.serializer.load({'id': document_id}, partial=True)
         return self.manager.find(document_id, *args)
 
-    def save(self, document_id: int, **kwargs):
+    def get(self, **kwargs) -> dict:
+        data = self.search_serializer.load(kwargs)
+        return self.manager.get(**data)
+
+    def save(self, document_id: int, **kwargs) -> Document:
         self.serializer.load({'id': document_id}, partial=True)
         file = get_request_file()
         data = self.serializer.valid_request_file(file)
@@ -67,30 +71,28 @@ class DocumentService(BaseService):
         filepath = f'{document.directory_path}/{document.internal_filename}'
 
         try:
-            fs = FileStorage()
-            fs.save_bytes(data.get('file_data'), filepath, override=True)
+            self.file_storage.save_bytes(data.get('file_data'), filepath, override=True)
 
             data = {
                 'name': data.get('filename'),
                 'mime_type': data.get('mime_type'),
-                'size': fs.get_filesize(filepath),
+                'size': self.file_storage.get_filesize(filepath),
             }
             document = self.manager.save(document_id, **data)
             db.session.add(document)
             db.session.flush()
         except Exception as e:
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            self.file_storage.delete_file(filepath)
             logger.debug(e)
             raise InternalServerError()
         else:
             return document.reload()
 
-    def delete(self, document_id: int):
+    def delete(self, document_id: int) -> Document:
         self.serializer.load({'id': document_id}, partial=True)
         return self.manager.delete(document_id)
 
-    def get_document_content(self, document_id: int, **kwargs):
+    def get_document_content(self, document_id: int, **kwargs) -> Response:
         self.serializer.load({'id': document_id}, partial=True)
         request_args = DocumentAttachmentSerializer().load(kwargs, unknown=EXCLUDE)
 

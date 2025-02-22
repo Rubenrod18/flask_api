@@ -1,5 +1,4 @@
 import mimetypes
-import os
 import uuid
 from datetime import datetime, UTC
 from tempfile import NamedTemporaryFile
@@ -11,7 +10,7 @@ from flask import current_app
 
 from app.celery import ContextTask
 from app.extensions import celery, db
-from app.helpers.file_storage import FileStorage
+from app.helpers.file_storage.local_storage import LocalStorage
 from app.helpers.libreoffice import convert_to
 from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
 from app.models import Document, User
@@ -78,6 +77,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
 
             self.update_state(state=states.STARTED, meta={'current': i, 'total': self.total_progress})
 
+    local_storage = LocalStorage()
     user_list = _get_user_data(request_data)
 
     # Word table rows + 2 (Word table header and save data in database)
@@ -97,13 +97,13 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
     document.save(tempfile.name)
 
     directory_path = current_app.config.get('STORAGE_DIRECTORY')
-    temp_filename = FileStorage.get_basename(tempfile.name, include_path=False)
+    temp_filename = local_storage.get_basename(tempfile.name, include_path=False)
 
     if to_pdf:
         convert_to(directory_path, tempfile.name)
     else:
         dst = f'{directory_path}/{temp_filename}{tempfile_suffix}'
-        FileStorage.copy_file(tempfile.name, dst)
+        local_storage.copy_file(tempfile.name, dst)
 
     file_extension = mimetypes.guess_extension(mime_type)
     internal_filename = f'{uuid.uuid1().hex}{file_extension}'
@@ -115,7 +115,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
         filename = f'{basename}{file_extension}'
 
         src = f'{directory_path}/{temp_filename}{file_extension}'
-        FileStorage.rename(src, filepath)
+        local_storage.rename(src, filepath)
 
         data = {
             'created_by': created_by,
@@ -123,7 +123,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
             'internal_filename': internal_filename,
             'mime_type': mime_type,
             'directory_path': directory_path,
-            'size': FileStorage.get_filesize(filepath),
+            'size': local_storage.get_filesize(filepath),
         }
 
         document = Document(**data)
@@ -131,8 +131,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
         db.session.flush()
     except Exception as e:
         db.session.rollback()
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        local_storage.delete_file(filepath)
         logger.debug(e)
         raise e
 

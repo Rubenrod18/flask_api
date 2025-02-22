@@ -1,14 +1,14 @@
 import logging
 import os
-from pathlib import Path
 from shutil import copyfile
 
 from app.exceptions import FileEmptyError
+from app.helpers.file_storage.storage_interface import IFileStorage
 
 logger = logging.getLogger(__name__)
 
 
-class FileStorage:
+class LocalStorage(IFileStorage):
     def save_bytes(self, file_content: bytes, filename: str, override: bool = False):
         try:
             if not override and os.path.exists(filename):
@@ -29,17 +29,13 @@ class FileStorage:
                     os.remove(filename)
             raise e
 
-    @staticmethod
-    def copy_file(src: str, dst: str) -> None:
+    def copy_file(self, src: str, dst: str) -> None:
         copyfile(src, dst)
 
-    @staticmethod
-    def get_filesize(filename: str) -> int:
-        p = Path(filename)
-        return p.stat().st_size
+    def get_filesize(self, filepath: str) -> int:
+        return os.path.getsize(filepath)
 
-    @staticmethod
-    def get_basename(filename: str, include_path: bool = False) -> str:
+    def get_basename(self, filename: str, include_path: bool = False) -> str:
         if include_path:
             basename = os.path.splitext(filename)[0]
         else:
@@ -47,6 +43,9 @@ class FileStorage:
 
         return basename
 
-    @staticmethod
-    def rename(src: str, dst: str) -> None:
+    def rename(self, src: str, dst: str) -> None:
         os.rename(src, dst)
+
+    def delete_file(self, filepath: str) -> None:
+        if os.path.exists(filepath):
+            os.remove(filepath)

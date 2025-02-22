@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from flask import current_app
 
 from app.database.factories.document_factory import DocumentFactory
-from app.helpers.file_storage import FileStorage
+from app.helpers.file_storage.local_storage import LocalStorage
 from tests.base.base_api_test import TestBaseApi
 
 
@@ -18,6 +18,7 @@ class TestDocumentEndpoints(TestBaseApi):
             deleted_at=None,
             created_at=datetime.now(UTC) - timedelta(days=1),
         )
+        self.local_storage = LocalStorage()
 
     def test_save_document(self):
         pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/example.pdf'
@@ -38,7 +39,7 @@ class TestDocumentEndpoints(TestBaseApi):
         self.assertEqual(self.admin_user.id, json_data.get('created_by').get('id'))
         self.assertEqual(pdf_file, json_data.get('name'))
         self.assertEqual('application/pdf', json_data.get('mime_type'))
-        self.assertEqual(FileStorage.get_filesize(pdf_file), json_data.get('size'))
+        self.assertEqual(self.local_storage.get_filesize(pdf_file), json_data.get('size'))
         self.assertTrue(parse_url.scheme and parse_url.netloc)
         self.assertTrue(json_data.get('created_at'))
         self.assertEqual(json_data.get('updated_at'), json_data.get('created_at'))
@@ -62,7 +63,7 @@ class TestDocumentEndpoints(TestBaseApi):
         self.assertTrue(isinstance(json_data.get('created_by').get('id'), int))
         self.assertEqual(pdf_file, json_data.get('name'))
         self.assertEqual(self.document.mime_type, json_data.get('mime_type'))
-        self.assertEqual(FileStorage.get_filesize(pdf_file), json_data.get('size'))
+        self.assertEqual(self.local_storage.get_filesize(pdf_file), json_data.get('size'))
         self.assertTrue(parse_url.scheme and parse_url.netloc)
         self.assertEqual(self.document.created_at.strftime('%Y-%m-%d %H:%M:%S'), json_data.get('created_at'))
         self.assertTrue(json_data.get('updated_at') > json_data.get('created_at'))

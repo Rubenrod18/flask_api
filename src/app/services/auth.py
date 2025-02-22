@@ -25,7 +25,7 @@ class AuthService:
         return token
 
     @staticmethod
-    def logout_user():
+    def logout_user() -> dict:
         if flask_security.current_user.is_authenticated:
             flask_security.logout_user()
             response = {}
@@ -34,7 +34,7 @@ class AuthService:
 
         return response
 
-    def request_reset_password(self, **kwargs):
+    def request_reset_password(self, **kwargs) -> None:
         data = filter_by_keys(kwargs, auth_user_reset_password_sw_model.keys())
         user = self.auth_user_login_serializer.load(data, partial=True)
 
@@ -47,7 +47,7 @@ class AuthService:
         }
         self.task_service.reset_password_email(**email_data)
 
-    def check_token_status(self, token):
+    def check_token_status(self, token: str) -> None:
         data = filter_by_keys(data={'token': token}, keys=['token'])
         self.auth_user_confirm_reset_password.load(data, partial=True)
 
