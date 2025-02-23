@@ -1,7 +1,6 @@
 import logging
 import mimetypes
 import uuid
-from abc import ABC
 
 from flask import current_app, Response, send_file
 from flask_login import current_user
@@ -19,7 +18,7 @@ from app.services.base import BaseService
 logger = logging.getLogger(__name__)
 
 
-class DocumentService(BaseService, ABC):
+class DocumentService(BaseService):
     def __init__(self, file_storage: LocalStorage = None):
         super().__init__(
             manager=DocumentManager(), serializer=DocumentSerializer(), search_serializer=SearchSerializer()

@@ -1,5 +1,3 @@
-from abc import ABC
-
 from app.extensions import db
 from app.managers import RoleManager
 from app.models import Role, User, user_datastore
@@ -7,7 +5,7 @@ from app.serializers import RoleSerializer, SearchSerializer
 from app.services.base import BaseService
 
 
-class RoleService(BaseService, ABC):
+class RoleService(BaseService):
     def __init__(self):
         super().__init__(manager=RoleManager(), serializer=RoleSerializer(), search_serializer=SearchSerializer())
 

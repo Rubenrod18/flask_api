@@ -1,5 +1,3 @@
-from abc import ABC
-
 from flask_login import current_user
 from marshmallow import EXCLUDE
 
@@ -11,7 +9,7 @@ from app.services import RoleService
 from app.services.base import BaseService
 
 
-class UserService(BaseService, ABC):
+class UserService(BaseService):
     def __init__(self, role_service: RoleService = None):
         super().__init__(manager=UserManager(), serializer=UserSerializer(), search_serializer=SearchSerializer())
         self.role_service = role_service or RoleService()
