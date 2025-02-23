@@ -1,8 +1,10 @@
+from dependency_injector.wiring import inject, Provide
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
 from flask_restx import Resource
 from flask_security import roles_accepted
 
+from app.containers import Container
 from app.extensions import api as root_api
 from app.services.task import TaskService
 
@@ -11,7 +13,12 @@ api = root_api.namespace('tasks', description='Tasks endpoints')
 
 
 class TaskResource(Resource):
-    task_service = TaskService()
+    task_service: TaskService
+
+    @inject
+    def __init__(self, rest_api: str, task_service: TaskService = Provide[Container.task_service], *args, **kwargs):
+        super().__init__(rest_api, *args, **kwargs)
+        self.task_service = task_service
 
 
 @api.route('/status/<string:task_id>')

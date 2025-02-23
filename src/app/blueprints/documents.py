@@ -1,23 +1,39 @@
+from dependency_injector.wiring import inject, Provide
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
+from flask_restx import Resource
 from flask_security import roles_accepted
 from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
 
-from app.blueprints.base import BaseResource
+from app.containers import Container
 from app.extensions import api as root_api
 from app.helpers.request_helpers import get_request_file
 from app.serializers import DocumentSerializer
 from app.services.document import DocumentService
 from app.swagger import document_search_output_sw_model, document_sw_model, search_input_sw_model
 
-_API_DESCRIPTION = 'Users with role admin, team_leader or worker can manage these endpoints.'
 blueprint = Blueprint('documents', __name__)
-api = root_api.namespace('documents', description=_API_DESCRIPTION)
+api = root_api.namespace(
+    'documents', description='Users with role admin, team_leader or worker can manage these endpoints.'
+)
 
 
-class DocumentBaseResource(BaseResource):
-    doc_service = DocumentService()
-    doc_serializer = DocumentSerializer(exclude=('internal_filename',))
+class DocumentBaseResource(Resource):
+    document_service: DocumentService
+    document_serializer: DocumentSerializer
+
+    @inject
+    def __init__(
+        self,
+        rest_api: str,
+        document_service: DocumentService = Provide[Container.document_service],
+        document_serializer: DocumentSerializer = Provide[Container.document_serializer],
+        *args,
+        **kwargs,
+    ):
+        super().__init__(rest_api, *args, **kwargs)
+        self.document_service = document_service
+        self.document_serializer = document_serializer
 
 
 @api.route('')
@@ -38,8 +54,8 @@ class NewDocumentResource(DocumentBaseResource):
     @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        document = self.doc_service.create(**get_request_file())
-        return self.doc_serializer.dump(document), 201
+        document = self.document_service.create(**get_request_file())
+        return self.document_serializer.dump(document), 201
 
 
 @api.route('/<int:document_id>')
@@ -66,11 +82,11 @@ class DocumentResource(DocumentBaseResource):
     @roles_accepted('admin', 'team_leader', 'worker')
     def get(self, document_id: int) -> tuple:
         if request.headers.get('Content-Type') == 'application/json':
-            document = self.doc_service.find(document_id)
-            response = self.doc_serializer.dump(document), 200
+            document = self.document_service.find(document_id)
+            response = self.document_serializer.dump(document), 200
         else:
             args = request.args.to_dict()
-            response = self.doc_service.get_document_content(document_id, **args)
+            response = self.document_service.get_document_content(document_id, **args)
         return response
 
     @api.doc(
@@ -82,8 +98,8 @@ class DocumentResource(DocumentBaseResource):
     @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def put(self, document_id: int) -> tuple:
-        document = self.doc_service.save(document_id)
-        return self.doc_serializer.dump(document), 200
+        document = self.document_service.save(document_id)
+        return self.document_serializer.dump(document), 200
 
     @api.doc(
         responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found'}, security='auth_token'
@@ -92,8 +108,8 @@ class DocumentResource(DocumentBaseResource):
     @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def delete(self, document_id: int) -> tuple:
-        document = self.doc_service.delete(document_id)
-        return self.doc_serializer.dump(document), 200
+        document = self.document_service.delete(document_id)
+        return self.document_serializer.dump(document), 200
 
 
 @api.route('/search')
@@ -107,10 +123,10 @@ class SearchDocumentResource(DocumentBaseResource):
     @jwt_required()
     @roles_accepted('admin', 'team_leader', 'worker')
     def post(self) -> tuple:
-        doc_data = self.doc_service.get(**request.get_json())
-        doc_serializer = DocumentSerializer(many=True)
+        doc_data = self.document_service.get(**request.get_json())
+        document_serializer = DocumentSerializer(many=True)
         return {
-            'data': doc_serializer.dump(list(doc_data['query'])),
+            'data': document_serializer.dump(list(doc_data['query'])),
             'records_total': doc_data['records_total'],
             'records_filtered': doc_data['records_filtered'],
         }, 200

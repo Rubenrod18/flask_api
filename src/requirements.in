@@ -28,4 +28,7 @@ flask-jwt-extended
 
 marshmallow-sqlalchemy  # Required by flask-sqlalchemy
 
+# Python dependency injection framework
+dependency-injector
+
 gunicorn

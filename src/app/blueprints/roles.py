@@ -1,22 +1,36 @@
+from dependency_injector.wiring import inject, Provide
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
+from flask_restx import Resource
 from flask_security import roles_required
 
 from app.extensions import api as root_api
 from app.serializers import RoleSerializer
 from app.swagger import role_input_sw_model, role_search_output_sw_model, role_sw_model, search_input_sw_model
 
+from ..containers import Container
 from ..services.role import RoleService
-from .base import BaseResource
 
-_API_DESCRIPTION = 'Users with role admin can manage these endpoints.'
 blueprint = Blueprint('roles', __name__)
-api = root_api.namespace('roles', description=_API_DESCRIPTION)
+api = root_api.namespace('roles', description='Users with role admin can manage these endpoints.')
 
 
-class RoleBaseResource(BaseResource):
-    role_service = RoleService()
-    role_serializer = RoleSerializer()
+class RoleBaseResource(Resource):
+    role_service: RoleService
+    role_serializer: RoleSerializer
+
+    @inject
+    def __init__(
+        self,
+        rest_api: str,
+        role_service: RoleService = Provide[Container.role_service],
+        role_serializer: RoleSerializer = Provide[Container.role_serializer],
+        *args,
+        **kwargs,
+    ):
+        super().__init__(rest_api, *args, **kwargs)
+        self.role_service = role_service
+        self.role_serializer = role_serializer
 
 
 @api.route('')

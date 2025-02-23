@@ -44,6 +44,7 @@ def init_app(app: Flask) -> None:
     migrate.init_app(app, db, compare_type=True)
     _init_flask_security_too_app(app)
     jwt.init_app(app)
+    _init_python_dependency_injector(app)
 
     @app.teardown_request
     def teardown_request_context(_) -> None:
@@ -56,3 +57,9 @@ def _init_flask_security_too_app(flask_app: Flask):
     from app.models.user import user_datastore
 
     security.init_app(flask_app, datastore=user_datastore, register_blueprint=False)
+
+
+def _init_python_dependency_injector(flask_app: Flask):
+    from app.containers import Container
+
+    flask_app.container = Container()

@@ -1,7 +1,11 @@
+import logging
+
+from dependency_injector.wiring import inject, Provide
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from flask_restx import Resource
 
+from app.containers import Container
 from app.extensions import api as root_api
 from app.services.auth import AuthService
 from app.swagger import (
@@ -13,14 +17,20 @@ from app.swagger import (
 
 blueprint = Blueprint('auth', __name__)
 api = root_api.namespace('auth', description='Authentication endpoints')
+logger = logging.getLogger(__name__)
 
 
-class AuthBaseResource(Resource):
-    auth_service = AuthService()
+class BaseAuthResource(Resource):
+    auth_service: AuthService
+
+    @inject
+    def __init__(self, rest_api: str, auth_service: AuthService = Provide[Container.auth_service], *args, **kwargs):
+        super().__init__(rest_api, *args, **kwargs)
+        self.auth_service = auth_service
 
 
 @api.route('/login')
-class AuthUserLoginResource(AuthBaseResource):
+class AuthUserLoginResource(BaseAuthResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found', 422: 'Unprocessable Entity'})
     @api.expect(auth_login_sw_model)
     @api.marshal_with(auth_token_sw_model)
@@ -30,7 +40,7 @@ class AuthUserLoginResource(AuthBaseResource):
 
 
 @api.route('/logout')
-class AuthUserLogoutResource(AuthBaseResource):
+class AuthUserLogoutResource(BaseAuthResource):
     @api.doc(responses={200: 'Success', 401: 'Unauthorized'}, security='auth_token')
     @jwt_required()
     def post(self) -> tuple:
@@ -38,7 +48,7 @@ class AuthUserLogoutResource(AuthBaseResource):
 
 
 @api.route('/reset_password')
-class RequestResetPasswordResource(AuthBaseResource):
+class RequestResetPasswordResource(BaseAuthResource):
     @api.doc(responses={202: 'Success', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'})
     @api.expect(auth_user_reset_password_sw_model)
     def post(self) -> tuple:
@@ -48,7 +58,7 @@ class RequestResetPasswordResource(AuthBaseResource):
 
 @api.route('/reset_password/<token>')
 @api.doc(params={'token': 'A password reset token created previously'})
-class ResetPasswordResource(AuthBaseResource):
+class ResetPasswordResource(BaseAuthResource):
     @api.doc(responses={200: 'Success', 403: 'Forbidden'})
     def get(self, token: str) -> tuple:
         self.auth_service.check_token_status(token)

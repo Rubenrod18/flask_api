@@ -7,10 +7,6 @@ blueprint = Blueprint('base', __name__)
 api = root_api.namespace('', description='Base endpoints')
 
 
-class BaseResource(Resource):
-    pass
-
-
 @api.route('/welcome')
 class WelcomeResource(Resource):
     @api.doc(responses={200: 'Welcome to flask_api!'})

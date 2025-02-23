@@ -1,23 +1,39 @@
+from dependency_injector.wiring import inject, Provide
 from flask import Blueprint, request, url_for
 from flask_jwt_extended import jwt_required
+from flask_restx import Resource
 from flask_security import roles_accepted
 
-from app.blueprints.base import BaseResource
+from app.containers import Container
 from app.extensions import api as root_api
 from app.serializers import UserSerializer
 from app.services.task import TaskService
 from app.services.user import UserService
 from app.swagger import search_input_sw_model, user_input_sw_model, user_search_output_sw_model, user_sw_model
 
-_API_DESCRIPTION = 'Users with role admin or team_leader can manage these endpoints.'
 blueprint = Blueprint('users', __name__)
-api = root_api.namespace('users', description=_API_DESCRIPTION)
+api = root_api.namespace('users', description='Users with role admin or team_leader can manage these endpoints.')
 
 
-class UserBaseResource(BaseResource):
-    user_service = UserService()
-    task_service = TaskService()
-    user_serializer = UserSerializer()
+class UserBaseResource(Resource):
+    user_service: UserService
+    task_service: TaskService
+    user_serializer: UserSerializer
+
+    @inject
+    def __init__(
+        self,
+        rest_api: str,
+        user_service: UserService = Provide[Container.user_service],
+        task_service: TaskService = Provide[Container.task_service],
+        user_serializer: UserSerializer = Provide[Container.user_serializer],
+        *args,
+        **kwargs,
+    ):
+        super().__init__(rest_api, *args, **kwargs)
+        self.user_service = user_service
+        self.task_service = task_service
+        self.user_serializer = user_serializer
 
 
 @api.route('')
