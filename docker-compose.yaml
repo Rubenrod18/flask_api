@@ -93,7 +93,7 @@ services:
 
   mailpit:
     image: axllent/mailpit
-    container_name: mailpit
+    container_name: flask_api_mailpit
     ports:
       - "1025:1025"  # SMTP server port
       - "8025:8025"  # Web UI port for Mailpit
