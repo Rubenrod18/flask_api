@@ -8,14 +8,14 @@ logger = logging.getLogger(__name__)
 
 
 def convert_to(folder: str, source: str) -> str:
-    logger.debug('Folder: %s' % folder)
-    logger.debug('Word file: %s' % source)
+    logger.debug(f'Folder: {folder}')
+    logger.debug(f'Word file: {source}')
 
     if not os.path.isdir(folder):
-        raise FileNotFoundError('%s directory not found' % source)
+        raise FileNotFoundError(f'{source} directory not found')
 
     if not os.path.isfile(source):
-        raise FileNotFoundError('%s file not found' % source)
+        raise FileNotFoundError(f'{source} file not found')
 
     args = [
         libreoffice_exec(),
