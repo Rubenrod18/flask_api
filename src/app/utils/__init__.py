@@ -16,7 +16,3 @@ def to_readable(obj: object) -> object:
         return obj.__str__()
     else:
         return obj
-
-
-def pos_to_char(pos: int) -> str:
-    return chr(pos + 97)

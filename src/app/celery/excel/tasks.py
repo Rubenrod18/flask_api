@@ -17,7 +17,7 @@ from app.helpers.file_storage.local_storage import LocalStorage
 from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
 from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
-from app.utils import pos_to_char, to_readable
+from app.utils import to_readable
 
 logger = get_task_logger(__name__)
 
@@ -34,7 +34,7 @@ _COLUMN_DISPLAY_ORDER = [
 _EXCLUDE_COLUMNS = ['id', 'password']
 
 
-def _parse_user_data(users: list):
+def _parse_user_data(users: list) -> list:
     excel_rows = []
 
     for user in users:
@@ -71,9 +71,10 @@ def _adjust_each_column_width(rows: list, worksheet: Worksheet, excel_longest_wo
             worksheet.set_column(i, i + 1, excel_longest_word + 1)
 
 
-def _add_excel_autofilter(worksheet: Worksheet):
+def _add_excel_autofilter(worksheet: Worksheet) -> None:
     total_fields = len(_COLUMN_DISPLAY_ORDER)
-    columns = f'A1:{pos_to_char(total_fields).upper()}10'
+    pos_to_char = chr(total_fields + 97).upper()
+    columns = f'A1:{pos_to_char}10'
     worksheet.autofilter(columns)
 
 
