@@ -1,7 +1,8 @@
 """Registers Seeders.
 
-Seeders could be not follow strictly SOLID principles so they're developing
-in this way to be easily to import in a dynamic way in the `SeederCli`.
+NOTE: Seeders could be not follow strictly SOLID principles so they're
+developing in this way to be easily to import in a dynamic way in the
+`SeederCli`.
 
 """
 

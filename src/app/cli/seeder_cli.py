@@ -1,21 +1,25 @@
 import collections
 
-from app.cli._base_cli import _BaseCli
+import flask_sqlalchemy
+
+from app.cli.base_cli import BaseCli
 from app.database import seeds
-from app.extensions import db
 
 
-class SeederCli(_BaseCli):
+class SeederCli(BaseCli):
+    def __init__(self, db: flask_sqlalchemy.SQLAlchemy):
+        self.db = db
+
     def run_command(self):
         try:
             seeders = seeds.get_seeders()
             ordered_seeders = collections.OrderedDict(sorted(seeders.items()))
             for seeder in ordered_seeders.values():
                 seeder.seed()
-            db.session.commit()
+            self.db.session.commit()
             print(' Database seeding completed successfully.')  # noqa
-        except Exception:
-            db.session.rollback()
-            raise
+        except Exception as e:
+            self.db.session.rollback()
+            raise e
         finally:
-            db.session.close()
+            self.db.session.close()

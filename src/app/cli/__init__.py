@@ -1,0 +1,1 @@
+"""Registers CLI commands."""

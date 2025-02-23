@@ -1,7 +1,7 @@
 import os
 
 import click
-from flask import Flask
+from flask import current_app, Flask
 
 from app.cli.create_db_cli import CreateDatabaseCli
 from app.cli.seeder_cli import SeederCli
@@ -12,13 +12,13 @@ def init_app(app: Flask):
     @app.cli.command('create_db', help='Create database.')
     def create_database() -> None:
         """Command line script for creating the database."""
-        seeder_cli = CreateDatabaseCli()
+        seeder_cli = CreateDatabaseCli(db_uri=current_app.config['SQLALCHEMY_DATABASE_URI'])
         seeder_cli.run_command()
 
     @app.cli.command('seed', help='Fill database with fake data.')
     def seeds() -> None:
         """Command line script for filling database with fake data."""
-        seeder_cli = SeederCli()
+        seeder_cli = SeederCli(db=db)
         seeder_cli.run_command()
 
     @app.shell_context_processor
