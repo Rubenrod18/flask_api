@@ -1,54 +1,22 @@
-from app.database import seed_actions
 from app.database.factories.role_factory import RoleFactory
-from app.extensions import db
-from app.models.role import Role
+from app.database.seeds import seed_actions
+from app.database.seeds.base_seeder import FactorySeeder, ManagerSeeder
+from app.managers import RoleManager
+
+ROLE_DEFINITIONS = [
+    {'name': 'admin', 'description': 'Administrator', 'label': 'Admin'},
+    {'name': 'team_leader', 'description': 'Team leader', 'label': 'Team leader'},
+    {'name': 'worker', 'description': 'Worker', 'label': 'Worker'},
+]
 
 
-class Seeder:
-    name = 'RoleSeeder'
-    priority = 0
-
-    @staticmethod
-    def _create_admin_role() -> None:
-        admin_role = db.session.query(Role).filter(Role.name == 'admin').first()
-
-        if admin_role is None:
-            params = {
-                'name': 'admin',
-                'description': 'Administrator',
-                'label': 'Admin',
-                'deleted_at': None,
-            }
-            RoleFactory.create(**params)
-
-    @staticmethod
-    def _create_team_leader() -> None:
-        team_leader_role = db.session.query(Role).filter(Role.name == 'team_leader').first()
-
-        if team_leader_role is None:
-            params = {
-                'name': 'team_leader',
-                'description': 'Team leader',
-                'label': 'Team leader',
-                'deleted_at': None,
-            }
-            RoleFactory.create(**params)
-
-    @staticmethod
-    def _create_worker_role() -> None:
-        worker_role = db.session.query(Role).filter(Role.name == 'worker').first()
-
-        if worker_role is None:
-            params = {
-                'name': 'worker',
-                'description': 'Worker',
-                'label': 'Worker',
-                'deleted_at': None,
-            }
-            RoleFactory.create(**params)
+class Seeder(FactorySeeder, ManagerSeeder):
+    def __init__(self):
+        FactorySeeder.__init__(self, name='RoleSeeder', priority=0, factory=RoleFactory)
+        ManagerSeeder.__init__(self, manager=RoleManager())
 
     @seed_actions
-    def __init__(self):
-        self._create_admin_role()
-        self._create_team_leader()
-        self._create_worker_role()
+    def seed(self):
+        for role in ROLE_DEFINITIONS:
+            if self.manager.find_by_name(role['name']) is None:
+                self.factory.create(**role)

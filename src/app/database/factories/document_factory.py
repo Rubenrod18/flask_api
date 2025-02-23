@@ -5,8 +5,7 @@ import factory
 from flask import current_app
 from sqlalchemy import func
 
-from app.database import fake
-from app.database.factories.base_factory import BaseFactory
+from app.database.factories.base_factory import BaseFactory, faker
 from app.extensions import db
 from app.managers import UserManager
 from app.models import Document, User
@@ -20,7 +19,7 @@ class DocumentFactory(BaseFactory):
         model = Document
 
     name = factory.Sequence(lambda n: f'document_name_{n}')
-    size = fake.random_int(2_000_000, 10_000_000)
+    size = faker.random_int(2_000_000, 10_000_000)
 
     @factory.lazy_attribute
     def directory_path(self):
@@ -37,7 +36,7 @@ class DocumentFactory(BaseFactory):
 
     @factory.lazy_attribute
     def mime_type(self):
-        return fake.random_element([PDF_MIME_TYPE])
+        return faker.random_element([PDF_MIME_TYPE])
 
     @factory.lazy_attribute
     def created_by_user(self):

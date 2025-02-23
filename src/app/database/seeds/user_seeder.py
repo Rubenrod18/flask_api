@@ -1,36 +1,36 @@
 import os
 
-from app.database import seed_actions
 from app.database.factories.user_factory import UserFactory
-from app.extensions import db
-from app.models import Role, User
+from app.database.seeds import seed_actions
+from app.database.seeds.base_seeder import FactorySeeder, ManagerSeeder
+from app.managers import RoleManager, UserManager
+from app.models import User
 
 
-class Seeder:
-    name = 'UserSeeder'
-    priority = 1
+class Seeder(FactorySeeder, ManagerSeeder):
+    def __init__(self):
+        FactorySeeder.__init__(self, name='UserSeeder', priority=1, factory=UserFactory)
+        ManagerSeeder.__init__(self, UserManager())
+        self.role_manager = RoleManager()
 
-    @staticmethod
-    def _create_admin_user():
+    def _create_admin_user(self):
         test_user_email = os.getenv('TEST_USER_EMAIL')
-        test_user = db.session.query(User).filter(User.email == test_user_email).first()
 
-        if test_user is None:
-            role = db.session.query(Role).filter(Role.name == 'admin').first()
+        if self.manager.find_by_email(email=test_user_email) is None:
+            role = self.role_manager.find_by_name('admin')
 
-            params = {
-                'email': test_user_email,
-                'password': User.ensure_password(os.getenv('TEST_USER_PASSWORD')),
-                'deleted_at': None,
-                'active': True,
-                'created_by': None,
-                'roles': [role],
-            }
-            UserFactory.create(**params)
+            UserFactory.create(
+                **{
+                    'email': test_user_email,
+                    'password': User.ensure_password(os.getenv('TEST_USER_PASSWORD')),
+                    'deleted_at': None,
+                    'active': True,
+                    'created_by': None,
+                    'roles': [role],
+                }
+            )
 
     @seed_actions
-    def __init__(self, rows: int = 20):
-        # save user with user_datastore and method
-        # "create_user" -> look flask_security -> datastore.py
+    def seed(self, rows: int = 20):
         self._create_admin_user()
-        UserFactory.create_batch(rows)
+        self.factory.create_batch(rows)
