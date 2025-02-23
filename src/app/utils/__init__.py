@@ -20,11 +20,3 @@ def to_readable(obj: object) -> object:
 
 def pos_to_char(pos: int) -> str:
     return chr(pos + 97)
-
-
-def ignore_keys(data: dict, exclude: list) -> dict:
-    return dict({item: data[item] for item in data if item not in exclude})
-
-
-def filter_by_keys(data: dict, keys: list) -> dict:
-    return {key: value for key, value in data.items() if key in keys}
