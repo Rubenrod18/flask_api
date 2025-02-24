@@ -109,6 +109,8 @@ class Config(metaclass=Meta):
     STORAGE_DIRECTORY = f'{ROOT_DIRECTORY}/storage'
     MOCKUP_DIRECTORY = f'{ROOT_DIRECTORY}/storage/mockups'
     LOG_DIRECTORY = f'{ROOT_DIRECTORY}/src/log'
+    STATIC_FOLDER = f'{ROOT_DIRECTORY}/static'
+    TEMPLATES_FOLDER = f'{ROOT_DIRECTORY}/templates'
 
     RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
 

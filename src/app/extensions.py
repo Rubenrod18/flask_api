@@ -5,11 +5,11 @@ from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
-from flask_restx import Api
 from flask_security import Security
 from flask_sqlalchemy import SQLAlchemy
 
 from app.celery import MyCelery
+from app.helpers.custom_api import CustomApi
 from config import Config
 
 db = SQLAlchemy()
@@ -27,7 +27,7 @@ authorizations = {
         'name': Config.SECURITY_TOKEN_AUTHENTICATION_HEADER,
     },
 }
-api = Api(
+api = CustomApi(
     prefix='/api',
     title='Flask Api',
     description='A simple TodoMVC API',

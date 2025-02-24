@@ -9,7 +9,8 @@ import logging
 import pprint
 
 import flask
-from flask import Flask
+from flask import Flask, send_from_directory
+from werkzeug.utils import import_string
 
 from app import exceptions, extensions
 from app.blueprints import BLUEPRINTS
@@ -49,7 +50,13 @@ def _register_blueprints(app: Flask) -> None:
         app.register_blueprint(blueprint)
 
 
-def create_app(env_config: str) -> Flask:
+def _register_static_routes(app: Flask) -> None:
+    @app.route('/static/<path:path>')
+    def static_files(path: str):
+        return send_from_directory(app.config['STATIC_FOLDER'], path)
+
+
+def create_app(env_config: str | type['Config']) -> Flask:
     """Builds an application based on environment configuration.
 
     Parameters
@@ -71,7 +78,12 @@ def create_app(env_config: str) -> Flask:
             config.TestConfig
 
     """
-    app = flask.Flask(__name__)
+    config = env_config
+
+    if isinstance(env_config, str):
+        config = import_string(env_config)
+
+    app = flask.Flask(__name__, static_url_path=config.STATIC_FOLDER, template_folder=config.TEMPLATES_FOLDER)
     app.config.from_object(env_config)
     app.wsgi_app = Middleware(app)
 
@@ -79,6 +91,7 @@ def create_app(env_config: str) -> Flask:
     cli_register.init_app(app)
     extensions.init_app(app)
     _register_blueprints(app)
+    _register_static_routes(app)
     exceptions.init_app(app)
 
     return app
