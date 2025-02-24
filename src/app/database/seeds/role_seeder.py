@@ -1,13 +1,7 @@
-from app.database.factories.role_factory import RoleFactory
+from app.database.factories.role_factory import ROLE_DEFINITIONS, RoleFactory
 from app.database.seeds import seed_actions
 from app.database.seeds.base_seeder import FactorySeeder, ManagerSeeder
 from app.managers import RoleManager
-
-ROLE_DEFINITIONS = [
-    {'name': 'admin', 'description': 'Administrator', 'label': 'Admin'},
-    {'name': 'team_leader', 'description': 'Team leader', 'label': 'Team leader'},
-    {'name': 'worker', 'description': 'Worker', 'label': 'Worker'},
-]
 
 
 class Seeder(FactorySeeder, ManagerSeeder):

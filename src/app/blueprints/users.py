@@ -6,6 +6,7 @@ from flask_security import roles_accepted
 
 from app.containers import Container
 from app.extensions import api as root_api
+from app.models.role import ADMIN_ROLE, ROLES, TEAM_LEADER_ROLE
 from app.serializers import UserSerializer
 from app.services.task import TaskService
 from app.services.user import UserService
@@ -42,7 +43,7 @@ class NewUserResource(UserBaseResource):
     @api.expect(user_input_sw_model)
     @api.marshal_with(user_sw_model, envelope='data', code=201)
     @jwt_required()
-    @roles_accepted('admin', 'team_leader')
+    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def post(self) -> tuple:
         user = self.user_service.create(request.get_json())
         user_data = self.user_serializer.dump(user)
@@ -56,7 +57,7 @@ class UserResource(UserBaseResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.marshal_with(user_sw_model, envelope='data')
     @jwt_required()
-    @roles_accepted('admin')
+    @roles_accepted(ADMIN_ROLE)
     def get(self, user_id: int) -> tuple:
         user = self.user_service.find(user_id)
         return self.user_serializer.dump(user), 200
@@ -68,7 +69,7 @@ class UserResource(UserBaseResource):
     @api.expect(user_input_sw_model)
     @api.marshal_with(user_sw_model, envelope='data')
     @jwt_required()
-    @roles_accepted('admin', 'team_leader')
+    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def put(self, user_id: int) -> tuple:
         user = self.user_service.save(user_id, **request.get_json())
         return self.user_serializer.dump(user), 200
@@ -79,7 +80,7 @@ class UserResource(UserBaseResource):
     )
     @api.marshal_with(user_sw_model, envelope='data')
     @jwt_required()
-    @roles_accepted('admin', 'team_leader')
+    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def delete(self, user_id: int) -> tuple:
         user = self.user_service.delete(user_id)
         return self.user_serializer.dump(user), 200
@@ -94,7 +95,7 @@ class UsersSearchResource(UserBaseResource):
     @api.expect(search_input_sw_model)
     @api.marshal_with(user_search_output_sw_model)
     @jwt_required()
-    @roles_accepted('admin', 'team_leader')
+    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def post(self) -> tuple:
         user_data = self.user_service.get(**request.get_json())
         user_serializer = UserSerializer(many=True)
@@ -113,7 +114,7 @@ class ExportUsersExcelResource(UserBaseResource):
     )
     @api.expect(search_input_sw_model)
     @jwt_required()
-    @roles_accepted('admin', 'team_leader', 'worker')
+    @roles_accepted(*ROLES)
     def post(self) -> tuple:
         task = self.task_service.export_user_data_in_excel(request.get_json())
         return {'task': task.id, 'url': url_for('tasks_task_status_resource', task_id=task.id, _external=True)}, 202
@@ -127,7 +128,7 @@ class ExportUsersWordResource(UserBaseResource):
     )
     @api.expect(search_input_sw_model)
     @jwt_required()
-    @roles_accepted('admin', 'team_leader', 'worker')
+    @roles_accepted(*ROLES)
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()
         task = self.task_service.export_user_data_in_word(payload, args)
@@ -145,7 +146,7 @@ class ExportUsersExcelAndWordResource(UserBaseResource):
     )
     @api.expect(search_input_sw_model)
     @jwt_required()
-    @roles_accepted('admin', 'team_leader', 'worker')
+    @roles_accepted(*ROLES)
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()
         self.task_service.export_user_data_in_excel_and_word(payload, args)

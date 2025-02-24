@@ -8,6 +8,7 @@ from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
 from app.containers import Container
 from app.extensions import api as root_api
 from app.helpers.request_helpers import get_request_file
+from app.models.role import ROLES
 from app.serializers import DocumentSerializer
 from app.services.document import DocumentService
 from app.swagger import document_search_output_sw_model, document_sw_model, search_input_sw_model
@@ -52,7 +53,7 @@ class NewDocumentResource(DocumentBaseResource):
     @api.expect(parser)
     @api.marshal_with(document_sw_model, envelope='data', code=201)
     @jwt_required()
-    @roles_accepted('admin', 'team_leader', 'worker')
+    @roles_accepted(*ROLES)
     def post(self) -> tuple:
         document = self.document_service.create(**get_request_file())
         return self.document_serializer.dump(document), 201
@@ -79,7 +80,7 @@ class DocumentResource(DocumentBaseResource):
     @api.expect(_parser)
     @api.marshal_with(document_sw_model, envelope='data')
     @jwt_required()
-    @roles_accepted('admin', 'team_leader', 'worker')
+    @roles_accepted(*ROLES)
     def get(self, document_id: int) -> tuple:
         if request.headers.get('Content-Type') == 'application/json':
             document = self.document_service.find(document_id)
@@ -96,7 +97,7 @@ class DocumentResource(DocumentBaseResource):
     @api.expect(NewDocumentResource.parser)
     @api.marshal_with(document_sw_model, envelope='data')
     @jwt_required()
-    @roles_accepted('admin', 'team_leader', 'worker')
+    @roles_accepted(*ROLES)
     def put(self, document_id: int) -> tuple:
         document = self.document_service.save(document_id)
         return self.document_serializer.dump(document), 200
@@ -106,7 +107,7 @@ class DocumentResource(DocumentBaseResource):
     )
     @api.marshal_with(document_sw_model, envelope='data')
     @jwt_required()
-    @roles_accepted('admin', 'team_leader', 'worker')
+    @roles_accepted(*ROLES)
     def delete(self, document_id: int) -> tuple:
         document = self.document_service.delete(document_id)
         return self.document_serializer.dump(document), 200
@@ -121,7 +122,7 @@ class SearchDocumentResource(DocumentBaseResource):
     @api.expect(search_input_sw_model)
     @api.marshal_with(document_search_output_sw_model)
     @jwt_required()
-    @roles_accepted('admin', 'team_leader', 'worker')
+    @roles_accepted(*ROLES)
     def post(self) -> tuple:
         doc_data = self.document_service.get(**request.get_json())
         document_serializer = DocumentSerializer(many=True)

@@ -9,6 +9,7 @@ from app.serializers import RoleSerializer
 from app.swagger import role_input_sw_model, role_search_output_sw_model, role_sw_model, search_input_sw_model
 
 from ..containers import Container
+from ..models.role import ADMIN_ROLE
 from ..services.role import RoleService
 
 blueprint = Blueprint('roles', __name__)
@@ -39,7 +40,7 @@ class NewRoleResource(RoleBaseResource):
     @api.expect(role_input_sw_model)
     @api.marshal_with(role_sw_model, envelope='data', code=201)
     @jwt_required()
-    @roles_required('admin')
+    @roles_required(ADMIN_ROLE)
     def post(self) -> tuple:
         role = self.role_service.create(**request.get_json())
         return self.role_serializer.dump(role), 201
@@ -50,7 +51,7 @@ class RoleResource(RoleBaseResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found'}, security='auth_token')
     @api.marshal_with(role_sw_model, envelope='data')
     @jwt_required()
-    @roles_required('admin')
+    @roles_required(ADMIN_ROLE)
     def get(self, role_id: int) -> tuple:
         role = self.role_service.find(role_id)
         return self.role_serializer.dump(role), 200
@@ -62,7 +63,7 @@ class RoleResource(RoleBaseResource):
     @api.expect(role_input_sw_model)
     @api.marshal_with(role_sw_model, envelope='data')
     @jwt_required()
-    @roles_required('admin')
+    @roles_required(ADMIN_ROLE)
     def put(self, role_id: int) -> tuple:
         role = self.role_service.save(role_id, **request.get_json())
         return self.role_serializer.dump(role), 200
@@ -70,7 +71,7 @@ class RoleResource(RoleBaseResource):
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden'}, security='auth_token')
     @api.marshal_with(role_sw_model, envelope='data')
     @jwt_required()
-    @roles_required('admin')
+    @roles_required(ADMIN_ROLE)
     def delete(self, role_id: int) -> tuple:
         role = self.role_service.delete(role_id)
         return self.role_serializer.dump(role), 200
@@ -85,7 +86,7 @@ class RolesSearchResource(RoleBaseResource):
     @api.expect(search_input_sw_model)
     @api.marshal_with(role_search_output_sw_model)
     @jwt_required()
-    @roles_required('admin')
+    @roles_required(ADMIN_ROLE)
     def post(self) -> tuple:
         role_data = self.role_service.get(**request.get_json())
         role_serializer = RoleSerializer(many=True)

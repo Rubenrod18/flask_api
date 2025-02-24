@@ -6,6 +6,7 @@ from flask_security import roles_accepted
 
 from app.containers import Container
 from app.extensions import api as root_api
+from app.models.role import ROLES
 from app.services.task import TaskService
 
 blueprint = Blueprint('tasks', __name__, url_prefix='/api/tasks')
@@ -28,6 +29,6 @@ class TaskStatusResource(TaskResource):
         security='auth_token',
     )
     @jwt_required()
-    @roles_accepted('admin', 'team_leader', 'worker')
+    @roles_accepted(*ROLES)
     def get(self, task_id: str):
         return self.task_service.check_task_status(task_id), 200

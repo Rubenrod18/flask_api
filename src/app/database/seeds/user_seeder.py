@@ -6,6 +6,7 @@ from app.database.seeds import seed_actions
 from app.database.seeds.base_seeder import FactorySeeder, ManagerSeeder
 from app.managers import RoleManager, UserManager
 from app.models import Role, User
+from app.models.role import ADMIN_ROLE, ROLES
 
 
 class Seeder(FactorySeeder, ManagerSeeder):
@@ -18,7 +19,7 @@ class Seeder(FactorySeeder, ManagerSeeder):
         test_user_email = os.getenv('TEST_USER_EMAIL')
 
         if self.manager.find_by_email(email=test_user_email) is None:
-            role = self.role_manager.find_by_name('admin')
+            role = self.role_manager.find_by_name(ADMIN_ROLE)
 
             self.factory.create(
                 **{
@@ -37,6 +38,6 @@ class Seeder(FactorySeeder, ManagerSeeder):
         roles = {role.name: role for role in self.role_manager.get()['query']}
 
         for _ in range(rows):
-            user_role = roles.get(choice(['worker', 'team_leader', 'admin']))
-            created_by = self.manager.random_user(*(Role.name == 'admin',))
+            user_role = roles.get(choice(list(ROLES)))
+            created_by = self.manager.random_user(*(Role.name == ADMIN_ROLE,))
             self.factory.create(roles=[user_role], created_by_user=created_by)

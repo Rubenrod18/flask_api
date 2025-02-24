@@ -5,7 +5,7 @@ import factory
 
 from app.database.factories.base_factory import BaseFactory
 from app.models import Role
-from app.models.role import ROLE_NAME_DELIMITER
+from app.models.role import ADMIN_ROLE, ROLE_NAME_DELIMITER, TEAM_LEADER_ROLE, WORKER_ROLE
 
 
 class RoleFactory(BaseFactory):
@@ -22,18 +22,29 @@ class RoleFactory(BaseFactory):
 
 
 class AdminRoleFactory(RoleFactory):
-    name = 'admin'
+    name = ADMIN_ROLE
     description = 'Administrator'
     label = 'Admin'
 
 
 class TeamLeaderRoleFactory(RoleFactory):
-    name = 'team_leader'
+    name = TEAM_LEADER_ROLE
     description = 'Team Leader'
     label = 'Team Leader'
 
 
 class WorkerRoleFactory(RoleFactory):
-    name = 'worker'
+    name = WORKER_ROLE
     description = 'Worker'
     label = 'Worker'
+
+
+ROLE_DEFINITIONS = [
+    {'name': AdminRoleFactory.name, 'description': AdminRoleFactory.description, 'label': AdminRoleFactory.label},
+    {
+        'name': TeamLeaderRoleFactory.name,
+        'description': TeamLeaderRoleFactory.description,
+        'label': TeamLeaderRoleFactory.label,
+    },
+    {'name': WorkerRoleFactory.name, 'description': WorkerRoleFactory.description, 'label': WorkerRoleFactory.label},
+]

@@ -18,6 +18,7 @@ from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db, mail
+from app.models.role import ADMIN_ROLE
 from tests.base.base_test import TestBase
 
 
@@ -51,7 +52,7 @@ class TestCeleryTasks(TestBase):
                     'mime_type': document.mime_type,
                     'created_by': {
                         'email': self.app.config.get('TEST_USER_EMAIL'),
-                        'name': 'admin',
+                        'name': ADMIN_ROLE,
                     },
                 }
             }
