@@ -52,6 +52,7 @@ class Config(metaclass=Meta):
 
     #  Flask-JWT-Extended
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
     # Flask SQLAlchemy
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')

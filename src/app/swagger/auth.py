@@ -10,7 +10,7 @@ auth_login_sw_model = api.model(
     },
 )
 
-auth_token_sw_model = api.model('AuthUserToken', {'token': fields.String()})
+auth_token_sw_model = api.model('AuthUserToken', {'access_token': fields.String(), 'refresh_token': fields.String()})
 
 auth_user_reset_password_sw_model = api.model(
     'AuthUserResetPassword',

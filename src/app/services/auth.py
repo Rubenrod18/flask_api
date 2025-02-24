@@ -1,9 +1,9 @@
 import flask_security
 from flask import url_for
-from flask_jwt_extended import create_access_token
-from flask_security.passwordless import generate_login_token
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
 
 from app.managers import UserManager
+from app.models import User
 from app.serializers.auth import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
 from app.services.task import TaskService
 
@@ -15,11 +15,19 @@ class AuthService:
         self.auth_user_login_serializer = AuthUserLoginSerializer()
         self.auth_user_confirm_reset_password = AuthUserConfirmResetPasswordSerializer()
 
-    def login_user(self, **kwargs) -> str:
-        user = self.auth_user_login_serializer.load(kwargs)
+    @staticmethod
+    def _authenticate_user(user: User) -> dict:
         flask_security.login_user(user)
-        token = create_access_token(identity=str(user.id))
-        return token
+        user_id_str = str(user.id)
+
+        return {
+            'access_token': create_access_token(identity=user_id_str),
+            'refresh_token': create_refresh_token(identity=user_id_str),
+        }
+
+    def login_user(self, **kwargs) -> dict:
+        user = self.auth_user_login_serializer.load(kwargs)
+        return self._authenticate_user(user)
 
     @staticmethod
     def logout_user() -> dict:
@@ -46,9 +54,16 @@ class AuthService:
     def check_token_status(self, token: str) -> None:
         self.auth_user_confirm_reset_password.load({'token': token}, partial=True)
 
-    def confirm_request_reset_password(self, token: str, password: str) -> str:
+    def confirm_request_reset_password(self, token: str, password: str) -> dict:
         user = self.auth_user_confirm_reset_password.load({'token': token, 'password': password})
 
         self.user_manager.save(user.id, **{'password': password})
 
-        return generate_login_token(user.reload())
+        return self._authenticate_user(user.reload())
+
+    @staticmethod
+    def refresh_token() -> dict:
+        identity = get_jwt_identity()
+        access_token = create_access_token(identity=identity)
+
+        return {'access_token': access_token}

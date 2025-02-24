@@ -35,8 +35,16 @@ class AuthUserLoginResource(BaseAuthResource):
     @api.expect(auth_login_sw_model)
     @api.marshal_with(auth_token_sw_model)
     def post(self) -> tuple:
-        token = self.auth_service.login_user(**request.get_json())
-        return {'token': f'Bearer {token}'}, 200
+        return self.auth_service.login_user(**request.get_json()), 200
+
+
+@api.route('/refresh')
+class AuthRefreshResource(BaseAuthResource):
+    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found', 422: 'Unprocessable Entity'})
+    @api.marshal_with(auth_token_sw_model)
+    @jwt_required(refresh=True)
+    def post(self) -> tuple:
+        return self.auth_service.refresh_token(), 200
 
 
 @api.route('/logout')
@@ -68,6 +76,4 @@ class ResetPasswordResource(BaseAuthResource):
     @api.expect(auth_user_reset_password_token_sw_model)
     @api.marshal_with(auth_token_sw_model)
     def post(self, token: str) -> tuple:
-        password = request.get_json().get('password')
-        new_token = self.auth_service.confirm_request_reset_password(token, password)
-        return {'token': f'Bearer {new_token}'}, 200
+        return self.auth_service.confirm_request_reset_password(token, request.get_json().get('password')), 200

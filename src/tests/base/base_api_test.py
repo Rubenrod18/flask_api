@@ -39,6 +39,6 @@ class TestBaseApi(TestBase):
         json_response = response.get_json()
 
         assert 200 == response.status_code
-        token = json_response.get('token')
+        token = json_response['access_token']
 
-        return {self.app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER']: token} | extra_headers
+        return {self.app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER']: f'Bearer {token}'} | extra_headers

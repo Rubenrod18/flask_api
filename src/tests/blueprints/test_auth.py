@@ -24,10 +24,37 @@ class TestAuthEndpoints(TestBaseApi):
 
             response = self.client.post(f'{self.base_path}/login', json=data)
             json_response = response.get_json()
-            token = json_response.get('token')
 
             self.assertEqual(200, response.status_code)
-            self.assertTrue(token)
+            self.assertTrue(json_response.get('access_token'))
+            self.assertTrue(json_response.get('refresh_token'))
+            self.assertTrue(flask_security.current_user.is_authenticated)
+
+    def test_user_refresh_token(self):
+        with self.client:
+            auth_tokens = self.client.post(
+                f'{self.base_path}/login',
+                json={
+                    'email': self.admin_user.email,
+                    'password': os.getenv('TEST_USER_PASSWORD'),
+                },
+            ).get_json()
+
+            response = self.client.post(
+                f'{self.base_path}/refresh',
+                json={},
+                headers=self.build_headers(
+                    extra_headers={
+                        self.app.config[
+                            'SECURITY_TOKEN_AUTHENTICATION_HEADER'
+                        ]: f'Bearer {auth_tokens["refresh_token"]}'
+                    }
+                ),
+            )
+            json_response = response.get_json()
+
+            self.assertEqual(200, response.status_code, json_response)
+            self.assertTrue(json_response.get('access_token'))
             self.assertTrue(flask_security.current_user.is_authenticated)
 
     def test_invalid_user(self):
@@ -101,4 +128,4 @@ class TestAuthEndpoints(TestBaseApi):
         json_response = response.get_json()
 
         self.assertEqual(200, response.status_code)
-        self.assertTrue(json_response.get('token'))
+        self.assertTrue(json_response.get('access_token'))
