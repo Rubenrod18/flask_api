@@ -41,7 +41,6 @@ class Config(metaclass=Meta):
     DEBUG = False
     TESTING = False
     SERVER_NAME = os.getenv('SERVER_NAME')
-    LOGIN_DISABLED = False
 
     # Flask-Security-Too
     SECRET_KEY = os.getenv('SECRET_KEY')
