@@ -21,7 +21,7 @@ prod.build:
 
 ## === LOCAL ENVIRONMENT ===
 
-_build: # TODO: Temporal solution. I need to find the way to pass ENVIRONMENT in a dynamic way
+_build:
 	docker build . \
 		--build-arg ENVIRONMENT=local \
 		--tag $(REGISTRY):$(LOCAL_VERSION) \
