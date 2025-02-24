@@ -47,9 +47,8 @@ class NewUserResource(UserBaseResource):
     def post(self) -> tuple:
         user = self.user_service.create(request.get_json())
         user_data = self.user_serializer.dump(user)
-        # TODO: pending to refactor the arquitecture
-        # self.task_service.send_create_user_email(**user_data)
-        return user_data, 201
+        self.task_service.send_create_user_email(**user_data)
+        return self.user_serializer.dump(user), 201
 
 
 @api.route('/<int:user_id>')

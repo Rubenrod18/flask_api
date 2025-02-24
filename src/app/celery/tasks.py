@@ -8,22 +8,22 @@ from app.celery.excel.tasks import export_user_data_in_excel_task
 from app.celery.word.tasks import export_user_data_in_word_task
 from app.extensions import celery, db, mail
 from app.managers import DocumentManager
+from config import Config
 
 logger = get_task_logger(__name__)
 
 
 @celery.task(base=ContextTask)
 def create_user_email_task(email_data) -> bool:
-    logger.info(f'to: {email_data}')
+    email_data.update({'login_url': f'http://{Config.SERVER_NAME}'})
 
-    to = [email_data.get('email')]
-
-    email_args = {
-        'subject': 'Welcome to Flask Api!',
-        'sender': 'hello@flaskapi.com',
-        'recipients': to,
-    }
-    msg = Message(**email_args)
+    msg = Message(
+        **{
+            'subject': 'Welcome to Flask Api!',
+            'sender': 'hello@flaskapi.com',
+            'recipients': [email_data.get('email')],
+        }
+    )
     msg.html = render_template('mails/new_user.html', **email_data)
     mail.send(msg)
     return True

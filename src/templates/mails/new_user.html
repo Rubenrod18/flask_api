@@ -4,14 +4,20 @@
 
 {% block body %}
 
-<p>Hello {{ name }},</p>
+    <p>Hello {{ name }},</p>
 
-<p>Welcome to flask_api!</p>
+    <p>Welcome to flask_api! We're thrilled to have you on board. 🚀</p>
 
-<p>These are your account credentials:</p>
-<ul>
-    <li>Email: {{ email }}</li>
-    <li>Contraseña: {{ password }}</li>
-</ul>
+    <p>Here are a few things to get you started:</p>
+
+    <ul>
+        <li>✅ <strong>Explore your dashboard</strong> – Check out all the awesome features waiting for you.</li>
+        <li>✅ <strong>Update your profile</strong> – Personalize your experience.</li>
+        <li>✅ <strong>Need help?</strong> – Our support team is always here for you.</li>
+    </ul>
+
+    <a href="{{ login_url }}" style="background-color: #007BFF; color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 5px; display: inline-block; font-size: 16px;">
+        Login Now
+    </a>
 
 {% endblock body %}
