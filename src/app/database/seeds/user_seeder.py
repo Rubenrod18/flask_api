@@ -1,10 +1,11 @@
 import os
+from random import choice
 
 from app.database.factories.user_factory import UserFactory
 from app.database.seeds import seed_actions
 from app.database.seeds.base_seeder import FactorySeeder, ManagerSeeder
 from app.managers import RoleManager, UserManager
-from app.models import User
+from app.models import Role, User
 
 
 class Seeder(FactorySeeder, ManagerSeeder):
@@ -19,7 +20,7 @@ class Seeder(FactorySeeder, ManagerSeeder):
         if self.manager.find_by_email(email=test_user_email) is None:
             role = self.role_manager.find_by_name('admin')
 
-            UserFactory.create(
+            self.factory.create(
                 **{
                     'email': test_user_email,
                     'password': User.ensure_password(os.getenv('TEST_USER_PASSWORD')),
@@ -33,4 +34,9 @@ class Seeder(FactorySeeder, ManagerSeeder):
     @seed_actions
     def seed(self, rows: int = 20):
         self._create_admin_user()
-        self.factory.create_batch(rows)
+        roles = {role.name: role for role in self.role_manager.get()['query']}
+
+        for _ in range(rows):
+            user_role = roles.get(choice(['worker', 'team_leader', 'admin']))
+            created_by = self.manager.random_user(*(Role.name == 'admin',))
+            self.factory.create(roles=[user_role], created_by_user=created_by)
