@@ -35,7 +35,7 @@ class _TestBaseCreateSearchQuery:
         return {item[0] for item in query.all()}
 
 
-class TestOrderingHelper(TestBase):
+class TestOrderByClauseBuilder(TestBase):
     def test_ordering_asc_and_desc(self):
         doc = DocumentFactory(name='Invoice 2024-01')
         doc_2 = DocumentFactory(name='Employee Contract John Doe')
@@ -74,7 +74,7 @@ class TestOrderingHelper(TestBase):
                 self.assertEqual(query.first().name, expected_record)
 
 
-class TestStringClauseHelper(TestBase):
+class TestStringQueryClauseBuilder(TestBase):
     def setUp(self):
         super().setUp()
         self.string_clause_helper = rqo.StringQueryClauseBuilder()
@@ -115,7 +115,7 @@ class TestStringClauseHelper(TestBase):
                     self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
 
 
-class TestOperatorClauseHelper(TestBase):
+class TestComparisonClauseBuilder(TestBase):
     def setUp(self):
         super().setUp()
         self.operator_clause_helper = rqo.ComparisonClauseBuilder()
@@ -305,7 +305,7 @@ class TestOperatorClauseHelper(TestBase):
                     self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
 
 
-class TestCreateSearchQueryStrings(TestBase, _TestBaseCreateSearchQuery):
+class TestSQLAlchemyQueryBuilderStrings(TestBase, _TestBaseCreateSearchQuery):
     def setUp(self):
         super().setUp()
         self.query_helper = rqo.QueryClauseBuilder()
@@ -394,7 +394,7 @@ class TestCreateSearchQueryStrings(TestBase, _TestBaseCreateSearchQuery):
                 self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
 
-class TestCreateSearchQueryNoStrings(TestBase, _TestBaseCreateSearchQuery):
+class TestSQLAlchemyQueryBuilderNoStrings(TestBase, _TestBaseCreateSearchQuery):
     def setUp(self):
         super().setUp()
         self.query_helper = rqo.QueryClauseBuilder()
