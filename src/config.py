@@ -107,7 +107,6 @@ class Config(metaclass=Meta):
     ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
     STORAGE_DIRECTORY = f'{ROOT_DIRECTORY}/storage'
     MOCKUP_DIRECTORY = f'{ROOT_DIRECTORY}/storage/mockups'
-    LOG_DIRECTORY = f'{ROOT_DIRECTORY}/src/log'
     STATIC_FOLDER = f'{ROOT_DIRECTORY}/static'
     TEMPLATES_FOLDER = f'{ROOT_DIRECTORY}/templates'
 
