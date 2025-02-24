@@ -10,6 +10,9 @@ from app.serializers import SearchSerializer, UserExportWordSerializer
 
 
 class TaskService:
+    search_serializer: SearchSerializer
+    user_word_export_serializer: UserExportWordSerializer
+
     def __init__(self):
         self.search_serializer = SearchSerializer()
         self.user_word_export_serializer = UserExportWordSerializer()
@@ -28,14 +31,15 @@ class TaskService:
 
         return response
 
-    def send_create_user_email(self, **kwargs) -> None:
-        # TODO: Pending to add fields validation
+    @staticmethod
+    def send_create_user_email(**kwargs) -> None:
         create_user_email_task.delay(kwargs)
 
-    def reset_password_email(self, **kwargs) -> None:
+    @staticmethod
+    def reset_password_email(**kwargs) -> None:
         reset_password_email_task.delay(kwargs)
 
-    def export_user_data_in_excel(self, data) -> AsyncResult:
+    def export_user_data_in_excel(self, data: dict) -> AsyncResult:
         data = self.search_serializer.load(data)
 
         return export_user_data_in_excel_task.apply_async((current_user.id, data), countdown=5)
@@ -47,7 +51,7 @@ class TaskService:
         to_pdf = request_args.get('to_pdf', 0)
         return export_user_data_in_word_task.apply_async(args=[current_user.id, data, to_pdf])
 
-    def export_user_data_in_excel_and_word(self, data, args) -> AsyncResult:
+    def export_user_data_in_excel_and_word(self, data: dict, args) -> AsyncResult:
         request_data = self.search_serializer.load(data)
         request_args = self.user_word_export_serializer.load(args, unknown=EXCLUDE)
         to_pdf = request_args.get('to_pdf', 0)
