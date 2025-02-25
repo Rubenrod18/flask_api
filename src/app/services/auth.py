@@ -5,19 +5,16 @@ from flask_jwt_extended import create_access_token, create_refresh_token, get_jw
 from app.helpers.otp_token import OTPTokenManager
 from app.managers import UserManager
 from app.models import User
+from app.serializers.auth import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
 from app.services.task import TaskService
 
 
 class AuthService:
-    def __init__(self):
-        # TODO: Avoid circular import from dependency-injector. Keep the import here until the serializers would be
-        #  moved to blueprints.
-        from app.serializers.auth import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
-
+    def __init__(self, otp_token_manager: OTPTokenManager):
         self.task_service = TaskService()
         self.user_manager = UserManager()
         self.auth_user_login_serializer = AuthUserLoginSerializer()
-        self.auth_user_confirm_reset_password = AuthUserConfirmResetPasswordSerializer()
+        self.auth_user_confirm_reset_password = AuthUserConfirmResetPasswordSerializer(otp_token_manager)
 
     @staticmethod
     def _authenticate_user(user: User) -> dict:

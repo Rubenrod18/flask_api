@@ -22,19 +22,17 @@ logger = logging.getLogger(__name__)
 
 
 class BaseAuthResource(Resource):
-    auth_service: AuthService
-
     @inject
     def __init__(
         self,
         rest_api: str,
-        auth_service: AuthService = Provide[Container.auth_service],
+        auth_service: AuthService = Container.auth_service,
         otp_token_manager: OTPTokenManager = Provide[Container.otp_token_manager],
         *args,
         **kwargs,
     ):
         super().__init__(rest_api, *args, **kwargs)
-        self.auth_service = auth_service
+        self.auth_service = auth_service(otp_token_manager)
         self.otp_token_manager = otp_token_manager
 
 
