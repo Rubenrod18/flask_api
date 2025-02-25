@@ -2,9 +2,9 @@ import flask_security
 from flask import url_for
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
 
+from app.helpers.otp_token import OTPTokenManager
 from app.managers import UserManager
 from app.models import User
-from app.serializers.auth import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
 from app.services.task import TaskService
 
 
@@ -12,8 +12,6 @@ class AuthService:
     def __init__(self):
         self.task_service = TaskService()
         self.user_manager = UserManager()
-        self.auth_user_login_serializer = AuthUserLoginSerializer()
-        self.auth_user_confirm_reset_password = AuthUserConfirmResetPasswordSerializer()
 
     @staticmethod
     def _authenticate_user(user: User) -> dict:
@@ -25,8 +23,7 @@ class AuthService:
             'refresh_token': create_refresh_token(identity=user_id_str),
         }
 
-    def login_user(self, **kwargs) -> dict:
-        user = self.auth_user_login_serializer.load(kwargs)
+    def login_user(self, user: User) -> dict:
         return self._authenticate_user(user)
 
     @staticmethod
@@ -39,10 +36,8 @@ class AuthService:
 
         return response
 
-    def request_reset_password(self, **kwargs) -> None:
-        user = self.auth_user_login_serializer.load(kwargs, partial=True)
-
-        token = user.get_reset_token()
+    def request_reset_password(self, otp_token_manager: OTPTokenManager, user: User) -> None:
+        token = otp_token_manager.generate_token(user.email)
         reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
 
         email_data = {
@@ -51,12 +46,7 @@ class AuthService:
         }
         self.task_service.reset_password_email(**email_data)
 
-    def check_token_status(self, token: str) -> None:
-        self.auth_user_confirm_reset_password.load({'token': token}, partial=True)
-
-    def confirm_request_reset_password(self, token: str, password: str) -> dict:
-        user = self.auth_user_confirm_reset_password.load({'token': token, 'password': password})
-
+    def confirm_request_reset_password(self, user: User, password: str) -> dict:
         self.user_manager.save(user.id, **{'password': password})
 
         return self._authenticate_user(user.reload())

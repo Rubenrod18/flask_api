@@ -3,9 +3,7 @@ import logging
 import uuid
 
 import sqlalchemy as sa
-from flask import current_app
 from flask_security import hash_password, SQLAlchemyUserDatastore, UserMixin
-from itsdangerous import TimestampSigner, URLSafeSerializer
 from sqlalchemy.orm import backref, relationship
 
 from ..extensions import db
@@ -72,34 +70,6 @@ class User(Base, UserMixin):
             self.password = self.ensure_password(self.password)
 
         return super().save(*args, **kwargs)
-
-    def get_reset_token(self) -> str:
-        secret_key = current_app.config.get('SECRET_KEY')
-        expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
-        salt = expire_in.__str__()
-
-        url_safe_serializer = URLSafeSerializer(secret_key, salt)
-        timestamp_signer = TimestampSigner(secret_key)
-
-        data = url_safe_serializer.dumps({'user_id': self.id})
-        return timestamp_signer.sign(data).decode('utf-8')
-
-    @staticmethod
-    def verify_reset_token(token: str) -> any:
-        secret_key = current_app.config.get('SECRET_KEY')
-        expire_in = current_app.config.get('RESET_TOKEN_EXPIRES')
-        salt = expire_in.__str__()
-
-        url_safe_serializer = URLSafeSerializer(secret_key, salt)
-        timestamp_signer = TimestampSigner(secret_key)
-
-        try:
-            parsed_token = timestamp_signer.unsign(token, max_age=expire_in).decode('utf-8')
-            user_id = url_safe_serializer.loads(parsed_token)['user_id']
-        except:  # noqa: E722
-            # TODO: what kind of exception throws here?
-            return None
-        return db.session.query(User).filter_by(id=user_id).first()
 
     @staticmethod
     def ensure_password(plain_text: str) -> str:

@@ -7,6 +7,7 @@ import flask_security
 
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
+from app.helpers.otp_token import OTPTokenManager
 from tests.base.base_api_test import TestBaseApi
 
 
@@ -14,6 +15,11 @@ class TestAuthEndpoints(TestBaseApi):
     def setUp(self):
         super().setUp()
         self.base_path = f'{self.base_path}/auth'
+        self.otp_token_manager = OTPTokenManager(
+            secret_key=self.app.config.get('SECRET_KEY'),
+            salt=self.app.config.get('SECURITY_PASSWORD_SALT'),
+            expiration=self.app.config.get('RESET_TOKEN_EXPIRES'),
+        )
 
     def test_user_login(self):
         with self.client:
@@ -113,15 +119,14 @@ class TestAuthEndpoints(TestBaseApi):
         self.assertEqual(202, response.status_code)
 
     def test_validate_reset_password(self):
-        with self.app.app_context():
-            token = self.admin_user.get_reset_token()
+        token = self.otp_token_manager.generate_token(self.admin_user.email)
 
         response = self.client.get(f'{self.base_path}/reset_password/{token}', json={})
 
         self.assertEqual(200, response.status_code)
 
     def test_reset_password(self):
-        token = self.admin_user.get_reset_token()
+        token = self.otp_token_manager.generate_token(self.admin_user.email)
         data = {'password': os.getenv('TEST_USER_PASSWORD')}
 
         response = self.client.post(f'{self.base_path}/reset_password/{token}', json=data)

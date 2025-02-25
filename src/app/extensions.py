@@ -62,4 +62,12 @@ def _init_flask_security_too_app(flask_app: Flask):
 def _init_python_dependency_injector(flask_app: Flask):
     from app.containers import Container
 
-    flask_app.container = Container()
+    container = Container()
+    container.config.from_dict(
+        {
+            'secret_key': flask_app.config.get('SECRET_KEY'),
+            'salt': flask_app.config.get('SECURITY_PASSWORD_SALT'),
+            'expiration': flask_app.config.get('RESET_TOKEN_EXPIRES'),
+        }
+    )
+    flask_app.container = container

@@ -20,6 +20,7 @@ https://marshmallow.readthedocs.io/en/stable/extending.html?highlight=step1#pre-
 
 """
 
+from .auth import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
 from .core import SearchSerializer
 from .document import DocumentAttachmentSerializer, DocumentSerializer
 from .role import RoleSerializer
