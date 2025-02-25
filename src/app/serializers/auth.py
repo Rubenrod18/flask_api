@@ -10,7 +10,6 @@ from app.managers import UserManager
 from config import Config
 
 logger = logging.getLogger(__name__)
-user_manager = UserManager()
 
 
 class AuthUserLoginSerializer(ma.Schema):
@@ -22,13 +21,17 @@ class AuthUserLoginSerializer(ma.Schema):
     )
     __user = None
 
+    def __init__(self, user_manager: UserManager, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_manager = user_manager
+
     @validates('email')
     def validate_email(self, email):
         args = (
-            user_manager.model.active.is_(True),
-            user_manager.model.deleted_at.is_(None),
+            self.user_manager.model.active.is_(True),
+            self.user_manager.model.deleted_at.is_(None),
         )
-        self.__user = user_manager.find_by_email(email, *args)
+        self.__user = self.user_manager.find_by_email(email, *args)
 
         if self.__user is None:
             logger.debug(f'User "{email}" not found.')
@@ -62,14 +65,15 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
         validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50),
     )
 
-    def __init__(self, otp_token_manager: OTPTokenManager, *args, **kwargs):
+    def __init__(self, user_manager: UserManager, otp_token_manager: OTPTokenManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user_manager = user_manager
         self.otp_token_manager = otp_token_manager
 
     @validates('token')
     def validate_token(self, token):
         email = self.otp_token_manager.verify_token(token)
-        user = user_manager.find_by_email(email)
+        user = self.user_manager.find_by_email(email)
         if not user:
             logger.debug(f'Token - User "{user.email}" is invalid')
             raise Forbidden('Invalid token')
@@ -85,4 +89,4 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
     @post_load
     def make_object(self, data, **kwargs):
         email = self.otp_token_manager.verify_token(data.get('token'))
-        return user_manager.find_by_email(email)
+        return self.user_manager.find_by_email(email)
