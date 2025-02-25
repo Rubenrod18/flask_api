@@ -73,12 +73,12 @@ class DocumentResource(BaseDocumentResource):
         ),
     )
 
+    # NOTE: api.marshal_with cannot handle two differents kind of responses. That's the reason is not added here.
     @api.doc(
         responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(parser)
-    @api.marshal_with(swagger_models.document_sw_model, envelope='data')
     @jwt_required()
     @roles_accepted(*ROLES)
     def get(self, document_id: int) -> tuple:
@@ -87,7 +87,7 @@ class DocumentResource(BaseDocumentResource):
         if request.headers.get('Content-Type') == 'application/json':
             serializer.load({'id': document_id}, partial=True)
             document = self.service.find(document_id)
-            response = serializer.dump(document), 200
+            response = {'data': serializer.dump(document)}, 200
         else:
             request_args = serializers.DocumentAttachmentSerializer().load(request.args.to_dict(), unknown=EXCLUDE)
             response = self.service.get_document_content(document_id, request_args)
