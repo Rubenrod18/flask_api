@@ -60,9 +60,9 @@ def _init_flask_security_too_app(flask_app: Flask):
 
 
 def _init_python_dependency_injector(flask_app: Flask):
-    from app.containers import Container
+    from app.di_container import ServiceDIContainer
 
-    container = Container()
+    container = ServiceDIContainer()
     container.config.from_dict(
         {
             'secret_key': flask_app.config.get('SECRET_KEY'),

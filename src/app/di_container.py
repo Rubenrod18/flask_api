@@ -1,4 +1,4 @@
-"""Containers module."""
+"""Module for managing dependency injections."""
 
 from dependency_injector import containers, providers
 
@@ -6,7 +6,9 @@ from app import serializers, services
 from app.helpers.otp_token import OTPTokenManager
 
 
-class Container(containers.DeclarativeContainer):
+class ServiceDIContainer(containers.DeclarativeContainer):
+    """Service dependency injection container."""
+
     config = providers.Configuration()
     wiring_config = containers.WiringConfiguration(
         modules=[

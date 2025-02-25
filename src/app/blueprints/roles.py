@@ -6,7 +6,7 @@ from flask_security import roles_required
 from app import serializers, swagger as swagger_models
 from app.extensions import api as root_api
 
-from ..containers import Container
+from ..di_container import ServiceDIContainer
 from ..models.role import ADMIN_ROLE
 from ..services.role import RoleService
 from .base import BaseResource
@@ -22,7 +22,7 @@ class BaseRoleResource(BaseResource):
     def __init__(
         self,
         rest_api: str,
-        service: RoleService = Provide[Container.role_service],
+        service: RoleService = Provide[ServiceDIContainer.role_service],
         *args,
         **kwargs,
     ):

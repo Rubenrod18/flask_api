@@ -10,7 +10,7 @@ from app.blueprints.base import BaseResource
 from app.celery.excel.tasks import export_user_data_in_excel_task
 from app.celery.tasks import create_user_email_task, create_word_and_excel_documents_task
 from app.celery.word.tasks import export_user_data_in_word_task
-from app.containers import Container
+from app.di_container import ServiceDIContainer
 from app.extensions import api as root_api
 from app.models.role import ADMIN_ROLE, ROLES, TEAM_LEADER_ROLE
 from app.services.user import UserService
@@ -26,7 +26,7 @@ class BaseUserResource(BaseResource):
     def __init__(
         self,
         rest_api: str,
-        service: UserService = Provide[Container.user_service],
+        service: UserService = Provide[ServiceDIContainer.user_service],
         *args,
         **kwargs,
     ):

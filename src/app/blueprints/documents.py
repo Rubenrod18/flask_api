@@ -7,7 +7,7 @@ from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
 
 from app import serializers, swagger as swagger_models
 from app.blueprints.base import BaseResource
-from app.containers import Container
+from app.di_container import ServiceDIContainer
 from app.extensions import api as root_api
 from app.helpers.request_helpers import get_request_file
 from app.models.role import ROLES
@@ -26,7 +26,7 @@ class BaseDocumentResource(BaseResource):
     def __init__(
         self,
         rest_api: str,
-        service: DocumentService = Provide[Container.document_service],
+        service: DocumentService = Provide[ServiceDIContainer.document_service],
         *args,
         **kwargs,
     ):

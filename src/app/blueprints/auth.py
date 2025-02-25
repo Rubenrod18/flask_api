@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required
 
 from app import serializers, swagger as swagger_models
 from app.blueprints.base import BaseResource
-from app.containers import Container
+from app.di_container import ServiceDIContainer
 from app.extensions import api as root_api
 from app.helpers.otp_token import OTPTokenManager
 from app.services.auth import AuthService
@@ -18,8 +18,8 @@ class BaseAuthResource(BaseResource):
     def __init__(
         self,
         rest_api: str,
-        service: AuthService = Provide[Container.auth_service],
-        otp_token_manager: OTPTokenManager = Provide[Container.otp_token_manager],
+        service: AuthService = Provide[ServiceDIContainer.auth_service],
+        otp_token_manager: OTPTokenManager = Provide[ServiceDIContainer.otp_token_manager],
         *args,
         **kwargs,
     ):
