@@ -18,11 +18,20 @@ from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db, mail
+from app.helpers.otp_token import OTPTokenManager
 from app.models.role import ADMIN_ROLE
 from tests.base.base_test import TestBase
 
 
 class TestCeleryTasks(TestBase):
+    def setUp(self):
+        super().setUp()
+        self.otp_token_manager = OTPTokenManager(
+            secret_key=self.app.config.get('SECRET_KEY'),
+            salt=self.app.config.get('SECURITY_PASSWORD_SALT'),
+            expiration=self.app.config.get('RESET_TOKEN_EXPIRES'),
+        )
+
     def test_create_user_email_task(self):
         ignore_fields = {'role', 'created_by'}
         data = UserFactory.build_dict(exclude=ignore_fields)
@@ -33,7 +42,7 @@ class TestCeleryTasks(TestBase):
         user = UserFactory(roles=[role])
 
         with self.app.app_context():
-            token = user.get_reset_token()
+            token = self.otp_token_manager.generate_token(user.email)
             reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
         email_data = {'email': user.email, 'reset_password_url': reset_password_url}
         self.assertTrue(reset_password_email_task.apply(args=(email_data,)).get())

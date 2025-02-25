@@ -7,6 +7,7 @@ from flask_restx import Resource
 
 from app.containers import Container
 from app.extensions import api as root_api
+from app.helpers.otp_token import OTPTokenManager
 from app.services.auth import AuthService
 from app.swagger import (
     auth_login_sw_model,
@@ -24,9 +25,17 @@ class BaseAuthResource(Resource):
     auth_service: AuthService
 
     @inject
-    def __init__(self, rest_api: str, auth_service: AuthService = Provide[Container.auth_service], *args, **kwargs):
+    def __init__(
+        self,
+        rest_api: str,
+        auth_service: AuthService = Provide[Container.auth_service],
+        otp_token_manager: OTPTokenManager = Provide[Container.otp_token_manager],
+        *args,
+        **kwargs,
+    ):
         super().__init__(rest_api, *args, **kwargs)
         self.auth_service = auth_service
+        self.otp_token_manager = otp_token_manager
 
 
 @api.route('/login')
@@ -60,7 +69,7 @@ class RequestResetPasswordResource(BaseAuthResource):
     @api.doc(responses={202: 'Success', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'})
     @api.expect(auth_user_reset_password_sw_model)
     def post(self) -> tuple:
-        self.auth_service.request_reset_password(**request.get_json())
+        self.auth_service.request_reset_password(self.otp_token_manager, **request.get_json())
         return {}, 202
 
 

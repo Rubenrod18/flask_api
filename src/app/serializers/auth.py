@@ -1,10 +1,13 @@
 import logging
 
+from dependency_injector.wiring import inject, Provide
 from flask_security import verify_password
 from marshmallow import fields, post_load, validate, validates
 from werkzeug.exceptions import Forbidden, Unauthorized
 
+from app.containers import Container
 from app.extensions import ma
+from app.helpers.otp_token import OTPTokenManager
 from app.managers import UserManager
 from config import Config
 
@@ -61,9 +64,15 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
         validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50),
     )
 
+    @inject
+    def __init__(self, otp_token_manager: OTPTokenManager = Provide[Container.otp_token_manager], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.otp_token_manager = otp_token_manager
+
     @validates('token')
     def validate_token(self, token):
-        user = user_manager.model.verify_reset_token(token)
+        email = self.otp_token_manager.verify_token(token)
+        user = user_manager.find_by_email(email)
         if not user:
             logger.debug(f'Token - User "{user.email}" is invalid')
             raise Forbidden('Invalid token')
@@ -78,4 +87,5 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
 
     @post_load
     def make_object(self, data, **kwargs):
-        return user_manager.model.verify_reset_token(data.get('token'))
+        email = self.otp_token_manager.verify_token(data.get('token'))
+        return user_manager.find_by_email(email)

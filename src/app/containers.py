@@ -3,9 +3,11 @@
 from dependency_injector import containers, providers
 
 from app import serializers, services
+from app.helpers.otp_token import OTPTokenManager
 
 
 class Container(containers.DeclarativeContainer):
+    config = providers.Configuration()
     wiring_config = containers.WiringConfiguration(
         modules=[
             '.blueprints.auth',
@@ -13,7 +15,16 @@ class Container(containers.DeclarativeContainer):
             '.blueprints.roles',
             '.blueprints.tasks',
             '.blueprints.users',
+            '.serializers.auth',
         ]
+    )
+
+    # Helpers
+    otp_token_manager = providers.Factory(
+        OTPTokenManager,
+        secret_key=config.secret_key,
+        salt=config.salt,
+        expiration=config.expiration.as_int(),
     )
 
     # Serializers

@@ -2,14 +2,18 @@ import flask_security
 from flask import url_for
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
 
+from app.helpers.otp_token import OTPTokenManager
 from app.managers import UserManager
 from app.models import User
-from app.serializers.auth import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
 from app.services.task import TaskService
 
 
 class AuthService:
     def __init__(self):
+        # TODO: Avoid circular import from dependency-injector. Keep the import here until the serializers would be
+        #  moved to blueprints.
+        from app.serializers.auth import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
+
         self.task_service = TaskService()
         self.user_manager = UserManager()
         self.auth_user_login_serializer = AuthUserLoginSerializer()
@@ -39,10 +43,10 @@ class AuthService:
 
         return response
 
-    def request_reset_password(self, **kwargs) -> None:
+    def request_reset_password(self, otp_token_manager: OTPTokenManager, **kwargs) -> None:
         user = self.auth_user_login_serializer.load(kwargs, partial=True)
 
-        token = user.get_reset_token()
+        token = otp_token_manager.generate_token(user.email)
         reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
 
         email_data = {
