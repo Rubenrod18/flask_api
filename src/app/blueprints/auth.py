@@ -2,12 +2,11 @@ from dependency_injector.wiring import inject, Provide
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 
-from app import swagger as swagger_models
+from app import serializers, swagger as swagger_models
 from app.blueprints.base import BaseResource
 from app.containers import Container
 from app.extensions import api as root_api
 from app.helpers.otp_token import OTPTokenManager
-from app.serializers import auth as auth_serializers
 from app.services.auth import AuthService
 
 blueprint = Blueprint('auth', __name__)
@@ -30,7 +29,7 @@ class BaseAuthResource(BaseResource):
 
 @api.route('/login')
 class AuthUserLoginResource(BaseAuthResource):
-    serializer_class = auth_serializers.AuthUserLoginSerializer
+    serializer_class = serializers.AuthUserLoginSerializer
 
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found', 422: 'Unprocessable Entity'})
     @api.expect(swagger_models.auth_login_sw_model)
@@ -61,7 +60,7 @@ class AuthUserLogoutResource(BaseAuthResource):
 
 @api.route('/reset_password')
 class RequestResetPasswordResource(BaseAuthResource):
-    serializer_class = auth_serializers.AuthUserLoginSerializer
+    serializer_class = serializers.AuthUserLoginSerializer
 
     @api.doc(responses={202: 'Success', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'})
     @api.expect(swagger_models.auth_user_reset_password_sw_model)
@@ -77,7 +76,7 @@ class RequestResetPasswordResource(BaseAuthResource):
 @api.route('/reset_password/<token>')
 @api.doc(params={'token': 'A password reset token created previously'})
 class ResetPasswordResource(BaseAuthResource):
-    serializer_class = auth_serializers.AuthUserConfirmResetPasswordSerializer
+    serializer_class = serializers.AuthUserConfirmResetPasswordSerializer
 
     @api.doc(responses={200: 'Success', 403: 'Forbidden'})
     def get(self, token: str) -> tuple:

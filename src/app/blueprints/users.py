@@ -4,15 +4,13 @@ from flask_jwt_extended import jwt_required
 from flask_security import roles_accepted
 from marshmallow import EXCLUDE
 
-from app import serializers
+from app import serializers, swagger as swagger_models
 from app.blueprints.base import BaseResource
 from app.containers import Container
 from app.extensions import api as root_api
 from app.models.role import ADMIN_ROLE, ROLES, TEAM_LEADER_ROLE
-from app.serializers import UserExportWordSerializer
 from app.services.task import TaskService
 from app.services.user import UserService
-from app.swagger import search_input_sw_model, user_input_sw_model, user_search_output_sw_model, user_sw_model
 
 blueprint = Blueprint('users', __name__)
 api = root_api.namespace('users', description='Users with role admin or team_leader can manage these endpoints.')
@@ -41,8 +39,8 @@ class BaseUserTaskResource(BaseUserResource):
 @api.route('')
 class NewUserResource(BaseUserResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
-    @api.expect(user_input_sw_model)
-    @api.marshal_with(user_sw_model, envelope='data', code=201)
+    @api.expect(swagger_models.user_input_sw_model)
+    @api.marshal_with(swagger_models.user_sw_model, envelope='data', code=201)
     @jwt_required()
     @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def post(self) -> tuple:
@@ -59,7 +57,7 @@ class NewUserResource(BaseUserResource):
 @api.route('/<int:user_id>')
 class UserResource(BaseUserResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
-    @api.marshal_with(user_sw_model, envelope='data')
+    @api.marshal_with(swagger_models.user_sw_model, envelope='data')
     @jwt_required()
     @roles_accepted(ADMIN_ROLE)
     def get(self, user_id: int) -> tuple:
@@ -74,8 +72,8 @@ class UserResource(BaseUserResource):
         responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.expect(user_input_sw_model)
-    @api.marshal_with(user_sw_model, envelope='data')
+    @api.expect(swagger_models.user_input_sw_model)
+    @api.marshal_with(swagger_models.user_sw_model, envelope='data')
     @jwt_required()
     @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def put(self, user_id: int) -> tuple:
@@ -92,7 +90,7 @@ class UserResource(BaseUserResource):
         responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.marshal_with(user_sw_model, envelope='data')
+    @api.marshal_with(swagger_models.user_sw_model, envelope='data')
     @jwt_required()
     @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def delete(self, user_id: int) -> tuple:
@@ -110,8 +108,8 @@ class UsersSearchResource(BaseUserResource):
         responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.expect(search_input_sw_model)
-    @api.marshal_with(user_search_output_sw_model)
+    @api.expect(swagger_models.search_input_sw_model)
+    @api.marshal_with(swagger_models.user_search_output_sw_model)
     @jwt_required()
     @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def post(self) -> tuple:
@@ -133,7 +131,7 @@ class ExportUsersExcelResource(BaseUserTaskResource):
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.expect(search_input_sw_model)
+    @api.expect(swagger_models.search_input_sw_model)
     @jwt_required()
     @roles_accepted(*ROLES)
     def post(self) -> tuple:
@@ -151,14 +149,14 @@ class ExportUsersWordResource(BaseUserTaskResource):
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.expect(search_input_sw_model)
+    @api.expect(swagger_models.search_input_sw_model)
     @jwt_required()
     @roles_accepted(*ROLES)
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()
         serializer = self.get_serializer()
         deserialized_data = serializer.load(payload)
-        request_args = UserExportWordSerializer().load(args, unknown=EXCLUDE)
+        request_args = serializers.UserExportWordSerializer().load(args, unknown=EXCLUDE)
 
         task = self.task_service.export_user_data_in_word(deserialized_data, request_args)
 
@@ -174,14 +172,14 @@ class ExportUsersExcelAndWordResource(BaseUserTaskResource):
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.expect(search_input_sw_model)
+    @api.expect(swagger_models.search_input_sw_model)
     @jwt_required()
     @roles_accepted(*ROLES)
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()
         serializer = self.get_serializer()
         deserialized_data = serializer.load(payload)
-        request_args = UserExportWordSerializer().load(args, unknown=EXCLUDE)
+        request_args = serializers.UserExportWordSerializer().load(args, unknown=EXCLUDE)
 
         self.task_service.export_user_data_in_excel_and_word(deserialized_data, request_args)
 
