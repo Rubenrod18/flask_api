@@ -25,7 +25,6 @@ class BaseAuthResource(BaseResource):
         **kwargs,
     ):
         super().__init__(rest_api, service, *args, **kwargs)
-        self.service = service
         self.otp_token_manager = otp_token_manager
 
 

@@ -1,14 +1,12 @@
 from abc import ABC, abstractmethod
 
-from app.extensions import db, ma
+from app.extensions import db
 from app.managers import BaseManager
 
 
 class BaseService(ABC):
-    def __init__(self, manager: BaseManager, serializer: ma.SQLAlchemySchema, search_serializer: ma.Schema):
+    def __init__(self, manager: BaseManager):
         self.manager = manager
-        self.serializer = serializer
-        self.search_serializer = search_serializer
 
     @abstractmethod
     def create(self, **kwargs) -> db.Model:
