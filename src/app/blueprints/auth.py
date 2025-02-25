@@ -38,6 +38,7 @@ class AuthUserLoginResource(BaseAuthResource):
     def post(self) -> tuple:
         serializer = self.get_serializer(user_manager=self.service.user_manager)
         user = serializer.load(request.get_json())
+
         return self.service.login_user(user), 200
 
 
@@ -67,7 +68,9 @@ class RequestResetPasswordResource(BaseAuthResource):
     def post(self) -> tuple:
         serializer = self.get_serializer(user_manager=self.service.user_manager)
         user = serializer.load(request.get_json(), partial=True)
+
         self.service.request_reset_password(self.otp_token_manager, user)
+
         return {}, 202
 
 
@@ -82,6 +85,7 @@ class ResetPasswordResource(BaseAuthResource):
             user_manager=self.service.user_manager, otp_token_manager=self.otp_token_manager
         )
         serializer.load({'token': token}, partial=True)
+
         return {}, 200
 
     @api.doc(responses={200: 'Success', 403: 'Forbidden', 422: 'Unprocessable Entity'})

@@ -39,7 +39,9 @@ class NewRoleResource(RoleBaseResource):
     def post(self) -> tuple:
         serializer = self.serializer_class()
         validated_data = serializer.load(request.get_json())
+
         role = self.service.create(**validated_data)
+
         return serializer.dump(role), 201
 
 
@@ -52,7 +54,9 @@ class RoleResource(RoleBaseResource):
     def get(self, role_id: int) -> tuple:
         serializer = self.serializer_class()
         serializer.load({'id': role_id}, partial=True)
+
         role = self.service.find(role_id)
+
         return serializer.dump(role), 200
 
     @api.doc(
@@ -66,9 +70,9 @@ class RoleResource(RoleBaseResource):
     def put(self, role_id: int) -> tuple:
         json_data = request.get_json()
         json_data['id'] = role_id
-
         serializer = self.serializer_class()
         serialized_data = serializer.load(json_data)
+
         role = self.service.save(role_id, **serialized_data)
 
         return serializer.dump(role), 200
@@ -99,7 +103,9 @@ class RolesSearchResource(RoleBaseResource):
     def post(self) -> tuple:
         serializer = self.get_serializer(many=True)
         validated_data = role_serializers.SearchSerializer().load(request.get_json())
+
         doc_data = self.service.get(**validated_data)
+
         return {
             'data': serializer.dump(list(doc_data['query'])),
             'records_total': doc_data['records_total'],

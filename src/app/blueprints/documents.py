@@ -53,7 +53,9 @@ class NewDocumentResource(DocumentBaseResource):
     def post(self) -> tuple:
         serializer = self.get_serializer()
         validated_data = serializer.valid_request_file(get_request_file())
+
         document = self.service.create(validated_data)
+
         return serializer.dump(document), 201
 
 
@@ -91,6 +93,7 @@ class DocumentResource(DocumentBaseResource):
         else:
             request_args = doc_serializers.DocumentAttachmentSerializer().load(request.args.to_dict(), unknown=EXCLUDE)
             response = self.service.get_document_content(document_id, request_args)
+
         return response
 
     @api.doc(
@@ -107,6 +110,7 @@ class DocumentResource(DocumentBaseResource):
         data = serializer.valid_request_file(get_request_file())
 
         document = self.service.save(document_id, **data)
+
         return serializer.dump(document), 200
 
     @api.doc(
@@ -116,8 +120,11 @@ class DocumentResource(DocumentBaseResource):
     @jwt_required()
     @roles_accepted(*ROLES)
     def delete(self, document_id: int) -> tuple:
-        document = self.service.delete(document_id)
         serializer = self.get_serializer()
+        serializer.load({'id': document_id}, partial=True)
+
+        document = self.service.delete(document_id)
+
         return serializer.dump(document), 200
 
 
@@ -136,7 +143,9 @@ class SearchDocumentResource(DocumentBaseResource):
     def post(self) -> tuple:
         serializer = self.get_serializer(many=True)
         validated_data = doc_serializers.SearchSerializer().load(request.get_json())
+
         doc_data = self.service.get(**validated_data)
+
         return {
             'data': serializer.dump(list(doc_data['query'])),
             'records_total': doc_data['records_total'],
