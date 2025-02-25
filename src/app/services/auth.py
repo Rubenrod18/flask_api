@@ -2,15 +2,14 @@ import flask_security
 from flask import url_for
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
 
+from app.celery.tasks import reset_password_email_task
 from app.helpers.otp_token import OTPTokenManager
 from app.managers import UserManager
 from app.models import User
-from app.services.task import TaskService
 
 
 class AuthService:
     def __init__(self):
-        self.task_service = TaskService()
         self.user_manager = UserManager()
 
     @staticmethod
@@ -36,7 +35,8 @@ class AuthService:
 
         return response
 
-    def request_reset_password(self, otp_token_manager: OTPTokenManager, user: User) -> None:
+    @staticmethod
+    def request_reset_password(otp_token_manager: OTPTokenManager, user: User) -> None:
         token = otp_token_manager.generate_token(user.email)
         reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
 
@@ -44,7 +44,8 @@ class AuthService:
             'email': user.email,
             'reset_password_url': reset_password_url,
         }
-        self.task_service.reset_password_email(**email_data)
+
+        reset_password_email_task.delay(email_data)
 
     def confirm_request_reset_password(self, user: User, password: str) -> dict:
         self.user_manager.save(user.id, **{'password': password})

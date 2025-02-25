@@ -37,5 +37,4 @@ class Container(containers.DeclarativeContainer):
     auth_service = providers.Factory(services.AuthService)
     document_service = providers.Factory(services.DocumentService)
     role_service = providers.Factory(services.RoleService)
-    task_service = providers.Factory(services.TaskService)
     user_service = providers.Factory(services.UserService)

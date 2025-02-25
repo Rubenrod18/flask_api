@@ -108,15 +108,16 @@ class TestAuthEndpoints(TestBaseApi):
         self.assertEqual(200, response.status_code)
         self.assertFalse(json_response)
 
-    @mock.patch('app.services.task.TaskService.reset_password_email')
-    def test_request_reset_password(self, mock_reset_password_email):
-        mock_reset_password_email.return_value = True
+    @mock.patch('app.services.auth.reset_password_email_task.delay')
+    def test_request_reset_password(self, mock_reset_password_email_task_delay):
+        mock_reset_password_email_task_delay.return_value = True
 
         data = {'email': self.admin_user.email}
 
         response = self.client.post(f'{self.base_path}/reset_password', json=data)
 
         self.assertEqual(202, response.status_code)
+        mock_reset_password_email_task_delay.assert_called_once()
 
     def test_validate_reset_password(self):
         token = self.otp_token_manager.generate_token(self.admin_user.email)

@@ -1,15 +1,18 @@
 from dependency_injector.wiring import inject, Provide
 from flask import Blueprint, request, url_for
 from flask_jwt_extended import jwt_required
+from flask_login import current_user
 from flask_security import roles_accepted
 from marshmallow import EXCLUDE
 
 from app import serializers, swagger as swagger_models
 from app.blueprints.base import BaseResource
+from app.celery.excel.tasks import export_user_data_in_excel_task
+from app.celery.tasks import create_user_email_task, create_word_and_excel_documents_task
+from app.celery.word.tasks import export_user_data_in_word_task
 from app.containers import Container
 from app.extensions import api as root_api
 from app.models.role import ADMIN_ROLE, ROLES, TEAM_LEADER_ROLE
-from app.services.task import TaskService
 from app.services.user import UserService
 
 blueprint = Blueprint('users', __name__)
@@ -24,12 +27,10 @@ class BaseUserResource(BaseResource):
         self,
         rest_api: str,
         service: UserService = Provide[Container.user_service],
-        task_service: TaskService = Provide[Container.task_service],
         *args,
         **kwargs,
     ):
         super().__init__(rest_api, service, *args, **kwargs)
-        self.task_service = task_service
 
 
 class BaseUserTaskResource(BaseUserResource):
@@ -49,7 +50,7 @@ class NewUserResource(BaseUserResource):
 
         user = self.service.create(validated_data)
         user_data = serializer.dump(user)
-        self.task_service.send_create_user_email(**user_data)
+        create_user_email_task.delay(user_data)
 
         return user_data, 201
 
@@ -138,7 +139,7 @@ class ExportUsersExcelResource(BaseUserTaskResource):
         serializer = self.get_serializer()
         deserialized_data = serializer.load(request.get_json())
 
-        task = self.task_service.export_user_data_in_excel(deserialized_data)
+        task = export_user_data_in_excel_task.apply_async((current_user.id, deserialized_data), countdown=5)
 
         return {'task': task.id, 'url': url_for('tasks_task_status_resource', task_id=task.id, _external=True)}, 202
 
@@ -157,8 +158,9 @@ class ExportUsersWordResource(BaseUserTaskResource):
         serializer = self.get_serializer()
         deserialized_data = serializer.load(payload)
         request_args = serializers.UserExportWordSerializer().load(args, unknown=EXCLUDE)
+        to_pdf = request_args.get('to_pdf', 0)
 
-        task = self.task_service.export_user_data_in_word(deserialized_data, request_args)
+        task = export_user_data_in_word_task.apply_async(args=[current_user.id, deserialized_data, to_pdf])
 
         return {
             'task': task.id,
@@ -180,7 +182,8 @@ class ExportUsersExcelAndWordResource(BaseUserTaskResource):
         serializer = self.get_serializer()
         deserialized_data = serializer.load(payload)
         request_args = serializers.UserExportWordSerializer().load(args, unknown=EXCLUDE)
+        to_pdf = request_args.get('to_pdf', 0)
 
-        self.task_service.export_user_data_in_excel_and_word(deserialized_data, request_args)
+        create_word_and_excel_documents_task.apply_async(args=[current_user.id, deserialized_data, to_pdf])
 
         return {}, 202
