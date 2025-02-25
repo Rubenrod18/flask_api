@@ -1,5 +1,3 @@
-import logging
-
 from dependency_injector.wiring import inject, Provide
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
@@ -14,7 +12,6 @@ from app.services.auth import AuthService
 
 blueprint = Blueprint('auth', __name__)
 api = root_api.namespace('auth', description='Authentication endpoints')
-logger = logging.getLogger(__name__)
 
 
 class BaseAuthResource(BaseResource):
