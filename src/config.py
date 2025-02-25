@@ -116,7 +116,6 @@ class Config(metaclass=Meta):
     ALLOWED_CONTENT_TYPES = {
         'application/json',
         'multipart/form-data',
-        'application/octet-stream',
     }
     ALLOWED_MIME_TYPES = {
         'application/pdf',

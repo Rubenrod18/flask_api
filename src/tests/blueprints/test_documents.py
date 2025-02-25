@@ -71,8 +71,7 @@ class TestDocumentEndpoints(TestBaseApi):
 
     def test_get_document_data(self):
         response = self.client.get(f'{self.base_path}/{self.document.id}', json={}, headers=self.build_headers())
-        json_response = response.get_json()
-        json_data = json_response.get('data')
+        json_data = response.get_json()
 
         parse_url = urlparse(json_data.get('url'))
 
@@ -89,10 +88,12 @@ class TestDocumentEndpoints(TestBaseApi):
     def test_get_document_file(self):
         response = self.client.get(
             f'{self.base_path}/{self.document.id}',
-            headers=self.build_headers(extra_headers={'Content-Type': 'application/octet-stream'}),
+            headers=self.build_headers(
+                extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
+            ),
         )
 
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(200, response.status_code, response.get_json())
         self.assertTrue(isinstance(response.get_data(), bytes))
 
     def test_delete_document(self):

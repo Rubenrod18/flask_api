@@ -63,7 +63,7 @@ class NewDocumentResource(BaseDocumentResource):
 class DocumentResource(BaseDocumentResource):
     parser = api.parser()
     parser.add_argument(
-        'Content-Type',
+        'accept',
         type=str,
         location='headers',
         required=True,
@@ -78,19 +78,26 @@ class DocumentResource(BaseDocumentResource):
         responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
+    @api.response(200, 'Success', swagger_models.document_sw_model)
     @api.expect(parser)
     @jwt_required()
     @roles_accepted(*ROLES)
     def get(self, document_id: int) -> tuple:
+        """Get Document data or download.
+
+        - `Accept: application/json`: returns JSON data.
+        - `Accept: application/octet-stream`: returns the content of the document.
+
+        """
         serializer = self.get_serializer()
 
-        if request.headers.get('Content-Type') == 'application/json':
-            serializer.load({'id': document_id}, partial=True)
-            document = self.service.find(document_id)
-            response = {'data': serializer.dump(document)}, 200
-        else:
+        if request.headers.get('Accept') == 'application/octet-stream':
             request_args = serializers.DocumentAttachmentSerializer().load(request.args.to_dict(), unknown=EXCLUDE)
             response = self.service.get_document_content(document_id, request_args)
+        else:
+            serializer.load({'id': document_id}, partial=True)
+            document = self.service.find(document_id)
+            response = serializer.dump(document), 200
 
         return response
 

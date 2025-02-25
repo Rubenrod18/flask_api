@@ -892,9 +892,11 @@ SwaggerUIBundle object.
                   layout: "StandaloneLayout",
                   persistAuthorization: true,
                   requestInterceptor: function (request) {
-                      if (!request.headers || !request.headers['Content-Type']) {
-                          request.headers['Content-Type'] = 'application/json';
-                      }
+                      request.headers['Content-Type'] = 'application/json';
+
+                      if (!request.headers || !request.headers['accept'])
+                          request.headers['accept'] = 'application/json';
+
                       return request;
                   }
               });
