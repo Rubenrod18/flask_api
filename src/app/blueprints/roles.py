@@ -3,7 +3,7 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 from flask_security import roles_required
 
-from app import serializers as role_serializers, swagger as swagger_models
+from app import serializers, swagger as swagger_models
 from app.extensions import api as root_api
 
 from ..containers import Container
@@ -15,8 +15,8 @@ blueprint = Blueprint('roles', __name__)
 api = root_api.namespace('roles', description='Users with role admin can manage these endpoints.')
 
 
-class RoleBaseResource(BaseResource):
-    serializer_class = role_serializers.RoleSerializer
+class BaseRoleResource(BaseResource):
+    serializer_class = serializers.RoleSerializer
 
     @inject
     def __init__(
@@ -30,7 +30,7 @@ class RoleBaseResource(BaseResource):
 
 
 @api.route('')
-class NewRoleResource(RoleBaseResource):
+class NewRoleResource(BaseRoleResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.expect(swagger_models.role_input_sw_model)
     @api.marshal_with(swagger_models.role_sw_model, envelope='data', code=201)
@@ -46,7 +46,7 @@ class NewRoleResource(RoleBaseResource):
 
 
 @api.route('/<int:role_id>')
-class RoleResource(RoleBaseResource):
+class RoleResource(BaseRoleResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found'}, security='auth_token')
     @api.marshal_with(swagger_models.role_sw_model, envelope='data')
     @jwt_required()
@@ -91,7 +91,7 @@ class RoleResource(RoleBaseResource):
 
 
 @api.route('/search')
-class RolesSearchResource(RoleBaseResource):
+class RolesSearchResource(BaseRoleResource):
     @api.doc(
         responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
@@ -102,7 +102,7 @@ class RolesSearchResource(RoleBaseResource):
     @roles_required(ADMIN_ROLE)
     def post(self) -> tuple:
         serializer = self.get_serializer(many=True)
-        validated_data = role_serializers.SearchSerializer().load(request.get_json())
+        validated_data = serializers.SearchSerializer().load(request.get_json())
 
         doc_data = self.service.get(**validated_data)
 

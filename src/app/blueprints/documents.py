@@ -5,7 +5,7 @@ from flask_security import roles_accepted
 from marshmallow import EXCLUDE
 from werkzeug.datastructures import FileStorage as WerkzeugFileStorage
 
-from app import serializers as doc_serializers, swagger as swagger_models
+from app import serializers, swagger as swagger_models
 from app.blueprints.base import BaseResource
 from app.containers import Container
 from app.extensions import api as root_api
@@ -19,7 +19,9 @@ api = root_api.namespace(
 )
 
 
-class DocumentBaseResource(BaseResource):
+class BaseDocumentResource(BaseResource):
+    serializer_class = serializers.DocumentSerializer
+
     @inject
     def __init__(
         self,
@@ -32,7 +34,7 @@ class DocumentBaseResource(BaseResource):
 
 
 @api.route('')
-class NewDocumentResource(DocumentBaseResource):
+class NewDocumentResource(BaseDocumentResource):
     parser = api.parser()
     parser.add_argument('Content-Type', type=str, location='headers', required=True, choices=('multipart/form-data',))
     parser.add_argument(
@@ -42,8 +44,6 @@ class NewDocumentResource(DocumentBaseResource):
         required=True,
         help='You only can upload Excel and PDF files.',
     )
-
-    serializer_class = doc_serializers.DocumentSerializer
 
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.expect(parser)
@@ -60,7 +60,7 @@ class NewDocumentResource(DocumentBaseResource):
 
 
 @api.route('/<int:document_id>')
-class DocumentResource(DocumentBaseResource):
+class DocumentResource(BaseDocumentResource):
     parser = api.parser()
     parser.add_argument(
         'Content-Type',
@@ -72,8 +72,6 @@ class DocumentResource(DocumentBaseResource):
             'application/octet-stream',
         ),
     )
-
-    serializer_class = doc_serializers.DocumentSerializer
 
     @api.doc(
         responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'},
@@ -91,7 +89,7 @@ class DocumentResource(DocumentBaseResource):
             document = self.service.find(document_id)
             response = serializer.dump(document), 200
         else:
-            request_args = doc_serializers.DocumentAttachmentSerializer().load(request.args.to_dict(), unknown=EXCLUDE)
+            request_args = serializers.DocumentAttachmentSerializer().load(request.args.to_dict(), unknown=EXCLUDE)
             response = self.service.get_document_content(document_id, request_args)
 
         return response
@@ -129,9 +127,7 @@ class DocumentResource(DocumentBaseResource):
 
 
 @api.route('/search')
-class SearchDocumentResource(DocumentBaseResource):
-    serializer_class = doc_serializers.DocumentSerializer
-
+class SearchDocumentResource(BaseDocumentResource):
     @api.doc(
         responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
@@ -142,7 +138,7 @@ class SearchDocumentResource(DocumentBaseResource):
     @roles_accepted(*ROLES)
     def post(self) -> tuple:
         serializer = self.get_serializer(many=True)
-        validated_data = doc_serializers.SearchSerializer().load(request.get_json())
+        validated_data = serializers.SearchSerializer().load(request.get_json())
 
         doc_data = self.service.get(**validated_data)
 

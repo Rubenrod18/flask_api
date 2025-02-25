@@ -1,22 +1,13 @@
 from celery import states
 from celery.result import AsyncResult
 from flask_login import current_user
-from marshmallow import EXCLUDE
 
 from app.celery.excel.tasks import export_user_data_in_excel_task
 from app.celery.tasks import create_user_email_task, create_word_and_excel_documents_task, reset_password_email_task
 from app.celery.word.tasks import export_user_data_in_word_task
-from app.serializers import SearchSerializer, UserExportWordSerializer
 
 
 class TaskService:
-    search_serializer: SearchSerializer
-    user_word_export_serializer: UserExportWordSerializer
-
-    def __init__(self):
-        self.search_serializer = SearchSerializer()
-        self.user_word_export_serializer = UserExportWordSerializer()
-
     @staticmethod
     def check_task_status(task_id: str) -> dict:
         task_data = AsyncResult(task_id)
@@ -39,21 +30,17 @@ class TaskService:
     def reset_password_email(**kwargs) -> None:
         reset_password_email_task.delay(kwargs)
 
-    def export_user_data_in_excel(self, data: dict) -> AsyncResult:
-        data = self.search_serializer.load(data)
-
+    @staticmethod
+    def export_user_data_in_excel(data: dict) -> AsyncResult:
         return export_user_data_in_excel_task.apply_async((current_user.id, data), countdown=5)
 
-    def export_user_data_in_word(self, data: dict, args: dict) -> AsyncResult:
-        data = self.search_serializer.load(data)
-        request_args = self.user_word_export_serializer.load(args, unknown=EXCLUDE)
-
+    @staticmethod
+    def export_user_data_in_word(data: dict, request_args: dict) -> AsyncResult:
         to_pdf = request_args.get('to_pdf', 0)
         return export_user_data_in_word_task.apply_async(args=[current_user.id, data, to_pdf])
 
-    def export_user_data_in_excel_and_word(self, data: dict, args) -> AsyncResult:
-        request_data = self.search_serializer.load(data)
-        request_args = self.user_word_export_serializer.load(args, unknown=EXCLUDE)
+    @staticmethod
+    def export_user_data_in_excel_and_word(data: dict, request_args) -> AsyncResult:
         to_pdf = request_args.get('to_pdf', 0)
 
-        return create_word_and_excel_documents_task.apply_async(args=[current_user.id, request_data, to_pdf])
+        return create_word_and_excel_documents_task.apply_async(args=[current_user.id, data, to_pdf])

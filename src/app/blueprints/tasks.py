@@ -1,9 +1,9 @@
 from dependency_injector.wiring import inject, Provide
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
-from flask_restx import Resource
 from flask_security import roles_accepted
 
+from app.blueprints.base import BaseResource
 from app.containers import Container
 from app.extensions import api as root_api
 from app.models.role import ROLES
@@ -13,13 +13,10 @@ blueprint = Blueprint('tasks', __name__, url_prefix='/api/tasks')
 api = root_api.namespace('tasks', description='Tasks endpoints')
 
 
-class TaskResource(Resource):
-    task_service: TaskService
-
+class TaskResource(BaseResource):
     @inject
-    def __init__(self, rest_api: str, task_service: TaskService = Provide[Container.task_service], *args, **kwargs):
-        super().__init__(rest_api, *args, **kwargs)
-        self.task_service = task_service
+    def __init__(self, rest_api: str, service: TaskService = Provide[Container.task_service], *args, **kwargs):
+        super().__init__(rest_api, service, *args, **kwargs)
 
 
 @api.route('/status/<string:task_id>')
@@ -31,4 +28,4 @@ class TaskStatusResource(TaskResource):
     @jwt_required()
     @roles_accepted(*ROLES)
     def get(self, task_id: str):
-        return self.task_service.check_task_status(task_id), 200
+        return self.service.check_task_status(task_id), 200
