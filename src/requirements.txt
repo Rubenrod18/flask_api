@@ -46,7 +46,7 @@ email-validator==2.2.0
     # via flask-security-too
 factory-boy==3.3.3
     # via -r requirements.in
-faker==35.0.0
+faker==36.1.1
     # via
     #   -r requirements.in
     #   factory-boy
@@ -143,9 +143,7 @@ prompt-toolkit==3.0.50
 pyjwt==2.10.1
     # via flask-jwt-extended
 python-dateutil==2.9.0.post0
-    # via
-    #   celery
-    #   faker
+    # via celery
 python-docx==1.1.2
     # via -r requirements.in
 python-dotenv==1.0.1
@@ -177,12 +175,12 @@ tornado==6.4.2
 typing-extensions==4.12.2
     # via
     #   alembic
-    #   faker
     #   python-docx
     #   sqlalchemy
 tzdata==2025.1
     # via
     #   celery
+    #   faker
     #   kombu
 vine==5.1.0
     # via
