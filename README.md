@@ -63,7 +63,7 @@ This will start the Flask application with the appropriate database setup.
 
 ## 📄 License
 
-This project is licensed under the [MIT License][license].
+This project is licensed under the MIT License.
 
 ---
 
@@ -78,5 +78,4 @@ We welcome contributions! Feel free to submit issues, feature requests, or pull 
 See the [documentation][documentation] for more details.
 
 
-[License]: https://github.com/Rubenrod18/flask_api/LICENSE
 [documentation]: https://flask-api.readthedocs.io/en/latest/
