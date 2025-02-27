@@ -71,7 +71,7 @@ click-repl==0.3.0
     #   celery
 coverage==7.6.10
     # via -r requirements-dev.in
-dependency-injector==4.45.0
+dependency-injector==4.46.0
     # via -r requirements.txt
 distlib==0.3.9
     # via virtualenv

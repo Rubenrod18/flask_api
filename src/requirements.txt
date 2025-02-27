@@ -38,7 +38,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-dependency-injector==4.45.0
+dependency-injector==4.46.0
     # via -r requirements.in
 dnspython==2.7.0
     # via email-validator
