@@ -24,7 +24,7 @@
     "node": ">= 22"
   },
   "devDependencies": {
-    "npm-check": "^5.9.2",
-    "standard-version": "^9.3.2"
+    "npm-check": "^6.0.1",
+    "standard-version": "^9.5.0"
   }
 }
