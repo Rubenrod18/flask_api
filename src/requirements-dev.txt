@@ -93,7 +93,7 @@ execnet==2.1.1
     # via pytest-xdist
 factory-boy==3.3.3
     # via -r requirements.txt
-faker==35.0.0
+faker==36.1.1
     # via
     #   -r requirements.txt
     #   factory-boy
@@ -271,7 +271,6 @@ python-dateutil==2.9.0.post0
     # via
     #   -r requirements.txt
     #   celery
-    #   faker
     #   freezegun
 python-docx==1.1.2
     # via -r requirements.txt
@@ -347,13 +346,13 @@ typing-extensions==4.12.2
     # via
     #   -r requirements.txt
     #   alembic
-    #   faker
     #   python-docx
     #   sqlalchemy
 tzdata==2025.1
     # via
     #   -r requirements.txt
     #   celery
+    #   faker
     #   kombu
 urllib3==2.3.0
     # via requests
