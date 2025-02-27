@@ -10,11 +10,11 @@ from config import Config
 
 
 class VerifyRoleId(fields.Int, ManagerMixin):
-    _manager_classes = {'role_manager': RoleManager}
+    manager_classes = {'role_manager': RoleManager}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._role_manager = self._get_manager('role_manager')
+        self._role_manager = self.get_manager('role_manager')
 
     def _deserialize(self, value, *args, **kwargs):
         role = self._role_manager.find(value)
@@ -30,7 +30,7 @@ class UserSerializer(ma.SQLAlchemySchema, ManagerMixin):
         model = User
         ordered = True
 
-    _manager_classes = {'user_manager': UserManager}
+    manager_classes = {'user_manager': UserManager}
 
     id = fields.Int()
     created_by = fields.Nested(lambda: UserSerializer(only=('id',)))
@@ -50,7 +50,7 @@ class UserSerializer(ma.SQLAlchemySchema, ManagerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._user_manager = self._get_manager('user_manager')
+        self._user_manager = self.get_manager('user_manager')
 
     @validates('id')
     def validate_id(self, user_id: int):

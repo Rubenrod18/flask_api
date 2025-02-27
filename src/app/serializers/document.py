@@ -15,9 +15,7 @@ class DocumentSerializer(ma.SQLAlchemySchema, ManagerMixin):
         model = Document
         ordered = True
 
-    _manager_classes = {
-        'document_manager': DocumentManager,
-    }
+    manager_classes = {'document_manager': DocumentManager}
 
     id = ma.auto_field()
     name = ma.auto_field()
@@ -34,7 +32,7 @@ class DocumentSerializer(ma.SQLAlchemySchema, ManagerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._document_manager = self._get_manager('document_manager')
+        self._document_manager = self.get_manager('document_manager')
 
     @validates('id')
     def validate_id(self, document_id):

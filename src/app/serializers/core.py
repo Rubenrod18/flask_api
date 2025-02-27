@@ -6,13 +6,13 @@ from app.managers import BaseManager
 
 
 class ManagerMixin:
-    _manager_classes = {}
+    manager_classes = {}
 
-    def _get_manager(self, manager_name: str) -> type[BaseManager]:
+    def get_manager(self, manager_name: str) -> type[BaseManager]:
         return self._get_manager_class(manager_name)
 
     def _get_manager_class(self, manager_name: str) -> type[BaseManager]:
-        return self._manager_classes.get(manager_name)()
+        return self.manager_classes.get(manager_name)()
 
 
 class _SearchValueSerializer(ma.Schema):

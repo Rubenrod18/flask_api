@@ -12,7 +12,7 @@ class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
         model = Role
         ordered = True
 
-    _manager_classes = {'role_manager': RoleManager}
+    manager_classes = {'role_manager': RoleManager}
 
     id = fields.Int()
     name = fields.Str()
@@ -24,7 +24,7 @@ class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._role_manager = self._get_manager('role_manager')
+        self._role_manager = self.get_manager('role_manager')
 
     @validates('id')
     def validate_id(self, role_id):
