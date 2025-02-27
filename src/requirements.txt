@@ -126,7 +126,7 @@ marshmallow==3.26.0
     # via
     #   flask-marshmallow
     #   marshmallow-sqlalchemy
-marshmallow-sqlalchemy==1.4.0
+marshmallow-sqlalchemy==1.4.1
     # via -r requirements.in
 mysqlclient==2.2.7
     # via -r requirements.in
