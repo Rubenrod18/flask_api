@@ -7,23 +7,24 @@
     "minor": "npm run release -- --release-as minor",
     "major": "npm run release -- --release-as major",
     "release": "standard-version",
-    "publish-to-master": "git push --follow-tags origin master"
+    "publish-to-master": "git push --follow-tags origin master",
+    "upgrade": "node_modules/npm-check/bin/cli.js -u"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rubenrod18/flask_api.git"
   },
   "author": "Rubén Rodríguez Ramírez",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/rubenrod18/flask_api/issues"
   },
   "homepage": "https://github.com/rubenrod18/flask_api#readme",
-  "engines": {
-    "node": ">=16.13.1"
+  "engine": {
+    "node": ">= 22"
   },
   "devDependencies": {
-    "npm-check": "^5.9.2",
-    "standard-version": "^9.3.2"
+    "npm-check": "^6.0.1",
+    "standard-version": "^9.5.0"
   }
 }
