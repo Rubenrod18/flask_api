@@ -2,6 +2,75 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/rubenrod18/flask_api/compare/v2.0.6...v3.0.0) (2025-02-27)
+
+
+### ⚠ BREAKING CHANGES
+
+
+* **docker:** previous application setup is not compatible.
+* **db:** migrate to MySQL database.
+* **orm:** migrate to SQLAlchemy.
+
+### Features
+
+* **celery:** add sqlalchemy integration on celery tasks ([5bba41c](https://github.com/rubenrod18/flask_api/commit/5bba41c03e4184b81bdd5526f7b52de90545556f))
+* **celery:** define new celery queues to celery tasks ([acde9c1](https://github.com/rubenrod18/flask_api/commit/acde9c123562df010ca98218d0a1fb3801b950a9))
+* **cli:** enable custom cli and update seed command ([ed77f5d](https://github.com/rubenrod18/flask_api/commit/ed77f5d7ca1931a739fe2ef0f3397896593d2a80))
+* **db:** add script to create database ([048eb51](https://github.com/rubenrod18/flask_api/commit/048eb51334a9c5263ad6506be1afb0d68d05636a))
+* **db:** replace mysql-connector-python to mysqlclient package ([9e50c19](https://github.com/rubenrod18/flask_api/commit/9e50c19f898bab455f403ca975d818b2a9d48aef))
+* **jwt:** add flask-jwt-extended to manage json web tokens ([0feea80](https://github.com/rubenrod18/flask_api/commit/0feea801b150e268104d82946cee5e97227c74cc))
+* **jwt:** add refresh token ([10df8b5](https://github.com/rubenrod18/flask_api/commit/10df8b58dc377309d7cfa59730580fc39d62894e))
+* migrate to mysql, sqlalchemy and docker ([#26](https://github.com/rubenrod18/flask_api/issues/26)) ([e29f86e](https://github.com/rubenrod18/flask_api/commit/e29f86e42d643d24d46f1f170b5262cbf38c5961))
+* **pre-commit:** add ruff and update config ([c7929be](https://github.com/rubenrod18/flask_api/commit/c7929be38be26fd17476b05626f13deff6d4ab7b))
+* **request-query-op:** add sqlalchemy integration ([#31](https://github.com/rubenrod18/flask_api/issues/31)) ([0fc84b6](https://github.com/rubenrod18/flask_api/commit/0fc84b656b94d992ebfb937ae7459bd8d5b7681e))
+* **serializers:** add ma.autofield in role and user datetime fields ([272d193](https://github.com/rubenrod18/flask_api/commit/272d1930c8994713981f49251836ab80da7f0640))
+* **serializers:** add managermixin to import managers and update some fields ([bf97a20](https://github.com/rubenrod18/flask_api/commit/bf97a20f7a220faad2933f313c5a38db94f6524e))
+* **swagger:** override swagger user interface ([2827d5b](https://github.com/rubenrod18/flask_api/commit/2827d5b3d7b693596940d59aaac4e35762b59adb))
+* **task-status:** update endpoint to see the celery task statutes ([1c81521](https://github.com/rubenrod18/flask_api/commit/1c8152111b405162ee24c442a11ad3c4deabe7c2))
+* **test:** add pytest-xdist python package to run the tests in parallel ([20d5251](https://github.com/rubenrod18/flask_api/commit/20d5251290eb3ad76f915c316065ba761e5c2caa))
+* **tests:** add integration to sqlalchemy orm and mysql database ([#27](https://github.com/rubenrod18/flask_api/issues/27)) ([3d2bf7e](https://github.com/rubenrod18/flask_api/commit/3d2bf7eff86d15887e50bc53cb3c348072d4ffe8))
+* **users:** send an email when an user is created ([37aebfb](https://github.com/rubenrod18/flask_api/commit/37aebfbca52df368f207f34c3f538b68c9ff6175))
+
+
+### Code Refactoring
+
+*  move serializers to blueprints ([#32](https://github.com/rubenrod18/flask_api/issues/32)) ([2f9bd41](https://github.com/rubenrod18/flask_api/commit/2f9bd41b98013ec585dafd2667483f09ce4225a1))
+* **blueprints:** apply solid design principles ([9129a12](https://github.com/rubenrod18/flask_api/commit/9129a12a13318ee599bec0c782e912de6de2a897))
+* **cli:** apply solid design principles ([8b5f574](https://github.com/rubenrod18/flask_api/commit/8b5f574c6222dee4c2e3abcbc37ac317e5e5aa01))
+* **di-container:** rename container to ServiceDIContainer ([5d090a8](https://github.com/rubenrod18/flask_api/commit/5d090a80cfe188f362387ad9d243238059f7810d))
+* **helpers:** remove helpers package because is not required anymore ([541459a](https://github.com/rubenrod18/flask_api/commit/541459a143360ae67709989ec32515b5d986828d))
+* **managers:** apply solid design principles ([edc6fbd](https://github.com/rubenrod18/flask_api/commit/edc6fbd6c224e31a6c7adb83fe381c71ff1635e9))
+* **middleware:** apply solid design principles ([1300b79](https://github.com/rubenrod18/flask_api/commit/1300b791d354654e3b3b4ed1d87d06f90ce71f62))
+* **request-query-operator:** apply solid design principles ([97dcea2](https://github.com/rubenrod18/flask_api/commit/97dcea29d9624bdadbf2f7b33dfa77164fca9599))
+* **request-query-operator:** move query operators to constants ([d9c3b8c](https://github.com/rubenrod18/flask_api/commit/d9c3b8c6a7cfacf802117dfb00b535a3bd24d0d3))
+* **request-query-operator:** rename its classes and the module name ([7ee669c](https://github.com/rubenrod18/flask_api/commit/7ee669c955f29233f31ef1411eaef2d140c22d70))
+* **resource:** add serializermixin to create several serializers ([e35a97a](https://github.com/rubenrod18/flask_api/commit/e35a97a1c2420a0dcfa66a89a4297e1b40df0094))
+* **roles:** unify all role name declarations in role model ([45ac5c9](https://github.com/rubenrod18/flask_api/commit/45ac5c904e58ae605b354c737d6fdf9322fd9b03))
+* **seeders:** apply some solid principles and update way to import them in seed command ([341ed74](https://github.com/rubenrod18/flask_api/commit/341ed744be6934ee740c22d1a16b2201806b1793))
+* **services:** apply solid design principles ([88d407d](https://github.com/rubenrod18/flask_api/commit/88d407dff06ba3962ca2fd50683653f1e1deaa46))
+* **task:** remove task service ([2e3eadb](https://github.com/rubenrod18/flask_api/commit/2e3eadbb7da3a27192a105b82a68fd71ab4b92b3))
+* **utils:** add pos_to_char function in excel task ([ff18d9a](https://github.com/rubenrod18/flask_api/commit/ff18d9aa47c79e5ffa741ab73eb587e5bf550459))
+
+
+### Build System
+
+* **docker-compose:** add mailpit docker image ([b7fe5b7](https://github.com/rubenrod18/flask_api/commit/b7fe5b74ad11fc909b405635f07e58d4de2ac214))
+* **docker-compose:** rename mailpit container name ([f84a985](https://github.com/rubenrod18/flask_api/commit/f84a985a2dc2c409558e6ad6d9f3991f6842b798))
+* **docker-compose:** update way to build the docker images ([9fdbdcc](https://github.com/rubenrod18/flask_api/commit/9fdbdccc0da3df63f923ca7b24f1068c732d809d))
+* **docker:** add Docker integration ([f2035f5](https://github.com/rubenrod18/flask_api/commit/f2035f58ea1454c8ae2b4314b08ff4fe912eb1ca))
+* **docker:** add files to init the application ([ddef07c](https://github.com/rubenrod18/flask_api/commit/ddef07c74c78523462faf28b9b84700730158f91))
+* **docker:** add libreoffice-writer package ([bbd3834](https://github.com/rubenrod18/flask_api/commit/bbd38341d80ed1a0666b967c4575450605e90905))
+* **docker:** update docker to python 3.13 ([#24](https://github.com/rubenrod18/flask_api/issues/24)) ([0641849](https://github.com/rubenrod18/flask_api/commit/0641849df3c2b6067e3594478bfdb4d66e5028b1))
+* **docker:** update pythonpath environment var ([7c9d8e6](https://github.com/rubenrod18/flask_api/commit/7c9d8e64a8975cc510bfdc8373a6412dc918d99d))
+* **helpers:** create new package and move some modules ([4180481](https://github.com/rubenrod18/flask_api/commit/41804818ef5553cfa1e1f86851b935757596c522))
+* **npm:** update node package versions ([#39](https://github.com/rubenrod18/flask_api/issues/39)) ([fad9102](https://github.com/rubenrod18/flask_api/commit/fad910200ca564277c2eb4350e82cbe39f6e79ef))
+* **pip:** add new celery config ([3915979](https://github.com/rubenrod18/flask_api/commit/3915979c6d9d189fb3ce2a6cc7d7e0b8b607d3da))
+* **pip:** remove peewee package ([e668e37](https://github.com/rubenrod18/flask_api/commit/e668e37941f5b5981bd423614a47db51f6cac637))
+* **pip:** update all python packages to latest versions ([#23](https://github.com/rubenrod18/flask_api/issues/23)) ([662b2d2](https://github.com/rubenrod18/flask_api/commit/662b2d2b7bac5766895760602c716adb820c202b))
+* **pre-commit:** add git hooks integration ([7d8cb36](https://github.com/rubenrod18/flask_api/commit/7d8cb36e52ace0ce2406dadef5db922ee3dec71f))
+* **utils:** move some code specific modules ([e436a6a](https://github.com/rubenrod18/flask_api/commit/e436a6af9a4a1dce822c3047c1461df036f4ff1c))
+
 ### [2.0.6](https://github.com/rubenrod18/flask_api/compare/v2.0.5...v2.0.6) (2021-12-28)
 
 
