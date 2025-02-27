@@ -1,0 +1,21 @@
+-r requirements.txt
+
+sqlalchemy-utils
+
+# Documentation
+m2r2
+sphinx
+sphinx-click
+sphinx-rtd-theme
+
+# Manage python packages
+pip-tools
+
+# Test
+coverage
+freezegun
+pytest
+pytest-xdist
+
+# Git hooks
+pre-commit

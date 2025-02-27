@@ -1,0 +1,110 @@
+x-app-common:
+  &app-common
+  image: flask_api:local
+  volumes:
+    - ".:/flask-api-docker-dir"
+  env_file:
+    - .env
+
+services:
+  app:
+    << : *app-common
+    container_name: flask_api_app
+    build:
+      context: .
+      dockerfile: ./docker/local/Dockerfile.local
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - flask_api_network
+    command: 'runserver.sh'
+
+  db:
+    << : *app-common
+    image: mysql:8.4
+    container_name: flask_api_db
+    ports:
+      - "3406:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "--silent"]
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - flask_api_network
+
+  celery:
+    << : *app-common
+    container_name: flask_api_celery
+    command: 'celery.sh'
+    depends_on:
+      - app
+    networks:
+      - flask_api_network
+    healthcheck:
+      test: ["CMD", "celery", "-A", "app.celery", "status"]  # Replace with the actual command for your app's Celery
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: flask_api_rabbitmq
+    ports:
+      - "15672:15672"  # RabbitMQ management console (optional)
+      - "5672:5672"    # RabbitMQ AMQP protocol port (Celery will use this)
+    command: bash -c "rabbitmq-plugins enable rabbitmq_management && rabbitmq-server"
+    restart: always
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
+    networks:
+      - flask_api_network
+
+  flower:
+    << : *app-common
+    image: mher/flower:latest
+    container_name: flask_api_flower
+    depends_on:
+      celery:
+        condition: service_healthy
+    ports:
+      - "5555:5555"
+    networks:
+      - flask_api_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555/health"]
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: flask_api_mailpit
+    ports:
+      - "1025:1025"  # SMTP server port
+      - "8025:8025"  # Web UI port for Mailpit
+    networks:
+      - flask_api_network
+    restart: always
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  flask_api_network:
+    driver: bridge

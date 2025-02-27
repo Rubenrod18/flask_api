@@ -1,0 +1,80 @@
+name: Integrity checks
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD} --silent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 3306:3306
+
+      rabbitmq:
+        image: rabbitmq:3-management
+        env:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+        ports:
+          - 5672:5672
+          - 15672:15672
+
+    strategy:
+      max-parallel: 4
+
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout code from the repository
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install --assume-yes build-essential \
+            build-essential gcc \
+            libmagic-dev \
+            git \
+            python3-dev default-libmysqlclient-dev pkg-config \
+            libreoffice-writer \
+            git
+        working-directory: ${{ env.working-directory }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-dev.txt
+        working-directory: ${{ env.working-directory }}
+
+      - name: Set up .env file
+        run: echo "${{ secrets.ENV_TEST }}" > .env
+
+      - name: Ruff linter
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: "latest"
+          args: 'check --config=./src/ruff.toml'
+
+      - name: Ruff format
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: "latest"
+          args: 'format --check --config=./src/ruff.toml'
+
+      - name: Run tests with make
+        run: |
+          make test
+        working-directory: ${{ env.working-directory }}
+
+    env:
+      working-directory: ./src
