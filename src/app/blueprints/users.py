@@ -20,8 +20,6 @@ api = root_api.namespace('users', description='Users with role admin or team_lea
 
 
 class BaseUserResource(BaseResource):
-    serializer_class = serializers.UserSerializer
-
     @inject
     def __init__(
         self,
@@ -33,12 +31,10 @@ class BaseUserResource(BaseResource):
         super().__init__(rest_api, service, *args, **kwargs)
 
 
-class BaseUserTaskResource(BaseUserResource):
-    serializer_class = serializers.SearchSerializer
-
-
 @api.route('')
 class NewUserResource(BaseUserResource):
+    serializer_class = serializers.UserSerializer
+
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.expect(swagger_models.user_input_sw_model)
     @api.marshal_with(swagger_models.user_sw_model, envelope='data', code=201)
@@ -57,6 +53,8 @@ class NewUserResource(BaseUserResource):
 
 @api.route('/<int:user_id>')
 class UserResource(BaseUserResource):
+    serializer_class = serializers.UserSerializer
+
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.marshal_with(swagger_models.user_sw_model, envelope='data')
     @jwt_required()
@@ -105,6 +103,11 @@ class UserResource(BaseUserResource):
 
 @api.route('/search')
 class UsersSearchResource(BaseUserResource):
+    serializer_classes = {
+        'user': serializers.UserSerializer,
+        'search': serializers.SearchSerializer,
+    }
+
     @api.doc(
         responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
@@ -114,8 +117,8 @@ class UsersSearchResource(BaseUserResource):
     @jwt_required()
     @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def post(self) -> tuple:
-        serializer = self.get_serializer(many=True)
-        validated_data = serializers.SearchSerializer().load(request.get_json())
+        serializer = self.get_serializer('user', many=True)
+        validated_data = self.get_serializer('search').load(request.get_json())
 
         doc_data = self.service.get(**validated_data)
 
@@ -127,7 +130,9 @@ class UsersSearchResource(BaseUserResource):
 
 
 @api.route('/xlsx')
-class ExportUsersExcelResource(BaseUserTaskResource):
+class ExportUsersExcelResource(BaseUserResource):
+    serializer_class = serializers.SearchSerializer
+
     @api.doc(
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
@@ -145,7 +150,12 @@ class ExportUsersExcelResource(BaseUserTaskResource):
 
 
 @api.route('/word')
-class ExportUsersWordResource(BaseUserTaskResource):
+class ExportUsersWordResource(BaseUserResource):
+    serializer_classes = {
+        'search': serializers.SearchSerializer,
+        'user_export_word': serializers.UserExportWordSerializer,
+    }
+
     @api.doc(
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
@@ -155,9 +165,9 @@ class ExportUsersWordResource(BaseUserTaskResource):
     @roles_accepted(*ROLES)
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()
-        serializer = self.get_serializer()
+        serializer = self.get_serializer('search')
         deserialized_data = serializer.load(payload)
-        request_args = serializers.UserExportWordSerializer().load(args, unknown=EXCLUDE)
+        request_args = self.get_serializer('user_export_word').load(args, unknown=EXCLUDE)
         to_pdf = request_args.get('to_pdf', 0)
 
         task = export_user_data_in_word_task.apply_async(args=[current_user.id, deserialized_data, to_pdf])
@@ -169,7 +179,12 @@ class ExportUsersWordResource(BaseUserTaskResource):
 
 
 @api.route('/word_and_xlsx')
-class ExportUsersExcelAndWordResource(BaseUserTaskResource):
+class ExportUsersExcelAndWordResource(BaseUserResource):
+    serializer_classes = {
+        'search': serializers.SearchSerializer,
+        'user_export_word': serializers.UserExportWordSerializer,
+    }
+
     @api.doc(
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
@@ -179,9 +194,9 @@ class ExportUsersExcelAndWordResource(BaseUserTaskResource):
     @roles_accepted(*ROLES)
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()
-        serializer = self.get_serializer()
+        serializer = self.get_serializer('search')
         deserialized_data = serializer.load(payload)
-        request_args = serializers.UserExportWordSerializer().load(args, unknown=EXCLUDE)
+        request_args = self.get_serializer('user_export_word').load(args, unknown=EXCLUDE)
         to_pdf = request_args.get('to_pdf', 0)
 
         create_word_and_excel_documents_task.apply_async(args=[current_user.id, deserialized_data, to_pdf])

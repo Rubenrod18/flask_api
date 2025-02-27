@@ -16,8 +16,6 @@ api = root_api.namespace('roles', description='Users with role admin can manage 
 
 
 class BaseRoleResource(BaseResource):
-    serializer_class = serializers.RoleSerializer
-
     @inject
     def __init__(
         self,
@@ -31,6 +29,8 @@ class BaseRoleResource(BaseResource):
 
 @api.route('')
 class NewRoleResource(BaseRoleResource):
+    serializer_class = serializers.RoleSerializer
+
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.expect(swagger_models.role_input_sw_model)
     @api.marshal_with(swagger_models.role_sw_model, envelope='data', code=201)
@@ -47,6 +47,8 @@ class NewRoleResource(BaseRoleResource):
 
 @api.route('/<int:role_id>')
 class RoleResource(BaseRoleResource):
+    serializer_class = serializers.RoleSerializer
+
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found'}, security='auth_token')
     @api.marshal_with(swagger_models.role_sw_model, envelope='data')
     @jwt_required()
@@ -92,6 +94,11 @@ class RoleResource(BaseRoleResource):
 
 @api.route('/search')
 class RolesSearchResource(BaseRoleResource):
+    serializer_classes = {
+        'role': serializers.RoleSerializer,
+        'search': serializers.SearchSerializer,
+    }
+
     @api.doc(
         responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
@@ -101,8 +108,8 @@ class RolesSearchResource(BaseRoleResource):
     @jwt_required()
     @roles_required(ADMIN_ROLE)
     def post(self) -> tuple:
-        serializer = self.get_serializer(many=True)
-        validated_data = serializers.SearchSerializer().load(request.get_json())
+        serializer = self.get_serializer('role', many=True)
+        validated_data = self.get_serializer('search').load(request.get_json())
 
         doc_data = self.service.get(**validated_data)
 

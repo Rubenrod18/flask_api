@@ -154,15 +154,7 @@ class TestUserEndpoints(TestBaseApi):
 
     def test_export_word_endpoint(self):
         auth_headers = self.build_headers()
-        json = {
-            'search': [],
-            'order': [
-                {
-                    'field_name': 'name',
-                    'sorting': 'desc',
-                },
-            ],
-        }
+        json = {}
         test_cases = [
             (f'{self.base_path}/word', auth_headers, json),
             (f'{self.base_path}/word?to_pdf=1', auth_headers, json),

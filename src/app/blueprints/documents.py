@@ -20,8 +20,6 @@ api = root_api.namespace(
 
 
 class BaseDocumentResource(BaseResource):
-    serializer_class = serializers.DocumentSerializer
-
     @inject
     def __init__(
         self,
@@ -44,6 +42,8 @@ class NewDocumentResource(BaseDocumentResource):
         required=True,
         help='You only can upload Excel and PDF files.',
     )
+
+    serializer_class = serializers.DocumentSerializer
 
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.expect(parser)
@@ -73,6 +73,11 @@ class DocumentResource(BaseDocumentResource):
         ),
     )
 
+    serializer_classes = {
+        'document': serializers.DocumentSerializer,
+        'document_attachment': serializers.DocumentAttachmentSerializer,
+    }
+
     # NOTE: api.marshal_with cannot handle two differents kind of responses. That's the reason is not added here.
     @api.doc(
         responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'},
@@ -89,10 +94,10 @@ class DocumentResource(BaseDocumentResource):
         - `Accept: application/octet-stream`: returns the content of the document.
 
         """
-        serializer = self.get_serializer()
+        serializer = self.get_serializer('document')
 
         if request.headers.get('Accept') == 'application/octet-stream':
-            request_args = serializers.DocumentAttachmentSerializer().load(request.args.to_dict(), unknown=EXCLUDE)
+            request_args = self.get_serializer('document_attachment').load(request.args.to_dict(), unknown=EXCLUDE)
             response = self.service.get_document_content(document_id, request_args)
         else:
             serializer.load({'id': document_id}, partial=True)
@@ -110,7 +115,7 @@ class DocumentResource(BaseDocumentResource):
     @jwt_required()
     @roles_accepted(*ROLES)
     def put(self, document_id: int) -> tuple:
-        serializer = self.get_serializer()
+        serializer = self.get_serializer('document')
         serializer.load({'id': document_id}, partial=True)
         data = serializer.valid_request_file(get_request_file())
 
@@ -125,7 +130,7 @@ class DocumentResource(BaseDocumentResource):
     @jwt_required()
     @roles_accepted(*ROLES)
     def delete(self, document_id: int) -> tuple:
-        serializer = self.get_serializer()
+        serializer = self.get_serializer('document')
         serializer.load({'id': document_id}, partial=True)
 
         document = self.service.delete(document_id)
@@ -135,6 +140,8 @@ class DocumentResource(BaseDocumentResource):
 
 @api.route('/search')
 class SearchDocumentResource(BaseDocumentResource):
+    serializer_classes = {'document': serializers.DocumentSerializer, 'search': serializers.SearchSerializer}
+
     @api.doc(
         responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
@@ -144,8 +151,8 @@ class SearchDocumentResource(BaseDocumentResource):
     @jwt_required()
     @roles_accepted(*ROLES)
     def post(self) -> tuple:
-        serializer = self.get_serializer(many=True)
-        validated_data = serializers.SearchSerializer().load(request.get_json())
+        serializer = self.get_serializer('document', many=True)
+        validated_data = self.get_serializer('search').load(request.get_json())
 
         doc_data = self.service.get(**validated_data)
 
