@@ -383,7 +383,7 @@ wtforms==3.2.1
     #   -r requirements.txt
     #   flask-security-too
     #   flask-wtf
-xlsxwriter==3.2.1
+xlsxwriter==3.2.2
     # via -r requirements.txt
 
 # The following packages are considered to be unsafe in a requirements file:
