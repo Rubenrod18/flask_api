@@ -13,5 +13,4 @@ set -o nounset
 # This makes the script treat the use of unset variables as an error.
 # If the script tries to use an undefined variable, it will immediately exit with an error, preventing subtle bugs.
 
-# TODO: Temporal solution. I need to find a better way to run the gunicorn
 gunicorn --config /usr/local/etc/gunicorn.py
