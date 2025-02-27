@@ -2,7 +2,7 @@
 
 from dependency_injector import containers, providers
 
-from app import serializers, services
+from app import services
 from app.helpers.otp_token import OTPTokenManager
 
 
@@ -28,12 +28,6 @@ class ServiceDIContainer(containers.DeclarativeContainer):
         salt=config.salt,
         expiration=config.expiration.as_int(),
     )
-
-    # Serializers
-    document_serializer = providers.Factory(serializers.DocumentSerializer)
-    document_serializer.add_attributes(exclude=('internal_filename',))
-    role_serializer = providers.Factory(serializers.RoleSerializer)
-    user_serializer = providers.Factory(serializers.UserSerializer)
 
     # Services
     auth_service = providers.Factory(services.AuthService)
