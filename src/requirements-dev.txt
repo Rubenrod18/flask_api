@@ -215,7 +215,7 @@ marshmallow==3.26.0
     #   -r requirements.txt
     #   flask-marshmallow
     #   marshmallow-sqlalchemy
-marshmallow-sqlalchemy==1.4.0
+marshmallow-sqlalchemy==1.4.1
     # via -r requirements.txt
 mistune==0.8.4
     # via m2r2
