@@ -37,14 +37,14 @@ NOT_CONTAINS_OP = 'ncontains'
 STARTS_WITH_OP = 'startswith'
 ENDS_WITH_OP = 'endswith'
 
-STRING_QUERY_OPERATORS = [
+STRING_QUERY_OPERATORS = {
     EQUAL_OP,
     NOT_EQUAL_OP,
     CONTAINS_OP,
     NOT_CONTAINS_OP,
     STARTS_WITH_OP,
     ENDS_WITH_OP,
-]
+}
 
 # No-String query operators
 LESS_THAN_OP = 'lt'
@@ -55,7 +55,7 @@ IN_OP = 'in'
 NOT_IN_OP = 'nin'
 BETWEEN_OP = 'between'
 
-QUERY_OPERATORS = [
+QUERY_OPERATORS = {
     EQUAL_OP,
     NOT_EQUAL_OP,
     LESS_THAN_OP,
@@ -65,7 +65,9 @@ QUERY_OPERATORS = [
     IN_OP,
     NOT_IN_OP,
     BETWEEN_OP,
-]
+}
+
+ALL_OPERATORS = STRING_QUERY_OPERATORS | QUERY_OPERATORS
 
 
 class OrderByClauseBuilder:

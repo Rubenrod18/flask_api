@@ -1,5 +1,3 @@
-import logging
-
 import magic
 from flask import url_for
 from marshmallow import fields, post_dump, pre_load, validate, validates
@@ -8,16 +6,18 @@ from werkzeug.exceptions import NotFound, UnprocessableEntity
 from app.extensions import ma
 from app.managers import DocumentManager
 from app.models import Document
+from app.serializers.core import ManagerMixin
 from config import Config
 
-logger = logging.getLogger(__name__)
-document_manager = DocumentManager()
 
-
-class DocumentSerializer(ma.SQLAlchemySchema):
+class DocumentSerializer(ma.SQLAlchemySchema, ManagerMixin):
     class Meta:
         model = Document
         ordered = True
+
+    _manager_classes = {
+        'document_manager': DocumentManager,
+    }
 
     id = ma.auto_field()
     name = ma.auto_field()
@@ -32,17 +32,16 @@ class DocumentSerializer(ma.SQLAlchemySchema):
     updated_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     deleted_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._document_manager = self._get_manager('document_manager')
+
     @validates('id')
     def validate_id(self, document_id):
-        args = (document_manager.model.deleted_at.is_(None),)
-        document = document_manager.find(document_id, *args)
+        args = (self._document_manager.model.deleted_at.is_(None),)
+        document = self._document_manager.find(document_id, *args)
 
-        if document is None:
-            logger.debug(f'Document "{document_id}" not found.')
-            raise NotFound('Document not found')
-
-        if document.deleted_at is not None:
-            logger.debug(f'Document "{document_id}" already deleted.')
+        if document is None or document.deleted_at is not None:
             raise NotFound('Document not found')
 
     @post_dump()

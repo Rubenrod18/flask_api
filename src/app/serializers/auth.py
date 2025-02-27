@@ -1,15 +1,12 @@
-import logging
-
 from flask_security import verify_password
-from marshmallow import fields, post_load, validate, validates
+from marshmallow import fields, post_load, validate, validates, validates_schema, ValidationError
 from werkzeug.exceptions import Forbidden, Unauthorized
 
 from app.extensions import ma
 from app.helpers.otp_token import OTPTokenManager
 from app.managers import UserManager
+from app.models import User
 from config import Config
-
-logger = logging.getLogger(__name__)
 
 
 class AuthUserLoginSerializer(ma.Schema):
@@ -33,22 +30,12 @@ class AuthUserLoginSerializer(ma.Schema):
         )
         self.__user = self.user_manager.find_by_email(email, *args)
 
-        if self.__user is None:
-            logger.debug(f'User "{email}" not found.')
-            raise Unauthorized('Credentials invalid')
-
-        if self.__user.active is False:
-            logger.debug(f'User "{email}" not activated.')
-            raise Unauthorized('Credentials invalid')
-
-        if self.__user.deleted_at is not None:
-            logger.debug(f'User "{email}" deleted.')
+        if self.__user is None or self.__user.active is False or self.__user.deleted_at is not None:
             raise Unauthorized('Credentials invalid')
 
     @validates('password')
     def validate_password(self, password):
-        if not verify_password(password, self.__user.password):
-            logger.debug(f'User "{self.__user.email}" password does not match.')
+        if isinstance(self.__user, User) and not verify_password(password, self.__user.password):
             raise Unauthorized('Credentials invalid')
 
     @post_load
@@ -58,8 +45,12 @@ class AuthUserLoginSerializer(ma.Schema):
 
 class AuthUserConfirmResetPasswordSerializer(ma.Schema):
     token = fields.Str(required=True)
-    # TODO: It could be safer if I add "password" and "confirm_password" fields.  # noqa
     password = fields.Str(
+        load_only=True,
+        required=True,
+        validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50),
+    )
+    confirm_password = fields.Str(
         load_only=True,
         required=True,
         validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50),
@@ -74,17 +65,17 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
     def validate_token(self, token):
         email = self.otp_token_manager.verify_token(token)
         user = self.user_manager.find_by_email(email)
-        if not user:
-            logger.debug(f'Token - User "{user.email}" is invalid')
+
+        if not user or user.deleted_at is not None or not user.active:
             raise Forbidden('Invalid token')
 
-        if user.deleted_at is not None:
-            logger.debug(f'Token - User "{user.email}" already deleted')
-            raise Forbidden('Invalid token')
+    @validates_schema
+    def validate_passwords(self, data, **kwargs):
+        password = data.get('password')
+        confirm_password = data.get('confirm_password')
 
-        if not user.active:
-            logger.debug(f'Token - User "{user.email}" is not active')
-            raise Forbidden('Invalid token')
+        if password != confirm_password:
+            raise ValidationError('Passwords must match', field_name='confirm_password')
 
     @post_load
     def make_object(self, data, **kwargs):

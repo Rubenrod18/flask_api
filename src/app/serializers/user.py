@@ -1,5 +1,3 @@
-import logging
-
 from marshmallow import fields, pre_load, validate, validates
 from werkzeug.exceptions import BadRequest, NotFound
 
@@ -7,29 +5,32 @@ from app.extensions import ma
 from app.managers import RoleManager, UserManager
 from app.models import User
 from app.serializers import RoleSerializer
+from app.serializers.core import ManagerMixin
 from config import Config
 
-logger = logging.getLogger(__name__)
-user_manager = UserManager()
-role_manager = RoleManager()
 
+class VerifyRoleId(fields.Int, ManagerMixin):
+    _manager_classes = {'role_manager': RoleManager}
 
-class VerifyRoleId(fields.Field):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._role_manager = self._get_manager('role_manager')
+
     def _deserialize(self, value, *args, **kwargs):
-        role = role_manager.find(value)
-        if role is None:
-            raise NotFound(f'Role "{value}" not found')
+        role = self._role_manager.find(value)
 
-        if role.deleted_at is not None:
-            raise BadRequest(f'Role "{value}" deleted')
+        if role is None or role.deleted_at is not None:
+            raise NotFound('Role not found')
 
         return value
 
 
-class UserSerializer(ma.SQLAlchemySchema):
+class UserSerializer(ma.SQLAlchemySchema, ManagerMixin):
     class Meta:
         model = User
         ordered = True
+
+    _manager_classes = {'user_manager': UserManager}
 
     id = fields.Int()
     created_by = fields.Nested(lambda: UserSerializer(only=('id',)))
@@ -47,22 +48,21 @@ class UserSerializer(ma.SQLAlchemySchema):
 
     role_id = VerifyRoleId(load_only=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._user_manager = self._get_manager('user_manager')
+
     @validates('id')
     def validate_id(self, user_id: int):
-        args = (user_manager.model.deleted_at.is_(None),)
-        user = user_manager.find(user_id, *args)
+        args = (self._user_manager.model.deleted_at.is_(None),)
+        user = self._user_manager.find(user_id, *args)
 
-        if user is None:
-            logger.debug(f'User "{user_id}" not found.')
-            raise NotFound('User not found')
-
-        if user.deleted_at is not None:
-            logger.debug(f'User "{user_id}" deleted.')
+        if user is None or user.deleted_at is not None:
             raise NotFound('User not found')
 
     @validates('email')
     def validate_email(self, email: str):
-        if user_manager.find_by_email(email):
+        if self._user_manager.find_by_email(email):
             raise BadRequest('User email already created')
 
 

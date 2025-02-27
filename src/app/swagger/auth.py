@@ -20,5 +20,6 @@ auth_user_reset_password_sw_model = api.model(
 )
 
 auth_user_reset_password_token_sw_model = api.model(
-    'AuthUserResetPasswordToken', {'password': fields.String(required=True)}
+    'AuthUserResetPasswordToken',
+    {'password': fields.String(required=True), 'confirm_password': fields.String(required=True)},
 )
