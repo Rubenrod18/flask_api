@@ -69,7 +69,7 @@ click-repl==0.3.0
     # via
     #   -r requirements.txt
     #   celery
-coverage==7.6.10
+coverage==7.6.12
     # via -r requirements-dev.in
 dependency-injector==4.45.0
     # via -r requirements.txt
