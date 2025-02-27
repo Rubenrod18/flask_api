@@ -199,5 +199,5 @@ wtforms==3.2.1
     # via
     #   flask-security-too
     #   flask-wtf
-xlsxwriter==3.2.1
+xlsxwriter==3.2.2
     # via -r requirements.in
