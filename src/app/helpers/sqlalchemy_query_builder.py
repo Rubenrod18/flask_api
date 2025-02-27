@@ -111,7 +111,7 @@ class OrderByClauseBuilder:
 
 class StringQueryClauseBuilder:
     def __init__(self):
-        self.operator_map = {
+        self._operator_map = {
             'eq': self._eq,
             'ne': self._ne,
             'contains': self._contains,
@@ -147,10 +147,10 @@ class StringQueryClauseBuilder:
     def build_clause(
         self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: str
     ) -> sa.BinaryExpression:
-        if field_operator not in self.operator_map:
+        if field_operator not in self._operator_map:
             raise ValueError(f'Unsupported operator: {field_operator}')
 
-        return self.operator_map[field_operator](field, field_value)
+        return self._operator_map[field_operator](field, field_value)
 
     def build_clause_with_multiple_values(
         self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: str
@@ -166,7 +166,7 @@ class StringQueryClauseBuilder:
 
 class ComparisonClauseBuilder:
     def __init__(self):
-        self.operator_map = {
+        self._operator_map = {
             'eq': self._eq,
             'ne': self._ne,
             'lt': self._lt,
@@ -218,10 +218,10 @@ class ComparisonClauseBuilder:
     def build_clause(
         self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: any
     ) -> sa.BinaryExpression:
-        if field_operator not in self.operator_map:
+        if field_operator not in self._operator_map:
             raise ValueError(f'Unsupported operator: {field_operator}')
 
-        return self.operator_map[field_operator](field, field_value)
+        return self._operator_map[field_operator](field, field_value)
 
     def build_clause_with_multiple_values(
         self, field: sa.orm.InstrumentedAttribute, field_operator: str, field_value: any
