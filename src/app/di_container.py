@@ -7,7 +7,7 @@ from app.helpers.otp_token import OTPTokenManager
 
 
 class ServiceDIContainer(containers.DeclarativeContainer):
-    """Service dependency injection container."""
+    """Service Dependency Injection Container."""
 
     config = providers.Configuration()
     wiring_config = containers.WiringConfiguration(
