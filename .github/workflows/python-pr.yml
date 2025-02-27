@@ -57,7 +57,7 @@ jobs:
         working-directory: ${{ env.working-directory }}
 
       - name: Set up .env file
-        run: echo "${{ secrets.ENV_TEST }}" > .env
+        run: cp .env.example .env
 
       - name: Ruff linter
         uses: astral-sh/ruff-action@v3
