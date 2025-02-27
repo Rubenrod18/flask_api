@@ -128,7 +128,8 @@ class TestAuthEndpoints(TestBaseApi):
 
     def test_reset_password(self):
         token = self.otp_token_manager.generate_token(self.admin_user.email)
-        data = {'password': os.getenv('TEST_USER_PASSWORD')}
+        plain_password = os.getenv('TEST_USER_PASSWORD')
+        data = {'password': plain_password, 'confirm_password': plain_password}
 
         response = self.client.post(f'{self.base_path}/reset_password/{token}', json=data)
         json_response = response.get_json()
