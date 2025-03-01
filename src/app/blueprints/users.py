@@ -151,6 +151,9 @@ class ExportUsersExcelResource(BaseUserResource):
 
 @api.route('/word')
 class ExportUsersWordResource(BaseUserResource):
+    parser = api.parser()
+    parser.add_argument('to_pdf', type=int, location='args', required=False, choices=(0, 1))
+
     serializer_classes = {
         'search': serializers.SearchSerializer,
         'user_export_word': serializers.UserExportWordSerializer,
@@ -160,7 +163,7 @@ class ExportUsersWordResource(BaseUserResource):
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.expect(swagger_models.search_input_sw_model)
+    @api.expect(parser, swagger_models.search_input_sw_model)
     @jwt_required()
     @roles_accepted(*ROLES)
     def post(self) -> tuple:
@@ -180,6 +183,9 @@ class ExportUsersWordResource(BaseUserResource):
 
 @api.route('/word_and_xlsx')
 class ExportUsersExcelAndWordResource(BaseUserResource):
+    parser = api.parser()
+    parser.add_argument('to_pdf', type=int, location='args', required=False, choices=(0, 1))
+
     serializer_classes = {
         'search': serializers.SearchSerializer,
         'user_export_word': serializers.UserExportWordSerializer,
@@ -189,7 +195,7 @@ class ExportUsersExcelAndWordResource(BaseUserResource):
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.expect(swagger_models.search_input_sw_model)
+    @api.expect(parser, swagger_models.search_input_sw_model)
     @jwt_required()
     @roles_accepted(*ROLES)
     def post(self) -> tuple:
