@@ -84,10 +84,6 @@ class DocumentService(BaseService):
         mime_type = document.mime_type
         file_extension = mimetypes.guess_extension(mime_type)
 
-        attachment_filename = (
-            document.name if document.name.find(file_extension) else f'{document.name}{file_extension}'
-        )
-
         kwargs = {
             'path_or_file': document.get_filepath(),
             'mimetype': mime_type,
@@ -95,5 +91,8 @@ class DocumentService(BaseService):
         }
 
         if as_attachment:
-            kwargs['attachment_filename'] = attachment_filename
+            kwargs['download_name'] = (
+                document.name if document.name.find(file_extension) else f'{document.name}{file_extension}'
+            )
+
         return send_file(**kwargs)

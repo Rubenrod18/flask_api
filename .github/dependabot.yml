@@ -8,6 +8,6 @@ updates:
     timezone: Europe/Madrid
   open-pull-requests-limit: 10
   commit-message:
-    prefix: "[Dep][pip] "
+    prefix: "build(pip): "
   labels:
     - dependabot
