@@ -86,15 +86,19 @@ class TestDocumentEndpoints(TestBaseApi):
         self.assertEqual(self.document.deleted_at, json_data.get('deleted_at'))
 
     def test_get_document_file(self):
-        response = self.client.get(
-            f'{self.base_path}/{self.document.id}',
-            headers=self.build_headers(
-                extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
-            ),
-        )
+        test_cases = ['as_attachment=1', 'as_attachment=0', '']
 
-        self.assertEqual(200, response.status_code, response.get_json())
-        self.assertTrue(isinstance(response.get_data(), bytes))
+        for test_case in test_cases:
+            with self.subTest(test_case):
+                response = self.client.get(
+                    f'{self.base_path}/{self.document.id}?{test_case}',
+                    headers=self.build_headers(
+                        extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
+                    ),
+                )
+
+                self.assertEqual(200, response.status_code)
+                self.assertTrue(isinstance(response.get_data(), bytes))
 
     def test_delete_document(self):
         response = self.client.delete(f'{self.base_path}/{self.document.id}', json={}, headers=self.build_headers())
