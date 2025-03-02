@@ -72,6 +72,7 @@ class DocumentResource(BaseDocumentResource):
             'application/octet-stream',
         ),
     )
+    parser.add_argument('as_attachment', type=int, location='args', required=False, choices=(0, 1))
 
     serializer_classes = {
         'document': serializers.DocumentSerializer,
