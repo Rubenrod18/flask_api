@@ -305,7 +305,7 @@ six==1.17.0
     #   python-dateutil
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==8.2.1
+sphinx==8.2.3
     # via
     #   -r requirements-dev.in
     #   sphinx-click
