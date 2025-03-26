@@ -274,7 +274,7 @@ python-dateutil==2.9.0.post0
     #   freezegun
 python-docx==1.1.2
     # via -r requirements.txt
-python-dotenv==1.0.1
+python-dotenv==1.1.0
     # via -r requirements.txt
 python-magic==0.4.27
     # via -r requirements.txt
