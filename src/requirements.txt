@@ -146,7 +146,7 @@ python-dateutil==2.9.0.post0
     # via celery
 python-docx==1.1.2
     # via -r requirements.in
-python-dotenv==1.0.1
+python-dotenv==1.1.0
     # via -r requirements.in
 python-magic==0.4.27
     # via -r requirements.in
