@@ -9,7 +9,10 @@ class RoleService(BaseService):
         super().__init__(manager=RoleManager())
 
     def create(self, **kwargs) -> Role:
-        return self.manager.create(**kwargs)
+        role = self.manager.create(**kwargs)
+        db.session.add(role)
+        db.session.flush()
+        return role
 
     def find(self, role_id: int, *args) -> Role | None:
         return self.manager.find(role_id)

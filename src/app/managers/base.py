@@ -11,8 +11,6 @@ class BaseManager:
         self.model = model
 
     def create(self, **kwargs) -> db.Model:
-        current_date = datetime.now(UTC)
-        kwargs.update({'created_at': current_date, 'updated_at': current_date})
         return self.model(**kwargs)
 
     def save(self, record_id: int, **kwargs) -> db.Model:
