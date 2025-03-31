@@ -21,6 +21,7 @@ def get_blueprints() -> list:
     def get_bp_instances(modules: list) -> list:
         """Get Blueprints instances."""
         blueprints = []
+        modules.sort()
 
         for item in modules:
             if item.endswith('.py'):
