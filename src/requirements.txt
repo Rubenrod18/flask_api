@@ -21,7 +21,7 @@ blinker==1.9.0
     #   flask
     #   flask-mail
     #   flask-principal
-celery==5.4.0
+celery==5.5.1
     # via
     #   -r requirements.in
     #   flower
@@ -109,7 +109,7 @@ jsonschema==4.23.0
     # via flask-restx
 jsonschema-specifications==2024.10.1
     # via jsonschema
-kombu==5.4.2
+kombu==5.5.2
     # via celery
 lxml==5.3.0
     # via python-docx
@@ -177,9 +177,8 @@ typing-extensions==4.12.2
     #   alembic
     #   python-docx
     #   sqlalchemy
-tzdata==2025.1
+tzdata==2025.2
     # via
-    #   celery
     #   faker
     #   kombu
 vine==5.1.0
