@@ -37,7 +37,7 @@ blinker==1.9.0
     #   flask-principal
 build==1.2.2.post1
     # via pip-tools
-celery==5.4.0
+celery==5.5.1
     # via
     #   -r requirements.txt
     #   flower
@@ -188,7 +188,7 @@ jsonschema-specifications==2024.10.1
     # via
     #   -r requirements.txt
     #   jsonschema
-kombu==5.4.2
+kombu==5.5.2
     # via
     #   -r requirements.txt
     #   celery
@@ -348,10 +348,9 @@ typing-extensions==4.12.2
     #   alembic
     #   python-docx
     #   sqlalchemy
-tzdata==2025.1
+tzdata==2025.2
     # via
     #   -r requirements.txt
-    #   celery
     #   faker
     #   kombu
 urllib3==2.3.0
