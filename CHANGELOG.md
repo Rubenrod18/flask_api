@@ -1,6 +1,59 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
+
+## [3.1.0](https://github.com/rubenrod18/flask_api/compare/v3.0.0...v3.1.0) (2025-05-02)
+
+
+### Build System
+
+* **docker-compose:** rename container and network names ([36c1deb](https://github.com/rubenrod18/flask_api/commit/36c1debdc4b091e1f5a62c11a820c9348d3797d2))
+* **make:** update help command to show command descriptions ([#68](https://github.com/rubenrod18/flask_api/issues/68)) ([b9ad04c](https://github.com/rubenrod18/flask_api/commit/b9ad04cc93b9986f9c54ae2239970f89ddb14359))
+* **npm:** replace standard-version to commit-and-tag-version package ([#80](https://github.com/rubenrod18/flask_api/issues/80)) ([309817b](https://github.com/rubenrod18/flask_api/commit/309817bc98acd1738982e87b7a4362d6feaa1886))
+* **pip:** bump celery from 5.4.0 to 5.5.1 in /src ([#72](https://github.com/rubenrod18/flask_api/issues/72)) ([722ce59](https://github.com/rubenrod18/flask_api/commit/722ce59b8898cdcd39b6685dffff7cf62acb090c))
+* **pip:** bump celery from 5.5.1 to 5.5.2 in /src ([#78](https://github.com/rubenrod18/flask_api/issues/78)) ([4f7c4e0](https://github.com/rubenrod18/flask_api/commit/4f7c4e083f23e491ec86d7a65c6ddbe2e5dc2bac))
+* **pip:** bump coverage from 7.6.10 to 7.6.12 in /src ([#40](https://github.com/rubenrod18/flask_api/issues/40)) ([0a405f8](https://github.com/rubenrod18/flask_api/commit/0a405f819597750998bb794b5319804062a8c7ab))
+* **pip:** bump coverage from 7.6.12 to 7.7.0 in /src ([#57](https://github.com/rubenrod18/flask_api/issues/57)) ([87e2152](https://github.com/rubenrod18/flask_api/commit/87e215295b83a1e5ddb1bf6814ce9a10e63f0cb8))
+* **pip:** bump coverage from 7.7.0 to 7.7.1 in /src ([#63](https://github.com/rubenrod18/flask_api/issues/63)) ([b1cee59](https://github.com/rubenrod18/flask_api/commit/b1cee59b44274dce140f323bce9e1dd037432c93))
+* **pip:** bump coverage from 7.7.1 to 7.8.0 in /src ([#67](https://github.com/rubenrod18/flask_api/issues/67)) ([ab291f4](https://github.com/rubenrod18/flask_api/commit/ab291f448768618f36793104381f34d1f09b9ab1))
+* **pip:** bump dependency-injector from 4.45.0 to 4.46.0 in /src ([#38](https://github.com/rubenrod18/flask_api/issues/38)) ([5dd6a75](https://github.com/rubenrod18/flask_api/commit/5dd6a75d0307cac183826c7ec5898a18164511fb))
+* **pip:** bump faker from 35.0.0 to 36.1.1 in /src ([#36](https://github.com/rubenrod18/flask_api/issues/36)) ([67ba2ea](https://github.com/rubenrod18/flask_api/commit/67ba2ea276ec78375116a9ccd195d43e2b0e5fe3))
+* **pip:** bump faker from 36.1.1 to 36.2.2 in /src ([#51](https://github.com/rubenrod18/flask_api/issues/51)) ([8f4ef59](https://github.com/rubenrod18/flask_api/commit/8f4ef5964bce73d1850cf152abcf3d45e66f7c0a))
+* **pip:** bump faker from 36.2.2 to 37.0.0 in /src ([#54](https://github.com/rubenrod18/flask_api/issues/54)) ([f2b7876](https://github.com/rubenrod18/flask_api/commit/f2b787658b89053258ccc472bb2332175936e8f1))
+* **pip:** bump faker from 37.0.0 to 37.0.2 in /src ([#61](https://github.com/rubenrod18/flask_api/issues/61)) ([167de94](https://github.com/rubenrod18/flask_api/commit/167de944669c2ef7f41de59b78c4ac8c3dad4aac))
+* **pip:** bump faker from 37.0.2 to 37.1.0 in /src ([#64](https://github.com/rubenrod18/flask_api/issues/64)) ([2e2b5e1](https://github.com/rubenrod18/flask_api/commit/2e2b5e1a5f7d3603fb03882e3a97f90ad0fbe2b8))
+* **pip:** bump flask-security-too from 5.5.2 to 5.6.0 in /src ([#43](https://github.com/rubenrod18/flask_api/issues/43)) ([0c3dd34](https://github.com/rubenrod18/flask_api/commit/0c3dd34648b580b689758c70776ed96ebf1e7174))
+* **pip:** bump flask-security-too from 5.6.0 to 5.6.1 in /src ([#60](https://github.com/rubenrod18/flask_api/issues/60)) ([ab90ccd](https://github.com/rubenrod18/flask_api/commit/ab90ccdc71ec7085145b863111ec93dc167d699a))
+* **pip:** bump jinja2 from 3.1.5 to 3.1.6 in /src ([#52](https://github.com/rubenrod18/flask_api/issues/52)) ([6480e89](https://github.com/rubenrod18/flask_api/commit/6480e8942ed3589d14459dc2f47647f5fea03ada))
+* **pip:** bump m2r2 from 0.3.3.post2 to 0.3.4 in /src ([#79](https://github.com/rubenrod18/flask_api/issues/79)) ([637d166](https://github.com/rubenrod18/flask_api/commit/637d166b299145dec4a116299707894bbd42501a))
+* **pip:** bump marshmallow-sqlalchemy from 1.4.0 to 1.4.1 in /src ([#42](https://github.com/rubenrod18/flask_api/issues/42)) ([574ce85](https://github.com/rubenrod18/flask_api/commit/574ce85f8ecd40ffbc3d5b5770100474d5bbf4ea))
+* **pip:** bump marshmallow-sqlalchemy from 1.4.1 to 1.4.2 in /src ([#73](https://github.com/rubenrod18/flask_api/issues/73)) ([3d17795](https://github.com/rubenrod18/flask_api/commit/3d17795a20853f2209a2ba078868956be3e8965a))
+* **pip:** bump pre-commit from 4.1.0 to 4.2.0 in /src ([#59](https://github.com/rubenrod18/flask_api/issues/59)) ([8c9b350](https://github.com/rubenrod18/flask_api/commit/8c9b350da71215f7084fc102188e41fe31f5c26e))
+* **pip:** bump pytest from 8.3.4 to 8.3.5 in /src ([#50](https://github.com/rubenrod18/flask_api/issues/50)) ([2fdd9b6](https://github.com/rubenrod18/flask_api/commit/2fdd9b61b9026226f3caf11c62a06b4707cb6999))
+* **pip:** bump python-dotenv from 1.0.1 to 1.1.0 in /src ([#65](https://github.com/rubenrod18/flask_api/issues/65)) ([c5837a4](https://github.com/rubenrod18/flask_api/commit/c5837a434ee002fef902ff6d62cd61daec5b966d))
+* **pip:** bump sphinx from 8.1.3 to 8.2.1 in /src ([#35](https://github.com/rubenrod18/flask_api/issues/35)) ([9ca9b0a](https://github.com/rubenrod18/flask_api/commit/9ca9b0aa844d8bad13f55fbc26d2b02dd4f1a098))
+* **pip:** bump sphinx from 8.2.1 to 8.2.3 in /src ([#49](https://github.com/rubenrod18/flask_api/issues/49)) ([b20b0de](https://github.com/rubenrod18/flask_api/commit/b20b0de180b2d15bd9590c979e06938c2bd1d03e))
+* **pip:** bump sqlalchemy from 2.0.37 to 2.0.38 in /src ([#41](https://github.com/rubenrod18/flask_api/issues/41)) ([b809dd6](https://github.com/rubenrod18/flask_api/commit/b809dd61bde0180a4f96bc42663f0b64eb3b5666))
+* **pip:** bump sqlalchemy from 2.0.38 to 2.0.39 in /src ([#55](https://github.com/rubenrod18/flask_api/issues/55)) ([0aa0ce7](https://github.com/rubenrod18/flask_api/commit/0aa0ce7356334e6ac05792046d68669e00898668))
+* **pip:** bump sqlalchemy from 2.0.39 to 2.0.40 in /src ([#66](https://github.com/rubenrod18/flask_api/issues/66)) ([ec338a3](https://github.com/rubenrod18/flask_api/commit/ec338a340d7da1b10da4af2d709c158e2f07ad64))
+* **pip:** bump xlsxwriter from 3.2.1 to 3.2.2 in /src ([#37](https://github.com/rubenrod18/flask_api/issues/37)) ([6a222e5](https://github.com/rubenrod18/flask_api/commit/6a222e5e0398cfbe9930236e1700f2bc671fd764))
+* **pip:** bump xlsxwriter from 3.2.2 to 3.2.3 in /src ([#75](https://github.com/rubenrod18/flask_api/issues/75)) ([b52545d](https://github.com/rubenrod18/flask_api/commit/b52545d3dc154d67c6fa99fae611c81dcfd0ca0c))
+
+
+### Features
+
+* **swagger:** add as_attachment field on /documents/<document_id> endpoint ([#47](https://github.com/rubenrod18/flask_api/issues/47)) ([61303d9](https://github.com/rubenrod18/flask_api/commit/61303d914323b363e0ab8df4693a593ca71178ac))
+* **swagger:** add to_pdf field on /users/word_and_xlsx and /users/word endpoints ([#45](https://github.com/rubenrod18/flask_api/issues/45)) ([98aa497](https://github.com/rubenrod18/flask_api/commit/98aa497772528a9908670cc8968ea19633625e99))
+
+
+### Bug Fixes
+
+* **documents:** as_attachment field didn't work when was sent ([#46](https://github.com/rubenrod18/flask_api/issues/46)) ([9d282f0](https://github.com/rubenrod18/flask_api/commit/9d282f0d0207682d6ccaa6c16b708ef3576cc455))
+
+
+### Code Refactoring
+
+* **managers:** datetime fields are not required anymore in create method ([#69](https://github.com/rubenrod18/flask_api/issues/69)) ([a23dc0b](https://github.com/rubenrod18/flask_api/commit/a23dc0bd944e31cd657e435cf2abb21a623e24c0))
 
 ## [3.0.0](https://github.com/rubenrod18/flask_api/compare/v2.0.6...v3.0.0) (2025-02-27)
 

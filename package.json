@@ -1,6 +1,6 @@
 {
   "name": "flask_api",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "scripts": {
     "first-release": "npm run release -- --first-release",
     "patch": "npm run release -- --release-as patch",
