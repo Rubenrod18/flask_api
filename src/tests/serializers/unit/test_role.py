@@ -6,6 +6,7 @@ from werkzeug.exceptions import BadRequest, NotFound
 from app.database.factories.role_factory import RoleFactory
 from app.managers import RoleManager
 from app.models import Role
+from app.repositories import RoleRepository
 from app.serializers import RoleSerializer
 from tests.base.base_test import TestBase
 
@@ -23,6 +24,7 @@ class TestRoleSerializer(TestBase):
         )
         self.role_manager = MagicMock(spec=RoleManager)
         self.role_manager.find.return_value = self.role
+        self.role_manager.repository = MagicMock(spec=RoleRepository)
         self.role_manager.model = MagicMock(spec=Role)
         self.role_manager.model.deleted_at.is_.return_value = None
 

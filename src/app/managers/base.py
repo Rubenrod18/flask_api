@@ -1,20 +1,21 @@
-from datetime import datetime, UTC
-
-from flask_sqlalchemy.model import DefaultMeta
-
 from app.extensions import db
 from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
+from app.repositories.base import BaseRepository
 
 
 class BaseManager:
-    def __init__(self, model: type[DefaultMeta]):
-        self.model = model
+    def __init__(self, repository: type[BaseRepository]):
+        self.repository = repository()
+
+    @property
+    def model(self):
+        return self.repository.model
 
     def create(self, **kwargs) -> db.Model:
-        return self.model(**kwargs)
+        return self.repository.create(**kwargs)
 
     def save(self, record_id: int, **kwargs) -> db.Model:
-        record = db.session.query(self.model).filter_by(id=record_id).first()
+        record = self.find(record_id)
 
         for key, value in kwargs.items():
             setattr(record, key, value)
@@ -39,13 +40,8 @@ class BaseManager:
 
     def delete(self, record_id: int) -> db.Model:
         record = self.find(record_id)
-        record.deleted_at = datetime.now(UTC)
-        return record
+        return self.repository.delete(record)
 
     def find(self, record_id: int, *args) -> db.Model | None:
-        query = db.session.query(self.model).filter(self.model.id == record_id)
-
-        for arg in args:
-            query = query.filter(arg)
-
-        return query.first()
+        args += (self.model.id == record_id,)
+        return self.repository.find(*args)

@@ -7,6 +7,7 @@ from werkzeug.exceptions import BadRequest, NotFound
 from app.database.factories.user_factory import UserFactory
 from app.managers import UserManager
 from app.models import Role, User
+from app.repositories import UserRepository
 from app.serializers import UserExportWordSerializer, UserSerializer
 from tests.base.base_test import TestBase
 
@@ -28,8 +29,9 @@ class TestUserSerializer(TestBase):
         )
         self.user_manager = MagicMock(spec=UserManager)
         self.user_manager.find_by_email.return_value = None
-        self.user_manager.model = MagicMock(spec=User)
-        self.user_manager.model.deleted_at.is_.return_value = None
+        self.user_manager.repository = MagicMock(spec=UserRepository)
+        self.user_manager.repository.model = MagicMock(spec=User)
+        self.user_manager.repository.model.deleted_at.is_.return_value = None
 
         self.serializer = UserSerializer()
         self.serializer._user_manager = self.user_manager

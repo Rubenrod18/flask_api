@@ -37,7 +37,7 @@ api = CustomApi(
 
 def init_app(app: Flask) -> None:
     api.init_app(app)
-    # Order matters: Initialize SQLAlchemy before Marshmallow
+    # NOTE: Order matters - Initialize SQLAlchemy before Marshmallow
     db.init_app(app)
     ma.init_app(app)
     mail.init_app(app)

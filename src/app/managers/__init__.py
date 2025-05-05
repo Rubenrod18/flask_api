@@ -1,7 +1,7 @@
 """Registers database managers.
 
 The managers are classes for managing database queries through
-database models.
+database repositories.
 
 """
 
