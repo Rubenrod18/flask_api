@@ -18,7 +18,7 @@ class TestCli(TestBase):
         finished_message = 'Database seeding completed successfully'
         is_finished_process = stdout_str.find(finished_message) != -1
 
-        self.assertEqual(0, result.exit_code)
+        self.assertEqual(0, result.exit_code, result.exception)
         self.assertEqual(True, is_finished_process)
 
     def test_is_flask_shell_ok_resources_are_available_returns_resources(self):

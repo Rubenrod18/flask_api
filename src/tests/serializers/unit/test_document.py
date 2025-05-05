@@ -9,6 +9,7 @@ from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.user_factory import UserFactory
 from app.managers import DocumentManager
 from app.models import Document
+from app.repositories import DocumentRepository
 from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
 from tests.base.base_test import TestBase
 
@@ -18,6 +19,7 @@ class TestDocumentSerializer(TestBase):
         super().setUp()
         self.user = UserFactory()
         self.document_manager = MagicMock(spec=DocumentManager)
+        self.document_manager.repository = MagicMock(spec=DocumentRepository)
         self.document_manager.model = MagicMock(spec=Document)
         self.document_manager.model.deleted_at.is_.return_value = None
         self.document = DocumentFactory(

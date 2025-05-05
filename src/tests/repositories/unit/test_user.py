@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.database.factories.user_factory import UserFactory
 from app.repositories.user import UserRepository
 from tests.base.base_test import TestBase
@@ -39,3 +41,16 @@ class TestUserRepository(TestBase):
         for field_name, field_value in test_cases:
             with self.subTest(msg=field_name, field_value=field_value):
                 self.assertTrue(self.repository.find(**{field_name: field_value}))
+
+    def test_delete_soft_user(self):
+        user = UserFactory()
+
+        user = self.repository.delete(user)
+
+        self.assertTrue(isinstance(user.deleted_at, datetime))
+
+    def test_delete_hard_user(self):
+        user = UserFactory()
+
+        with self.assertRaises(NotImplementedError):
+            self.repository.delete(user, force_delete=True)

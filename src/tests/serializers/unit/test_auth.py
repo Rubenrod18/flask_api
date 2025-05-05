@@ -7,6 +7,7 @@ from app.database.factories.user_factory import UserFactory
 from app.helpers.otp_token import OTPTokenManager
 from app.managers import UserManager
 from app.models import User
+from app.repositories import UserRepository
 from app.serializers import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
 from tests.base.base_test import TestBase
 
@@ -21,6 +22,7 @@ class TestAuthUserLoginSerializer(TestBase):
         )
 
         self.user_manager = MagicMock(spec=UserManager)
+        self.user_manager.repository = MagicMock(spec=UserRepository)
         self.user_manager.model = MagicMock(spec=User)
         self.user_manager.model.deleted_at.return_value = None
         self.user_manager.model.active.return_value = True

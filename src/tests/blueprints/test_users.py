@@ -2,7 +2,7 @@
 
 import os
 
-from app.database.factories.role_factory import RoleFactory
+from app.database.factories.role_factory import RoleFactory, TeamLeaderRoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from tests.base.base_api_test import TestBaseApi
@@ -12,9 +12,9 @@ class TestUserEndpoints(TestBaseApi):
     def setUp(self):
         super().setUp()
         self.base_path = f'{self.base_path}/users'
-        self.role = RoleFactory()
+        self.role = TeamLeaderRoleFactory()
         self.user = UserFactory(active=True, deleted_at=None, roles=[self.role])
-        # Refresh the role to avoid any potential detached instance issue
+        # NOTE: Refresh the role to avoid any potential detached instance issue
         db.session.refresh(self.role)
 
     def test_create_user_endpoint(self):
@@ -74,12 +74,14 @@ class TestUserEndpoints(TestBaseApi):
         role = RoleFactory()
         data['role_id'] = role.id
 
-        response = self.client.put(f'{self.base_path}/{self.user.id}', json=data, headers=self.build_headers())
+        response = self.client.put(
+            f'{self.base_path}/{self.user.id}', json=data, headers=self.build_headers(user_email=self.user.email)
+        )
         json_response = response.get_json()
         json_data = json_response.get('data')
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(self.user.id, json_data.get('id'))
+        self.assertEqual(self.user.id, json_data.get('id'), json_response)
         self.assertEqual(data.get('name'), json_data.get('name'))
         self.assertEqual(data.get('last_name'), json_data.get('last_name'))
         self.assertEqual(data.get('birth_date'), json_data.get('birth_date'))

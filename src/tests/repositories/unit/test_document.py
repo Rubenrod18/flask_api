@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.user_factory import UserFactory
 from app.repositories.document import DocumentRepository
@@ -37,3 +39,18 @@ class TestDocumentRepository(TestBase):
         for field_name, field_value in test_cases:
             with self.subTest(msg=field_name, field_value=field_value):
                 self.assertTrue(self.repository.find(**{field_name: field_value}))
+
+    def test_delete_soft_document(self):
+        user = UserFactory()
+        document = DocumentFactory(created_by_user=user)
+
+        document = self.repository.delete(document)
+
+        self.assertTrue(isinstance(document.deleted_at, datetime))
+
+    def test_delete_hard_document(self):
+        user = UserFactory()
+        document = DocumentFactory(created_by_user=user)
+
+        with self.assertRaises(NotImplementedError):
+            self.repository.delete(document, force_delete=True)
