@@ -38,7 +38,7 @@ class TestUserEndpoints(TestBaseApi):
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(201, response.status_code)
+        self.assertEqual(201, response.status_code, json_response)
         self.assertEqual(data.get('name'), json_data.get('name'))
         self.assertEqual(data.get('last_name'), json_data.get('last_name'))
         self.assertEqual(data.get('birth_date'), json_data.get('birth_date'))
