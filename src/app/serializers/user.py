@@ -32,15 +32,15 @@ class UserSerializer(ma.SQLAlchemySchema, ManagerMixin):
 
     manager_classes = {'user_manager': UserManager}
 
-    id = fields.Int()
+    id = ma.auto_field()
     created_by = fields.Nested(lambda: UserSerializer(only=('id',)))
-    name = fields.Str()
-    last_name = fields.Str()
-    email = fields.Email(required=True)
-    password = fields.Str(validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50), load_only=True)
-    genre = fields.Str(validate=validate.OneOf(['m', 'f']))
-    birth_date = fields.Date()
-    active = fields.Bool()
+    name = ma.auto_field()
+    last_name = ma.auto_field()
+    email = ma.auto_field()
+    password = ma.auto_field(validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50), load_only=True)
+    genre = ma.auto_field(validate=validate.OneOf(['m', 'f']))
+    birth_date = ma.auto_field()
+    active = ma.auto_field(dump_only=True)
     created_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     updated_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     deleted_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')

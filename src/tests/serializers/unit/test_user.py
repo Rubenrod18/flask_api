@@ -86,9 +86,18 @@ class TestUserSerializer(TestBase):
 
     def test_missing_required_fields(self):
         with self.assertRaises(ValidationError) as context:
-            self.serializer.load({'name': 'Test', 'last_name': 'User'})
+            self.serializer.load({})
 
-        self.assertEqual(context.exception.messages, {'email': ['Missing data for required field.']})
+        self.assertEqual(
+            context.exception.messages,
+            {
+                'name': ['Missing data for required field.'],
+                'last_name': ['Missing data for required field.'],
+                'email': ['Missing data for required field.'],
+                'password': ['Missing data for required field.'],
+                'birth_date': ['Missing data for required field.'],
+            },
+        )
 
     def test_invalid_role_id_format(self):
         with self.assertRaises(NotFound) as context:
