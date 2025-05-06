@@ -1,8 +1,6 @@
 import os
 
-from app.database.factories.user_factory import AdminUserFactory
-from app.extensions import db
-from app.models import User
+from app.database.factories.user_factory import AdminUserFactory, TeamLeaderUserFactory, WorkerUserFactory
 from tests.base.base_test import TestBase
 
 
@@ -10,21 +8,13 @@ class TestBaseApi(TestBase):
     def setUp(self):
         super().setUp()
         self.base_path = '/api'
-        self.admin_user = self.get_active_admin_user()
-
-    @staticmethod
-    def get_active_admin_user():
-        user = db.session.query(User).filter_by(email=os.getenv('TEST_USER_EMAIL')).first()
-
-        if user is None:
-            return AdminUserFactory(
-                active=True,
-                deleted_at=None,
-                email=os.getenv('TEST_USER_EMAIL'),
-                password=os.getenv('TEST_USER_PASSWORD'),
-            )
-
-        return user
+        self.admin_user = AdminUserFactory(
+            active=True, deleted_at=None, email=os.getenv('TEST_USER_EMAIL'), password=os.getenv('TEST_USER_PASSWORD')
+        )
+        self.team_leader_user = TeamLeaderUserFactory(
+            active=True, deleted_at=None, password=os.getenv('TEST_USER_PASSWORD')
+        )
+        self.worker_user = WorkerUserFactory(active=True, deleted_at=None, password=os.getenv('TEST_USER_PASSWORD'))
 
     def build_headers(self, user_email: str = None, extra_headers: dict = None):
         """Create an auth header from a given user that can be added to http requests."""

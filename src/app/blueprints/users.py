@@ -35,11 +35,11 @@ class BaseUserResource(BaseResource):
 class NewUserResource(BaseUserResource):
     serializer_class = serializers.UserSerializer
 
+    @jwt_required()
+    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.expect(swagger_models.user_input_sw_model)
     @api.marshal_with(swagger_models.user_sw_model, envelope='data', code=201)
-    @jwt_required()
-    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def post(self) -> tuple:
         serializer = self.serializer_class()
         validated_data = serializer.load(request.get_json())
@@ -55,10 +55,10 @@ class NewUserResource(BaseUserResource):
 class UserResource(BaseUserResource):
     serializer_class = serializers.UserSerializer
 
+    @jwt_required()
+    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.marshal_with(swagger_models.user_sw_model, envelope='data')
-    @jwt_required()
-    @roles_accepted(ADMIN_ROLE)
     def get(self, user_id: int) -> tuple:
         serializer = self.serializer_class()
         serializer.load({'id': user_id}, partial=True)
@@ -67,14 +67,14 @@ class UserResource(BaseUserResource):
 
         return serializer.dump(user), 200
 
+    @jwt_required()
+    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     @api.doc(
         responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(swagger_models.user_input_sw_model)
     @api.marshal_with(swagger_models.user_sw_model, envelope='data')
-    @jwt_required()
-    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def put(self, user_id: int) -> tuple:
         json_data = request.get_json()
         json_data['id'] = user_id
@@ -85,13 +85,13 @@ class UserResource(BaseUserResource):
 
         return serializer.dump(user), 200
 
+    @jwt_required()
+    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     @api.doc(
         responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.marshal_with(swagger_models.user_sw_model, envelope='data')
-    @jwt_required()
-    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def delete(self, user_id: int) -> tuple:
         serializer = self.get_serializer()
         serializer.load({'id': user_id}, partial=True)
@@ -108,14 +108,14 @@ class UsersSearchResource(BaseUserResource):
         'search': serializers.SearchSerializer,
     }
 
+    @jwt_required()
+    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     @api.doc(
         responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(swagger_models.search_input_sw_model)
     @api.marshal_with(swagger_models.user_search_output_sw_model)
-    @jwt_required()
-    @roles_accepted(*{ADMIN_ROLE, TEAM_LEADER_ROLE})
     def post(self) -> tuple:
         serializer = self.get_serializer('user', many=True)
         validated_data = self.get_serializer('search').load(request.get_json())
@@ -133,13 +133,13 @@ class UsersSearchResource(BaseUserResource):
 class ExportUsersExcelResource(BaseUserResource):
     serializer_class = serializers.SearchSerializer
 
+    @jwt_required()
+    @roles_accepted(*ROLES)
     @api.doc(
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(swagger_models.search_input_sw_model)
-    @jwt_required()
-    @roles_accepted(*ROLES)
     def post(self) -> tuple:
         serializer = self.get_serializer()
         deserialized_data = serializer.load(request.get_json())
@@ -159,13 +159,13 @@ class ExportUsersWordResource(BaseUserResource):
         'user_export_word': serializers.UserExportWordSerializer,
     }
 
+    @jwt_required()
+    @roles_accepted(*ROLES)
     @api.doc(
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(parser, swagger_models.search_input_sw_model)
-    @jwt_required()
-    @roles_accepted(*ROLES)
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()
         serializer = self.get_serializer('search')
@@ -191,13 +191,13 @@ class ExportUsersExcelAndWordResource(BaseUserResource):
         'user_export_word': serializers.UserExportWordSerializer,
     }
 
+    @jwt_required()
+    @roles_accepted(*ROLES)
     @api.doc(
         responses={202: 'Accepted', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(parser, swagger_models.search_input_sw_model)
-    @jwt_required()
-    @roles_accepted(*ROLES)
     def post(self) -> tuple:
         payload, args = request.get_json(), request.args.to_dict()
         serializer = self.get_serializer('search')

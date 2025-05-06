@@ -2,9 +2,11 @@
 
 import os
 
-from app.database.factories.role_factory import RoleFactory, TeamLeaderRoleFactory
+from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
+from app.models import Role
+from app.models.role import TEAM_LEADER_ROLE
 from tests.base.base_api_test import TestBaseApi
 
 
@@ -12,10 +14,8 @@ class TestUserEndpoints(TestBaseApi):
     def setUp(self):
         super().setUp()
         self.base_path = f'{self.base_path}/users'
-        self.role = TeamLeaderRoleFactory()
+        self.role = db.session.query(Role).filter_by(name=TEAM_LEADER_ROLE).first()
         self.user = UserFactory(active=True, deleted_at=None, roles=[self.role])
-        # NOTE: Refresh the role to avoid any potential detached instance issue
-        db.session.refresh(self.role)
 
     def test_create_user_endpoint(self):
         role = RoleFactory()
@@ -51,6 +51,22 @@ class TestUserEndpoints(TestBaseApi):
 
         self.assertEqual(role.name, role_data.get('name'))
         self.assertEqual(role.label, role_data.get('label'))
+
+    def test_check_user_roles_in_create_user_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 422),
+            (self.team_leader_user.email, 422),
+            (self.worker_user.email, 403),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.post(
+                    f'{self.base_path}', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
 
     def test_create_invalid_user_endpoint(self):
         data = {
@@ -95,6 +111,22 @@ class TestUserEndpoints(TestBaseApi):
         self.assertEqual(role.name, role_data.get('name'))
         self.assertEqual(role.label, role_data.get('label'))
 
+    def test_check_user_roles_in_update_user_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 422),
+            (self.team_leader_user.email, 422),
+            (self.worker_user.email, 403),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.put(
+                    f'{self.base_path}/{self.user.id}', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
     def test_get_user_endpoint(self):
         response = self.client.get(f'{self.base_path}/{self.user.id}', json={}, headers=self.build_headers())
         json_response = response.get_json()
@@ -114,6 +146,22 @@ class TestUserEndpoints(TestBaseApi):
         self.assertEqual(role.name, role_data.get('name'))
         self.assertEqual(role.label, role_data.get('label'))
 
+    def test_check_user_roles_in_get_user_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 200),
+            (self.team_leader_user.email, 200),
+            (self.worker_user.email, 403),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.get(
+                    f'{self.base_path}/{self.user.id}', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
     def test_delete_user_endpoint(self):
         response = self.client.delete(f'{self.base_path}/{self.user.id}', json={}, headers=self.build_headers())
         json_response = response.get_json()
@@ -123,6 +171,22 @@ class TestUserEndpoints(TestBaseApi):
         self.assertEqual(self.user.id, json_data.get('id'))
         self.assertIsNotNone(json_data.get('deleted_at'))
         self.assertGreaterEqual(json_data.get('deleted_at'), json_data.get('updated_at'))
+
+    def test_check_user_roles_in_delete_user_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 200),
+            (self.team_leader_user.email, 404),
+            (self.worker_user.email, 403),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.delete(
+                    f'{self.base_path}/{self.user.id}', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
 
     def test_search_users_endpoint(self):
         json_body = {
@@ -154,6 +218,22 @@ class TestUserEndpoints(TestBaseApi):
         self.assertTrue(0 < records_filtered <= records_total)
         self.assertTrue(user_data[0]['name'].find(self.user.name) != -1)
 
+    def test_check_user_roles_in_search_users_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 200),
+            (self.team_leader_user.email, 200),
+            (self.worker_user.email, 403),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.post(
+                    f'{self.base_path}/search', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
     def test_export_word_endpoint(self):
         auth_headers = self.build_headers()
         json = {}
@@ -172,6 +252,22 @@ class TestUserEndpoints(TestBaseApi):
                 self.assertTrue(json_response.get('task'))
                 self.assertTrue(json_response.get('url'))
 
+    def test_check_user_roles_in_export_word_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 202),
+            (self.team_leader_user.email, 202),
+            (self.worker_user.email, 202),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.post(
+                    f'{self.base_path}/word', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
     def test_export_excel_endpoint(self):
         response = self.client.post(f'{self.base_path}/xlsx', json={}, headers=self.build_headers())
         json_response = response.get_json()
@@ -180,8 +276,40 @@ class TestUserEndpoints(TestBaseApi):
         self.assertTrue(json_response.get('task'))
         self.assertTrue(json_response.get('url'))
 
+    def test_check_user_roles_in_export_excel_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 202),
+            (self.team_leader_user.email, 202),
+            (self.worker_user.email, 202),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.post(
+                    f'{self.base_path}/xlsx', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
     def test_export_excel_and_word_endpoint(self):
         response = self.client.post(f'{self.base_path}/word_and_xlsx', json={}, headers=self.build_headers())
 
         self.assertEqual(202, response.status_code)
         self.assertTrue(isinstance(response.get_json(), dict))
+
+    def test_check_user_roles_in_export_excel_and_word_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 202),
+            (self.team_leader_user.email, 202),
+            (self.worker_user.email, 202),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.post(
+                    f'{self.base_path}/word_and_xlsx', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
