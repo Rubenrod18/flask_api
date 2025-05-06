@@ -31,11 +31,11 @@ class BaseRoleResource(BaseResource):
 class NewRoleResource(BaseRoleResource):
     serializer_class = serializers.RoleSerializer
 
+    @jwt_required()
+    @roles_required(ADMIN_ROLE)
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.expect(swagger_models.role_input_sw_model)
     @api.marshal_with(swagger_models.role_sw_model, envelope='data', code=201)
-    @jwt_required()
-    @roles_required(ADMIN_ROLE)
     def post(self) -> tuple:
         serializer = self.serializer_class()
         validated_data = serializer.load(request.get_json())
@@ -49,10 +49,10 @@ class NewRoleResource(BaseRoleResource):
 class RoleResource(BaseRoleResource):
     serializer_class = serializers.RoleSerializer
 
-    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found'}, security='auth_token')
-    @api.marshal_with(swagger_models.role_sw_model, envelope='data')
     @jwt_required()
     @roles_required(ADMIN_ROLE)
+    @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found'}, security='auth_token')
+    @api.marshal_with(swagger_models.role_sw_model, envelope='data')
     def get(self, role_id: int) -> tuple:
         serializer = self.serializer_class()
         serializer.load({'id': role_id}, partial=True)
@@ -61,14 +61,14 @@ class RoleResource(BaseRoleResource):
 
         return serializer.dump(role), 200
 
+    @jwt_required()
+    @roles_required(ADMIN_ROLE)
     @api.doc(
         responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(swagger_models.role_input_sw_model)
     @api.marshal_with(swagger_models.role_sw_model, envelope='data')
-    @jwt_required()
-    @roles_required(ADMIN_ROLE)
     def put(self, role_id: int) -> tuple:
         json_data = request.get_json()
         json_data['id'] = role_id
@@ -79,10 +79,10 @@ class RoleResource(BaseRoleResource):
 
         return serializer.dump(role), 200
 
-    @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden'}, security='auth_token')
-    @api.marshal_with(swagger_models.role_sw_model, envelope='data')
     @jwt_required()
     @roles_required(ADMIN_ROLE)
+    @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden'}, security='auth_token')
+    @api.marshal_with(swagger_models.role_sw_model, envelope='data')
     def delete(self, role_id: int) -> tuple:
         serializer = self.serializer_class()
         serializer.load({'id': role_id}, partial=True)
@@ -99,14 +99,14 @@ class RolesSearchResource(BaseRoleResource):
         'search': serializers.SearchSerializer,
     }
 
+    @jwt_required()
+    @roles_required(ADMIN_ROLE)
     @api.doc(
         responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(swagger_models.search_input_sw_model)
     @api.marshal_with(swagger_models.role_search_output_sw_model)
-    @jwt_required()
-    @roles_required(ADMIN_ROLE)
     def post(self) -> tuple:
         serializer = self.get_serializer('role', many=True)
         validated_data = self.get_serializer('search').load(request.get_json())

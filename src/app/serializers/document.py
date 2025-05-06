@@ -50,6 +50,9 @@ class DocumentSerializer(ma.SQLAlchemySchema, ManagerMixin):
 
     @staticmethod
     def valid_request_file(data):
+        if not data.get('file_data'):
+            raise UnprocessableEntity('empty file')
+
         is_valid_mime_type = data.get('mime_type') in Config.ALLOWED_MIME_TYPES
 
         file_content_type = magic.from_buffer(data.get('file_data'), mime=True)
