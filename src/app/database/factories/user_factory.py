@@ -7,7 +7,7 @@ import factory
 from sqlalchemy import func
 
 from app.database.factories.base_factory import BaseFactory, faker
-from app.database.factories.role_factory import AdminRoleFactory, RoleFactory
+from app.database.factories.role_factory import AdminRoleFactory, RoleFactory, TeamLeaderRoleFactory, WorkerRoleFactory
 from app.extensions import db
 from app.managers import UserManager
 from app.models import Role, User
@@ -78,3 +78,15 @@ class AdminUserFactory(UserFactory):
     @factory.lazy_attribute
     def roles(self):
         return [AdminRoleFactory()]
+
+
+class TeamLeaderUserFactory(UserFactory):
+    @factory.lazy_attribute
+    def roles(self):
+        return [TeamLeaderRoleFactory()]
+
+
+class WorkerUserFactory(UserFactory):
+    @factory.lazy_attribute
+    def roles(self):
+        return [WorkerRoleFactory()]

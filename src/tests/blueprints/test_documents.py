@@ -20,7 +20,7 @@ class TestDocumentEndpoints(TestBaseApi):
         )
         self.local_storage = LocalStorage()
 
-    def test_save_document(self):
+    def test_save_document_endpoint(self):
         pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/example.pdf'
         data = {
             'document': open(pdf_file, 'rb'),
@@ -45,7 +45,23 @@ class TestDocumentEndpoints(TestBaseApi):
         self.assertEqual(json_data.get('updated_at'), json_data.get('created_at'))
         self.assertIsNone(json_data.get('deleted_at'))
 
-    def test_update_document(self):
+    def test_check_user_roles_in_save_document_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 422),
+            (self.team_leader_user.email, 422),
+            (self.worker_user.email, 422),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.post(
+                    f'{self.base_path}', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
+    def test_update_document_endpoint(self):
         pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/example.pdf'
         data = {'document': open(pdf_file, 'rb')}
 
@@ -69,7 +85,23 @@ class TestDocumentEndpoints(TestBaseApi):
         self.assertTrue(json_data.get('updated_at') > json_data.get('created_at'))
         self.assertTrue(json_data.get('deleted_at') is None)
 
-    def test_get_document_data(self):
+    def test_check_user_roles_in_update_document_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 422),
+            (self.team_leader_user.email, 422),
+            (self.worker_user.email, 422),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.put(
+                    f'{self.base_path}/{self.document.id}', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
+    def test_get_document_data_endpoint(self):
         response = self.client.get(f'{self.base_path}/{self.document.id}', json={}, headers=self.build_headers())
         json_data = response.get_json()
 
@@ -85,7 +117,23 @@ class TestDocumentEndpoints(TestBaseApi):
         self.assertEqual(self.document.updated_at.strftime('%Y-%m-%d %H:%M:%S'), json_data.get('updated_at'))
         self.assertEqual(self.document.deleted_at, json_data.get('deleted_at'))
 
-    def test_get_document_file(self):
+    def test_check_user_roles_in_get_document_data_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 200),
+            (self.team_leader_user.email, 200),
+            (self.worker_user.email, 200),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.get(
+                    f'{self.base_path}/{self.document.id}', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
+    def test_get_document_file_endpoint(self):
         test_cases = ['as_attachment=1', 'as_attachment=0', '']
 
         for test_case in test_cases:
@@ -100,7 +148,28 @@ class TestDocumentEndpoints(TestBaseApi):
                 self.assertEqual(200, response.status_code)
                 self.assertTrue(isinstance(response.get_data(), bytes))
 
-    def test_delete_document(self):
+    def test_check_user_roles_in_get_document_file_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 200),
+            (self.team_leader_user.email, 200),
+            (self.worker_user.email, 200),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.get(
+                    f'{self.base_path}/{self.document.id}',
+                    json={},
+                    headers=self.build_headers(
+                        user_email=user_email,
+                        extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'},
+                    ),
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
+    def test_delete_document_endpoint(self):
         response = self.client.delete(f'{self.base_path}/{self.document.id}', json={}, headers=self.build_headers())
         json_response = response.get_json()
         json_data = json_response.get('data')
@@ -110,7 +179,23 @@ class TestDocumentEndpoints(TestBaseApi):
         self.assertIsNotNone(json_data.get('deleted_at'))
         self.assertGreaterEqual(json_data.get('deleted_at'), json_data.get('updated_at'))
 
-    def test_search_document(self):
+    def test_check_user_roles_in_delete_document_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 200),
+            (self.team_leader_user.email, 404),
+            (self.worker_user.email, 404),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.delete(
+                    f'{self.base_path}/{self.document.id}', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
+
+    def test_search_document_endpoint(self):
         json_body = {
             'search': [
                 {
@@ -139,3 +224,19 @@ class TestDocumentEndpoints(TestBaseApi):
         self.assertGreater(records_total, 0)
         self.assertTrue(0 < records_filtered <= records_total)
         self.assertTrue(document_data[0].get('name').find(self.document.name) != -1)
+
+    def test_check_user_roles_in_search_document_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 200),
+            (self.team_leader_user.email, 200),
+            (self.worker_user.email, 200),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.post(
+                    f'{self.base_path}/search', json={}, headers=self.build_headers(user_email=user_email)
+                )
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)

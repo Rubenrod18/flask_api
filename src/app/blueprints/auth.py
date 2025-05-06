@@ -43,17 +43,17 @@ class AuthUserLoginResource(BaseAuthResource):
 
 @api.route('/refresh')
 class AuthRefreshResource(BaseAuthResource):
+    @jwt_required(refresh=True)
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found', 422: 'Unprocessable Entity'})
     @api.marshal_with(swagger_models.auth_token_sw_model)
-    @jwt_required(refresh=True)
     def post(self) -> tuple:
         return self.service.refresh_token(), 200
 
 
 @api.route('/logout')
 class AuthUserLogoutResource(BaseAuthResource):
-    @api.doc(responses={200: 'Success', 401: 'Unauthorized'}, security='auth_token')
     @jwt_required()
+    @api.doc(responses={200: 'Success', 401: 'Unauthorized'}, security='auth_token')
     def post(self) -> tuple:
         return self.service.logout_user(), 200
 
