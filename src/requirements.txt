@@ -46,7 +46,7 @@ email-validator==2.2.0
     # via flask-security-too
 factory-boy==3.3.3
     # via -r requirements.in
-faker==37.1.0
+faker==37.3.0
     # via
     #   -r requirements.in
     #   factory-boy
