@@ -1,5 +1,27 @@
 version: 2
 updates:
+- package-ecosystem: docker
+  directory: "/docker"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  commit-message:
+    prefix: "build(docker): "
+  labels:
+    - dependabot
+  reviewers:
+    - "Rubenrod18"
+- package-ecosystem: docker-compose
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  commit-message:
+    prefix: "build(docker-compose): "
+  labels:
+    - dependabot
+  reviewers:
+    - "Rubenrod18"
 - package-ecosystem: pip
   directory: "/src"
   schedule:
