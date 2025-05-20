@@ -171,7 +171,7 @@ sqlalchemy==2.0.41
     #   alembic
     #   flask-sqlalchemy
     #   marshmallow-sqlalchemy
-tornado==6.4.2
+tornado==6.5
     # via flower
 typing-extensions==4.12.2
     # via
