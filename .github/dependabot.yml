@@ -11,3 +11,12 @@ updates:
     prefix: "build(pip): "
   labels:
     - dependabot
+- package-ecosystem: github-actions
+  directory: "/"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+  commit-message:
+    prefix: "ci(github-actions): "
+  labels:
+    - dependabot
