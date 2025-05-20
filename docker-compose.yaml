@@ -26,7 +26,7 @@ services:
 
   db:
     << : *app-common
-    image: mysql:8.4
+    image: mysql:9.3
     container_name: flask_api__mysql
     ports:
       - "3406:3306"
