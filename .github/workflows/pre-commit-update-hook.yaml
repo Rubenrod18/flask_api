@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
@@ -44,7 +44,7 @@ jobs:
           echo "pre_commit_version=$PRE_COMMIT_VERSION" >> $GITHUB_ENV
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v7
         with:
           title: "ci(pre-commit): update pre-commit hook version to ${{ env.pre_commit_version }}"
           body: "This PR updates pre-commit hook to the latest version."
@@ -52,4 +52,3 @@ jobs:
           branch: "update-pre-commit-hook-${{ env.pre_commit_version }}"
           commit-message: "ci(pre-commit): update pre-commit hook version to ${{ env.pre_commit_version }}"
           delete-branch: true
-          push: true
