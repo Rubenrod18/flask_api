@@ -4,8 +4,6 @@
 #
 #    pip-compile requirements-dev.in
 #
-alabaster==1.0.0
-    # via sphinx
 alembic==1.14.1
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -23,8 +21,6 @@ attrs==25.1.0
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   jsonschema
     #   referencing
-babel==2.16.0
-    # via sphinx
 billiard==4.2.1
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -41,12 +37,8 @@ celery==5.5.2
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   flower
-certifi==2024.12.14
-    # via requests
 cfgv==3.4.0
     # via pre-commit
-charset-normalizer==3.4.1
-    # via requests
 click==8.1.8
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -56,7 +48,6 @@ click==8.1.8
     #   click-repl
     #   flask
     #   pip-tools
-    #   sphinx-click
 click-didyoumean==0.3.1
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -79,12 +70,6 @@ dnspython==2.7.0
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   email-validator
-docutils==0.21.2
-    # via
-    #   m2r2
-    #   sphinx
-    #   sphinx-click
-    #   sphinx-rtd-theme
 email-validator==2.2.0
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -160,9 +145,6 @@ idna==3.10
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   email-validator
-    #   requests
-imagesize==1.4.1
-    # via sphinx
 importlib-resources==6.5.2
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -179,7 +161,6 @@ jinja2==3.1.6
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   flask
-    #   sphinx
 jsonschema==4.23.0
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -200,8 +181,6 @@ lxml==5.3.0
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   python-docx
-m2r2==0.3.4
-    # via -r requirements-dev.in
 mako==1.3.8
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -222,8 +201,6 @@ marshmallow==3.26.0
     #   marshmallow-sqlalchemy
 marshmallow-sqlalchemy==1.4.2
     # via -r /home/ruben/workspace/flask_api/src/requirements.txt
-mistune==0.8.4
-    # via m2r2
 mysqlclient==2.2.7
     # via -r /home/ruben/workspace/flask_api/src/requirements.txt
 nodeenv==1.9.1
@@ -235,7 +212,6 @@ packaging==24.2
     #   gunicorn
     #   marshmallow
     #   pytest
-    #   sphinx
 pip-tools==7.4.1
     # via -r requirements-dev.in
 platformdirs==4.3.6
@@ -252,8 +228,6 @@ prompt-toolkit==3.0.50
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   click-repl
-pygments==2.19.1
-    # via sphinx
 pyjwt==2.10.1
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -291,10 +265,6 @@ referencing==0.36.2
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
-    # via sphinx
-roman-numerals-py==3.1.0
-    # via sphinx
 rpds-py==0.22.3
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -304,32 +274,6 @@ six==1.17.0
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   python-dateutil
-snowballstemmer==2.2.0
-    # via sphinx
-sphinx==8.2.3
-    # via
-    #   -r requirements-dev.in
-    #   sphinx-click
-    #   sphinx-rtd-theme
-    #   sphinxcontrib-jquery
-sphinx-click==6.0.0
-    # via -r requirements-dev.in
-sphinx-rtd-theme==3.0.2
-    # via -r requirements-dev.in
-sphinxcontrib-applehelp==2.0.0
-    # via sphinx
-sphinxcontrib-devhelp==2.0.0
-    # via sphinx
-sphinxcontrib-htmlhelp==2.1.0
-    # via sphinx
-sphinxcontrib-jquery==4.1
-    # via sphinx-rtd-theme
-sphinxcontrib-jsmath==1.0.1
-    # via sphinx
-sphinxcontrib-qthelp==2.0.0
-    # via sphinx
-sphinxcontrib-serializinghtml==2.0.0
-    # via sphinx
 sqlalchemy==2.0.41
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
@@ -354,8 +298,6 @@ tzdata==2025.2
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
     #   faker
     #   kombu
-urllib3==2.3.0
-    # via requests
 vine==5.1.0
     # via
     #   -r /home/ruben/workspace/flask_api/src/requirements.txt
