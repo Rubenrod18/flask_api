@@ -61,11 +61,13 @@ This will start the Flask application with the appropriate database setup.
 
 ### 5. Application Layer Components
 
+The application follows a Domain Driven Design arquitecture:
+
 ![Application Layer Components Diagram](docs/app_layer_components.png)
 
 1. **Serializer**: Converts data structures (often Python objects) to formats suitable for responses (e.g., JSON) and vice versa. Responsible for validating and transforming input/output data. Acts as a bridge between the endpoint (request/response) and the service layer, handling both serialization and deserialization.
 
-2. **Service**: Contains the application’s use-case-specific logic. Handles requests from endpoints, coordinates tasks, manages workflow, and orchestrates interactions between managers, external APIs, and background jobs (e.g., via Celery). Delegates domain-specific logic to managers.
+2. **Service**: Contains the application’s use-case-specific logic. Handles requests from endpoints, manages workflow, and orchestrates interactions between managers. Delegates domain-specific logic to managers.
 
 3. **Manager**: Encapsulates business rules and domain-specific workflows. Sits between the service and repository layers, ensuring that all necessary business logic is executed before or after data access. Managers prevent business rules from leaking into repositories and make logic reusable across services.
 
