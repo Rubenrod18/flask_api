@@ -1,4 +1,4 @@
-.PHONY: help run component shell migration migrate migrate-rollback seed linter coverage coverage-html test test-one test-path test-parallel
+.PHONY: help run component shell migration migrate migrate-rollback seed linter coverage coverage-html linter test test-one test-path test-parallel
 
 # Flask-migrate
 MIGRATIONS_DIRECTORY ?= /flask-api-docker-dir/src/app/database/migrations
@@ -42,6 +42,9 @@ coverage: ## Report coverage statistics on modules
 
 coverage-html: ## Create an HTML report of the coverage of the files
 	coverage run -m pytest && coverage html
+
+linter: ## Run Pylint on the app directory, disabling refactor warnings
+	pylint app --disable=R
 
 test: ## Run tests
 	pytest
