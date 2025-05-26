@@ -24,8 +24,8 @@ class BaseDocumentResource(BaseResource):
     def __init__(
         self,
         rest_api: str,
-        service: DocumentService = Provide[ServiceDIContainer.document_service],
         *args,
+        service: DocumentService = Provide[ServiceDIContainer.document_service],
         **kwargs,
     ):
         super().__init__(rest_api, service, *args, **kwargs)
@@ -95,10 +95,12 @@ class DocumentResource(BaseDocumentResource):
         - `Accept: application/octet-stream`: returns the content of the document.
 
         """
-        serializer = self.get_serializer('document')
+        serializer = self.get_serializer(serializer_name='document')
 
         if request.headers.get('Accept') == 'application/octet-stream':
-            request_args = self.get_serializer('document_attachment').load(request.args.to_dict(), unknown=EXCLUDE)
+            request_args = self.get_serializer(serializer_name='document_attachment').load(
+                request.args.to_dict(), unknown=EXCLUDE
+            )
             response = self.service.get_document_content(document_id, request_args)
         else:
             serializer.load({'id': document_id}, partial=True)
@@ -116,7 +118,7 @@ class DocumentResource(BaseDocumentResource):
     @api.expect(NewDocumentResource.parser)
     @api.marshal_with(swagger_models.document_sw_model, envelope='data')
     def put(self, document_id: int) -> tuple:
-        serializer = self.get_serializer('document')
+        serializer = self.get_serializer(serializer_name='document')
         serializer.load({'id': document_id}, partial=True)
         data = serializer.valid_request_file(get_request_file())
 
@@ -131,7 +133,7 @@ class DocumentResource(BaseDocumentResource):
     )
     @api.marshal_with(swagger_models.document_sw_model, envelope='data')
     def delete(self, document_id: int) -> tuple:
-        serializer = self.get_serializer('document')
+        serializer = self.get_serializer(serializer_name='document')
         serializer.load({'id': document_id}, partial=True)
 
         document = self.service.delete(document_id)
@@ -152,8 +154,8 @@ class SearchDocumentResource(BaseDocumentResource):
     @api.expect(swagger_models.search_input_sw_model)
     @api.marshal_with(swagger_models.document_search_output_sw_model)
     def post(self) -> tuple:
-        serializer = self.get_serializer('document', many=True)
-        validated_data = self.get_serializer('search').load(request.get_json())
+        serializer = self.get_serializer(serializer_name='document', many=True)
+        validated_data = self.get_serializer(serializer_name='search').load(request.get_json())
 
         doc_data = self.service.get(**validated_data)
 

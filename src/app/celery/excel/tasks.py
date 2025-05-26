@@ -67,7 +67,7 @@ def _get_excel_column_names(excel_rows: list) -> None:
 
 def _adjust_each_column_width(rows: list, worksheet: Worksheet, excel_longest_word: int) -> None:
     if rows:
-        for i, v in enumerate(rows[0]):
+        for i, _ in enumerate(rows[0]):
             worksheet.set_column(i, i + 1, excel_longest_word + 1)
 
 

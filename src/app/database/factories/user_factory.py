@@ -47,7 +47,7 @@ class UserFactory(BaseFactory):
             db.session.query(User)
             .join(User.roles)
             .filter(User.deleted_at.is_(None), Role.name == ADMIN_ROLE)
-            .order_by(func.random())
+            .order_by(func.random())  # pylint: disable=not-callable
             .limit(1)
             .one_or_none()
         )

@@ -19,7 +19,7 @@ record_monitoring_sw_model = api.model(
     },
 )
 
-_field_operator_description = """
+_FIELT_OPERATOR_DESCRIPTION = """
 general type query operators:
 &emsp;&emsp;&emsp;&emsp; eq: x equals to field_value.
 
@@ -57,7 +57,7 @@ _search_search_input_sw_model = api.model(
     'SearchSearch',
     {
         'field_name': fields.String(required=True, example='name'),
-        'field_operator': fields.String(required=True, description=_field_operator_description, example='contains'),
+        'field_operator': fields.String(required=True, description=_FIELT_OPERATOR_DESCRIPTION, example='contains'),
         'field_value': fields.String(required=True, description='Could be string or integer.', example='n'),
     },
 )
@@ -70,14 +70,16 @@ _order_input_sw_model = api.model(
     },
 )
 
-_order_description = 'First value is the field name, second value is the sort ( asc or desc ).'
-
 search_input_sw_model = api.model(
     'SearchInput',
     {
         'search': fields.List(fields.Nested(_search_search_input_sw_model, required=True)),
         'order': fields.List(
-            fields.Nested(_order_input_sw_model, description=_order_description, required=True),
+            fields.Nested(
+                _order_input_sw_model,
+                description=('First value is the field name, second value is the sort ( asc or desc ).'),
+                required=True,
+            ),
             example=[
                 {'field_name': 'name', 'sorting': 'asc'},
                 {'field_name': 'created_at', 'sorting': 'desc'},

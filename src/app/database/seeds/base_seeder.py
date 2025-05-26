@@ -11,7 +11,7 @@ class BaseSeeder(ABC):
         self.priority = priority
 
     @seed_actions
-    def seed(self, *args, **kwargs):
+    def seed(self, rows: int = None):
         raise NotImplementedError
 
 

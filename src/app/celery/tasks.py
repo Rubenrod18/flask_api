@@ -31,7 +31,7 @@ def create_user_email_task(email_data) -> bool:
 
 @celery.task(base=ContextTask)
 def reset_password_email_task(email_data) -> bool:
-    logger.info(f'to: {email_data}')
+    logger.info('to: %s', email_data)
 
     to = [email_data.get('email')]
 

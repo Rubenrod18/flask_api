@@ -11,7 +11,7 @@ class SerializerMixin:
     serializer_class = None
     serializer_classes = {}
 
-    def get_serializer(self, serializer_name=None, *args, **kwargs):
+    def get_serializer(self, *args, serializer_name=None, **kwargs):
         serializer_class = self.get_serializer_class(serializer_name)
         if serializer_class:
             return serializer_class(*args, **kwargs)

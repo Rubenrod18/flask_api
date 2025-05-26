@@ -10,9 +10,6 @@ class UserManager(BaseManager):
     def __init__(self):
         super().__init__(repository=UserRepository)
 
-    def create(self, user: User) -> User:
-        pass
-
     def find_by_email(self, email: str, *args) -> User | None:
         args += (self.model.email == email,)
         return self.repository.find(*args)
@@ -31,7 +28,7 @@ class UserManager(BaseManager):
             db.session.query(self.model)
             .join(self.model.roles)
             .filter(*query)
-            .order_by(func.random())
+            .order_by(func.random())  # pylint: disable=not-callable
             .limit(1)
             .one_or_none()
         )
