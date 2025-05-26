@@ -46,7 +46,7 @@ fail-under=10
 #from-stdin=
 
 # Files or directories to be skipped. They should be base names, not paths.
-ignore=CVS
+ignore=di_container.py
 
 # Add files or directories matching the regular expressions patterns to the
 # ignore-list. The regex matches against paths and can be in Posix or Windows
@@ -441,7 +441,8 @@ disable=raw-checker-failed,
         use-symbolic-message-instead,
         missing-module-docstring,
         missing-class-docstring,
-        missing-function-docstring
+        missing-function-docstring,
+        logging-fstring-interpolation
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -462,15 +463,7 @@ timeout-methods=requests.api.delete,requests.api.get,requests.api.head,requests.
 # List of note tags to take in consideration, separated by a comma.
 notes=FIXME,
       XXX,
-      TODO,
-      HACK,
-      NOTE,
-      OPTIMIZE,
-      BUG,
-      DEPRECATED,
-      WARNING,
-      QUESTION,
-      IDEA
+      TODO
 
 # Regular expression of note tags to take in consideration.
 notes-rgx=

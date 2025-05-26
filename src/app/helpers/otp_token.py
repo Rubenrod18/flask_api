@@ -14,7 +14,7 @@ class OTPTokenManager:
     def verify_token(self, token: str) -> str | None:
         try:
             return self.serializer.loads(token, salt=self.salt, max_age=self.expiration)
-        except SignatureExpired:
-            raise BadRequest('Token expired')
-        except BadSignature:
-            raise BadRequest('Invalid token')
+        except SignatureExpired as exc:
+            raise BadRequest('Token expired') from exc
+        except BadSignature as exc:
+            raise BadRequest('Invalid token') from exc

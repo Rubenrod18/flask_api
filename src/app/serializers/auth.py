@@ -39,7 +39,7 @@ class AuthUserLoginSerializer(ma.Schema):
             raise Unauthorized('Credentials invalid')
 
     @post_load
-    def make_object(self, data, **kwargs):
+    def make_object(self):
         return self.__user
 
 
@@ -70,7 +70,7 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
             raise Forbidden('Invalid token')
 
     @validates_schema
-    def validate_passwords(self, data, **kwargs):
+    def validate_passwords(self, data):
         password = data.get('password')
         confirm_password = data.get('confirm_password')
 
@@ -78,6 +78,6 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
             raise ValidationError('Passwords must match', field_name='confirm_password')
 
     @post_load
-    def make_object(self, data, **kwargs):
+    def make_object(self, data):
         email = self.otp_token_manager.verify_token(data.get('token'))
         return self.user_manager.find_by_email(email)

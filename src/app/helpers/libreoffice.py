@@ -27,7 +27,7 @@ def convert_to(folder: str, source: str) -> str:
         source,
     ]
 
-    process = subprocess.run(args, stdout=subprocess.PIPE, env={'$HOME': os.getenv('HOME')})
+    process = subprocess.run(args, stdout=subprocess.PIPE, env={'$HOME': os.getenv('HOME')}, check=False)
     logger.debug(process)
     filename = re.search('-> (.*?) using filter', process.stdout.decode('utf-8'))
 

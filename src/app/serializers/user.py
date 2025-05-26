@@ -16,7 +16,7 @@ class VerifyRoleId(fields.Int, ManagerMixin):
         super().__init__(*args, **kwargs)
         self._role_manager = self.get_manager('role_manager')
 
-    def _deserialize(self, value, *args, **kwargs):
+    def _deserialize(self, value, attr, data, **kwargs):  # pylint: disable=unused-argument
         role = self._role_manager.find(value)
 
         if role is None or role.deleted_at is not None:
@@ -70,7 +70,7 @@ class UserExportWordSerializer(ma.Schema):
     to_pdf = fields.Int(validate=validate.OneOf([1, 0]))
 
     @pre_load
-    def process_input(self, value, many, **kwargs):
+    def process_input(self, value):
         if 'to_pdf' in value:
             value['to_pdf'] = int(value.get('to_pdf'))
         return value

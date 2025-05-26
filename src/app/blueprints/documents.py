@@ -54,7 +54,7 @@ class NewDocumentResource(BaseDocumentResource):
         serializer = self.get_serializer()
         validated_data = serializer.valid_request_file(get_request_file())
 
-        document = self.service.create(validated_data)
+        document = self.service.create(**validated_data)
 
         return serializer.dump(document), 201
 

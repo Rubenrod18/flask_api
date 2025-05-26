@@ -44,7 +44,7 @@ class NewUserResource(BaseUserResource):
         serializer = self.get_serializer()
         validated_data = serializer.load(request.get_json())
 
-        user = self.service.create(validated_data)
+        user = self.service.create(**validated_data)
         user_data = serializer.dump(user)
         create_user_email_task.delay(user_data)
 

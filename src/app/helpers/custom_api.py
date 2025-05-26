@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from flask import render_template, request
 from flask_restx import Api
 
@@ -8,8 +10,6 @@ class CustomApi(Api):
         if self._doc_view:
             return self._doc_view()
         elif not self._doc:
-            from http import HTTPStatus
-
             self.abort(HTTPStatus.NOT_FOUND)
 
         scheme = request.headers.get('X-Forwarded-Proto') or 'http'
