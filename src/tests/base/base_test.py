@@ -3,6 +3,7 @@ import os
 import unittest
 import uuid
 
+import sqlalchemy
 from dotenv import find_dotenv, load_dotenv
 from faker import Faker
 from faker.providers import date_time, person
@@ -162,7 +163,10 @@ class TestBase(unittest.TestCase):
 
         def create_celery_db():
             if not self._database_exists(os.getenv('SQLALCHEMY_DATABASE_URI')):
-                create_database(os.getenv('SQLALCHEMY_DATABASE_URI'))
+                try:
+                    create_database(os.getenv('SQLALCHEMY_DATABASE_URI'))
+                except sqlalchemy.exc.ProgrammingError:
+                    pass
 
             assert self._database_exists(os.getenv('SQLALCHEMY_DATABASE_URI'))
 
