@@ -83,7 +83,7 @@ class TestBase(unittest.TestCase):
         load_dotenv(find_dotenv('.env.test'), override=True)
 
     def setUp(self) -> None:
-        self.__create_database()
+        self.__create_databases()
         app = self.__create_app()
         app_context = app.app_context()
         app_context.push()
@@ -135,14 +135,23 @@ class TestBase(unittest.TestCase):
         info = get_recorded_queries()[-1]
         print(info.statement, info.parameters, info.duration, sep='\n')  # noqa
 
-    def __create_database(self):
-        database_uri = f'{os.getenv("SQLALCHEMY_DATABASE_URI")}_{uuid.uuid4().hex}'
-        self.__engine = create_engine(database_uri)
+    def __create_databases(self):
+        def create_app_db():
+            database_uri = f'{os.getenv("SQLALCHEMY_DATABASE_URI")}_{uuid.uuid4().hex}'
+            self.__engine = create_engine(database_uri)
+            if not database_exists(self.plain_engine_url):
+                create_database(self.plain_engine_url)
 
-        if not database_exists(self.plain_engine_url):
-            create_database(self.plain_engine_url)
+            assert database_exists(self.plain_engine_url)
 
-        assert database_exists(self.plain_engine_url)
+        def create_celery_db():
+            if not database_exists(os.getenv('SQLALCHEMY_DATABASE_URI')):
+                create_database(os.getenv('SQLALCHEMY_DATABASE_URI'))
+
+            assert database_exists(os.getenv('SQLALCHEMY_DATABASE_URI'))
+
+        create_app_db()
+        create_celery_db()
 
     def __drop_database(self) -> None:
         """Kill active processes connected to the database and drop the database.
