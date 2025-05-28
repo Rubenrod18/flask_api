@@ -70,7 +70,7 @@ class UserExportWordSerializer(ma.Schema):
     to_pdf = fields.Int(validate=validate.OneOf([1, 0]))
 
     @pre_load
-    def process_input(self, value):
+    def process_input(self, value, many, **kwargs):  # pylint: disable=unused-argument
         if 'to_pdf' in value:
             value['to_pdf'] = int(value.get('to_pdf'))
         return value

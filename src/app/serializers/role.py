@@ -35,7 +35,7 @@ class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
             raise NotFound('Role not found')
 
     @post_load
-    def sluglify_name(self, item):
+    def sluglify_name(self, item, many, **kwargs):  # pylint: disable=unused-argument
         if item.get('label'):
             item['name'] = item['label'].lower().strip().replace(' ', '-')
         return item
