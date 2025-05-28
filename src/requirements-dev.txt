@@ -6,30 +6,30 @@
 #
 alembic==1.14.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-migrate
 amqp==5.3.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   kombu
 aniso8601==10.0.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-restx
 astroid==3.3.10
     # via pylint
 attrs==25.1.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   jsonschema
     #   referencing
 billiard==4.2.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   celery
 blinker==1.9.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask
     #   flask-mail
     #   flask-principal
@@ -37,13 +37,13 @@ build==1.2.2.post1
     # via pip-tools
 celery==5.5.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flower
 cfgv==3.4.0
     # via pre-commit
 click==8.1.8
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   celery
     #   click-didyoumean
     #   click-plugins
@@ -52,20 +52,20 @@ click==8.1.8
     #   pip-tools
 click-didyoumean==0.3.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   celery
 click-plugins==1.1.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   celery
 click-repl==0.3.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   celery
-coverage==7.8.1
+coverage==7.8.2
     # via -r requirements-dev.in
 dependency-injector==4.46.0
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 dill==0.4.0
     # via pylint
 distlib==0.3.9
@@ -90,7 +90,7 @@ filelock==3.17.0
     # via virtualenv
 flask==3.1.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-jwt-extended
     #   flask-login
     #   flask-mail
@@ -102,56 +102,56 @@ flask==3.1.1
     #   flask-sqlalchemy
     #   flask-wtf
 flask-jwt-extended==4.7.1
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 flask-login==0.6.3
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-security-too
 flask-mail==0.10.0
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 flask-marshmallow==1.3.0
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 flask-migrate==4.1.0
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 flask-principal==0.4.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-security-too
 flask-restx==1.3.0
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 flask-security-too==5.6.2
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 flask-sqlalchemy==3.1.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-migrate
 flask-wtf==1.2.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-security-too
 flower==2.0.1
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
-freezegun==1.5.1
+    # via -r requirements.txt
+freezegun==1.5.2
     # via -r requirements-dev.in
 greenlet==3.1.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   sqlalchemy
 gunicorn==23.0.0
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 humanize==4.11.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flower
 identify==2.6.6
     # via pre-commit
 idna==3.10
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   email-validator
 importlib-resources==6.5.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-restx
     #   flask-security-too
 iniconfig==2.0.0
@@ -160,40 +160,40 @@ isort==6.0.1
     # via pylint
 itsdangerous==2.2.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask
     #   flask-wtf
 jinja2==3.1.6
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask
 jsonschema==4.23.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-restx
 jsonschema-specifications==2024.10.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   jsonschema
 kombu==5.5.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   celery
 libpass==1.9.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-security-too
 lxml==5.3.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   python-docx
 mako==1.3.8
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   alembic
 markupsafe==3.0.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask
     #   flask-security-too
     #   jinja2
@@ -202,20 +202,20 @@ markupsafe==3.0.2
     #   wtforms
 marshmallow==3.26.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-marshmallow
     #   marshmallow-sqlalchemy
 marshmallow-sqlalchemy==1.4.2
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 mccabe==0.7.0
     # via pylint
 mysqlclient==2.2.7
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 nodeenv==1.9.1
     # via pre-commit
 packaging==24.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   build
     #   gunicorn
     #   marshmallow
@@ -232,15 +232,15 @@ pre-commit==4.2.0
     # via -r requirements-dev.in
 prometheus-client==0.21.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flower
 prompt-toolkit==3.0.50
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   click-repl
 pyjwt==2.10.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-jwt-extended
 pylint==3.3.7
     # via -r requirements-dev.in
@@ -252,43 +252,43 @@ pytest==8.3.5
     # via
     #   -r requirements-dev.in
     #   pytest-xdist
-pytest-xdist==3.6.1
+pytest-xdist==3.7.0
     # via -r requirements-dev.in
 python-dateutil==2.9.0.post0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   celery
     #   freezegun
 python-docx==1.1.2
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 python-dotenv==1.1.0
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 python-magic==0.4.27
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 pytz==2024.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-restx
     #   flower
 pyyaml==6.0.2
     # via pre-commit
 referencing==0.36.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   jsonschema
     #   jsonschema-specifications
 rpds-py==0.22.3
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   jsonschema
     #   referencing
 six==1.17.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   python-dateutil
 sqlalchemy==2.0.41
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   alembic
     #   flask-sqlalchemy
     #   marshmallow-sqlalchemy
@@ -299,22 +299,22 @@ tomlkit==0.13.2
     # via pylint
 tornado==6.5
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flower
 typing-extensions==4.12.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   alembic
     #   python-docx
     #   sqlalchemy
 tzdata==2025.2
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   faker
     #   kombu
 vine==5.1.0
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   amqp
     #   celery
     #   kombu
@@ -322,11 +322,11 @@ virtualenv==20.29.1
     # via pre-commit
 wcwidth==0.2.13
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   prompt-toolkit
 werkzeug==3.1.3
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask
     #   flask-jwt-extended
     #   flask-login
@@ -335,11 +335,11 @@ wheel==0.45.1
     # via pip-tools
 wtforms==3.2.1
     # via
-    #   -r /home/ruben/workspace/flask_api/src/requirements.txt
+    #   -r requirements.txt
     #   flask-security-too
     #   flask-wtf
 xlsxwriter==3.2.3
-    # via -r /home/ruben/workspace/flask_api/src/requirements.txt
+    # via -r requirements.txt
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
