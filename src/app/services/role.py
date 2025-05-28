@@ -14,18 +14,18 @@ class RoleService(BaseService):
         db.session.flush()
         return role
 
-    def find(self, role_id: int, *args) -> Role | None:
-        return self.manager.find(role_id)
+    def find(self, record_id: int, *args) -> Role | None:
+        return self.manager.find(record_id)
 
     def get(self, **kwargs) -> dict:
         return self.manager.get(**kwargs)
 
-    def save(self, role_id: int, **kwargs) -> Role:
-        self.manager.save(role_id, **kwargs)
-        return self.manager.find(role_id)
+    def save(self, record_id: int, **kwargs) -> Role:
+        self.manager.save(record_id, **kwargs)
+        return self.manager.find(record_id)
 
-    def delete(self, role_id: int) -> Role:
-        return self.manager.delete(role_id)
+    def delete(self, record_id: int) -> Role:
+        return self.manager.delete(record_id)
 
     def assign_role_to_user(self, user: User, role_id: int) -> None:
         """Assigns a role to a user, replacing any existing role."""

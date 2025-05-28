@@ -40,4 +40,10 @@ class DocumentFactory(BaseFactory):
 
     @factory.lazy_attribute
     def created_by_user(self):
-        return db.session.query(User).filter(User.deleted_at.is_(None)).order_by(func.random()).limit(1).first()
+        return (
+            db.session.query(User)
+            .filter(User.deleted_at.is_(None))
+            .order_by(func.random())  # pylint: disable=not-callable
+            .limit(1)
+            .first()
+        )

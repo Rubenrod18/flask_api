@@ -14,6 +14,7 @@ class Seeder(FactorySeeder, ManagerSeeder):
         FactorySeeder.__init__(self, name='UserSeeder', priority=1, factory=UserFactory)
         ManagerSeeder.__init__(self, UserManager())
         self.role_manager = RoleManager()
+        self._default_rows = 20
 
     def _create_admin_user(self):
         test_user_email = os.getenv('TEST_USER_EMAIL')
@@ -33,7 +34,8 @@ class Seeder(FactorySeeder, ManagerSeeder):
             )
 
     @seed_actions
-    def seed(self, rows: int = 20):
+    def seed(self, rows: int = None) -> None:
+        rows = rows or self._default_rows
         self._create_admin_user()
         roles = {role.name: role for role in self.role_manager.get()['query']}
 

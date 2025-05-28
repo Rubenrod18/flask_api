@@ -14,3 +14,16 @@ repos:
         args: [ --fix,--config=src/ruff.toml ]
     -   id: ruff-format
         args: [ --config=src/ruff.toml ]
+-   repo: local
+    hooks:
+    -   id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]
+        args:
+            [
+                "app",
+                "--disable=R",
+                "--rcfile=src/.pylintrc",
+            ]

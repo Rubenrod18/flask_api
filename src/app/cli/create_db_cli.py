@@ -21,11 +21,11 @@ class CreateDatabaseCli(BaseCli):
             result = conn.execute(text(f"SHOW DATABASES LIKE '{dbname}';")).fetchone()
 
             if not result:
-                raise Exception(f"Failed to create the database: '{dbname}'.")
+                raise ValueError(f"Failed to create the database: '{dbname}'.")
 
             return True
 
-    def run_command(self):
+    def run_command(self, *args, **kwargs):
         uri = current_app.config['SQLALCHEMY_DATABASE_URI']
         dbname = uri.rsplit('/', 1)[1]
 

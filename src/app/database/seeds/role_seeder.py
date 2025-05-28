@@ -10,7 +10,7 @@ class Seeder(FactorySeeder, ManagerSeeder):
         ManagerSeeder.__init__(self, manager=RoleManager())
 
     @seed_actions
-    def seed(self):
+    def seed(self, rows: int = None) -> None:
         for role in ROLE_DEFINITIONS:
             if self.manager.find_by_name(role['name']) is None:
                 self.factory.create(**role)

@@ -22,6 +22,3 @@ class Role(Base, RoleMixin):
     name = sa.Column(sa.String(255), nullable=False, unique=True)
     description = sa.Column(sa.Text, nullable=True)
     label = sa.Column(sa.String(255), nullable=False)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)

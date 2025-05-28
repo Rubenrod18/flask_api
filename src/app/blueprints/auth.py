@@ -18,9 +18,9 @@ class BaseAuthResource(BaseResource):
     def __init__(
         self,
         rest_api: str,
+        *args,
         service: AuthService = Provide[ServiceDIContainer.auth_service],
         otp_token_manager: OTPTokenManager = Provide[ServiceDIContainer.otp_token_manager],
-        *args,
         **kwargs,
     ):
         super().__init__(rest_api, service, *args, **kwargs)

@@ -43,7 +43,7 @@ class DocumentSerializer(ma.SQLAlchemySchema, ManagerMixin):
             raise NotFound('Document not found')
 
     @post_dump()
-    def wrap(self, data, **kwargs):
+    def wrap(self, data, **kwargs):  # pylint: disable=unused-argument
         data['url'] = url_for('documents_document_resource', document_id=data['id'], _external=True)
         data['created_by'] = data.pop('created_by_user')
         return data
@@ -68,7 +68,7 @@ class DocumentAttachmentSerializer(ma.Schema):
     as_attachment = fields.Int(validate=validate.OneOf([1, 0]))
 
     @pre_load
-    def process_input(self, value, many, **kwargs):
+    def process_input(self, value, many, **kwargs):  # pylint: disable=unused-argument
         if 'as_attachment' in value:
             value['as_attachment'] = int(value.get('as_attachment'))
         return value

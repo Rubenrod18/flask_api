@@ -65,6 +65,11 @@ jobs:
           version: "latest"
           args: 'check --config=./src/ruff.toml'
 
+      - name: Run Pylint
+        # https://docs.astral.sh/ruff/faq/#how-does-ruffs-linter-compare-to-pylint
+        run: |
+          pylint app --disable=R --exit-zero
+
       - name: Ruff format
         uses: astral-sh/ruff-action@v3
         with:

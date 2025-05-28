@@ -37,7 +37,7 @@ class MyCelery(Celery):
 
         References
         ----------
-        https://docs.celeryproject.org/en/stable/userguide/tasks.html?highlight=gen_task_name#changing-the-automatic-naming-behavior  # noqa
+        https://docs.celeryproject.org/en/stable/userguide/tasks.html?highlight=gen_task_name#changing-the-automatic-naming-behavior  # noqa # pylint: C0301
 
         """
         if module.endswith('.tasks'):
@@ -60,17 +60,14 @@ class ContextTask(Task):
         """
         )
 
+    def run(self, *args, **kwargs):
+        logger.info('Celery task started')
+
 
 def make_celery(app: Flask) -> Celery:
     celery = MyCelery(app.import_name)
     celery.conf.update(app.config)
     logger.debug(celery.conf.__dict__)
-
-    def __call__(self, *args, **kwargs):
-        with app.app_context():
-            return self.run(*args, **kwargs)
-
-    ContextTask.__call__ = __call__
 
     celery.register_task(ContextTask())
     return celery

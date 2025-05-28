@@ -20,8 +20,8 @@ class BaseRoleResource(BaseResource):
     def __init__(
         self,
         rest_api: str,
-        service: RoleService = Provide[ServiceDIContainer.role_service],
         *args,
+        service: RoleService = Provide[ServiceDIContainer.role_service],
         **kwargs,
     ):
         super().__init__(rest_api, service, *args, **kwargs)
@@ -37,7 +37,7 @@ class NewRoleResource(BaseRoleResource):
     @api.expect(swagger_models.role_input_sw_model)
     @api.marshal_with(swagger_models.role_sw_model, envelope='data', code=201)
     def post(self) -> tuple:
-        serializer = self.serializer_class()
+        serializer = self.get_serializer()
         validated_data = serializer.load(request.get_json())
 
         role = self.service.create(**validated_data)
@@ -54,7 +54,7 @@ class RoleResource(BaseRoleResource):
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found'}, security='auth_token')
     @api.marshal_with(swagger_models.role_sw_model, envelope='data')
     def get(self, role_id: int) -> tuple:
-        serializer = self.serializer_class()
+        serializer = self.get_serializer()
         serializer.load({'id': role_id}, partial=True)
 
         role = self.service.find(role_id)
@@ -72,7 +72,7 @@ class RoleResource(BaseRoleResource):
     def put(self, role_id: int) -> tuple:
         json_data = request.get_json()
         json_data['id'] = role_id
-        serializer = self.serializer_class()
+        serializer = self.get_serializer()
         serialized_data = serializer.load(json_data)
 
         role = self.service.save(role_id, **serialized_data)
@@ -84,7 +84,7 @@ class RoleResource(BaseRoleResource):
     @api.doc(responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden'}, security='auth_token')
     @api.marshal_with(swagger_models.role_sw_model, envelope='data')
     def delete(self, role_id: int) -> tuple:
-        serializer = self.serializer_class()
+        serializer = self.get_serializer()
         serializer.load({'id': role_id}, partial=True)
 
         role = self.service.delete(role_id)
@@ -108,8 +108,8 @@ class RolesSearchResource(BaseRoleResource):
     @api.expect(swagger_models.search_input_sw_model)
     @api.marshal_with(swagger_models.role_search_output_sw_model)
     def post(self) -> tuple:
-        serializer = self.get_serializer('role', many=True)
-        validated_data = self.get_serializer('search').load(request.get_json())
+        serializer = self.get_serializer(serializer_name='role', many=True)
+        validated_data = self.get_serializer(serializer_name='search').load(request.get_json())
 
         doc_data = self.service.get(**validated_data)
 

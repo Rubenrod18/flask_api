@@ -48,7 +48,7 @@ class User(Base, UserMixin):
 
     __tablename__ = 'users'
 
-    fs_uniquifier = sa.Column(sa.String(64), unique=True, nullable=False, default=lambda: uuid.uuid4())
+    fs_uniquifier = sa.Column(sa.String(64), unique=True, nullable=False, default=uuid.uuid4())
     created_by = sa.Column(sa.Integer, sa.ForeignKey('users.id'), nullable=True)
 
     name = sa.Column(sa.String(255), nullable=False)
@@ -61,9 +61,6 @@ class User(Base, UserMixin):
 
     created_by_user = relationship('User', remote_side='User.id')
     roles = relationship('Role', secondary='users_roles_through', backref=backref('users', lazy='dynamic'))
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def save(self, *args: list, **kwargs: dict) -> int:
         if self.password and 'password' in self.__dict__:

@@ -18,14 +18,14 @@ def seed_actions(fnc):
     def message(*args, **kwargs):
         seeder = args[0]
 
-        print(' Seeding: %s' % seeder.name)  # noqa
+        print(f' Seeding: {seeder.name}')  # noqa: T201
         exec_time = 0
         try:
             start = time.time()
             res = fnc(*args, **kwargs)
             exec_time = round((time.time() - start), 2)
         finally:
-            print(f' Seeded:  {seeder.name} ( {exec_time} seconds )')  # noqa
+            print(f' Seeded:  {seeder.name} ( {exec_time} seconds )')  # noqa: T201
         return res
 
     return message

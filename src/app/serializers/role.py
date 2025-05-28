@@ -35,12 +35,12 @@ class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
             raise NotFound('Role not found')
 
     @post_load
-    def sluglify_name(self, item, many, **kwargs):
+    def sluglify_name(self, item, many, **kwargs):  # pylint: disable=unused-argument
         if item.get('label'):
             item['name'] = item['label'].lower().strip().replace(' ', '-')
         return item
 
     @validates('name')
-    def validate_name(self, value, **kwargs):
+    def validate_name(self, value):
         if self._role_manager.find_by_name(name=value):
             raise BadRequest('Role name already created')
