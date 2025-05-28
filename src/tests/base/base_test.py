@@ -167,7 +167,7 @@ class TestBase(unittest.TestCase):
                 try:
                     create_database(dbname)
                 except sqlalchemy.exc.ProgrammingError as exc:
-                    if exc.code == 1_007:
+                    if getattr(exc.orig, 'args', [None])[0] == 1_007:
                         pass  # NOTE: Database already exists, ignore
                     else:
                         raise exc

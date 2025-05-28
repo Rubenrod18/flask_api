@@ -50,4 +50,4 @@ test: ## Run tests
 	pytest
 
 test-parallel:  ## Run tests in parallel
-	pytest --numprocesses=4 --maxfail=$(MAX_FAIL_TEST)
+	pytest --numprocesses=$(PARALLEL_TEST) --maxfail=$(MAX_FAIL_TEST)
