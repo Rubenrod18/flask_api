@@ -9,8 +9,9 @@ from faker.providers import date_time, person
 from flask import Flask, Response
 from flask.testing import FlaskClient
 from flask_sqlalchemy.record_queries import get_recorded_queries
-from sqlalchemy import create_engine, text
-from sqlalchemy_utils import create_database, database_exists
+from sqlalchemy import create_engine, make_url, text
+from sqlalchemy.exc import OperationalError
+from sqlalchemy_utils import create_database
 
 from app.extensions import db
 
@@ -135,20 +136,35 @@ class TestBase(unittest.TestCase):
         info = get_recorded_queries()[-1]
         print(info.statement, info.parameters, info.duration, sep='\n')  # noqa
 
+    @staticmethod
+    def _database_exists(database_url: str) -> bool:
+        url = make_url(database_url)
+        url_without_db = url.set(database=None)
+        engine = create_engine(url_without_db)
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(
+                    text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = :db_name'),
+                    {'db_name': url.database},
+                )
+                return result.scalar() is not None
+        except OperationalError:
+            return False
+
     def __create_databases(self):
         def create_app_db():
             database_uri = f'{os.getenv("SQLALCHEMY_DATABASE_URI")}_{uuid.uuid4().hex}'
             self.__engine = create_engine(database_uri)
-            if not database_exists(self.plain_engine_url):
+            if not self._database_exists(self.plain_engine_url):
                 create_database(self.plain_engine_url)
 
-            assert database_exists(self.plain_engine_url)
+            assert self._database_exists(self.plain_engine_url)
 
         def create_celery_db():
-            if not database_exists(os.getenv('SQLALCHEMY_DATABASE_URI')):
+            if not self._database_exists(os.getenv('SQLALCHEMY_DATABASE_URI')):
                 create_database(os.getenv('SQLALCHEMY_DATABASE_URI'))
 
-            assert database_exists(os.getenv('SQLALCHEMY_DATABASE_URI'))
+            assert self._database_exists(os.getenv('SQLALCHEMY_DATABASE_URI'))
 
         create_app_db()
         create_celery_db()
