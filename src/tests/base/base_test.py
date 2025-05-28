@@ -3,13 +3,15 @@ import os
 import unittest
 import uuid
 
+import sqlalchemy
 from dotenv import find_dotenv, load_dotenv
 from faker import Faker
 from faker.providers import date_time, person
 from flask import Flask, Response
 from flask.testing import FlaskClient
 from flask_sqlalchemy.record_queries import get_recorded_queries
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, make_url, text
+from sqlalchemy.exc import OperationalError
 from sqlalchemy_utils import create_database, database_exists
 
 from app.extensions import db
@@ -106,8 +108,8 @@ class TestBase(unittest.TestCase):
 
     def __create_app(self):
         """Create an app with testing environment."""
-        from app import create_app
-        from config import TestConfig
+        from app import create_app  # pylint: disable=(import-outside-toplevel
+        from config import TestConfig  # pylint: disable=(import-outside-toplevel
 
         TestConfig.SQLALCHEMY_DATABASE_URI = self.plain_engine_url
         return create_app('config.TestConfig')
@@ -135,16 +137,45 @@ class TestBase(unittest.TestCase):
         info = get_recorded_queries()[-1]
         print(info.statement, info.parameters, info.duration, sep='\n')  # noqa
 
+    @staticmethod
+    def _database_exists(database_url: str) -> bool:
+        url = make_url(database_url)
+        url_without_db = url.set(database=None)
+        engine = create_engine(url_without_db)
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(
+                    text('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = :db_name'),
+                    {'db_name': url.database},
+                )
+                return result.scalar() is not None
+        except OperationalError:
+            return False
+
     def __create_databases(self):
-        database_uri = f'{os.getenv("SQLALCHEMY_DATABASE_URI")}_{uuid.uuid4().hex}'
-        self.__engine = create_engine(database_uri)
-        if not database_exists(self.plain_engine_url):
-            create_database(self.plain_engine_url)
+        def create_app_db():
+            database_uri = f'{os.getenv("SQLALCHEMY_DATABASE_URI")}_{uuid.uuid4().hex}'
+            self.__engine = create_engine(database_uri)
+            if not database_exists(self.plain_engine_url):
+                create_database(self.plain_engine_url)
 
-        if not database_exists(os.getenv('SQLALCHEMY_DATABASE_URI')):
-            create_database(os.getenv('SQLALCHEMY_DATABASE_URI'))
+            assert database_exists(self.plain_engine_url)
 
-        assert database_exists(self.plain_engine_url)
+        def create_celery_db():
+            dbname = os.getenv('SQLALCHEMY_DATABASE_URI')
+            if not self._database_exists(os.getenv('SQLALCHEMY_DATABASE_URI')):
+                try:
+                    create_database(dbname)
+                except sqlalchemy.exc.ProgrammingError as exc:
+                    if getattr(exc.orig, 'args', [None])[0] == 1_007:
+                        pass  # NOTE: Database already exists, ignore
+                    else:
+                        raise exc
+
+            assert database_exists(dbname)
+
+        create_app_db()
+        create_celery_db()
 
     def __drop_database(self) -> None:
         """Kill active processes connected to the database and drop the database.
