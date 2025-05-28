@@ -12,7 +12,7 @@ from flask.testing import FlaskClient
 from flask_sqlalchemy.record_queries import get_recorded_queries
 from sqlalchemy import create_engine, make_url, text
 from sqlalchemy.exc import OperationalError
-from sqlalchemy_utils import create_database
+from sqlalchemy_utils import create_database, database_exists
 
 from app.extensions import db
 
@@ -156,19 +156,23 @@ class TestBase(unittest.TestCase):
         def create_app_db():
             database_uri = f'{os.getenv("SQLALCHEMY_DATABASE_URI")}_{uuid.uuid4().hex}'
             self.__engine = create_engine(database_uri)
-            if not self._database_exists(self.plain_engine_url):
+            if not database_exists(self.plain_engine_url):
                 create_database(self.plain_engine_url)
 
-            assert self._database_exists(self.plain_engine_url)
+            assert database_exists(self.plain_engine_url)
 
         def create_celery_db():
+            dbname = os.getenv('SQLALCHEMY_DATABASE_URI')
             if not self._database_exists(os.getenv('SQLALCHEMY_DATABASE_URI')):
                 try:
-                    create_database(os.getenv('SQLALCHEMY_DATABASE_URI'))
-                except sqlalchemy.exc.ProgrammingError:
-                    pass
+                    create_database(dbname)
+                except sqlalchemy.exc.ProgrammingError as exc:
+                    if exc.code == 1_007:
+                        pass  # NOTE: Database already exists, ignore
+                    else:
+                        raise exc
 
-            assert self._database_exists(os.getenv('SQLALCHEMY_DATABASE_URI'))
+            assert database_exists(dbname)
 
         create_app_db()
         create_celery_db()
