@@ -9,14 +9,12 @@ from sqlalchemy import func
 from app.database.factories.base_factory import BaseFactory, faker
 from app.database.factories.role_factory import AdminRoleFactory, RoleFactory, TeamLeaderRoleFactory, WorkerRoleFactory
 from app.extensions import db
-from app.managers import UserManager
 from app.models import Role, User
 from app.models.role import ADMIN_ROLE
 from app.models.user import Genre
 from app.serializers import UserSerializer
 
 UserList = list[User]
-_user_manager = UserManager()
 
 
 class UserFactory(BaseFactory):
