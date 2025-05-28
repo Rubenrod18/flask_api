@@ -28,9 +28,6 @@ jobs:
           - 5672:5672
           - 15672:15672
 
-    strategy:
-      max-parallel: 4
-
     steps:
       - uses: actions/checkout@v4
         name: Checkout code from the repository
