@@ -83,7 +83,7 @@ class TestBase(unittest.TestCase):
         load_dotenv(find_dotenv('.env.test'), override=True)
 
     def setUp(self) -> None:
-        self.__create_databases()
+        self.__create_database()
         app = self.__create_app()
         app_context = app.app_context()
         app_context.push()
@@ -106,8 +106,8 @@ class TestBase(unittest.TestCase):
 
     def __create_app(self):
         """Create an app with testing environment."""
-        from app import create_app
-        from config import TestConfig
+        from app import create_app  # pylint: disable=(import-outside-toplevel
+        from config import TestConfig  # pylint: disable=(import-outside-toplevel
 
         TestConfig.SQLALCHEMY_DATABASE_URI = self.plain_engine_url
         return create_app('config.TestConfig')
@@ -135,14 +135,12 @@ class TestBase(unittest.TestCase):
         info = get_recorded_queries()[-1]
         print(info.statement, info.parameters, info.duration, sep='\n')  # noqa
 
-    def __create_databases(self):
+    def __create_database(self):
         database_uri = f'{os.getenv("SQLALCHEMY_DATABASE_URI")}_{uuid.uuid4().hex}'
         self.__engine = create_engine(database_uri)
+
         if not database_exists(self.plain_engine_url):
             create_database(self.plain_engine_url)
-
-        if not database_exists(os.getenv('SQLALCHEMY_DATABASE_URI')):
-            create_database(os.getenv('SQLALCHEMY_DATABASE_URI'))
 
         assert database_exists(self.plain_engine_url)
 
