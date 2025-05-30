@@ -1,0 +1,59 @@
+from datetime import datetime, timedelta, UTC
+
+from app.database.factories.document_factory import DocumentFactory
+
+from ._base_integration_test import _BaseDocumentsIntegrationTest
+
+
+class SearchDocumentsIntegrationTest(_BaseDocumentsIntegrationTest):
+    def setUp(self):
+        super().setUp()
+        self.document = DocumentFactory(
+            deleted_at=None,
+            created_at=datetime.now(UTC) - timedelta(days=1),
+        )
+        self.endpoint = f'{self.base_path}/search'
+
+    def test_search_document_endpoint(self):
+        payload = {
+            'search': [
+                {
+                    'field_name': 'name',
+                    'field_operator': 'eq',
+                    'field_value': self.document.name,
+                },
+            ],
+            'order': [
+                {
+                    'field_name': 'name',
+                    'sorting': 'desc',
+                },
+            ],
+        }
+
+        response = self.client.post(self.endpoint, json=payload, headers=self.build_headers())
+        json_response = response.get_json()
+
+        document_data = json_response.get('data')
+        records_total = json_response.get('records_total')
+        records_filtered = json_response.get('records_filtered')
+
+        self.assertEqual(200, response.status_code)
+        self.assertTrue(isinstance(document_data, list))
+        self.assertGreater(records_total, 0)
+        self.assertTrue(0 < records_filtered <= records_total)
+        self.assertTrue(document_data[0].get('name').find(self.document.name) != -1)
+
+    def test_check_user_roles_in_search_document_endpoint(self):
+        test_cases = [
+            (self.admin_user.email, 200),
+            (self.team_leader_user.email, 200),
+            (self.worker_user.email, 200),
+        ]
+
+        for user_email, response_status in test_cases:
+            with self.subTest(user_email=user_email):
+                response = self.client.post(self.endpoint, json={}, headers=self.build_headers(user_email=user_email))
+                json_response = response.get_json()
+
+                self.assertEqual(response_status, response.status_code, json_response)
