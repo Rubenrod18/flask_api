@@ -19,7 +19,6 @@ class UpdateUserEndpointTest(_BaseUserEndpointsTest):
     def test_update_user_endpoint(self):
         ignore_fields = {'id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'roles'}
         payload = UserFactory.build_dict(exclude=ignore_fields)
-
         payload['password'] = os.getenv('TEST_USER_PASSWORD')
         role = RoleFactory()
         payload['role_id'] = role.id
@@ -27,8 +26,8 @@ class UpdateUserEndpointTest(_BaseUserEndpointsTest):
         response = self.client.put(self.endpoint, json=payload, headers=self.build_headers(user_email=self.user.email))
         json_response = response.get_json()
         json_data = json_response.get('data')
+        role_data = json_data.get('roles')[0]
 
-        self.assertEqual(200, response.status_code)
         self.assertEqual(self.user.id, json_data.get('id'), json_response)
         self.assertEqual(payload.get('name'), json_data.get('name'))
         self.assertEqual(payload.get('last_name'), json_data.get('last_name'))
@@ -37,9 +36,6 @@ class UpdateUserEndpointTest(_BaseUserEndpointsTest):
         self.assertTrue(json_data.get('created_at'))
         self.assertGreaterEqual(json_data.get('updated_at'), json_data.get('created_at'))
         self.assertIsNone(json_data.get('deleted_at'))
-
-        role_data = json_data.get('roles')[0]
-
         self.assertEqual(role.name, role_data.get('name'))
         self.assertEqual(role.label, role_data.get('label'))
 
@@ -52,7 +48,6 @@ class UpdateUserEndpointTest(_BaseUserEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.put(self.endpoint, json={}, headers=self.build_headers(user_email=user_email))
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)
+                self.client.put(
+                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+                )

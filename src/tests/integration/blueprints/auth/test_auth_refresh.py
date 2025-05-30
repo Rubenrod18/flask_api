@@ -13,10 +13,10 @@ class RefreshAuthEndpointTest(_BaseAuthEndpointsTest):
             headers=self.build_headers(
                 extra_headers={self.app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER']: f'Bearer {refresh_token}'}
             ),
+            exp_code=200,
         )
         json_response = response.get_json()
 
-        self.assertEqual(200, response.status_code, json_response)
         self.assertTrue(json_response.get('access_token'))
         decoded = decode_token(json_response.get('access_token'))
         self.assertEqual(decoded['sub'], str(self.admin_user.id))

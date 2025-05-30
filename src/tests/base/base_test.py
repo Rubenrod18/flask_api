@@ -7,12 +7,13 @@ import sqlalchemy
 from dotenv import find_dotenv, load_dotenv
 from faker import Faker
 from faker.providers import date_time, person
-from flask import Flask, Response
+from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy.record_queries import get_recorded_queries
 from sqlalchemy import create_engine, make_url, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy_utils import create_database, database_exists
+from werkzeug.test import TestResponse
 
 from app.extensions import db
 
@@ -30,44 +31,49 @@ class _CustomFlaskClient(FlaskClient):
         logger.info(f'kwargs: {kwargs}')
 
     @staticmethod
-    def __log_request_data(response: Response):
+    def __log_request_data(response: TestResponse):
         if response.mimetype == 'application/json' and response.data:
             response_data = response.get_json()
         else:
             response_data = response.data
         logger.info(f'response data: {response_data}')
 
-    def __after_request(self, response: Response):
+    def __after_request(self, response: TestResponse):
         logger.info(f'response status code: {response.status_code}')
         logger.info(f'response mime type: {response.mimetype}')
         self.__log_request_data(response)
 
-    def __make_request(self, method: str, *args, **kwargs):
+    def __make_request(self, method: str, expected_status_code: int, *args, **kwargs):
+        kwargs['method'] = method
+
         logger.info('< === START REQUEST === >')
         self.__before_request(*args, **kwargs)
-
-        kwargs['method'] = method
         response = self.open(*args, **kwargs)
-
         self.__after_request(response)
         logger.info('< === END REQUEST === >')
+
+        assert response.status_code == expected_status_code
         return response
 
     def get(self, *args, **kwargs):
         """Like open but method is enforced to GET."""
-        return self.__make_request('GET', *args, **kwargs)
+        exp_code = kwargs.pop('exp_code', 200)
+        return self.__make_request('GET', exp_code, *args, **kwargs)
 
     def post(self, *args, **kwargs):
         """Like open but method is enforced to POST."""
-        return self.__make_request('POST', *args, **kwargs)
+        exp_code = kwargs.pop('exp_code', 201)
+        return self.__make_request('POST', exp_code, *args, **kwargs)
 
     def put(self, *args, **kwargs):
         """Like open but method is enforced to PUT."""
-        return self.__make_request('PUT', *args, **kwargs)
+        exp_code = kwargs.pop('exp_code', 200)
+        return self.__make_request('PUT', exp_code, *args, **kwargs)
 
     def delete(self, *args, **kwargs):
         """Like open but method is enforced to DELETE."""
-        return self.__make_request('DELETE', *args, **kwargs)
+        exp_code = kwargs.pop('exp_code', 200)
+        return self.__make_request('DELETE', exp_code, *args, **kwargs)
 
 
 class BaseTest(unittest.TestCase):

@@ -17,16 +17,13 @@ class ConfirmResetPasswordEndpointTest(_BaseAuthEndpointsTest):
         self.endpoint = f'{self.base_path}/reset_password/{self.token}'
 
     def test_validate_reset_password(self):
-        response = self.client.get(self.endpoint, json={})
-
-        self.assertEqual(200, response.status_code)
+        self.client.get(self.endpoint, json={})
 
     def test_reset_password(self):
         plain_password = os.getenv('TEST_USER_PASSWORD')
         payload = {'password': plain_password, 'confirm_password': plain_password}
 
-        response = self.client.post(self.endpoint, json=payload)
+        response = self.client.post(self.endpoint, json=payload, exp_code=200)
         json_response = response.get_json()
 
-        self.assertEqual(200, response.status_code)
         self.assertTrue(json_response.get('access_token'))

@@ -12,7 +12,6 @@ class SaveRoleEndpointTest(_BaseRoleEndpointsTest):
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(201, response.status_code)
         self.assertEqual(payload.get('label'), json_data.get('label'))
         self.assertEqual(payload.get('label').lower().replace(' ', '-'), json_data.get('name'))
         self.assertTrue(json_data.get('created_at'))
@@ -28,9 +27,9 @@ class SaveRoleEndpointTest(_BaseRoleEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.post(
-                    f'{self.base_path}', json={}, headers=self.build_headers(user_email=user_email)
+                self.client.post(
+                    f'{self.base_path}',
+                    json={},
+                    headers=self.build_headers(user_email=user_email),
+                    exp_code=response_status,
                 )
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)

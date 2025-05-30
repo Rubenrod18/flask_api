@@ -13,7 +13,7 @@ class RequestResetPasswordAuthEndpointTest(_BaseAuthEndpointsTest):
         mock_reset_password_email_task_delay.return_value = True
         payload = {'email': self.admin_user.email}
 
-        response = self.client.post(self.endpoint, json=payload)
+        response = self.client.post(self.endpoint, json=payload, exp_code=202)
 
         self.assertEqual(202, response.status_code)
         mock_reset_password_email_task_delay.assert_called_once()

@@ -7,13 +7,10 @@ class ExceptionsTest(BaseApiTest):
         user = UserFactory(active=True, deleted_at=None)
 
         response = self.client.post(
-            '/api/users',
-            json={},
-            headers=self.build_headers(user_email=user.email),
+            '/api/users', json={}, headers=self.build_headers(user_email=user.email), exp_code=403
         )
         json_response = response.get_json()
 
-        self.assertEqual(403, response.status_code, json_response)
         self.assertEqual(
             (
                 "You don't have the permission to access the requested resource. "

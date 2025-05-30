@@ -18,10 +18,8 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
     def test_get_document_data_endpoint(self):
         response = self.client.get(self.endpoint, json={}, headers=self.build_headers())
         json_data = response.get_json()
-
         parse_url = urlparse(json_data.get('url'))
 
-        self.assertEqual(200, response.status_code)
         self.assertEqual(self.document.created_by, json_data.get('created_by').get('id'))
         self.assertEqual(self.document.name, json_data.get('name'))
         self.assertEqual(self.document.mime_type, json_data.get('mime_type'))
@@ -40,10 +38,9 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.get(self.endpoint, json={}, headers=self.build_headers(user_email=user_email))
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)
+                self.client.get(
+                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+                )
 
     def test_get_document_file_content_endpoint(self):
         test_cases = ['as_attachment=1', 'as_attachment=0', '']
@@ -57,5 +54,4 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
                     ),
                 )
 
-                self.assertEqual(200, response.status_code)
                 self.assertTrue(isinstance(response.get_data(), bytes))

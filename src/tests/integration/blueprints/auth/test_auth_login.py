@@ -20,10 +20,9 @@ class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
                 'password': os.getenv('TEST_USER_PASSWORD'),
             }
 
-            response = self.client.post(self.endpoint, json=payload)
+            response = self.client.post(self.endpoint, json=payload, exp_code=200)
             json_response = response.get_json()
 
-            self.assertEqual(200, response.status_code)
             self.assertTrue(json_response.get('access_token'))
             self.assertTrue(json_response.get('refresh_token'))
             self.assertTrue(flask_security.current_user.is_authenticated)
@@ -34,25 +33,22 @@ class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
             'password': '12345678',
         }
 
-        response = self.client.post(self.endpoint, json=payload)
+        response = self.client.post(self.endpoint, json=payload, exp_code=401)
         json_response = response.get_json()
 
         self.assertTrue(json_response.get('message'))
-        self.assertEqual(401, response.status_code)
 
     def test_inactive_user(self):
         role = RoleFactory()
         user = UserFactory(active=False, deleted_at=None, roles=[role])
-
         payload = {
             'email': user.email,
             'password': os.getenv('TEST_USER_PASSWORD'),
         }
 
-        response = self.client.post(f'{self.base_path}/login', json=payload)
+        self.client.post(f'{self.base_path}/login', json=payload, exp_code=401)
 
         self.assertFalse(user.active)
-        self.assertEqual(401, response.status_code)
 
     def test_invalid_password(self):
         payload = {
@@ -60,6 +56,4 @@ class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
             'password': '12345678',
         }
 
-        response = self.client.post(f'{self.base_path}/login', json=payload)
-
-        self.assertEqual(401, response.status_code)
+        self.client.post(f'{self.base_path}/login', json=payload, exp_code=401)

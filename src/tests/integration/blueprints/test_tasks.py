@@ -21,7 +21,6 @@ class TaskEndpointTest(BaseApiTest):
         response = self.client.get(f'{self.base_path}/status/{uuid.uuid4()}', json={}, headers=self.build_headers())
         json_data = response.get_json()
 
-        self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(json_data, dict))
         self.assertEqual(json_data.get('state'), mock_task_result.state)
         self.assertEqual(json_data.get('current'), mock_task_result.info.get('current'))
@@ -38,7 +37,6 @@ class TaskEndpointTest(BaseApiTest):
         response = self.client.get(f'{self.base_path}/status/{uuid.uuid4()}', json={}, headers=self.build_headers())
         json_data = response.get_json()
 
-        self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(json_data, dict))
         self.assertEqual(json_data.get('state'), mock_task_result.state)
         self.assertEqual(json_data.get('current'), mock_task_result.info.get('current'))
@@ -55,7 +53,6 @@ class TaskEndpointTest(BaseApiTest):
         response = self.client.get(f'{self.base_path}/status/{uuid.uuid4()}', json={}, headers=self.build_headers())
         json_data = response.get_json()
 
-        self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(json_data, dict))
         self.assertEqual(json_data.get('state'), mock_task_result.state)
         self.assertEqual(json_data.get('current'), mock_task_result.info.get('current'))
@@ -78,6 +75,9 @@ class TaskEndpointTest(BaseApiTest):
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
                 response = self.client.get(
-                    f'{self.base_path}/status/{uuid.uuid4()}', json={}, headers=self.build_headers()
+                    f'{self.base_path}/status/{uuid.uuid4()}',
+                    json={},
+                    headers=self.build_headers(),
+                    exp_code=response_status,
                 )
                 self.assertEqual(response.status_code, response_status)
