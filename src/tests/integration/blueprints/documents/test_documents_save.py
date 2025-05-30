@@ -25,7 +25,6 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
         json_data = json_response.get('data')
         parse_url = urlparse(json_data.get('url'))
 
-        self.assertEqual(201, response.status_code)
         self.assertEqual(self.admin_user.id, json_data.get('created_by').get('id'))
         self.assertEqual(pdf_file, json_data.get('name'))
         self.assertEqual('application/pdf', json_data.get('mime_type'))
@@ -44,7 +43,6 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.post(self.base_path, json={}, headers=self.build_headers(user_email=user_email))
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)
+                self.client.post(
+                    self.base_path, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+                )

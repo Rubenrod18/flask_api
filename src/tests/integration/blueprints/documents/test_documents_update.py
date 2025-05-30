@@ -30,10 +30,8 @@ class UpdateDocumentEndpointTest(_BaseDocumentEndpointsTest):
         )
         json_response = response.get_json()
         json_data = json_response.get('data')
-
         parse_url = urlparse(json_data.get('url'))
 
-        self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(json_data.get('created_by').get('id'), int))
         self.assertEqual(pdf_file, json_data.get('name'))
         self.assertEqual(self.document.mime_type, json_data.get('mime_type'))
@@ -52,7 +50,6 @@ class UpdateDocumentEndpointTest(_BaseDocumentEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.put(self.endpoint, json={}, headers=self.build_headers(user_email=user_email))
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)
+                self.client.put(
+                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+                )

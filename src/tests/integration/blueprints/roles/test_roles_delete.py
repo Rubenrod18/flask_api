@@ -13,7 +13,6 @@ class DeleteRoleEndpointTest(_BaseRoleEndpointsTest):
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(200, response.status_code)
         self.assertEqual(self.role.id, json_data.get('id'))
         self.assertIsNotNone(json_data.get('deleted_at') is not None)
         self.assertGreaterEqual(json_data.get('deleted_at'), json_data.get('updated_at'))
@@ -27,7 +26,6 @@ class DeleteRoleEndpointTest(_BaseRoleEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.delete(self.endpoint, json={}, headers=self.build_headers(user_email=user_email))
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)
+                self.client.delete(
+                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+                )

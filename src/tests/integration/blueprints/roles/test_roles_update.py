@@ -14,11 +14,9 @@ class UpdateRoleEndpointTest(_BaseRoleEndpointsTest):
         payload = RoleFactory.build_dict(exclude=ignore_fields)
 
         response = self.client.put(self.endpoint, json=payload, headers=self.build_headers())
-
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(200, response.status_code)
         self.assertEqual(self.role.id, json_data.get('id'))
         self.assertEqual(payload.get('label'), json_data.get('label'))
         self.assertEqual(payload.get('label').lower().replace(' ', '-'), json_data.get('name'))
@@ -35,7 +33,6 @@ class UpdateRoleEndpointTest(_BaseRoleEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.put(self.endpoint, json={}, headers=self.build_headers(user_email=user_email))
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)
+                self.client.put(
+                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+                )

@@ -7,9 +7,8 @@ class WordAndExcelUserEndpointTest(_BaseUserEndpointsTest):
         self.endpoint = f'{self.base_path}/word_and_xlsx'
 
     def test_export_excel_and_word_endpoint(self):
-        response = self.client.post(self.endpoint, json={}, headers=self.build_headers())
+        response = self.client.post(self.endpoint, json={}, headers=self.build_headers(), exp_code=202)
 
-        self.assertEqual(202, response.status_code)
         self.assertTrue(isinstance(response.get_json(), dict))
 
     def test_check_user_roles_in_export_excel_and_word_endpoint(self):
@@ -21,7 +20,6 @@ class WordAndExcelUserEndpointTest(_BaseUserEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.post(self.endpoint, json={}, headers=self.build_headers(user_email=user_email))
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)
+                self.client.post(
+                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+                )

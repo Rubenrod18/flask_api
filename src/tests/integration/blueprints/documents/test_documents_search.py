@@ -31,14 +31,13 @@ class SearchDocumentEndpointTest(_BaseDocumentEndpointsTest):
             ],
         }
 
-        response = self.client.post(self.endpoint, json=payload, headers=self.build_headers())
+        response = self.client.post(self.endpoint, json=payload, headers=self.build_headers(), exp_code=200)
         json_response = response.get_json()
 
         document_data = json_response.get('data')
         records_total = json_response.get('records_total')
         records_filtered = json_response.get('records_filtered')
 
-        self.assertEqual(200, response.status_code)
         self.assertTrue(isinstance(document_data, list))
         self.assertGreater(records_total, 0)
         self.assertTrue(0 < records_filtered <= records_total)
@@ -53,7 +52,6 @@ class SearchDocumentEndpointTest(_BaseDocumentEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.post(self.endpoint, json={}, headers=self.build_headers(user_email=user_email))
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)
+                self.client.post(
+                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+                )

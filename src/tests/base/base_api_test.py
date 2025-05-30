@@ -23,12 +23,8 @@ class BaseApiTest(BaseTest):
         if user_email is None:
             user_email = self.admin_user.email
 
-        data = {'email': user_email, 'password': self.admin_user.password}
-
-        response = self.client.post('/api/auth/login', json=data)
-        json_response = response.get_json()
-
-        assert 200 == response.status_code
-        token = json_response['access_token']
+        payload = {'email': user_email, 'password': self.admin_user.password}
+        response = self.client.post('/api/auth/login', json=payload, exp_code=200)
+        token = response.get_json()['access_token']
 
         return {self.app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER']: f'Bearer {token}'} | extra_headers

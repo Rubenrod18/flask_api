@@ -18,7 +18,6 @@ class GetUserEndpointTest(_BaseUserEndpointsTest):
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(200, response.status_code)
         self.assertEqual(self.user.id, json_data.get('id'))
         self.assertEqual(self.user.name, json_data.get('name'))
         self.assertEqual(self.user.last_name, json_data.get('last_name'))
@@ -41,7 +40,6 @@ class GetUserEndpointTest(_BaseUserEndpointsTest):
 
         for user_email, response_status in test_cases:
             with self.subTest(user_email=user_email):
-                response = self.client.get(self.endpoint, json={}, headers=self.build_headers(user_email=user_email))
-                json_response = response.get_json()
-
-                self.assertEqual(response_status, response.status_code, json_response)
+                self.client.get(
+                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+                )

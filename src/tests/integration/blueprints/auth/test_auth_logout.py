@@ -9,8 +9,7 @@ class LogoutAuthEndpointTest(_BaseAuthEndpointsTest):
     def test_user_logout(self):
         auth_header = self.build_headers()
 
-        response = self.client.post(self.endpoint, json={}, headers=auth_header)
+        response = self.client.post(self.endpoint, json={}, headers=auth_header, exp_code=200)
         json_response = response.get_json()
 
-        self.assertEqual(200, response.status_code)
         self.assertFalse(json_response)
