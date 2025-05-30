@@ -26,7 +26,6 @@ pip-log.txt
 
 # Mr Developer
 .env
-.env.test
 *.pyc
 !src/storage/mockups/example.pdf
 !src/storage/tests

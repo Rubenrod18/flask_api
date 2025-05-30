@@ -1,14 +1,14 @@
 {
   "name": "flask_api",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "scripts": {
     "first-release": "npm run release -- --first-release",
     "patch": "npm run release -- --release-as patch",
     "minor": "npm run release -- --release-as minor",
     "major": "npm run release -- --release-as major",
-    "release": "standard-version",
+    "release": "commit-and-tag-version",
     "publish-to-master": "git push --follow-tags origin master",
-    "upgrade": "node_modules/npm-check/bin/cli.js -u"
+    "upgrade": "npx npm-check-updates -u"
   },
   "repository": {
     "type": "git",
@@ -24,7 +24,6 @@
     "node": ">= 22"
   },
   "devDependencies": {
-    "npm-check": "^6.0.1",
-    "standard-version": "^9.5.0"
+    "commit-and-tag-version": "^12.5.1"
   }
 }

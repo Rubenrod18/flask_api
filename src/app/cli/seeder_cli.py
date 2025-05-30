@@ -10,7 +10,7 @@ class SeederCli(BaseCli):
     def __init__(self, db: flask_sqlalchemy.SQLAlchemy):
         self.db = db
 
-    def run_command(self):
+    def run_command(self, *args, **kwargs):
         try:
             seeders = seeds.get_seeders()
             ordered_seeders = collections.OrderedDict(sorted(seeders.items()))

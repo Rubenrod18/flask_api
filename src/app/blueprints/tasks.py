@@ -14,12 +14,12 @@ api = root_api.namespace('tasks', description='Tasks endpoints')
 
 @api.route('/status/<string:task_id>')
 class TaskStatusResource(Resource):
+    @jwt_required()
+    @roles_accepted(*ROLES)
     @api.doc(
         responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not found', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @jwt_required()
-    @roles_accepted(*ROLES)
     def get(self, task_id: str):
         task_data = AsyncResult(task_id)
         response = {'state': task_data.state}

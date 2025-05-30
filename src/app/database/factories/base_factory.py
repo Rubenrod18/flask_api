@@ -33,6 +33,4 @@ class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
         """
         exclude_fields = set(exclude or [])
         instance = cls.build(**kwargs)
-        return {
-            field: getattr(instance, field) for field in cls._meta.declarations.keys() if field not in exclude_fields
-        }
+        return {field: getattr(instance, field) for field in cls._meta.declarations if field not in exclude_fields}

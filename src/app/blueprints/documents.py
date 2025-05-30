@@ -24,8 +24,8 @@ class BaseDocumentResource(BaseResource):
     def __init__(
         self,
         rest_api: str,
-        service: DocumentService = Provide[ServiceDIContainer.document_service],
         *args,
+        service: DocumentService = Provide[ServiceDIContainer.document_service],
         **kwargs,
     ):
         super().__init__(rest_api, service, *args, **kwargs)
@@ -45,16 +45,16 @@ class NewDocumentResource(BaseDocumentResource):
 
     serializer_class = serializers.DocumentSerializer
 
+    @jwt_required()
+    @roles_accepted(*ROLES)
     @api.doc(responses={401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'}, security='auth_token')
     @api.expect(parser)
     @api.marshal_with(swagger_models.document_sw_model, envelope='data', code=201)
-    @jwt_required()
-    @roles_accepted(*ROLES)
     def post(self) -> tuple:
         serializer = self.get_serializer()
         validated_data = serializer.valid_request_file(get_request_file())
 
-        document = self.service.create(validated_data)
+        document = self.service.create(**validated_data)
 
         return serializer.dump(document), 201
 
@@ -79,6 +79,8 @@ class DocumentResource(BaseDocumentResource):
         'document_attachment': serializers.DocumentAttachmentSerializer,
     }
 
+    @jwt_required()
+    @roles_accepted(*ROLES)
     # NOTE: api.marshal_with cannot handle two differents kind of responses. That's the reason is not added here.
     @api.doc(
         responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'},
@@ -86,8 +88,6 @@ class DocumentResource(BaseDocumentResource):
     )
     @api.response(200, 'Success', swagger_models.document_sw_model)
     @api.expect(parser)
-    @jwt_required()
-    @roles_accepted(*ROLES)
     def get(self, document_id: int) -> tuple:
         """Get Document data or download.
 
@@ -95,10 +95,12 @@ class DocumentResource(BaseDocumentResource):
         - `Accept: application/octet-stream`: returns the content of the document.
 
         """
-        serializer = self.get_serializer('document')
+        serializer = self.get_serializer(serializer_name='document')
 
         if request.headers.get('Accept') == 'application/octet-stream':
-            request_args = self.get_serializer('document_attachment').load(request.args.to_dict(), unknown=EXCLUDE)
+            request_args = self.get_serializer(serializer_name='document_attachment').load(
+                request.args.to_dict(), unknown=EXCLUDE
+            )
             response = self.service.get_document_content(document_id, request_args)
         else:
             serializer.load({'id': document_id}, partial=True)
@@ -107,16 +109,16 @@ class DocumentResource(BaseDocumentResource):
 
         return response
 
+    @jwt_required()
+    @roles_accepted(*ROLES)
     @api.doc(
         responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(NewDocumentResource.parser)
     @api.marshal_with(swagger_models.document_sw_model, envelope='data')
-    @jwt_required()
-    @roles_accepted(*ROLES)
     def put(self, document_id: int) -> tuple:
-        serializer = self.get_serializer('document')
+        serializer = self.get_serializer(serializer_name='document')
         serializer.load({'id': document_id}, partial=True)
         data = serializer.valid_request_file(get_request_file())
 
@@ -124,14 +126,14 @@ class DocumentResource(BaseDocumentResource):
 
         return serializer.dump(document), 200
 
+    @jwt_required()
+    @roles_accepted(*ROLES)
     @api.doc(
         responses={400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found'}, security='auth_token'
     )
     @api.marshal_with(swagger_models.document_sw_model, envelope='data')
-    @jwt_required()
-    @roles_accepted(*ROLES)
     def delete(self, document_id: int) -> tuple:
-        serializer = self.get_serializer('document')
+        serializer = self.get_serializer(serializer_name='document')
         serializer.load({'id': document_id}, partial=True)
 
         document = self.service.delete(document_id)
@@ -143,17 +145,17 @@ class DocumentResource(BaseDocumentResource):
 class SearchDocumentResource(BaseDocumentResource):
     serializer_classes = {'document': serializers.DocumentSerializer, 'search': serializers.SearchSerializer}
 
+    @jwt_required()
+    @roles_accepted(*ROLES)
     @api.doc(
         responses={200: 'Success', 401: 'Unauthorized', 403: 'Forbidden', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
     @api.expect(swagger_models.search_input_sw_model)
     @api.marshal_with(swagger_models.document_search_output_sw_model)
-    @jwt_required()
-    @roles_accepted(*ROLES)
     def post(self) -> tuple:
-        serializer = self.get_serializer('document', many=True)
-        validated_data = self.get_serializer('search').load(request.get_json())
+        serializer = self.get_serializer(serializer_name='document', many=True)
+        validated_data = self.get_serializer(serializer_name='search').load(request.get_json())
 
         doc_data = self.service.get(**validated_data)
 

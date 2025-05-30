@@ -37,7 +37,7 @@ def _add_table_user_data(users_query: list, rows: list) -> None:
         user_dict = dict(sorted(user_dict.items(), key=lambda x: _COLUMN_DISPLAY_ORDER.index(x[0])))
         user_list.append(user_dict)
 
-    for i, user_dict in enumerate(user_list):
+    for _, user_dict in enumerate(user_list):
         user_values = list(user_dict.values())
         rows.append(user_values)
 
@@ -70,7 +70,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
 
         table = document.add_table(rows=len(rows), cols=len(header_fields))
 
-        for i in range(len(rows)):
+        for i, _ in enumerate(rows):
             row = table.rows[i]
             for j, table_cell in enumerate(rows[i]):
                 row.cells[j].text = str(table_cell)

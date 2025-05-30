@@ -6,10 +6,9 @@ CACHE_KEY = cache_python_3.13_pip
 LOCAL_VERSION ?= local
 
 help:
-	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make COMMAND\033[36m\033[0m\n\n  A general utility script.\n\n  Provides commands to run the application, database migrations, tests, etc.\n  Next command start up the application:\n\n    \44 make run\n\nCommands:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-14s\033[0m \t%s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make COMMAND\033[36m\033[0m\n\n  A general utility script.\n\n  Provides commands to run the application, database migrations, tests, etc.\n\nCommands:\n"} /^[a-zA-Z_.-]+:.*?##/ { printf "  \033[36m%-14s\033[0m \t%s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
-# Builds a Docker image with cache tags.
-prod.build:
+prod.build:  # Builds a Docker image with cache tags.
 	docker build . \
 		--build-arg ENVIRONMENT=production \
 		--tag $(REGISTRY):$(LOCAL_VERSION) \
@@ -31,22 +30,17 @@ _build:
 		--cache-from $(REGISTRY):$(LOCAL_VERSION) \
 		--cache-from $(REGISTRY):$(CACHE_KEY)
 
-## Build the Docker images without using the cache.
-local.build: _build
+local.build: _build  ## Build the Docker images without using the cache.
 	docker compose build --no-cache
 
-## Create and start Docker containers in detached mode, rebuilding images if necessary.
-local.start:
+local.start:  ## Create and start Docker containers in detached mode, rebuilding images if necessary.
 	docker compose up --build --detach
 
-## Stop running Docker containers without removing them.
-local.stop:
+local.stop:  ## Stop running Docker containers without removing them.
 	docker compose stop
 
-## Stop and remove Docker containers, networks, volumes, and orphaned containers.
-local.down:
+local.down:  ## Stop and remove Docker containers, networks, volumes, and orphaned containers.
 	docker compose down --volumes --remove-orphans
 
-## View logs from all Docker containers (following logs in real-time).
-local.logs:
+local.logs:  ## View logs from all Docker containers (following logs in real-time).
 	docker compose logs -f

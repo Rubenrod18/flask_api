@@ -6,7 +6,8 @@ from app.database.seeds.base_seeder import FactorySeeder
 class Seeder(FactorySeeder):
     def __init__(self):
         super().__init__(name='DocumentSeeder', priority=2, factory=DocumentFactory)
+        self._default_rows = 30
 
     @seed_actions
-    def seed(self, rows: int = 30):
-        self.factory.create_batch(rows)
+    def seed(self, rows: int = None) -> None:
+        self.factory.create_batch(rows or self._default_rows)

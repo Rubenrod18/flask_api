@@ -1,4 +1,4 @@
-.PHONY: help run component shell migration migrate migrate-rollback seed linter coverage coverage-html test test-one test-path test-parallel
+.PHONY: help run component shell migration migrate migrate-rollback seed linter coverage coverage-html linter test test-one test-path test-parallel
 
 # Flask-migrate
 MIGRATIONS_DIRECTORY ?= /flask-api-docker-dir/src/app/database/migrations
@@ -8,7 +8,7 @@ MAX_FAIL_TEST ?= 5
 
 
 help:
-	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make COMMAND\033[36m\033[0m\n\n  A general utility script.\n\n  Provides commands to run the application, database migrations, tests, etc.\n  Next command start up the application:\n\n    \44 make run\n\nCommands:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-14s\033[0m \t%s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make COMMAND\033[36m\033[0m\n\n  A general utility script.\n\n  Provides commands to run the application, database migrations, tests, etc.\n\nCommands:\n"} /^[a-zA-Z_.-]+:.*?##/ { printf "  \033[36m%-14s\033[0m \t%s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 # ================================
 # ==== APPLICATION COMMANDS ======
@@ -42,6 +42,9 @@ coverage: ## Report coverage statistics on modules
 
 coverage-html: ## Create an HTML report of the coverage of the files
 	coverage run -m pytest && coverage html
+
+linter: ## Run Pylint on the app directory, disabling refactor warnings
+	pylint app --disable=R
 
 test: ## Run tests
 	pytest

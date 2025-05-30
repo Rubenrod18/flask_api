@@ -8,9 +8,22 @@ repos:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.9
+    rev: v0.11.11
     hooks:
     -   id: ruff
         args: [ --fix,--config=src/ruff.toml ]
     -   id: ruff-format
         args: [ --config=src/ruff.toml ]
+-   repo: local
+    hooks:
+    -   id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]
+        args:
+            [
+                "app",
+                "--disable=R",
+                "--rcfile=src/.pylintrc",
+            ]

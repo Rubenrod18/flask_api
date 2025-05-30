@@ -16,7 +16,7 @@ class VerifyRoleId(fields.Int, ManagerMixin):
         super().__init__(*args, **kwargs)
         self._role_manager = self.get_manager('role_manager')
 
-    def _deserialize(self, value, *args, **kwargs):
+    def _deserialize(self, value, attr, data, **kwargs):  # pylint: disable=unused-argument
         role = self._role_manager.find(value)
 
         if role is None or role.deleted_at is not None:
@@ -32,15 +32,15 @@ class UserSerializer(ma.SQLAlchemySchema, ManagerMixin):
 
     manager_classes = {'user_manager': UserManager}
 
-    id = fields.Int()
+    id = ma.auto_field()
     created_by = fields.Nested(lambda: UserSerializer(only=('id',)))
-    name = fields.Str()
-    last_name = fields.Str()
-    email = fields.Email(required=True)
-    password = fields.Str(validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50), load_only=True)
-    genre = fields.Str(validate=validate.OneOf(['m', 'f']))
-    birth_date = fields.Date()
-    active = fields.Bool()
+    name = ma.auto_field()
+    last_name = ma.auto_field()
+    email = ma.auto_field()
+    password = ma.auto_field(validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50), load_only=True)
+    genre = ma.auto_field(validate=validate.OneOf(['m', 'f']))
+    birth_date = ma.auto_field()
+    active = ma.auto_field(dump_only=True)
     created_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     updated_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     deleted_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
@@ -70,7 +70,7 @@ class UserExportWordSerializer(ma.Schema):
     to_pdf = fields.Int(validate=validate.OneOf([1, 0]))
 
     @pre_load
-    def process_input(self, value, many, **kwargs):
+    def process_input(self, value, many, **kwargs):  # pylint: disable=unused-argument
         if 'to_pdf' in value:
             value['to_pdf'] = int(value.get('to_pdf'))
         return value

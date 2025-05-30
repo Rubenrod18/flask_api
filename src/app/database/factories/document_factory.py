@@ -7,11 +7,8 @@ from sqlalchemy import func
 
 from app.database.factories.base_factory import BaseFactory, faker
 from app.extensions import db
-from app.managers import UserManager
 from app.models import Document, User
 from app.utils.constants import PDF_MIME_TYPE
-
-_user_manager = UserManager()
 
 
 class DocumentFactory(BaseFactory):
@@ -40,4 +37,10 @@ class DocumentFactory(BaseFactory):
 
     @factory.lazy_attribute
     def created_by_user(self):
-        return db.session.query(User).filter(User.deleted_at.is_(None)).order_by(func.random()).limit(1).first()
+        return (
+            db.session.query(User)
+            .filter(User.deleted_at.is_(None))
+            .order_by(func.random())  # pylint: disable=not-callable
+            .limit(1)
+            .first()
+        )

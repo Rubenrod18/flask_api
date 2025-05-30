@@ -1,4 +1,4 @@
-from marshmallow import fields, post_load, validates
+from marshmallow import post_load, validates
 from werkzeug.exceptions import BadRequest, NotFound
 
 from app.extensions import ma
@@ -14,10 +14,10 @@ class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
 
     manager_classes = {'role_manager': RoleManager}
 
-    id = fields.Int()
-    name = fields.Str()
-    description = fields.Str()
-    label = fields.Str()
+    id = ma.auto_field()
+    name = ma.auto_field(required=False)
+    description = ma.auto_field()
+    label = ma.auto_field()
     created_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     updated_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     deleted_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
@@ -27,7 +27,7 @@ class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
         self._role_manager = self.get_manager('role_manager')
 
     @validates('id')
-    def validate_id(self, role_id):
+    def validate_id(self, role_id: int):
         args = (self._role_manager.model.deleted_at.is_(None),)
         role = self._role_manager.find(role_id, *args)
 
@@ -35,12 +35,12 @@ class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
             raise NotFound('Role not found')
 
     @post_load
-    def sluglify_name(self, item, many, **kwargs):
+    def sluglify_name(self, item, many, **kwargs):  # pylint: disable=unused-argument
         if item.get('label'):
             item['name'] = item['label'].lower().strip().replace(' ', '-')
         return item
 
     @validates('name')
-    def validate_name(self, value, **kwargs):
+    def validate_name(self, value):
         if self._role_manager.find_by_name(name=value):
             raise BadRequest('Role name already created')

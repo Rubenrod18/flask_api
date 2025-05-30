@@ -1,5 +1,19 @@
 version: 2
 updates:
+- package-ecosystem: docker
+  directory: "/docker"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  commit-message:
+    prefix: "build(docker): "
+- package-ecosystem: docker-compose
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  commit-message:
+    prefix: "build(docker-compose): "
 - package-ecosystem: pip
   directory: "/src"
   schedule:
@@ -9,5 +23,10 @@ updates:
   open-pull-requests-limit: 10
   commit-message:
     prefix: "build(pip): "
-  labels:
-    - dependabot
+- package-ecosystem: github-actions
+  directory: "/"
+  schedule:
+    interval: "weekly"
+  open-pull-requests-limit: 10
+  commit-message:
+    prefix: "ci(github-actions): "
