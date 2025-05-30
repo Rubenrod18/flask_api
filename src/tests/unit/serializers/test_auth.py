@@ -9,10 +9,10 @@ from app.managers import UserManager
 from app.models import User
 from app.repositories import UserRepository
 from app.serializers import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestAuthUserLoginSerializer(TestBase):
+class AuthUserLoginSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
 
@@ -88,7 +88,7 @@ class TestAuthUserLoginSerializer(TestBase):
             self.serializer.load({'email': self.user.email})
 
 
-class TestAuthUserConfirmResetPasswordSerializer(TestBase):
+class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.valid_token = 'valid_token'

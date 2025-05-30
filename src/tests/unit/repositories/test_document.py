@@ -3,10 +3,10 @@ from datetime import datetime
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.user_factory import UserFactory
 from app.repositories.document import DocumentRepository
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestDocumentRepository(TestBase):
+class DocumentRepositoryTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.repository = DocumentRepository()

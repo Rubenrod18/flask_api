@@ -1,8 +1,8 @@
 from app.middleware import ContentTypeValidator, Middleware
-from tests.base.base_api_test import TestBaseApi
+from tests.base.base_api_test import BaseApiTest
 
 
-class TestMiddleware(TestBaseApi):
+class MiddlewareTest(BaseApiTest):
     def setUp(self):
         super().setUp()
 

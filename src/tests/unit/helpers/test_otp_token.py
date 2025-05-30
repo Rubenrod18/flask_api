@@ -3,10 +3,10 @@ import time
 from werkzeug.exceptions import BadRequest
 
 from app.helpers.otp_token import OTPTokenManager
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestOTPTokenManager(TestBase):
+class OTPTokenManagerTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.secret_key = 'test_secret'

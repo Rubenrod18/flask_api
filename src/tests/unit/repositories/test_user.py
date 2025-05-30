@@ -2,10 +2,10 @@ from datetime import datetime
 
 from app.database.factories.user_factory import UserFactory
 from app.repositories.user import UserRepository
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestUserRepository(TestBase):
+class UserRepositoryTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.repository = UserRepository()

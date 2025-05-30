@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta, UTC
 
 from app.database.factories.document_factory import DocumentFactory
-from tests.integration.blueprints.documents._base_integration_test import _BaseDocumentsIntegrationTest
+from tests.integration.blueprints.documents._base_integration_test import _BaseDocumentEndpointsTest
 
 
-class DeleteDocumentsIntegrationTest(_BaseDocumentsIntegrationTest):
+class DeleteDocumentEndpointTest(_BaseDocumentEndpointsTest):
     def setUp(self):
         super().setUp()
         self.document = DocumentFactory(

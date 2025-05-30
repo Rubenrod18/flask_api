@@ -1,9 +1,9 @@
 from flask_jwt_extended import create_refresh_token, decode_token
 
-from ._base_auth_integration_test import _BaseAuthIntegrationTest
+from ._base_auth_integration_test import _BaseAuthEndpointsTest
 
 
-class RefreshAuthIntegrationTest(_BaseAuthIntegrationTest):
+class RefreshAuthEndpointTest(_BaseAuthEndpointsTest):
     def test_user_refresh_token(self):
         refresh_token = create_refresh_token(identity=str(self.admin_user.id))
 

@@ -1,7 +1,7 @@
-from ._base_integration_test import _BaseUsersIntegrationTest
+from ._base_integration_test import _BaseUserEndpointsTest
 
 
-class ExcelUsersIntegrationTest(_BaseUsersIntegrationTest):
+class ExcelUserEndpointTest(_BaseUserEndpointsTest):
     def setUp(self):
         super().setUp()
         self.endpoint = f'{self.base_path}/xlsx'

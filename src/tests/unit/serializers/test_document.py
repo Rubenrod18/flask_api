@@ -11,10 +11,10 @@ from app.managers import DocumentManager
 from app.models import Document
 from app.repositories import DocumentRepository
 from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestDocumentSerializer(TestBase):
+class DocumentSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.user = UserFactory()

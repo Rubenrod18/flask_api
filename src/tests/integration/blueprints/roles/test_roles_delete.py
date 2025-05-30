@@ -1,8 +1,8 @@
 from app.database.factories.role_factory import RoleFactory
-from tests.integration.blueprints.roles._base_integration_test import _BaseRolesIntegrationTest
+from tests.integration.blueprints.roles._base_integration_test import _BaseRoleEndpointsTest
 
 
-class DeleteRolesIntegrationTest(_BaseRolesIntegrationTest):
+class DeleteRoleEndpointTest(_BaseRoleEndpointsTest):
     def setUp(self):
         super().setUp()
         self.role = RoleFactory(deleted_at=None)

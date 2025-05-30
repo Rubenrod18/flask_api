@@ -1,9 +1,9 @@
 """Module for testing basic blueprint."""
 
-from tests.base.base_api_test import TestBaseApi
+from tests.base.base_api_test import BaseApiTest
 
 
-class TestBasicEndpoints(TestBaseApi):
+class BasicEndpointTest(BaseApiTest):
     def test_welcome_api(self):
         response = self.client.get(f'{self.base_path}/welcome', json={})
 

@@ -2,10 +2,10 @@ from marshmallow import ValidationError
 
 from app.helpers.sqlalchemy_query_builder import EQUAL_OP, GREATER_THAN_OP
 from app.serializers import SearchSerializer
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestSearchSerializer(TestBase):
+class SearchSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.serializer = SearchSerializer()

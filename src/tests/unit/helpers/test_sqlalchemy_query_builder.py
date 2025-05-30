@@ -10,7 +10,7 @@ from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Document, Role, User
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
 class _TestBaseCreateSearchQuery:
@@ -35,7 +35,7 @@ class _TestBaseCreateSearchQuery:
         return {item[0] for item in query.all()}
 
 
-class TestOrderByClauseBuilder(TestBase):
+class OrderByClauseBuilderTest(BaseTest):
     def test_ordering_asc_and_desc(self):
         doc = DocumentFactory(name='Invoice 2024-01')
         doc_2 = DocumentFactory(name='Employee Contract John Doe')
@@ -74,7 +74,7 @@ class TestOrderByClauseBuilder(TestBase):
                 self.assertEqual(query.first().name, expected_record)
 
 
-class TestStringQueryClauseBuilder(TestBase):
+class StringQueryClauseBuilderTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.string_clause_helper = rqo.StringQueryClauseBuilder()
@@ -115,7 +115,7 @@ class TestStringQueryClauseBuilder(TestBase):
                     self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
 
 
-class TestComparisonClauseBuilder(TestBase):
+class ComparisonClauseBuilderTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.operator_clause_helper = rqo.ComparisonClauseBuilder()
@@ -313,7 +313,7 @@ class TestComparisonClauseBuilder(TestBase):
                     self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
 
 
-class TestSQLAlchemyQueryBuilderStrings(TestBase, _TestBaseCreateSearchQuery):
+class SQLAlchemyQueryBuilderStringsTest(BaseTest, _TestBaseCreateSearchQuery):
     def setUp(self):
         super().setUp()
         self.query_helper = rqo.QueryClauseBuilder()
@@ -402,7 +402,7 @@ class TestSQLAlchemyQueryBuilderStrings(TestBase, _TestBaseCreateSearchQuery):
                 self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
 
-class TestSQLAlchemyQueryBuilderNoStrings(TestBase, _TestBaseCreateSearchQuery):
+class SQLAlchemyQueryBuilderNoStringsTest(BaseTest, _TestBaseCreateSearchQuery):
     def setUp(self):
         super().setUp()
         self.query_helper = rqo.QueryClauseBuilder()

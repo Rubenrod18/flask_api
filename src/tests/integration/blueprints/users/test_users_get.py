@@ -3,10 +3,10 @@ from app.extensions import db
 from app.models import Role
 from app.models.role import TEAM_LEADER_ROLE
 
-from ._base_integration_test import _BaseUsersIntegrationTest
+from ._base_integration_test import _BaseUserEndpointsTest
 
 
-class GetUsersIntegrationTest(_BaseUsersIntegrationTest):
+class GetUserEndpointTest(_BaseUserEndpointsTest):
     def setUp(self):
         super().setUp()
         self.role = db.session.query(Role).filter_by(name=TEAM_LEADER_ROLE).first()

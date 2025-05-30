@@ -3,10 +3,10 @@ import os
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 
-from ._base_integration_test import _BaseUsersIntegrationTest
+from ._base_integration_test import _BaseUserEndpointsTest
 
 
-class SaveUsersIntegrationTest(_BaseUsersIntegrationTest):
+class SaveUserEndpointTest(_BaseUserEndpointsTest):
     def test_create_user_endpoint(self):
         role = RoleFactory()
 

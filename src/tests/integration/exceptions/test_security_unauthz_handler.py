@@ -1,8 +1,8 @@
 from app.database.factories.user_factory import UserFactory
-from tests.base.base_api_test import TestBaseApi
+from tests.base.base_api_test import BaseApiTest
 
 
-class TestExceptions(TestBaseApi):
+class ExceptionsTest(BaseApiTest):
     def test_custom_unauthorized_handler_exception(self):
         user = UserFactory(active=True, deleted_at=None)
 

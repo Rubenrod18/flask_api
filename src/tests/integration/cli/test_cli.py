@@ -2,10 +2,10 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_sqlalchemy.model import DefaultMeta
 
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestCli(TestBase):
+class CliTest(BaseTest):
     def test_is_cli_seeder_ok_execute_all_seeders_process_executed_successfully(  # noqa
         self,
     ):

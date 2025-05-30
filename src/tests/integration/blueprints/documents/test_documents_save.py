@@ -4,10 +4,10 @@ from flask import current_app
 
 from app.helpers.file_storage.local_storage import LocalStorage
 
-from ._base_integration_test import _BaseDocumentsIntegrationTest
+from ._base_integration_test import _BaseDocumentEndpointsTest
 
 
-class GetDocumentsIntegrationTest(_BaseDocumentsIntegrationTest):
+class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
     def setUp(self):
         super().setUp()
         self.local_storage = LocalStorage()

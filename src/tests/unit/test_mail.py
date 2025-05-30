@@ -1,10 +1,10 @@
 """Module for testing mail."""
 
 from app.extensions import mail
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestMail(TestBase):
+class MailTest(BaseTest):
     def test_mail_record_messages(self):
         """Check if an email is sent."""
         with mail.record_messages() as outbox:

@@ -8,10 +8,10 @@ from app.managers import RoleManager
 from app.models import Role
 from app.repositories import RoleRepository
 from app.serializers import RoleSerializer
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestRoleSerializer(TestBase):
+class RoleSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.role = RoleFactory(

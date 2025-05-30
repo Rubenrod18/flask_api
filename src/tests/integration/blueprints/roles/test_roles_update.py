@@ -1,9 +1,9 @@
 from app.database.factories.role_factory import RoleFactory
 
-from ._base_integration_test import _BaseRolesIntegrationTest
+from ._base_integration_test import _BaseRoleEndpointsTest
 
 
-class UpdateRolesIntegrationTest(_BaseRolesIntegrationTest):
+class UpdateRoleEndpointTest(_BaseRoleEndpointsTest):
     def setUp(self):
         super().setUp()
         self.role = RoleFactory(deleted_at=None)

@@ -70,7 +70,7 @@ class _CustomFlaskClient(FlaskClient):
         return self.__make_request('DELETE', *args, **kwargs)
 
 
-class TestBase(unittest.TestCase):
+class BaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__engine = None

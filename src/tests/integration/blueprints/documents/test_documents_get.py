@@ -3,10 +3,10 @@ from urllib.parse import urlparse
 
 from app.database.factories.document_factory import DocumentFactory
 
-from ._base_integration_test import _BaseDocumentsIntegrationTest
+from ._base_integration_test import _BaseDocumentEndpointsTest
 
 
-class GetDocumentsIntegrationTest(_BaseDocumentsIntegrationTest):
+class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
     def setUp(self):
         super().setUp()
         self.document = DocumentFactory(

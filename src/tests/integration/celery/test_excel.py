@@ -5,10 +5,10 @@ from urllib.parse import urlparse
 from app.celery.excel.tasks import export_user_data_in_excel_task
 from app.database.factories.user_factory import UserFactory
 from app.utils.constants import MS_EXCEL_MIME_TYPE
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestExcelTask(TestBase):
+class ExcelTaskTest(BaseTest):
     def test_export_excel_task(self):
         user = UserFactory()
         user_id = user.id

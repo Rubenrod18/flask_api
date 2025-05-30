@@ -3,10 +3,10 @@ from unittest.mock import MagicMock, patch
 
 from celery import states
 
-from tests.base.base_api_test import TestBaseApi
+from tests.base.base_api_test import BaseApiTest
 
 
-class TestTaskEndpoints(TestBaseApi):
+class TaskEndpointTest(BaseApiTest):
     def setUp(self):
         super().setUp()
         self.base_path = f'{self.base_path}/tasks'

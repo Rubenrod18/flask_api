@@ -1,7 +1,7 @@
-from ._base_integration_test import _BaseUsersIntegrationTest
+from ._base_integration_test import _BaseUserEndpointsTest
 
 
-class WordAndExcelUsersIntegrationTest(_BaseUsersIntegrationTest):
+class WordAndExcelUserEndpointTest(_BaseUserEndpointsTest):
     def setUp(self):
         super().setUp()
         self.endpoint = f'{self.base_path}/word_and_xlsx'

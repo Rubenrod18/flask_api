@@ -2,10 +2,10 @@ from datetime import datetime
 
 from app.database.factories.role_factory import RoleFactory
 from app.repositories.role import RoleRepository
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestRoleRepository(TestBase):
+class RoleRepositoryTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.repository = RoleRepository()

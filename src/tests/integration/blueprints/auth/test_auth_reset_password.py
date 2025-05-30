@@ -1,9 +1,9 @@
 from unittest import mock
 
-from ._base_auth_integration_test import _BaseAuthIntegrationTest
+from ._base_auth_integration_test import _BaseAuthEndpointsTest
 
 
-class RequestResetPasswordAuthIntegrationTest(_BaseAuthIntegrationTest):
+class RequestResetPasswordAuthEndpointTest(_BaseAuthEndpointsTest):
     def setUp(self):
         super().setUp()
         self.endpoint = f'{self.base_path}/reset_password'

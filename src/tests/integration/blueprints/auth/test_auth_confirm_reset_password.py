@@ -2,10 +2,10 @@ import os
 
 from app.helpers.otp_token import OTPTokenManager
 
-from ._base_auth_integration_test import _BaseAuthIntegrationTest
+from ._base_auth_integration_test import _BaseAuthEndpointsTest
 
 
-class ConfirmResetPasswordAuthIntegrationTest(_BaseAuthIntegrationTest):
+class ConfirmResetPasswordEndpointTest(_BaseAuthEndpointsTest):
     def setUp(self):
         super().setUp()
         self.otp_token_manager = OTPTokenManager(

@@ -20,10 +20,10 @@ from app.database.factories.user_factory import UserFactory
 from app.extensions import db, mail
 from app.helpers.otp_token import OTPTokenManager
 from app.models.role import ADMIN_ROLE
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestCeleryTasks(TestBase):
+class CeleryTasksTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.otp_token_manager = OTPTokenManager(

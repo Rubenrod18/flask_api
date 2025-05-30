@@ -1,7 +1,7 @@
-from ._base_auth_integration_test import _BaseAuthIntegrationTest
+from ._base_auth_integration_test import _BaseAuthEndpointsTest
 
 
-class LogoutAuthIntegrationTest(_BaseAuthIntegrationTest):
+class LogoutAuthEndpointTest(_BaseAuthEndpointsTest):
     def setUp(self):
         super().setUp()
         self.endpoint = f'{self.base_path}/logout'

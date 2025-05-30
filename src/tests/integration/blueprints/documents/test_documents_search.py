@@ -2,10 +2,10 @@ from datetime import datetime, timedelta, UTC
 
 from app.database.factories.document_factory import DocumentFactory
 
-from ._base_integration_test import _BaseDocumentsIntegrationTest
+from ._base_integration_test import _BaseDocumentEndpointsTest
 
 
-class SearchDocumentsIntegrationTest(_BaseDocumentsIntegrationTest):
+class SearchDocumentEndpointTest(_BaseDocumentEndpointsTest):
     def setUp(self):
         super().setUp()
         self.document = DocumentFactory(

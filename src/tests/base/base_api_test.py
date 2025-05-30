@@ -1,10 +1,10 @@
 import os
 
 from app.database.factories.user_factory import AdminUserFactory, TeamLeaderUserFactory, WorkerUserFactory
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestBaseApi(TestBase):
+class BaseApiTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.base_path = '/api'

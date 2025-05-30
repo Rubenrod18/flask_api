@@ -5,10 +5,10 @@ import flask_security
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 
-from ._base_auth_integration_test import _BaseAuthIntegrationTest
+from ._base_auth_integration_test import _BaseAuthEndpointsTest
 
 
-class LoginAuthIntegrationTest(_BaseAuthIntegrationTest):
+class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
     def setUp(self):
         super().setUp()
         self.endpoint = f'{self.base_path}/login'

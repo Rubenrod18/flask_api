@@ -9,10 +9,10 @@ from app.managers import UserManager
 from app.models import Role, User
 from app.repositories import UserRepository
 from app.serializers import UserExportWordSerializer, UserSerializer
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestUserSerializer(TestBase):
+class UserSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.user = UserFactory(

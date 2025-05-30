@@ -6,10 +6,10 @@ from app.celery.word.tasks import export_user_data_in_word_task
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.utils.constants import MS_WORD_MIME_TYPE, PDF_MIME_TYPE
-from tests.base.base_test import TestBase
+from tests.base.base_test import BaseTest
 
 
-class TestWordTask(TestBase):
+class WordTaskTest(BaseTest):
     def run_task(self, created_by: int, request_data: dict, to_pdf: int = 0):
         result = export_user_data_in_word_task.apply(args=(created_by, request_data, to_pdf)).get()
 

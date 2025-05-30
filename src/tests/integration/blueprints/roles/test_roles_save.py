@@ -1,9 +1,9 @@
 from app.database.factories.role_factory import RoleFactory
 
-from ._base_integration_test import _BaseRolesIntegrationTest
+from ._base_integration_test import _BaseRoleEndpointsTest
 
 
-class SaveRolesIntegrationTest(_BaseRolesIntegrationTest):
+class SaveRoleEndpointTest(_BaseRoleEndpointsTest):
     def test_save_role_endpoint(self):
         ignore_fields = {'id', 'created_at', 'updated_at', 'deleted_at', 'name'}
         payload = RoleFactory.build_dict(exclude=ignore_fields)

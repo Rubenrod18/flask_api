@@ -6,10 +6,10 @@ from flask import current_app
 from app.database.factories.document_factory import DocumentFactory
 from app.helpers.file_storage.local_storage import LocalStorage
 
-from ._base_integration_test import _BaseDocumentsIntegrationTest
+from ._base_integration_test import _BaseDocumentEndpointsTest
 
 
-class UpdateDocumentsIntegrationTest(_BaseDocumentsIntegrationTest):
+class UpdateDocumentEndpointTest(_BaseDocumentEndpointsTest):
     def setUp(self):
         super().setUp()
         self.document = DocumentFactory(
