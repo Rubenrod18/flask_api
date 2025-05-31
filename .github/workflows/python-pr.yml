@@ -48,9 +48,20 @@ jobs:
             git
         working-directory: ${{ env.working-directory }}
 
+      - name: Install and config Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry config virtualenvs.create false
+
+      - name: Validate pyproject.toml with Poetry Check
+        run: |
+          poetry check
+        working-directory: ${{ env.working-directory }}
+
       - name: Install dependencies
         run: |
-          pip install -r requirements-dev.txt
+          poetry install --with dev
         working-directory: ${{ env.working-directory }}
 
       - name: Set up .env file

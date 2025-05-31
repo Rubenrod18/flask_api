@@ -48,7 +48,12 @@ RUN apt-get update && apt-get install --assume-yes \
 # -------------------------------------------
 # Install Python Dependencies
 # -------------------------------------------
-RUN pip install -r requirements-dev.txt
+# Upgrade pip and setuptools, then install Poetry for managing dependencies.
+# Configure Poetry to disable virtual environment creation, ensuring packages are installed globally.
+# Install only necessary dependencies for the specified environment.
+RUN pip install --no-cache-dir --upgrade pip setuptools poetry \
+  && poetry config virtualenvs.create false \
+  && poetry install
 
 # -------------------------------------------
 # Initialize Git Repository (Optional)
