@@ -3,12 +3,13 @@ import os
 from shutil import copyfile
 
 from app.exceptions import FileEmptyError
-from app.helpers.file_storage.storage_interface import IFileStorage
+
+from .base import BaseFileStorage
 
 logger = logging.getLogger(__name__)
 
 
-class LocalStorage(IFileStorage):
+class LocalStorage(BaseFileStorage):
     def save_bytes(self, file_content: bytes, filename: str, override: bool = False):
         try:
             if not override and os.path.exists(filename):

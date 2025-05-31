@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class IFileStorage(ABC):
+class BaseFileStorage(ABC):
     """Abstract interface for file storage operations."""
 
     @abstractmethod

@@ -75,6 +75,7 @@ The application follows a Domain Driven Design arquitecture:
 
 5. **Database Model**: Defines the structure of the data as Python classes (typically using an ORM), mapping objects to database tables. Handles schema definition, relationships, and direct interaction with the database.
 
+6. **File Storage**: Responsible for saving, retrieving, and deleting files. Provides an interface for file operations such as uploading, downloading, copying, and deleting files. Interacts exclusively with the Service layer, keeping file-handling logic separate from business and data access logic.
 
 ---
 
