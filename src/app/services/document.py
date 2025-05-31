@@ -7,7 +7,7 @@ from flask_login import current_user
 from werkzeug.exceptions import InternalServerError
 
 from app.extensions import db
-from app.helpers.file_storage.local_storage import LocalStorage
+from app.file_storages import LocalStorage
 from app.managers import DocumentManager
 from app.models import Document
 from app.services.base import BaseService

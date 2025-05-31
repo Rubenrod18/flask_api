@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from flask import current_app
 
 from app.database.factories.document_factory import DocumentFactory
-from app.helpers.file_storage.local_storage import LocalStorage
+from app.file_storages import LocalStorage
 
 from ._base_integration_test import _BaseDocumentEndpointsTest
 

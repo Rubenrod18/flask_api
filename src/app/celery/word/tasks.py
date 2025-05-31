@@ -10,7 +10,7 @@ from flask import current_app
 
 from app.celery import ContextTask
 from app.extensions import celery, db
-from app.helpers.file_storage.local_storage import LocalStorage
+from app.file_storages import LocalStorage
 from app.helpers.libreoffice import convert_to
 from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
 from app.models import Document, User
