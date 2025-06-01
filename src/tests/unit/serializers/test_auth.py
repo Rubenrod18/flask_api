@@ -16,9 +16,9 @@ class AuthUserLoginSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
 
-        self.plain_password = 'securepassword'
+        self.plain_password = self.faker.password()
         self.user = UserFactory(
-            email='test@example.com', password=User.ensure_password(self.plain_password), active=True, deleted_at=None
+            email=self.faker.email(), password=User.ensure_password(self.plain_password), active=True, deleted_at=None
         )
 
         self.user_manager = MagicMock(spec=UserManager)
@@ -46,7 +46,7 @@ class AuthUserLoginSerializerTest(BaseTest):
         self.user_manager.find_by_email.return_value = None
 
         with self.assertRaises(Unauthorized) as context:
-            self.serializer.load({'email': 'notfound@example.com', 'password': 'password'})
+            self.serializer.load({'email': self.faker.email(), 'password': 'password'})
 
         self.assertEqual(context.exception.code, Unauthorized.code)
         self.assertEqual(context.exception.description, 'Credentials invalid')
@@ -91,9 +91,11 @@ class AuthUserLoginSerializerTest(BaseTest):
 class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
-        self.valid_token = 'valid_token'
-        self.valid_email = 'user@example.com'
-        self.valid_password = 'SecurePassword123'
+        self.valid_token = self.faker.sha256()
+        self.valid_email = self.faker.email()
+        self.valid_password = self.faker.password(
+            length=12, special_chars=True, digits=True, upper_case=True, lower_case=True
+        )
         self.user = UserFactory(email=self.valid_email, active=True, deleted_at=None)
 
         self.user_manager = MagicMock(spec=UserManager)
@@ -122,7 +124,7 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
         with self.assertRaises(Forbidden) as context:
             self.serializer.load(
                 {
-                    'token': 'invalid_token',
+                    'token': self.faker.sha256(),
                     'password': self.valid_password,
                     'confirm_password': self.valid_password,
                 }
@@ -189,8 +191,12 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
             self.serializer.load(
                 {
                     'token': self.valid_token,
-                    'password': 'SecurePassword123',
-                    'confirm_password': 'DifferentPassword123',
+                    'password': self.faker.password(
+                        length=12, special_chars=True, digits=True, upper_case=True, lower_case=True
+                    ),
+                    'confirm_password': self.faker.password(
+                        length=12, special_chars=True, digits=True, upper_case=True, lower_case=True
+                    ),
                 }
             )
 

@@ -17,7 +17,7 @@ class BaseFileStorage(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_basename(self, filename: str, include_path: bool = False) -> str:
+    def get_basename(self, filename: str) -> str:
         raise NotImplementedError
 
     @abstractmethod

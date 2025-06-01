@@ -6,7 +6,7 @@ from tests.base.base_test import BaseTest
 
 
 class CliTest(BaseTest):
-    def test_is_cli_seeder_ok_execute_all_seeders_process_executed_successfully(  # noqa
+    def test_is_cli_seeder_ok_execute_all_seeders_process_executed_successfully(
         self,
     ):
         result = self.runner.invoke(args=['seed'])

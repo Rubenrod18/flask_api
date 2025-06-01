@@ -83,7 +83,7 @@ class OrderByClauseBuilder:
         Request fields:
         >>> from app.models.user import User
         >>> db_model = User
-        >>> request_data = {'order': [{'sorting': 'asc', 'field_name': 'created_at'}]}  # noqa
+        >>> request_data = {'order': [{'sorting': 'asc', 'field_name': 'created_at'}]}
         >>> OrderByClauseBuilder.build_order_by(db_model, request_data)
         <flask_sqlalchemy.query.Query object at 0x7f9edf6954f0>
 

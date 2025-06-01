@@ -31,4 +31,4 @@ class CreateDatabaseCli(BaseCli):
 
         self.create_database_if_not_exists(dbname)
 
-        print(f"Database '{dbname}' exists or was created successfully!")  # noqa
+        print(f"Database '{dbname}' exists or was created successfully!")  # noqa: T201

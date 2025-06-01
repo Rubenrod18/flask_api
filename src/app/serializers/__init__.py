@@ -16,7 +16,7 @@ In short, marshmallow schemas can be used to:
 References
 ----------
 Pre-/Post-processor Invocation Order:
-https://marshmallow.readthedocs.io/en/stable/extending.html?highlight=step1#pre-post-processor-invocation-order  # noqa
+https://marshmallow.readthedocs.io/en/stable/extending.html?highlight=step1#pre-post-processor-invocation-order
 
 """
 

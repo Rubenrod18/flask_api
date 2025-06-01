@@ -18,7 +18,7 @@ There are three kinds of tests created:
     Integration testing means checking if different modules are working
     fine when combined together as a group.
 
-3. Functional testing
+3. Functional testing / E2E testing
     Functional testing means testing a slice of functionality in the
     system (may interact with dependencies) to confirm that the code
     is doing the right things.
@@ -43,40 +43,7 @@ References
 ----------
 `The Differences Between Unit Testing, Integration Testing and
 Functional Testing
-<https://www.softwaretestinghelp.com/the-difference-between-unit-integration-and-functional-testing/>`_.  # noqa
-
-Examples
---------
-How to usage::
-
-    source venv/bin/activate
-    pytest
-
-How to call a specific test::
-
-    source venv/bin/activate
-    pytest tests/blueprints/test_base.py
-
-How to call a specific test function::
-
-    source venv/bin/activate
-    pytest -k test_welcome_api
-
-You can use coverage package for running tests as well::
-
-    source venv/bin/activate
-    coverage run -m pytest
-
-And get a report coverage stadistics on modules::
-
-    source venv/bin/activate
-    coverage report -m
-
-For a nicer presentation, use coverage html to get annotated HTML
-listings detailing missed lines::
-
-    source venv/bin/activate
-    coverage html
+<https://www.softwaretestinghelp.com/the-difference-between-unit-integration-and-functional-testing/>`_.
 
 References
 ----------
@@ -84,9 +51,10 @@ How can I test Celery tasks?
 
 Depends on what exactly you want to be testing.
 
-    - Test the task code directly. Don't call "task.delay(...)" just call "task(...)" from your unit tests.  # noqa
-    - Use CELERY_ALWAYS_EAGER. This will cause your tasks to be called immediately at the point you say "task.delay(...)", so you can test the whole path (but not any asynchronous behavior).  # noqa
+    - Test the task code directly. Don't call "task.delay(...)" just call "task(...)" from your unit tests.
+    - Use CELERY_ALWAYS_EAGER. This will cause your tasks to be called immediately at the point you say
+      "task.delay(...)", so you can test the whole path (but not any asynchronous behavior).
 
-https://stackoverflow.com/questions/12078667/how-do-you-unit-test-a-celery-task  # noqa
+https://stackoverflow.com/questions/12078667/how-do-you-unit-test-a-celery-task
 
 """

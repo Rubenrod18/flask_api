@@ -56,7 +56,9 @@ class TestLocalStorage(BaseTest):
 
     def test_get_basename(self):
         self.assertEqual(self.local_storage.get_basename('/tmp/myfile.txt'), 'myfile')
-        self.assertEqual(self.local_storage.get_basename('some/dir/foo.bar', include_path=True), 'some/dir/foo')
+        self.assertEqual(
+            self.local_storage.get_basename(f'{self.app.config["ROOT_DIRECTORY"]}/src/config.py'), 'config'
+        )
 
     def test_rename(self):
         new_name = self.file_path + '_renamed'

@@ -49,4 +49,4 @@ class LibreOfficeError(Exception):
 
 
 if __name__ == '__main__':
-    print('Converted to ' + convert_to(sys.argv[1], sys.argv[2]))  # noqa
+    print('Converted to ' + convert_to(sys.argv[1], sys.argv[2]))  # noqa: T201

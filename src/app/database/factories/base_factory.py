@@ -1,12 +1,6 @@
 import factory
-from faker import Faker
-from faker.providers import date_time, person
 
 from app.extensions import db
-
-faker = Faker()
-faker.add_provider(person)
-faker.add_provider(date_time)
 
 
 class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):

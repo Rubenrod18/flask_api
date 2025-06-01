@@ -36,13 +36,8 @@ class LocalStorage(BaseFileStorage):
     def get_filesize(self, filepath: str) -> int:
         return os.path.getsize(filepath)
 
-    def get_basename(self, filename: str, include_path: bool = False) -> str:
-        if include_path:
-            basename = os.path.splitext(filename)[0]
-        else:
-            basename = os.path.splitext(os.path.basename(filename))[0]
-
-        return basename
+    def get_basename(self, filename: str) -> str:
+        return os.path.splitext(os.path.basename(filename))[0]
 
     def rename(self, src: str, dst: str) -> None:
         os.rename(src, dst)

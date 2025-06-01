@@ -19,7 +19,7 @@ def init_app(app: Flask) -> None:
     app.errorhandler(ValidationError)(_handle_validation_error_exception)
 
     @security.unauthz_handler
-    def custom_unauthorized_handler(func_name: str, params: list[str]) -> None:  # noqa
+    def custom_unauthorized_handler(func_name: str, params: list[str]) -> None:  # noqa: F841
         """Custom unauthorized handler.
 
         Parameters

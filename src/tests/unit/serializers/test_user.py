@@ -1,4 +1,5 @@
 from datetime import datetime, UTC
+from random import choice
 from unittest.mock import MagicMock
 
 from marshmallow import ValidationError
@@ -7,6 +8,7 @@ from werkzeug.exceptions import BadRequest, NotFound
 from app.database.factories.user_factory import UserFactory
 from app.managers import UserManager
 from app.models import Role, User
+from app.models.user import Genre
 from app.repositories import UserRepository
 from app.serializers import UserExportWordSerializer, UserSerializer
 from tests.base.base_test import BaseTest
@@ -16,11 +18,11 @@ class UserSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.user = UserFactory(
-            name='Test',
-            last_name='User',
-            email='test@example.com',
-            password='securepassword123',
-            genre='m',
+            name=self.faker.name(),
+            last_name=self.faker.last_name(),
+            email=self.faker.email(),
+            password=self.faker.password(length=12, special_chars=True, digits=True, upper_case=True, lower_case=True),
+            genre=choice(Genre.to_list()),
             birth_date='1990-01-01',
             active=True,
             created_at=datetime.now(UTC),

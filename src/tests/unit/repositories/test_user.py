@@ -11,7 +11,7 @@ class UserRepositoryTest(BaseTest):
         self.repository = UserRepository()
 
     def test_create_user(self):
-        user_data = UserFactory.build_dict(exclude=('roles',))
+        user_data = UserFactory.build_dict(exclude={'roles'})
 
         user = self.repository.create(**user_data)
 
