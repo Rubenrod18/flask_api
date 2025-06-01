@@ -29,7 +29,7 @@ class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
     @validates('id')
     def validate_id(self, role_id: int):
         args = (self._role_manager.model.deleted_at.is_(None),)
-        role = self._role_manager.find(role_id, *args)
+        role = self._role_manager.find_by_id(role_id, *args)
 
         if role is None or role.deleted_at is not None:
             raise NotFound('Role not found')

@@ -15,7 +15,7 @@ class BaseManager:
         return self.repository.create(**kwargs)
 
     def save(self, record_id: int, **kwargs) -> db.Model:
-        record = self.find(record_id)
+        record = self.find_by_id(record_id)
 
         for key, value in kwargs.items():
             setattr(record, key, value)
@@ -39,9 +39,9 @@ class BaseManager:
         }
 
     def delete(self, record_id: int) -> db.Model:
-        record = self.find(record_id)
+        record = self.find_by_id(record_id)
         return self.repository.delete(record)
 
-    def find(self, record_id: int, *args) -> db.Model | None:
+    def find_by_id(self, record_id: int, *args) -> db.Model | None:
         args += (self.model.id == record_id,)
         return self.repository.find(*args)

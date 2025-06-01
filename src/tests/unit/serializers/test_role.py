@@ -23,7 +23,7 @@ class RoleSerializerTest(BaseTest):
             deleted_at=None,
         )
         self.role_manager = MagicMock(spec=RoleManager)
-        self.role_manager.find.return_value = self.role
+        self.role_manager.find_by_id.return_value = self.role
         self.role_manager.repository = MagicMock(spec=RoleRepository)
         self.role_manager.model = MagicMock(spec=Role)
         self.role_manager.model.deleted_at.is_.return_value = None
@@ -43,7 +43,7 @@ class RoleSerializerTest(BaseTest):
         self.serializer.load({'id': 1}, partial=True)
 
     def test_validate_nonexistent_role_id(self):
-        self.role_manager.find.return_value = None
+        self.role_manager.find_by_id.return_value = None
 
         with self.assertRaises(NotFound) as context:
             self.serializer.validate_id(999)

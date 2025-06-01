@@ -17,7 +17,7 @@ class VerifyRoleId(fields.Int, ManagerMixin):
         self._role_manager = self.get_manager('role_manager')
 
     def _deserialize(self, value, attr, data, **kwargs):  # pylint: disable=unused-argument
-        role = self._role_manager.find(value)
+        role = self._role_manager.find_by_id(value)
 
         if role is None or role.deleted_at is not None:
             raise NotFound('Role not found')
@@ -55,7 +55,7 @@ class UserSerializer(ma.SQLAlchemySchema, ManagerMixin):
     @validates('id')
     def validate_id(self, user_id: int):
         args = (self._user_manager.model.deleted_at.is_(None),)
-        user = self._user_manager.find(user_id, *args)
+        user = self._user_manager.find_by_id(user_id, *args)
 
         if user is None or user.deleted_at is not None:
             raise NotFound('User not found')
