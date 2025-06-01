@@ -28,7 +28,15 @@ class MySQLRepository(BaseRepository):
         return self.model(**kwargs)
 
     def find(self, *args, **kwargs) -> db.Model | None:
-        return db.session.query(self.model).filter(*args).first()
+        query = db.session.query(self.model)
+
+        if args:
+            query = query.filter(*args)
+
+        if kwargs:
+            query = query.filter_by(**kwargs)
+
+        return query.first()
 
     def delete(self, record: db.Model, force_delete: bool = False) -> db.Model | int:
         if force_delete:

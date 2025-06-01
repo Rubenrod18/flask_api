@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, UTC
 
-from app.database.factories.user_factory import UserFactory
+from app.database.factories.user_factory import AdminUserFactory, UserFactory
 from app.extensions import db
 from app.models import User
 from app.repositories.user import UserRepository
@@ -26,24 +26,42 @@ class UserRepositoryTest(BaseTest):
         self.assertIsNone(db.session.query(User).filter_by(name=user_data['name']).one_or_none())
 
     def test_find_user(self):
-        user = UserFactory()
+        admin = AdminUserFactory(deleted_at=None, active=True)
+        user = UserFactory(deleted_at=datetime.now(UTC), created_by_user=admin, active=False)
 
         test_cases = [
-            ('name', user.name),
-            ('fs_uniquifier', user.fs_uniquifier),
-            ('last_name', user.last_name),
-            ('email', user.email),
-            ('genre', user.genre),
-            ('birth_date', user.birth_date),
-            ('active', user.active),
-            ('created_at', user.created_at),
-            ('updated_at', user.updated_at),
-            ('deleted_at', user.deleted_at),
+            ('id', (), {'id': user.id}),
+            ('fs_uniquifier', (), {'fs_uniquifier': user.fs_uniquifier}),
+            ('created_by', (), {'created_by': user.created_by_user.id}),
+            ('name', (), {'name': user.name}),
+            ('last_name', (), {'last_name': user.last_name}),
+            ('email', (), {'email': user.email}),
+            ('genre', (), {'genre': user.genre}),
+            ('birth_date', (), {'birth_date': user.birth_date}),
+            ('active', (), {'active': user.active}),
+            ('created_at', (), {'created_at': user.created_at}),
+            ('updated_at', (), {'updated_at': user.updated_at}),
+            ('deleted_at', (), {'deleted_at': user.deleted_at}),
+            ('id', (User.id == user.id,), {}),
+            ('fs_uniquifier', (User.fs_uniquifier == user.fs_uniquifier,), {}),
+            ('created_by', (User.created_by == user.created_by_user.id,), {}),
+            ('name', (User.name == user.name,), {}),
+            ('last_name', (User.last_name == user.last_name,), {}),
+            ('email', (User.email == user.email,), {}),
+            ('genre', (User.genre == user.genre,), {}),
+            ('birth_date', (User.birth_date == user.birth_date,), {}),
+            ('active', (User.active == user.active,), {}),
+            ('created_at', (User.created_at == user.created_at,), {}),
+            ('updated_at', (User.updated_at == user.updated_at,), {}),
+            ('deleted_at', (User.deleted_at == user.deleted_at,), {}),
         ]
 
-        for field_name, field_value in test_cases:
-            with self.subTest(msg=field_name, field_value=field_value):
-                self.assertTrue(self.repository.find(**{field_name: field_value}))
+        for description, args, kwargs in test_cases:
+            with self.subTest():
+                result = self.repository.find(*args, **kwargs)
+                self.assertIsNotNone(result, (description, args, kwargs))
+                self.assertTrue(isinstance(result, User), (description, args, kwargs))
+                self.assertEqual(result.id, user.id, (description, args, kwargs))
 
     def test_delete_soft_user(self):
         user = UserFactory()

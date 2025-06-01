@@ -28,20 +28,37 @@ class DocumentRepositoryTest(BaseTest):
 
     def test_find_document(self):
         user = UserFactory()
-        document = DocumentFactory(created_by_user=user)
+        document = DocumentFactory(created_by_user=user, deleted_at=None)
 
         test_cases = [
-            ('name', document.name),
-            ('size', document.size),
-            ('directory_path', document.directory_path),
-            ('internal_filename', document.internal_filename),
-            ('mime_type', document.mime_type),
-            ('created_by_user', document.created_by_user),
+            ('id', (), {'id': document.id}),
+            ('name', (), {'name': document.name}),
+            ('size', (), {'size': document.size}),
+            ('directory_path', (), {'directory_path': document.directory_path}),
+            ('internal_filename', (), {'internal_filename': document.internal_filename}),
+            ('mime_type', (), {'mime_type': document.mime_type}),
+            ('created_by', (), {'created_by': document.created_by}),
+            ('created_at', (), {'created_at': document.created_at}),
+            ('updated_at', (), {'updated_at': document.updated_at}),
+            ('deleted_at', (), {'deleted_at': None}),
+            ('id', (Document.id == document.id,), {}),
+            ('name', (Document.name == document.name,), {}),
+            ('size', (Document.size == document.size,), {}),
+            ('directory_path', (Document.directory_path == document.directory_path,), {}),
+            ('internal_filename', (Document.internal_filename == document.internal_filename,), {}),
+            ('mime_type', (Document.mime_type == document.mime_type,), {}),
+            ('created_by', (Document.created_by == document.created_by,), {}),
+            ('created_at', (Document.created_at == document.created_at,), {}),
+            ('updated_at', (Document.updated_at == document.updated_at,), {}),
+            ('deleted_at', (Document.deleted_at.is_(None),), {}),
         ]
 
-        for field_name, field_value in test_cases:
-            with self.subTest(msg=field_name, field_value=field_value):
-                self.assertTrue(self.repository.find(**{field_name: field_value}))
+        for description, args, kwargs in test_cases:
+            with self.subTest():
+                result = self.repository.find(*args, **kwargs)
+                self.assertIsNotNone(result, (description, args, kwargs))
+                self.assertTrue(isinstance(result, Document), (description, args, kwargs))
+                self.assertEqual(result.id, document.id, (description, args, kwargs))
 
     def test_delete_soft_document(self):
         user = UserFactory()
