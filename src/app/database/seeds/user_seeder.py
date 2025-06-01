@@ -1,9 +1,12 @@
 import os
 from random import choice
 
+from sqlalchemy import func
+
 from app.database.factories.user_factory import UserFactory
 from app.database.seeds import seed_actions
 from app.database.seeds.base_seeder import FactorySeeder, ManagerSeeder
+from app.extensions import db
 from app.managers import RoleManager, UserManager
 from app.models import Role, User
 from app.models.role import ADMIN_ROLE, ROLES
@@ -33,6 +36,17 @@ class Seeder(FactorySeeder, ManagerSeeder):
                 }
             )
 
+    @staticmethod
+    def _random_user() -> User | None:
+        return (
+            db.session.query(User)
+            .join(User.roles)
+            .filter(Role.name == ADMIN_ROLE, User.deleted_at.is_(None))
+            .order_by(func.random())  # pylint: disable=not-callable
+            .limit(1)
+            .one_or_none()
+        )
+
     @seed_actions
     def seed(self, rows: int = None) -> None:
         rows = rows or self._default_rows
@@ -41,5 +55,5 @@ class Seeder(FactorySeeder, ManagerSeeder):
 
         for _ in range(rows):
             user_role = roles.get(choice(list(ROLES)))
-            created_by = self.manager.random_user(*(Role.name == ADMIN_ROLE,))
+            created_by = self._random_user()
             self.factory.create(roles=[user_role], created_by_user=created_by)
