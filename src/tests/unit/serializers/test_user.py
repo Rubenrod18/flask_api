@@ -62,13 +62,13 @@ class UserSerializerTest(BaseTest):
         self.assertEqual(context.exception.description, 'User email already created')
 
     def test_validate_existing_user_id(self):
-        self.user_manager.find.return_value = self.user
-        self.user_manager.find.return_value = self.user
+        self.user_manager.find_by_id.return_value = self.user
+        self.user_manager.find_by_id.return_value = self.user
 
         self.serializer.load({'id': 1}, partial=True)
 
     def test_validate_nonexistent_user_id(self):
-        self.user_manager.find.return_value = None
+        self.user_manager.find_by_id.return_value = None
 
         with self.assertRaises(NotFound) as context:
             self.serializer.validate_id(999)

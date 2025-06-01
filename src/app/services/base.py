@@ -13,7 +13,7 @@ class BaseService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def find(self, record_id: int, *args) -> db.Model | None:
+    def find_by_id(self, record_id: int, *args) -> db.Model | None:
         raise NotImplementedError
 
     @abstractmethod

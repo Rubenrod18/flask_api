@@ -57,7 +57,7 @@ class RoleResource(BaseRoleResource):
         serializer = self.get_serializer()
         serializer.load({'id': role_id}, partial=True)
 
-        role = self.service.find(role_id)
+        role = self.service.find_by_id(role_id)
 
         return serializer.dump(role), 200
 
