@@ -62,7 +62,7 @@ def send_email_with_attachments_task(task_data: list) -> bool:
     msg.html = render_template('mails/attachments.html', **auth_user_data)
 
     for item in task_data:
-        document = document_manager.find(item.get('result')['id'])
+        document = document_manager.find_by_id(item.get('result')['id'])
         with open(document.get_filepath(), 'rb') as fp:
             msg.attach(document.name, document.mime_type, fp.read())
 

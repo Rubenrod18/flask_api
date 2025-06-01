@@ -63,7 +63,7 @@ class UserResource(BaseUserResource):
         serializer = self.get_serializer()
         serializer.load({'id': user_id}, partial=True)
 
-        user = self.service.find(user_id)
+        user = self.service.find_by_id(user_id)
 
         return serializer.dump(user), 200
 

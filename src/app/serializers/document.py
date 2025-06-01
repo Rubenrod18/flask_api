@@ -37,7 +37,7 @@ class DocumentSerializer(ma.SQLAlchemySchema, ManagerMixin):
     @validates('id')
     def validate_id(self, document_id):
         args = (self._document_manager.model.deleted_at.is_(None),)
-        document = self._document_manager.find(document_id, *args)
+        document = self._document_manager.find_by_id(document_id, *args)
 
         if document is None or document.deleted_at is not None:
             raise NotFound('Document not found')

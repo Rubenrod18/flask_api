@@ -35,7 +35,7 @@ class DocumentSerializerTest(BaseTest):
 
         self.serializer = DocumentSerializer()
         self.serializer._document_manager = self.document_manager  # pylint: disable=protected-access
-        self.document_manager.find.return_value = self.document
+        self.document_manager.find_by_id.return_value = self.document
 
     def test_valid_serialization(self):
         serialized_data = self.serializer.dump(self.document)
@@ -50,7 +50,7 @@ class DocumentSerializerTest(BaseTest):
         self.serializer.load({'id': self.document.id}, partial=True)
 
     def test_validate_nonexistent_document_id(self):
-        self.document_manager.find.return_value = None
+        self.document_manager.find_by_id.return_value = None
 
         with self.assertRaises(NotFound) as context:
             self.serializer.validate_id(999)

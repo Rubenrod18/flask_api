@@ -27,14 +27,14 @@ class UserService(BaseService):
 
         return user
 
-    def find(self, record_id: int, *args) -> User | None:
-        return self.manager.find(record_id, *args)
+    def find_by_id(self, record_id: int, *args) -> User | None:
+        return self.manager.find_by_id(record_id, *args)
 
     def get(self, **kwargs) -> dict:
         return self.manager.get(**kwargs)
 
     def save(self, record_id: int, **kwargs) -> User:
-        user = self.manager.find(record_id)
+        user = self.manager.find_by_id(record_id)
         self.manager.save(record_id, **kwargs)
 
         if 'role_id' in kwargs:

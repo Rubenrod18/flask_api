@@ -46,14 +46,14 @@ class DocumentService(BaseService):
         else:
             return document
 
-    def find(self, record_id: int, *args) -> Document | None:
-        return self.manager.find(record_id, *args)
+    def find_by_id(self, record_id: int, *args) -> Document | None:
+        return self.manager.find_by_id(record_id, *args)
 
     def get(self, **kwargs) -> dict:
         return self.manager.get(**kwargs)
 
     def save(self, record_id: int, **kwargs) -> Document:
-        document = self.manager.find(record_id)
+        document = self.manager.find_by_id(record_id)
         filepath = f'{document.directory_path}/{document.internal_filename}'
 
         try:
@@ -79,7 +79,7 @@ class DocumentService(BaseService):
 
     def get_document_content(self, document_id: int, request_args: dict) -> Response:
         as_attachment = request_args.get('as_attachment', 0)
-        document = self.manager.find(document_id)
+        document = self.manager.find_by_id(document_id)
 
         mime_type = document.mime_type
         file_extension = mimetypes.guess_extension(mime_type)

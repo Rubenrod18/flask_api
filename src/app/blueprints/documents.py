@@ -104,7 +104,7 @@ class DocumentResource(BaseDocumentResource):
             response = self.service.get_document_content(document_id, request_args)
         else:
             serializer.load({'id': document_id}, partial=True)
-            document = self.service.find(document_id)
+            document = self.service.find_by_id(document_id)
             response = serializer.dump(document), 200
 
         return response

@@ -14,22 +14,22 @@ class RoleService(BaseService):
         db.session.flush()
         return role
 
-    def find(self, record_id: int, *args) -> Role | None:
-        return self.manager.find(record_id)
+    def find_by_id(self, record_id: int, *args) -> Role | None:
+        return self.manager.find_by_id(record_id)
 
     def get(self, **kwargs) -> dict:
         return self.manager.get(**kwargs)
 
     def save(self, record_id: int, **kwargs) -> Role:
         self.manager.save(record_id, **kwargs)
-        return self.manager.find(record_id)
+        return self.manager.find_by_id(record_id)
 
     def delete(self, record_id: int) -> Role:
         return self.manager.delete(record_id)
 
     def assign_role_to_user(self, user: User, role_id: int) -> None:
         """Assigns a role to a user, replacing any existing role."""
-        role = self.manager.find(role_id)
+        role = self.manager.find_by_id(role_id)
         if user.roles:
             user_datastore.remove_role_from_user(user, user.roles[0])
 
