@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from app.database.factories.role_factory import RoleFactory
+from app.extensions import db
+from app.models import Role
 from app.repositories.role import RoleRepository
 from tests.base.base_test import BaseTest
 
@@ -18,6 +20,7 @@ class RoleRepositoryTest(BaseTest):
         self.assertEqual(role.name, role_data['name'])
         self.assertEqual(role.description, role_data['description'])
         self.assertEqual(role.label, role_data['label'])
+        self.assertIsNone(db.session.query(Role).filter_by(name=role_data['name']).one_or_none())
 
     def test_find_role(self):
         role = RoleFactory()
@@ -38,6 +41,7 @@ class RoleRepositoryTest(BaseTest):
         role = self.repository.delete(role)
 
         self.assertTrue(isinstance(role.deleted_at, datetime))
+        self.assertIsNone(db.session.query(Role).filter_by(name=role.name, deleted_at=role.deleted_at).one_or_none())
 
     def test_delete_hard_role(self):
         role = RoleFactory()

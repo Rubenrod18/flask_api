@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from app.database.factories.user_factory import UserFactory
+from app.extensions import db
+from app.models import User
 from app.repositories.user import UserRepository
 from tests.base.base_test import BaseTest
 
@@ -21,6 +23,7 @@ class UserRepositoryTest(BaseTest):
         self.assertEqual(user.genre, user_data['genre'])
         self.assertEqual(user.birth_date, user_data['birth_date'])
         self.assertEqual(user.active, user_data['active'])
+        self.assertIsNone(db.session.query(User).filter_by(name=user_data['name']).one_or_none())
 
     def test_find_user(self):
         user = UserFactory()
@@ -48,6 +51,7 @@ class UserRepositoryTest(BaseTest):
         user = self.repository.delete(user)
 
         self.assertTrue(isinstance(user.deleted_at, datetime))
+        self.assertIsNone(db.session.query(User).filter_by(name=user.name, deleted_at=user.deleted_at).one_or_none())
 
     def test_delete_hard_user(self):
         user = UserFactory()

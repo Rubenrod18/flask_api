@@ -2,6 +2,8 @@ from datetime import datetime
 
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.user_factory import UserFactory
+from app.extensions import db
+from app.models import Document
 from app.repositories.document import DocumentRepository
 from tests.base.base_test import BaseTest
 
@@ -22,6 +24,7 @@ class DocumentRepositoryTest(BaseTest):
         self.assertEqual(document.internal_filename, document_data['internal_filename'])
         self.assertEqual(document.mime_type, document_data['mime_type'])
         self.assertEqual(document.created_by_user, document_data['created_by_user'])
+        self.assertIsNone(db.session.query(Document).filter_by(name=document_data['name']).one_or_none())
 
     def test_find_document(self):
         user = UserFactory()
@@ -47,6 +50,9 @@ class DocumentRepositoryTest(BaseTest):
         document = self.repository.delete(document)
 
         self.assertTrue(isinstance(document.deleted_at, datetime))
+        self.assertIsNone(
+            db.session.query(Document).filter_by(name=document.name, deleted_at=document.deleted_at).one_or_none()
+        )
 
     def test_delete_hard_document(self):
         user = UserFactory()
