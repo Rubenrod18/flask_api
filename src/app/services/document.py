@@ -54,6 +54,7 @@ class DocumentService(BaseService):
 
     def save(self, record_id: int, **kwargs) -> Document:
         document = self.manager.find_by_id(record_id)
+        # QUESTION: The app doesn't have file versioning, should we consider this feature in the future?
         filepath = f'{document.directory_path}/{document.internal_filename}'
 
         try:
@@ -67,7 +68,7 @@ class DocumentService(BaseService):
             document = self.manager.save(record_id, **data)
             db.session.add(document)
             db.session.flush()
-        except Exception as e:
+        except Exception as e:  # HACK: Add the proper exceptions here
             self.file_storage.delete_file(filepath)
             logger.debug(e)
             raise InternalServerError() from e

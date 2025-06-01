@@ -23,7 +23,7 @@ make local.build && make local.start
 Next, connect to the SQL container:
 
 ```bash
-docker exec -it flask_api_db bash
+docker exec -it flask_api__mysql bash
 mysql -u root -p
 ```
 

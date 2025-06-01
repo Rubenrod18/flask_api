@@ -34,14 +34,14 @@ class BaseManager:
 
         return {
             'query': query,
-            'records_total': records_total,
             'records_filtered': query.count(),
+            'records_total': records_total,
         }
 
     def delete(self, record_id: int) -> db.Model:
         record = self.find_by_id(record_id)
         return self.repository.delete(record)
 
-    def find_by_id(self, record_id: int, *args) -> db.Model | None:
+    def find_by_id(self, record_id: int, *args, **kwargs) -> db.Model | None:
         args += (self.model.id == record_id,)
-        return self.repository.find(*args)
+        return self.repository.find(*args, **kwargs)
