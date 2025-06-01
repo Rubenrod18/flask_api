@@ -2,7 +2,9 @@
 [run]
 branch = True
 omit =
-    *venv*
+    *venv*,
+    */dependency_injector/*,
+    */tests/*
 
 [report]
 omit =
