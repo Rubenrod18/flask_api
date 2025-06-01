@@ -6,7 +6,7 @@ import uuid
 import sqlalchemy
 from dotenv import find_dotenv, load_dotenv
 from faker import Faker
-from faker.providers import date_time, person
+from faker.providers import date_time, file, person
 from flask import Flask
 from flask.testing import FlaskClient
 from flask_sqlalchemy.record_queries import get_recorded_queries
@@ -18,10 +18,6 @@ from werkzeug.test import TestResponse
 from app.extensions import db
 
 logger = logging.getLogger(__name__)
-
-faker = Faker()
-faker.add_provider(person)
-faker.add_provider(date_time)
 
 
 class _CustomFlaskClient(FlaskClient):
@@ -109,6 +105,14 @@ class BaseTest(unittest.TestCase):
             self.__drop_database()
 
     @property
+    def faker(self):
+        fake = Faker()
+        fake.add_provider(person)
+        fake.add_provider(date_time)
+        fake.add_provider(file)
+        return fake
+
+    @property
     def plain_engine_url(self):
         return self.__engine.url.render_as_string(hide_password=False)
 
@@ -141,7 +145,7 @@ class BaseTest(unittest.TestCase):
 
         """
         info = get_recorded_queries()[-1]
-        print(info.statement, info.parameters, info.duration, sep='\n')  # noqa
+        print(info.statement, info.parameters, info.duration, sep='\n')  # noqa: T201
 
     @staticmethod
     def _database_exists(database_url: str) -> bool:

@@ -29,8 +29,8 @@ class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
 
     def test_invalid_user(self):
         payload = {
-            'email': '123@mail.com',
-            'password': '12345678',
+            'email': self.faker.email(),
+            'password': self.faker.password(),
         }
 
         response = self.client.post(self.endpoint, json=payload, exp_code=401)
@@ -53,7 +53,7 @@ class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
     def test_invalid_password(self):
         payload = {
             'email': self.admin_user.email,
-            'password': '12345678',
+            'password': self.faker.password(),
         }
 
         self.client.post(f'{self.base_path}/login', json=payload, exp_code=401)

@@ -17,7 +17,7 @@ class SeederCli(BaseCli):
             for seeder in ordered_seeders.values():
                 seeder.seed()
             self.db.session.commit()
-            print(' Database seeding completed successfully.')  # noqa
+            print(' Database seeding completed successfully.')  # noqa: T201
         except Exception as e:
             self.db.session.rollback()
             raise e

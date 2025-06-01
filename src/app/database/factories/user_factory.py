@@ -6,7 +6,7 @@ from random import randint
 import factory
 from sqlalchemy import func
 
-from app.database.factories.base_factory import BaseFactory, faker
+from app.database.factories.base_factory import BaseFactory
 from app.database.factories.role_factory import AdminRoleFactory, RoleFactory, TeamLeaderRoleFactory, WorkerRoleFactory
 from app.extensions import db
 from app.models import Role, User
@@ -26,8 +26,10 @@ class UserFactory(BaseFactory):
     last_name = factory.Faker('last_name')
     email = factory.Faker('email')
     genre = factory.Iterator(Genre.to_list())
-    birth_date = faker.date_time_between(start_date='-30y', end_date='-5y')
+    birth_date = factory.Faker('date_time_between', start_date='-30y', end_date='-5y')
     active = factory.Faker('boolean')
+    created_at = factory.Faker('date_time_between', start_date='-3y', end_date='now')
+    deleted_at = random.choice([factory.Faker('date_time_between', start_date='-1y', end_date='now'), None])
 
     @classmethod
     def build_dict(cls, exclude: set = None, **kwargs):
@@ -54,14 +56,6 @@ class UserFactory(BaseFactory):
     @factory.lazy_attribute
     def roles(self):
         return [RoleFactory()]
-
-    @factory.lazy_attribute
-    def created_at(self):
-        return faker.date_time_between(start_date='-3y', end_date='now')
-
-    @factory.lazy_attribute
-    def deleted_at(self):
-        return random.choice([faker.date_time_between(start_date='-1y', end_date='now'), None])
 
     @factory.lazy_attribute
     def updated_at(self):

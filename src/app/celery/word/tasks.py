@@ -97,7 +97,7 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
     document.save(tempfile.name)
 
     directory_path = current_app.config.get('STORAGE_DIRECTORY')
-    temp_filename = local_storage.get_basename(tempfile.name, include_path=False)
+    temp_filename = local_storage.get_basename(tempfile.name)
 
     if to_pdf:
         convert_to(directory_path, tempfile.name)
