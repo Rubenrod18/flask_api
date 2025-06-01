@@ -54,6 +54,7 @@ class DocumentManagerTest(BaseTest):
         all_docs = self.manager.get()
 
         self.assertTrue(isinstance(all_docs['query'], Query))
+        self.assertTrue(all(isinstance(doc, Document) for doc in all_docs['query']))
         self.assertEqual(all_docs['records_filtered'], 5)
         self.assertEqual(all_docs['records_total'], 5)
 
@@ -73,19 +74,25 @@ class DocumentManagerTest(BaseTest):
         )
 
         self.assertTrue(isinstance(filtered_docs['query'], Query))
+        self.assertTrue(all(isinstance(doc, Document) for doc in filtered_docs['query']))
         self.assertEqual(filtered_docs['records_filtered'], 1)
         self.assertEqual(filtered_docs['records_total'], 5)
 
     def test_delete_soft_document(self):
         user = UserFactory()
-        document = DocumentFactory(created_by_user=user)
+        document = DocumentFactory(created_by_user=user, deleted_at=None)
 
-        document = self.manager.delete(document.id)
+        deleted_document = self.manager.delete(document.id)
 
-        self.assertTrue(isinstance(document.deleted_at, datetime))
+        self.assertTrue(isinstance(deleted_document, Document))
+        self.assertEqual(deleted_document.id, document.id)
+        self.assertTrue(isinstance(deleted_document.deleted_at, datetime))
 
     def test_find_by_id_document(self):
         user = UserFactory()
         document = DocumentFactory(created_by_user=user, deleted_at=None)
 
-        self.assertTrue(self.manager.find_by_id(document.id))
+        found_document = self.manager.find_by_id(document.id)
+
+        self.assertTrue(isinstance(found_document, Document))
+        self.assertEqual(found_document.id, document.id)
