@@ -8,4 +8,5 @@ class RoleManager(BaseManager):
         super().__init__(repository=RoleRepository)
 
     def find_by_name(self, name: str) -> Role | None:
+        # NOTE: It only used in seeders, I keep it here because I consider it useful.
         return self.repository.find(self.model.name == name)
