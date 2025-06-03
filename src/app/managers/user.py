@@ -8,6 +8,10 @@ class UserManager(BaseManager):
     def __init__(self):
         super().__init__(repository=UserRepository)
 
+    def create(self, **kwargs) -> db.Model:
+        # NOTE: The creation of users are managed by the package flask-security
+        raise NotImplementedError
+
     def find_by_email(self, email: str, *args) -> User | None:
         args += (self.model.email == email,)
         return self.repository.find(*args)
