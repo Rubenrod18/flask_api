@@ -14,8 +14,6 @@ from app.models.role import ADMIN_ROLE
 from app.models.user import Genre
 from app.serializers import UserSerializer
 
-UserList = list[User]
-
 
 class UserFactory(BaseFactory):
     class Meta:
@@ -67,18 +65,27 @@ class UserFactory(BaseFactory):
 
 
 class AdminUserFactory(UserFactory):
+    name = 'admin_name'
+    last_name = 'admin_last_name'
+
     @factory.lazy_attribute
     def roles(self):
         return [AdminRoleFactory()]
 
 
 class TeamLeaderUserFactory(UserFactory):
+    name = 'team_leader_name'
+    last_name = 'team_leader_last_name'
+
     @factory.lazy_attribute
     def roles(self):
         return [TeamLeaderRoleFactory()]
 
 
 class WorkerUserFactory(UserFactory):
+    name = 'worker_name'
+    last_name = 'worker_last_name'
+
     @factory.lazy_attribute
     def roles(self):
         return [WorkerRoleFactory()]
