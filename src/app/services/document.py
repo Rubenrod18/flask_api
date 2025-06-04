@@ -10,12 +10,14 @@ from app.extensions import db
 from app.file_storages import LocalStorage
 from app.models import Document
 from app.repositories import DocumentRepository
-from app.services.base import BaseService
+from app.services import base as b
 
 logger = logging.getLogger(__name__)
 
 
-class DocumentService(BaseService):
+class DocumentService(
+    b.BaseService, b.CreationService, b.DeletionService, b.FindByIdService, b.GetService, b.SaveService
+):
     def __init__(self, file_storage: LocalStorage = None):
         super().__init__(repository=DocumentRepository())
         self.file_storage = file_storage or LocalStorage()

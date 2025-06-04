@@ -3,11 +3,10 @@ from flask_login import current_user
 from app.extensions import db
 from app.models import User, user_datastore
 from app.repositories import UserRepository
-from app.services import RoleService
-from app.services.base import BaseService
+from app.services import base as b, RoleService
 
 
-class UserService(BaseService):
+class UserService(b.BaseService, b.CreationService, b.DeletionService, b.FindByIdService, b.GetService, b.SaveService):
     def __init__(self, role_service: RoleService = None):
         super().__init__(repository=UserRepository())
         self.role_service = role_service or RoleService()

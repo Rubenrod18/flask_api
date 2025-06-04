@@ -1,10 +1,10 @@
 from app.extensions import db
 from app.models import Role, User, user_datastore
 from app.repositories import RoleRepository
-from app.services.base import BaseService
+from app.services import base as b
 
 
-class RoleService(BaseService):
+class RoleService(b.BaseService, b.CreationService, b.DeletionService, b.FindByIdService, b.GetService, b.SaveService):
     def __init__(self):
         super().__init__(repository=RoleRepository())
 
