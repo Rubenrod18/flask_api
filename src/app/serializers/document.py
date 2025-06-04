@@ -4,18 +4,18 @@ from marshmallow import fields, post_dump, pre_load, validate, validates
 from werkzeug.exceptions import NotFound, UnprocessableEntity
 
 from app.extensions import ma
-from app.managers import DocumentManager
 from app.models import Document
-from app.serializers.core import ManagerMixin
+from app.repositories import DocumentRepository
+from app.serializers.core import RepositoryMixin
 from config import Config
 
 
-class DocumentSerializer(ma.SQLAlchemySchema, ManagerMixin):
+class DocumentSerializer(ma.SQLAlchemySchema, RepositoryMixin):
     class Meta:
         model = Document
         ordered = True
 
-    manager_classes = {'document_manager': DocumentManager}
+    repository_classes = {'document_repository': DocumentRepository}
 
     id = ma.auto_field()
     name = ma.auto_field()
@@ -32,12 +32,12 @@ class DocumentSerializer(ma.SQLAlchemySchema, ManagerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._document_manager = self.get_manager('document_manager')
+        self._document_repository = self.get_repository('document_repository')
 
     @validates('id')
     def validate_id(self, document_id):
-        args = (self._document_manager.model.deleted_at.is_(None),)
-        document = self._document_manager.find_by_id(document_id, *args)
+        args = (self._document_repository.model.deleted_at.is_(None),)
+        document = self._document_repository.find_by_id(document_id, *args)
 
         if document is None or document.deleted_at is not None:
             raise NotFound('Document not found')

@@ -4,8 +4,8 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 
 from app.extensions import ma
 from app.helpers.otp_token import OTPTokenManager
-from app.managers import UserManager
 from app.models import User
+from app.repositories import UserRepository
 from config import Config
 
 
@@ -18,17 +18,17 @@ class AuthUserLoginSerializer(ma.Schema):
     )
     __user = None
 
-    def __init__(self, user_manager: UserManager, *args, **kwargs):
+    def __init__(self, user_repository: UserRepository, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user_manager = user_manager
+        self.user_repository = user_repository
 
     @validates('email')
     def validate_email(self, email):
         args = (
-            self.user_manager.model.active.is_(True),
-            self.user_manager.model.deleted_at.is_(None),
+            self.user_repository.model.active.is_(True),
+            self.user_repository.model.deleted_at.is_(None),
         )
-        self.__user = self.user_manager.find_by_email(email, *args)
+        self.__user = self.user_repository.find_by_email(email, *args)
 
         if self.__user is None or self.__user.active is False or self.__user.deleted_at is not None:
             raise Unauthorized('Credentials invalid')
@@ -56,15 +56,15 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
         validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50),
     )
 
-    def __init__(self, user_manager: UserManager, otp_token_manager: OTPTokenManager, *args, **kwargs):
+    def __init__(self, user_repository: UserRepository, otp_token_manager: OTPTokenManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user_manager = user_manager
+        self.user_repository = user_repository
         self.otp_token_manager = otp_token_manager
 
     @validates('token')
     def validate_token(self, token):
         email = self.otp_token_manager.verify_token(token)
-        user = self.user_manager.find_by_email(email)
+        user = self.user_repository.find_by_email(email)
 
         if not user or user.deleted_at is not None or not user.active:
             raise Forbidden('Invalid token')
@@ -80,4 +80,4 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
     @post_load
     def make_object(self, data, **kwargs):  # pylint: disable=unused-argument
         email = self.otp_token_manager.verify_token(data.get('token'))
-        return self.user_manager.find_by_email(email)
+        return self.user_repository.find_by_email(email)

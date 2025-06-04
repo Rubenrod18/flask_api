@@ -2,17 +2,17 @@ from marshmallow import fields, validate
 
 from app.extensions import ma
 from app.helpers.sqlalchemy_query_builder import ALL_OPERATORS
-from app.managers import BaseManager
+from app.repositories.base import BaseRepository
 
 
-class ManagerMixin:
-    manager_classes = {}
+class RepositoryMixin:
+    repository_classes = {}
 
-    def get_manager(self, manager_name: str) -> type[BaseManager]:
-        return self._get_manager_class(manager_name)
+    def get_repository(self, repository_name: str) -> type[BaseRepository]:
+        return self._get_repository_class(repository_name)
 
-    def _get_manager_class(self, manager_name: str) -> type[BaseManager]:
-        return self.manager_classes.get(manager_name)()
+    def _get_repository_class(self, repository_name: str) -> type[BaseRepository]:
+        return self.repository_classes.get(repository_name)()
 
 
 class _SearchValueSerializer(ma.Schema):

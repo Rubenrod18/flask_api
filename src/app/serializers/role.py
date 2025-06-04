@@ -2,17 +2,17 @@ from marshmallow import post_load, validates
 from werkzeug.exceptions import BadRequest, NotFound
 
 from app.extensions import ma
-from app.managers import RoleManager
 from app.models import Role
-from app.serializers.core import ManagerMixin
+from app.repositories import RoleRepository
+from app.serializers.core import RepositoryMixin
 
 
-class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
+class RoleSerializer(ma.SQLAlchemySchema, RepositoryMixin):
     class Meta:
         model = Role
         ordered = True
 
-    manager_classes = {'role_manager': RoleManager}
+    repository_classes = {'role_repository': RoleRepository}
 
     id = ma.auto_field()
     name = ma.auto_field(required=False)
@@ -24,7 +24,7 @@ class RoleSerializer(ma.SQLAlchemySchema, ManagerMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._role_manager = self.get_manager('role_manager')
+        self._role_manager = self.get_repository('role_repository')
 
     @validates('id')
     def validate_id(self, role_id: int):
