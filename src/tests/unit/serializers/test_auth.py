@@ -26,7 +26,8 @@ class AuthUserLoginSerializerTest(BaseTest):
         self.user_repository.model.active.return_value = True
         self.user_repository.find_by_email.return_value = self.user
 
-        self.serializer = AuthUserLoginSerializer(user_repository=self.user_repository)
+        self.serializer = AuthUserLoginSerializer()
+        self.serializer._user_repository = self.user_repository  # noqa  # pylint: disable=protected-access
 
     def test_valid_login(self):
         self.user_repository.find_by_email.return_value = self.user
@@ -100,7 +101,8 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
         self.user_repository.find_by_email.return_value = None
         self.otp_token_manager = MagicMock(spec=OTPTokenManager)
 
-        self.serializer = AuthUserConfirmResetPasswordSerializer(self.user_repository, self.otp_token_manager)
+        self.serializer = AuthUserConfirmResetPasswordSerializer(self.otp_token_manager)
+        self.serializer._user_repository = self.user_repository  # noqa  # pylint: disable=protected-access
 
     def test_valid_data(self):
         self.otp_token_manager.verify_token.return_value = self.valid_email

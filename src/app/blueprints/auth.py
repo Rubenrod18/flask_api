@@ -35,7 +35,7 @@ class AuthUserLoginResource(BaseAuthResource):
     @api.expect(swagger_models.auth_login_sw_model)
     @api.marshal_with(swagger_models.auth_token_sw_model)
     def post(self) -> tuple:
-        serializer = self.get_serializer(user_repository=self.service.repository)
+        serializer = self.get_serializer()
         user = serializer.load(request.get_json())
 
         return self.service.login_user(user), 200
@@ -65,7 +65,7 @@ class RequestResetPasswordResource(BaseAuthResource):
     @api.doc(responses={202: 'Success', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'})
     @api.expect(swagger_models.auth_user_reset_password_sw_model)
     def post(self) -> tuple:
-        serializer = self.get_serializer(user_repository=self.service.repository)
+        serializer = self.get_serializer()
         user = serializer.load(request.get_json(), partial=True)
 
         self.service.request_reset_password(self.otp_token_manager, user)
@@ -80,9 +80,7 @@ class ResetPasswordResource(BaseAuthResource):
 
     @api.doc(responses={200: 'Success', 403: 'Forbidden'})
     def get(self, token: str) -> tuple:
-        serializer = self.get_serializer(
-            user_repository=self.service.repository, otp_token_manager=self.otp_token_manager
-        )
+        serializer = self.get_serializer(otp_token_manager=self.otp_token_manager)
         serializer.load({'token': token}, partial=True)
 
         return {}, 200
@@ -94,9 +92,7 @@ class ResetPasswordResource(BaseAuthResource):
         request_data = request.get_json()
         request_data['token'] = token
 
-        serializer = self.get_serializer(
-            user_repository=self.service.repository, otp_token_manager=self.otp_token_manager
-        )
+        serializer = self.get_serializer(otp_token_manager=self.otp_token_manager)
         user = serializer.load(request_data)
 
         return self.service.confirm_request_reset_password(user, request_data['password']), 200

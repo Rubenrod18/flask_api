@@ -6,44 +6,49 @@ from app.extensions import ma
 from app.helpers.otp_token import OTPTokenManager
 from app.models import User
 from app.repositories import UserRepository
+from app.serializers.core import RepositoryMixin
 from config import Config
 
 
-class AuthUserLoginSerializer(ma.Schema):
+class AuthUserLoginSerializer(ma.Schema, RepositoryMixin):
+    repository_classes = {'user_repository': UserRepository}
+
     email = fields.Str(load_only=True, required=True)
     password = fields.Str(
         load_only=True,
         required=True,
         validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50),
     )
-    __user = None
+    _user = None
 
-    def __init__(self, user_repository: UserRepository, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user_repository = user_repository
+        self._user_repository = self.get_repository('user_repository')
 
     @validates('email')
     def validate_email(self, email):
         args = (
-            self.user_repository.model.active.is_(True),
-            self.user_repository.model.deleted_at.is_(None),
+            self._user_repository.model.active.is_(True),
+            self._user_repository.model.deleted_at.is_(None),
         )
-        self.__user = self.user_repository.find_by_email(email, *args)
+        self._user = self._user_repository.find_by_email(email, *args)
 
-        if self.__user is None or self.__user.active is False or self.__user.deleted_at is not None:
+        if self._user is None or self._user.active is False or self._user.deleted_at is not None:
             raise Unauthorized('Credentials invalid')
 
     @validates('password')
     def validate_password(self, password):
-        if isinstance(self.__user, User) and not verify_password(password, self.__user.password):
+        if isinstance(self._user, User) and not verify_password(password, self._user.password):
             raise Unauthorized('Credentials invalid')
 
     @post_load
     def make_object(self, data, **kwargs):  # pylint: disable=unused-argument
-        return self.__user
+        return self._user
 
 
-class AuthUserConfirmResetPasswordSerializer(ma.Schema):
+class AuthUserConfirmResetPasswordSerializer(ma.Schema, RepositoryMixin):
+    repository_classes = {'user_repository': UserRepository}
+
     token = fields.Str(required=True)
     password = fields.Str(
         load_only=True,
@@ -56,15 +61,15 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
         validate=validate.Length(min=Config.SECURITY_PASSWORD_LENGTH_MIN, max=50),
     )
 
-    def __init__(self, user_repository: UserRepository, otp_token_manager: OTPTokenManager, *args, **kwargs):
+    def __init__(self, otp_token_manager: OTPTokenManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user_repository = user_repository
+        self._user_repository = self.get_repository('user_repository')
         self.otp_token_manager = otp_token_manager
 
     @validates('token')
     def validate_token(self, token):
         email = self.otp_token_manager.verify_token(token)
-        user = self.user_repository.find_by_email(email)
+        user = self._user_repository.find_by_email(email)
 
         if not user or user.deleted_at is not None or not user.active:
             raise Forbidden('Invalid token')
@@ -80,4 +85,4 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema):
     @post_load
     def make_object(self, data, **kwargs):  # pylint: disable=unused-argument
         email = self.otp_token_manager.verify_token(data.get('token'))
-        return self.user_repository.find_by_email(email)
+        return self._user_repository.find_by_email(email)
