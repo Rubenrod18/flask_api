@@ -7,7 +7,14 @@ from app.helpers.otp_token import OTPTokenManager
 
 
 class ServiceDIContainer(containers.DeclarativeContainer):
-    """Service Dependency Injection Container."""
+    """Service Dependency Injection Container.
+
+    Notes
+    -----
+    If you define this class in repositories, serializers or services then it's going to fail because
+    circular imports, it only can be used in blueprints.
+
+    """
 
     config = providers.Configuration()
     wiring_config = containers.WiringConfiguration(
@@ -17,7 +24,6 @@ class ServiceDIContainer(containers.DeclarativeContainer):
             '.blueprints.roles',
             '.blueprints.tasks',
             '.blueprints.users',
-            '.serializers.auth',
         ]
     )
 
