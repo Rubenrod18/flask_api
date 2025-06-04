@@ -13,17 +13,8 @@ class UserRepositoryTest(BaseTest):
         self.repository = UserRepository()
 
     def test_create_user(self):
-        user_data = UserFactory.build_dict(exclude={'roles'})
-
-        user = self.repository.create(**user_data)
-
-        self.assertEqual(user.name, user_data['name'])
-        self.assertEqual(user.last_name, user_data['last_name'])
-        self.assertEqual(user.email, user_data['email'])
-        self.assertEqual(user.genre, user_data['genre'])
-        self.assertEqual(user.birth_date, user_data['birth_date'])
-        self.assertEqual(user.active, user_data['active'])
-        self.assertIsNone(db.session.query(User).filter_by(name=user_data['name']).one_or_none())
+        with self.assertRaises(NotImplementedError):
+            self.repository.create(**{})
 
     def test_find_user(self):
         admin = AdminUserFactory(deleted_at=None, active=True)
@@ -66,7 +57,7 @@ class UserRepositoryTest(BaseTest):
     def test_delete_soft_user(self):
         user = UserFactory()
 
-        user = self.repository.delete(user)
+        user = self.repository.delete(user.id)
 
         self.assertTrue(isinstance(user.deleted_at, datetime))
         self.assertIsNone(db.session.query(User).filter_by(name=user.name, deleted_at=user.deleted_at).one_or_none())
@@ -75,4 +66,4 @@ class UserRepositoryTest(BaseTest):
         user = UserFactory()
 
         with self.assertRaises(NotImplementedError):
-            self.repository.delete(user, force_delete=True)
+            self.repository.delete(user.id, force_delete=True)

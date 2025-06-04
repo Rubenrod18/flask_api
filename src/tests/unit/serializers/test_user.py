@@ -6,7 +6,6 @@ from marshmallow import ValidationError
 from werkzeug.exceptions import BadRequest, NotFound
 
 from app.database.factories.user_factory import UserFactory
-from app.managers import UserManager
 from app.models import Role, User
 from app.models.user import Genre
 from app.repositories import UserRepository
@@ -29,14 +28,13 @@ class UserSerializerTest(BaseTest):
             updated_at=datetime.now(UTC),
             deleted_at=None,
         )
-        self.user_manager = MagicMock(spec=UserManager)
-        self.user_manager.find_by_email.return_value = None
-        self.user_manager.repository = MagicMock(spec=UserRepository)
-        self.user_manager.repository.model = MagicMock(spec=User)
-        self.user_manager.repository.model.deleted_at.is_.return_value = None
+        self.user_repository = MagicMock(spec=UserRepository)
+        self.user_repository.find_by_email.return_value = None
+        self.user_repository.model = MagicMock(spec=User)
+        self.user_repository.model.deleted_at.is_.return_value = None
 
         self.serializer = UserSerializer()
-        self.serializer._user_manager = self.user_manager  # pylint: disable=protected-access
+        self.serializer._user_repository = self.user_repository  # pylint: disable=protected-access
 
     def test_valid_serialization(self):
         serialized_data = self.serializer.dump(self.user)
@@ -48,12 +46,12 @@ class UserSerializerTest(BaseTest):
         self.assertEqual(serialized_data['roles'][0]['name'], self.user.roles[0].name)
 
     def test_valid_email_validation(self):
-        self.user_manager.find_by_email.return_value = None
+        self.user_repository.find_by_email.return_value = None
 
         self.serializer.load({'email': 'new_email@example.com'}, partial=True)
 
     def test_invalid_email_validation(self):
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository.find_by_email.return_value = self.user
 
         with self.assertRaises(BadRequest) as context:
             self.serializer.load({'email': self.user.email}, partial=True)
@@ -62,13 +60,13 @@ class UserSerializerTest(BaseTest):
         self.assertEqual(context.exception.description, 'User email already created')
 
     def test_validate_existing_user_id(self):
-        self.user_manager.find_by_id.return_value = self.user
-        self.user_manager.find_by_id.return_value = self.user
+        self.user_repository.find_by_id.return_value = self.user
+        self.user_repository.find_by_id.return_value = self.user
 
         self.serializer.load({'id': 1}, partial=True)
 
     def test_validate_nonexistent_user_id(self):
-        self.user_manager.find_by_id.return_value = None
+        self.user_repository.find_by_id.return_value = None
 
         with self.assertRaises(NotFound) as context:
             self.serializer.validate_id(999)

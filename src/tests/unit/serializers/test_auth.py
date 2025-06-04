@@ -5,7 +5,6 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 
 from app.database.factories.user_factory import UserFactory
 from app.helpers.otp_token import OTPTokenManager
-from app.managers import UserManager
 from app.models import User
 from app.repositories import UserRepository
 from app.serializers import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
@@ -21,29 +20,28 @@ class AuthUserLoginSerializerTest(BaseTest):
             email=self.faker.email(), password=User.ensure_password(self.plain_password), active=True, deleted_at=None
         )
 
-        self.user_manager = MagicMock(spec=UserManager)
-        self.user_manager.repository = MagicMock(spec=UserRepository)
-        self.user_manager.model = MagicMock(spec=User)
-        self.user_manager.model.deleted_at.return_value = None
-        self.user_manager.model.active.return_value = True
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository = MagicMock(spec=UserRepository)
+        self.user_repository.model = MagicMock(spec=User)
+        self.user_repository.model.deleted_at.return_value = None
+        self.user_repository.model.active.return_value = True
+        self.user_repository.find_by_email.return_value = self.user
 
-        self.serializer = AuthUserLoginSerializer(user_manager=self.user_manager)
+        self.serializer = AuthUserLoginSerializer(user_repository=self.user_repository)
 
     def test_valid_login(self):
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository.find_by_email.return_value = self.user
 
         data = self.serializer.load({'email': self.user.email, 'password': self.plain_password})
 
         self.assertEqual(data, self.user)
-        self.user_manager.find_by_email.assert_called_once_with(
+        self.user_repository.find_by_email.assert_called_once_with(
             self.user.email,
-            self.user_manager.model.active.is_(True),
-            self.user_manager.model.deleted_at.is_(None),
+            self.user_repository.model.active.is_(True),
+            self.user_repository.model.deleted_at.is_(None),
         )
 
     def test_invalid_email(self):
-        self.user_manager.find_by_email.return_value = None
+        self.user_repository.find_by_email.return_value = None
 
         with self.assertRaises(Unauthorized) as context:
             self.serializer.load({'email': self.faker.email(), 'password': 'password'})
@@ -53,7 +51,7 @@ class AuthUserLoginSerializerTest(BaseTest):
 
     def test_inactive_user(self):
         self.user.active = False
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository.find_by_email.return_value = self.user
 
         with self.assertRaises(Unauthorized) as context:
             self.serializer.load({'email': self.user.email, 'password': self.plain_password})
@@ -63,7 +61,7 @@ class AuthUserLoginSerializerTest(BaseTest):
 
     def test_deleted_user(self):
         self.user.deleted_at = '2000-01-01'
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository.find_by_email.return_value = self.user
 
         with self.assertRaises(Unauthorized) as context:
             self.serializer.load({'email': self.user.email, 'password': self.plain_password})
@@ -72,7 +70,7 @@ class AuthUserLoginSerializerTest(BaseTest):
         self.assertEqual(context.exception.description, 'Credentials invalid')
 
     def test_invalid_password(self):
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository.find_by_email.return_value = self.user
 
         with self.assertRaises(Unauthorized) as context:
             self.serializer.load({'email': self.user.email, 'password': 'wrongpassword'})
@@ -98,15 +96,15 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
         )
         self.user = UserFactory(email=self.valid_email, active=True, deleted_at=None)
 
-        self.user_manager = MagicMock(spec=UserManager)
-        self.user_manager.find_by_email.return_value = None
+        self.user_repository = MagicMock(spec=UserRepository)
+        self.user_repository.find_by_email.return_value = None
         self.otp_token_manager = MagicMock(spec=OTPTokenManager)
 
-        self.serializer = AuthUserConfirmResetPasswordSerializer(self.user_manager, self.otp_token_manager)
+        self.serializer = AuthUserConfirmResetPasswordSerializer(self.user_repository, self.otp_token_manager)
 
     def test_valid_data(self):
         self.otp_token_manager.verify_token.return_value = self.valid_email
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository.find_by_email.return_value = self.user
 
         validated_data = self.serializer.load(
             {
@@ -135,7 +133,7 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
 
     def test_user_not_found(self):
         self.otp_token_manager.verify_token.return_value = self.valid_email
-        self.user_manager.find_by_email.return_value = None
+        self.user_repository.find_by_email.return_value = None
 
         with self.assertRaises(Forbidden) as context:
             self.serializer.load(
@@ -152,7 +150,7 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
     def test_user_deleted(self):
         self.user.deleted_at = '2024-01-01'
         self.otp_token_manager.verify_token.return_value = self.valid_email
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository.find_by_email.return_value = self.user
 
         with self.assertRaises(Forbidden) as context:
             self.serializer.load(
@@ -169,7 +167,7 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
     def test_user_not_active(self):
         self.user.active = False
         self.otp_token_manager.verify_token.return_value = self.valid_email
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository.find_by_email.return_value = self.user
 
         with self.assertRaises(Forbidden) as context:
             self.serializer.load(
@@ -185,7 +183,7 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
 
     def test_mismatched_passwords(self):
         self.otp_token_manager.verify_token.return_value = self.valid_email
-        self.user_manager.find_by_email.return_value = self.user
+        self.user_repository.find_by_email.return_value = self.user
 
         with self.assertRaises(ValidationError) as context:
             self.serializer.load(

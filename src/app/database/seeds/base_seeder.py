@@ -2,7 +2,7 @@ from abc import ABC
 
 from app.database.factories.base_factory import BaseFactory
 from app.database.seeds import seed_actions
-from app.managers import BaseManager
+from app.repositories.base import BaseRepository
 
 
 class BaseSeeder(ABC):
@@ -21,14 +21,14 @@ class FactorySeeder(BaseSeeder):
         self.factory = factory
 
 
-class ManagerSeeder:
+class RepositorySeeder:
     """
 
-    NOTE: Instead of both FactorySeeder and ManagerSeeder inheriting BaseSeeder, make ManagerSeeder a mixin that
-    adds the manager attribute. This change avoid Python’s MRO (Method Resolution Order) will try to call BaseSeeder
-    twice (once for FactorySeeder and once for ManagerSeeder) if ManagerSeeder inherits BaseSeeder.
+    NOTE: Instead of both FactorySeeder and RepositorySeeder inheriting BaseSeeder, make RepositorySeeder a mixin that
+    adds the repository attribute. This change avoid Python’s MRO (Method Resolution Order) will try to call BaseSeeder
+    twice (once for FactorySeeder and once for RepositorySeeder) if RepositorySeeder inherits BaseSeeder.
 
     """
 
-    def __init__(self, manager: BaseManager):
-        self.manager = manager
+    def __init__(self, repository: BaseRepository):
+        self.repository = repository
