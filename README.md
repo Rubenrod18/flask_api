@@ -59,7 +59,10 @@ make seed
 
 This will start the Flask application with the appropriate database setup.
 
-### 5. Application Layer Components
+---
+
+
+## Application Layer Components
 
 The application follows a Domain Driven Design arquitecture:
 
@@ -67,15 +70,37 @@ The application follows a Domain Driven Design arquitecture:
 
 1. **Serializer**: Converts data structures (often Python objects) to formats suitable for responses (e.g., JSON) and vice versa. Responsible for validating and transforming input/output data. Acts as a bridge between the endpoint (request/response) and the service layer, handling both serialization and deserialization.
 
-2. **Service**: Contains the application’s use-case-specific logic. Handles requests from endpoints, manages workflow, and orchestrates interactions between managers. Delegates domain-specific logic to managers.
+2. **Service**: Contains the application’s use-case-specific logic. Handles requests from endpoints, manages workflow, and orchestrates interactions between repositories.
 
-3. **Manager**: Encapsulates business rules and domain-specific workflows. Sits between the service and repository layers, ensuring that all necessary business logic is executed before or after data access. Managers prevent business rules from leaking into repositories and make logic reusable across services.
+3. **Repository**: Abstracts data persistence and retrieval. Responsible solely for executing database queries and data manipulation. Provides an interface to interact with database models, isolating data access and keeping business logic out of the persistence layer.
 
-4. **Repository**: Abstracts data persistence and retrieval. Responsible solely for executing database queries and data manipulation. Provides an interface to interact with database models, isolating data access and keeping business logic out of the persistence layer.
+4. **Database Model**: Defines the structure of the data as Python classes (typically using an ORM), mapping objects to database tables. Handles schema definition, relationships, and direct interaction with the database.
 
-5. **Database Model**: Defines the structure of the data as Python classes (typically using an ORM), mapping objects to database tables. Handles schema definition, relationships, and direct interaction with the database.
+5. **File Storage**: Responsible for saving, retrieving, and deleting files. Provides an interface for file operations such as uploading, downloading, copying, and deleting files. Interacts exclusively with the Service layer, keeping file-handling logic separate from business and data access logic.
 
-6. **File Storage**: Responsible for saving, retrieving, and deleting files. Provides an interface for file operations such as uploading, downloading, copying, and deleting files. Interacts exclusively with the Service layer, keeping file-handling logic separate from business and data access logic.
+
+## Component Interaction Diagram
+
+The following diagram illustrates the main components and their interactions within the application architecture:
+
+![Component Interaction Diagram](docs/component_interaction_diagram.png)
+
+### Main Interactions
+
+1. **Request Flow**:
+   - Users make requests via the API Layer.
+   - The API passes validated data to the Service Layer.
+   - The Service Layer interacts with the Repository Layer for data operations and may trigger background tasks or file storage as needed.
+
+2. **Task Processing**:
+   - The Service Layer can enqueue tasks to the Task Queue, which are processed asynchronously.
+
+3. **Persistence**:
+   - Data flows from the Service Layer to the Repository Layer, which communicates with the Database.
+
+4. **File Storage**:
+   - The Service Layer handles file uploads/downloads via the Storage component.
+
 
 ---
 
