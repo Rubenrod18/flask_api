@@ -64,7 +64,7 @@ class DocumentRepositoryTest(BaseTest):
         user = UserFactory()
         document = DocumentFactory(created_by_user=user)
 
-        document = self.repository.delete(document)
+        document = self.repository.delete(document.id)
 
         self.assertTrue(isinstance(document.deleted_at, datetime))
         self.assertIsNone(
@@ -76,4 +76,4 @@ class DocumentRepositoryTest(BaseTest):
         document = DocumentFactory(created_by_user=user)
 
         with self.assertRaises(NotImplementedError):
-            self.repository.delete(document, force_delete=True)
+            self.repository.delete(document.id, force_delete=True)

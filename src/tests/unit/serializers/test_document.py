@@ -7,7 +7,6 @@ from werkzeug.exceptions import NotFound, UnprocessableEntity
 
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.user_factory import UserFactory
-from app.managers import DocumentManager
 from app.models import Document
 from app.repositories import DocumentRepository
 from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
@@ -18,10 +17,9 @@ class DocumentSerializerTest(BaseTest):
     def setUp(self):
         super().setUp()
         self.user = UserFactory()
-        self.document_manager = MagicMock(spec=DocumentManager)
-        self.document_manager.repository = MagicMock(spec=DocumentRepository)
-        self.document_manager.model = MagicMock(spec=Document)
-        self.document_manager.model.deleted_at.is_.return_value = None
+        self.document_repository = MagicMock(spec=DocumentRepository)
+        self.document_repository.model = MagicMock(spec=Document)
+        self.document_repository.model.deleted_at.is_.return_value = None
         self.document = DocumentFactory(
             name='test_doc.pdf',
             internal_filename='test_doc_internal.pdf',
@@ -34,8 +32,8 @@ class DocumentSerializerTest(BaseTest):
         )
 
         self.serializer = DocumentSerializer()
-        self.serializer._document_manager = self.document_manager  # pylint: disable=protected-access
-        self.document_manager.find_by_id.return_value = self.document
+        self.serializer._document_repository = self.document_repository  # pylint: disable=protected-access
+        self.document_repository.find_by_id.return_value = self.document
 
     def test_valid_serialization(self):
         serialized_data = self.serializer.dump(self.document)
@@ -50,7 +48,7 @@ class DocumentSerializerTest(BaseTest):
         self.serializer.load({'id': self.document.id}, partial=True)
 
     def test_validate_nonexistent_document_id(self):
-        self.document_manager.find_by_id.return_value = None
+        self.document_repository.find_by_id.return_value = None
 
         with self.assertRaises(NotFound) as context:
             self.serializer.validate_id(999)

@@ -1,31 +1,27 @@
-from abc import ABC
 from datetime import datetime, UTC
 
 from flask_sqlalchemy.model import DefaultMeta
 
 from app.extensions import db
+from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
 
 
-class BaseRepository(ABC):
+class BaseRepository:
     def __init__(self, model: type[DefaultMeta]):
         self.model = model
 
     def create(self, **kwargs) -> db.Model:
-        raise NotImplementedError
-
-    def find(self, *args, **kwargs) -> db.Model | None:
-        raise NotImplementedError
-
-    def delete(self, record: db.Model, force_delete: bool = False) -> db.Model | int:
-        raise NotImplementedError
-
-
-class MySQLRepository(BaseRepository):
-    def __init__(self, model: type[DefaultMeta]):
-        super().__init__(model=model)
-
-    def create(self, **kwargs) -> db.Model:
         return self.model(**kwargs)
+
+    def delete(self, record_id: int, force_delete: bool = False) -> db.Model:
+        record = self.find_by_id(record_id)
+
+        if force_delete:
+            raise NotImplementedError
+        else:
+            record.deleted_at = datetime.now(UTC)
+
+        return record
 
     def find(self, *args, **kwargs) -> db.Model | None:
         query = db.session.query(self.model)
@@ -38,10 +34,30 @@ class MySQLRepository(BaseRepository):
 
         return query.first()
 
-    def delete(self, record: db.Model, force_delete: bool = False) -> db.Model | int:
-        if force_delete:
-            raise NotImplementedError
-        else:
-            record.deleted_at = datetime.now(UTC)
+    def find_by_id(self, record_id: int, *args, **kwargs) -> db.Model | None:
+        args += (self.model.id == record_id,)
+        return self.find(*args, **kwargs)
+
+    def get(self, **kwargs) -> dict:
+        rqo = SQLAlchemyQueryBuilder()
+        page, items_per_page, order = rqo.get_request_query_fields(self.model, kwargs)
+
+        query = db.session.query(self.model)
+        records_total = db.session.query(self.model).count()
+
+        query = rqo.create_search_query(self.model, query, kwargs)
+        query = query.order_by(*order).offset(page * items_per_page).limit(items_per_page)
+
+        return {
+            'query': query,
+            'records_filtered': query.count(),
+            'records_total': records_total,
+        }
+
+    def save(self, record_id: int, **kwargs) -> db.Model:
+        record = self.find_by_id(record_id)
+
+        for key, value in kwargs.items():
+            setattr(record, key, value)
 
         return record

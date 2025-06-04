@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
 from app.extensions import db
-from app.managers import BaseManager
+from app.repositories.base import BaseRepository
 
 
 class BaseService(ABC):
-    def __init__(self, manager: BaseManager):
-        self.manager = manager
+    def __init__(self, repository: BaseRepository):
+        self.repository = repository
 
     @abstractmethod
     def create(self, **kwargs) -> db.Model:

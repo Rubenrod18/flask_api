@@ -8,8 +8,8 @@ from werkzeug.exceptions import InternalServerError
 
 from app.extensions import db
 from app.file_storages import LocalStorage
-from app.managers import DocumentManager
 from app.models import Document
+from app.repositories import DocumentRepository
 from app.services.base import BaseService
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class DocumentService(BaseService):
     def __init__(self, file_storage: LocalStorage = None):
-        super().__init__(manager=DocumentManager())
+        super().__init__(repository=DocumentRepository())
         self.file_storage = file_storage or LocalStorage()
 
     def create(self, **kwargs) -> Document:
@@ -36,7 +36,7 @@ class DocumentService(BaseService):
                 'directory_path': current_app.config.get('STORAGE_DIRECTORY'),
                 'size': self.file_storage.get_filesize(filepath),
             }
-            document = self.manager.create(**data)
+            document = self.repository.create(**data)
             db.session.add(document)
             db.session.flush()
         except Exception as e:
@@ -47,13 +47,13 @@ class DocumentService(BaseService):
             return document
 
     def find_by_id(self, record_id: int, *args) -> Document | None:
-        return self.manager.find_by_id(record_id, *args)
+        return self.repository.find_by_id(record_id, *args)
 
     def get(self, **kwargs) -> dict:
-        return self.manager.get(**kwargs)
+        return self.repository.get(**kwargs)
 
     def save(self, record_id: int, **kwargs) -> Document:
-        document = self.manager.find_by_id(record_id)
+        document = self.repository.find_by_id(record_id)
         # QUESTION: The app doesn't have file versioning, should we consider this feature in the future?
         filepath = f'{document.directory_path}/{document.internal_filename}'
 
@@ -65,7 +65,7 @@ class DocumentService(BaseService):
                 'mime_type': kwargs.get('mime_type'),
                 'size': self.file_storage.get_filesize(filepath),
             }
-            document = self.manager.save(record_id, **data)
+            document = self.repository.save(record_id, **data)
             db.session.add(document)
             db.session.flush()
         except Exception as e:  # HACK: Add the proper exceptions here
@@ -76,11 +76,11 @@ class DocumentService(BaseService):
             return document.reload()
 
     def delete(self, record_id: int) -> Document:
-        return self.manager.delete(record_id)
+        return self.repository.delete(record_id)
 
     def get_document_content(self, document_id: int, request_args: dict) -> Response:
         as_attachment = request_args.get('as_attachment', 0)
-        document = self.manager.find_by_id(document_id)
+        document = self.repository.find_by_id(document_id)
 
         mime_type = document.mime_type
         file_extension = mimetypes.guess_extension(mime_type)

@@ -5,25 +5,25 @@ from sqlalchemy import func
 
 from app.database.factories.user_factory import UserFactory
 from app.database.seeds import seed_actions
-from app.database.seeds.base_seeder import FactorySeeder, ManagerSeeder
+from app.database.seeds.base_seeder import FactorySeeder, RepositorySeeder
 from app.extensions import db
-from app.managers import RoleManager, UserManager
 from app.models import Role, User
 from app.models.role import ADMIN_ROLE, ROLES
+from app.repositories import RoleRepository, UserRepository
 
 
-class Seeder(FactorySeeder, ManagerSeeder):
+class Seeder(FactorySeeder, RepositorySeeder):
     def __init__(self):
         FactorySeeder.__init__(self, name='UserSeeder', priority=1, factory=UserFactory)
-        ManagerSeeder.__init__(self, UserManager())
-        self.role_manager = RoleManager()
+        RepositorySeeder.__init__(self, UserRepository())
+        self.role_repository = RoleRepository()
         self._default_rows = 20
 
     def _create_admin_user(self):
         test_user_email = os.getenv('TEST_USER_EMAIL')
 
-        if self.manager.find_by_email(email=test_user_email) is None:
-            role = self.role_manager.find_by_name(ADMIN_ROLE)
+        if self.repository.find_by_email(email=test_user_email) is None:
+            role = self.role_repository.find_by_name(ADMIN_ROLE)
 
             self.factory.create(
                 **{
@@ -51,7 +51,7 @@ class Seeder(FactorySeeder, ManagerSeeder):
     def seed(self, rows: int = None) -> None:
         rows = rows or self._default_rows
         self._create_admin_user()
-        roles = {role.name: role for role in self.role_manager.get()['query']}
+        roles = {role.name: role for role in self.role_repository.get()['query']}
 
         for _ in range(rows):
             user_role = roles.get(choice(list(ROLES)))

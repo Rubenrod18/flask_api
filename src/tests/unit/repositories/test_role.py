@@ -52,7 +52,7 @@ class RoleRepositoryTest(BaseTest):
     def test_delete_soft_role(self):
         role = RoleFactory()
 
-        role = self.repository.delete(role)
+        role = self.repository.delete(role.id)
 
         self.assertTrue(isinstance(role.deleted_at, datetime))
         self.assertIsNone(db.session.query(Role).filter_by(name=role.name, deleted_at=role.deleted_at).one_or_none())
@@ -61,4 +61,4 @@ class RoleRepositoryTest(BaseTest):
         role = RoleFactory()
 
         with self.assertRaises(NotImplementedError):
-            self.repository.delete(role, force_delete=True)
+            self.repository.delete(role.id, force_delete=True)

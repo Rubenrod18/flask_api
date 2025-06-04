@@ -4,13 +4,13 @@ from flask_jwt_extended import create_access_token, create_refresh_token, get_jw
 
 from app.celery.tasks import reset_password_email_task
 from app.helpers.otp_token import OTPTokenManager
-from app.managers import UserManager
 from app.models import User
+from app.repositories import UserRepository
 
 
 class AuthService:
     def __init__(self):
-        self.user_manager = UserManager()
+        self.user_repository = UserRepository()
 
     @staticmethod
     def _authenticate_user(user: User) -> dict:
@@ -48,7 +48,7 @@ class AuthService:
         reset_password_email_task.delay(email_data)
 
     def confirm_request_reset_password(self, user: User, password: str) -> dict:
-        self.user_manager.save(user.id, **{'password': password})
+        self.user_repository.save(user.id, **{'password': password})
 
         return self._authenticate_user(user.reload())
 
