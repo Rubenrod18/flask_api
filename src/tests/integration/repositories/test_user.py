@@ -54,6 +54,51 @@ class UserRepositoryTest(BaseTest):
                 self.assertTrue(isinstance(result, User), (description, args, kwargs))
                 self.assertEqual(result.id, user.id, (description, args, kwargs))
 
+    def test_find_by_email_user(self):
+        user = UserFactory(
+            deleted_at=datetime.now(UTC), created_by_user=AdminUserFactory(deleted_at=None, active=True), active=False
+        )
+
+        test_cases = [
+            ('fs_uniquifier', (User.fs_uniquifier == user.fs_uniquifier,)),
+            ('created_by', (User.created_by == user.created_by_user.id,)),
+            ('name', (User.name == user.name,)),
+            ('last_name', (User.last_name == user.last_name,)),
+            ('genre', (User.genre == user.genre,)),
+            ('birth_date', (User.birth_date == user.birth_date,)),
+            ('active', (User.active == user.active,)),
+            ('created_at', (User.created_at == user.created_at,)),
+            ('updated_at', (User.updated_at == user.updated_at,)),
+            ('deleted_at', (User.deleted_at == user.deleted_at,)),
+        ]
+
+        for description, args in test_cases:
+            result = self.repository.find_by_email(user.email, *args)
+            self.assertIsNotNone(result, (description, args))
+            self.assertTrue(isinstance(result, User), (description, args))
+            self.assertEqual(result.id, user.id, (description, args))
+
+    def test_find_by_email_not_found_user(self):
+        UserFactory(
+            deleted_at=datetime.now(UTC), created_by_user=AdminUserFactory(deleted_at=None, active=True), active=False
+        )
+
+        found_user = self.repository.find_by_email('fake-user@mail.com')
+
+        self.assertIsNone(found_user)
+
+    def test_get_last_record_user(self):
+        UserFactory(deleted_at=datetime.now(UTC), created_by_user=None, active=False)
+        UserFactory(
+            deleted_at=datetime.now(UTC), created_by_user=AdminUserFactory(deleted_at=None, active=True), active=False
+        )
+
+        found_user = self.repository.get_last_record()
+
+        self.assertIsNotNone(found_user)
+        self.assertTrue(isinstance(found_user, User))
+        self.assertEqual(found_user.id, 3)
+
     def test_delete_soft_user(self):
         user = UserFactory()
 
