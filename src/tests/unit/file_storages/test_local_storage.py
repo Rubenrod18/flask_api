@@ -15,6 +15,7 @@ class TestLocalStorage(BaseTest):
         os.close(fd)
 
     def tearDown(self):
+        super().tearDown()
         if os.path.exists(self.file_path):
             os.remove(self.file_path)
 
