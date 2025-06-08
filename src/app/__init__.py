@@ -56,12 +56,12 @@ def _register_static_routes(app: Flask) -> None:
         return send_from_directory(app.config['STATIC_FOLDER'], path)
 
 
-def create_app(env_config: str | type['Config']) -> Flask:
+def create_app(env_config: str) -> Flask:
     """Builds an application based on environment configuration.
 
     Parameters
     ----------
-    env_config
+    env_config: str
         Environment configuration.
 
     Returns
@@ -78,11 +78,7 @@ def create_app(env_config: str | type['Config']) -> Flask:
             config.TestConfig
 
     """
-    config = env_config
-
-    if isinstance(env_config, str):
-        config = import_string(env_config)
-
+    config = import_string(env_config)
     app = flask.Flask(__name__, static_url_path=config.STATIC_FOLDER, template_folder=config.TEMPLATES_FOLDER)
     app.config.from_object(env_config)
     app.wsgi_app = Middleware(app)
