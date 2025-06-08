@@ -3,26 +3,6 @@
 The module runs the application on differents
 configurations ( dev, prod, testing, etc ), run commands, etc.
 
-.. note:: A ".env" file must to be created before start up the
-application.
-
-Examples
---------
-
-How to run the server::
-
-    source ven/bin/activate
-    python manage.py
-
-.. note:: You can open a web browser and go to server name
-    http://flask-api.prod:5000 or the server name added to SERVER_NAME
-    environment variable.
-
-How to run a command::
-
-    source venv/bin/activate
-    flask init-db
-
 """
 
 import os

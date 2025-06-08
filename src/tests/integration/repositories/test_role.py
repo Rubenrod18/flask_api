@@ -49,6 +49,30 @@ class RoleRepositoryTest(BaseTest):
                 self.assertTrue(isinstance(result, Role), (description, args, kwargs))
                 self.assertEqual(result.id, role.id, (description, args, kwargs))
 
+    def test_find_by_name_role(self):
+        role = RoleFactory(deleted_at=None)
+
+        test_cases = [
+            ('description', (Role.description == role.description,)),
+            ('label', (Role.label == role.label,)),
+            ('created_at', (Role.created_at == role.created_at,)),
+            ('updated_at', (Role.updated_at == role.updated_at,)),
+            ('deleted_at', (Role.deleted_at.is_(None),)),
+        ]
+
+        for description, args in test_cases:
+            result = self.repository.find_by_name(role.name, *args)
+            self.assertIsNotNone(result, (description, args))
+            self.assertTrue(isinstance(result, Role), (description, args))
+            self.assertEqual(result.id, role.id, (description, args))
+
+    def test_find_by_name_not_found_role(self):
+        RoleFactory(deleted_at=None)
+
+        found_role = self.repository.find_by_name('fake-role')
+
+        self.assertIsNone(found_role)
+
     def test_delete_soft_role(self):
         role = RoleFactory()
 
