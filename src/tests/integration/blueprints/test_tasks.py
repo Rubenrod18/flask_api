@@ -73,11 +73,10 @@ class TaskEndpointTest(BaseApiTest):
         ]
 
         for user_email, response_status in test_cases:
-            with self.subTest(user_email=user_email):
-                response = self.client.get(
-                    f'{self.base_path}/status/{uuid.uuid4()}',
-                    json={},
-                    headers=self.build_headers(),
-                    exp_code=response_status,
-                )
-                self.assertEqual(response.status_code, response_status)
+            response = self.client.get(
+                f'{self.base_path}/status/{uuid.uuid4()}',
+                json={},
+                headers=self.build_headers(user_email=user_email),
+                exp_code=response_status,
+            )
+            self.assertEqual(response.status_code, response_status)

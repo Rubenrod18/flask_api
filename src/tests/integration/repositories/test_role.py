@@ -43,11 +43,10 @@ class RoleRepositoryTest(BaseTest):
         ]
 
         for description, args, kwargs in test_cases:
-            with self.subTest():
-                result = self.repository.find(*args, **kwargs)
-                self.assertIsNotNone(result, (description, args, kwargs))
-                self.assertTrue(isinstance(result, Role), (description, args, kwargs))
-                self.assertEqual(result.id, role.id, (description, args, kwargs))
+            result = self.repository.find(*args, **kwargs)
+            self.assertIsNotNone(result, (description, args, kwargs))
+            self.assertTrue(isinstance(result, Role), (description, args, kwargs))
+            self.assertEqual(result.id, role.id, (description, args, kwargs))
 
     def test_find_by_name_role(self):
         role = RoleFactory(deleted_at=None)

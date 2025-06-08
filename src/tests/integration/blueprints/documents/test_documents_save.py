@@ -43,7 +43,6 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
         ]
 
         for user_email, response_status in test_cases:
-            with self.subTest(user_email=user_email):
-                self.client.post(
-                    self.base_path, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-                )
+            self.client.post(
+                self.base_path, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+            )

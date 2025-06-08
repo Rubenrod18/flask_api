@@ -46,13 +46,12 @@ class OrderByClauseBuilderTest(BaseTest):
         ]
 
         for sorting, field_name, expected_record in test_cases:
-            with self.subTest(msg=sorting):
-                order = rqo.OrderByClauseBuilder.build_order_by(
-                    Document, request_data={'order': [{'sorting': sorting, 'field_name': field_name}]}
-                )
-                query = db.session.query(Document).order_by(*order)
+            order = rqo.OrderByClauseBuilder.build_order_by(
+                Document, request_data={'order': [{'sorting': sorting, 'field_name': field_name}]}
+            )
+            query = db.session.query(Document).order_by(*order)
 
-                self.assertEqual(query.first().name, expected_record)
+            self.assertEqual(query.first().name, expected_record)
 
     def test_ordering_with_more_than_one_criteria(self):
         with freeze_time('2020-01-01'):
@@ -67,11 +66,10 @@ class OrderByClauseBuilderTest(BaseTest):
         ]
 
         for sorting, expected_record in test_cases:
-            with self.subTest(msg=sorting):
-                order = rqo.OrderByClauseBuilder.build_order_by(Document, request_data={'order': sorting})
-                query = db.session.query(Document).order_by(*order)
+            order = rqo.OrderByClauseBuilder.build_order_by(Document, request_data={'order': sorting})
+            query = db.session.query(Document).order_by(*order)
 
-                self.assertEqual(query.first().name, expected_record)
+            self.assertEqual(query.first().name, expected_record)
 
 
 class StringQueryClauseBuilderTest(BaseTest):
@@ -101,18 +99,13 @@ class StringQueryClauseBuilderTest(BaseTest):
 
         for str_operator, test_case, expected, expected_clauses in test_cases:
             field, field_operator, field_value = test_case
-            with self.subTest(msg=str_operator):
-                sql_clause = self.string_clause_helper.build_clause_with_multiple_values(
-                    field, field_operator, field_value
-                )
-                self.assertEqual(sql_clause.operator, expected.operator)
-                if str_operator == 'multiple values':
-                    for index, _ in enumerate(sql_clause.clauses):
-                        self.assertEqual(
-                            sql_clause.clauses[index].right.value, expected_clauses[index], msg=str_operator
-                        )
-                else:
-                    self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
+            sql_clause = self.string_clause_helper.build_clause_with_multiple_values(field, field_operator, field_value)
+            self.assertEqual(sql_clause.operator, expected.operator)
+            if str_operator == 'multiple values':
+                for index, _ in enumerate(sql_clause.clauses):
+                    self.assertEqual(sql_clause.clauses[index].right.value, expected_clauses[index], msg=str_operator)
+            else:
+                self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
 
 
 class ComparisonClauseBuilderTest(BaseTest):
@@ -204,23 +197,18 @@ class ComparisonClauseBuilderTest(BaseTest):
 
         for str_operator, test_case, expected, expected_clauses in test_cases:
             field, field_operator, field_value = test_case
-            with self.subTest(msg=str_operator):
-                sql_clause = self.operator_clause_helper.build_clause_with_multiple_values(
-                    field, field_operator, field_value
-                )
-                self.assertEqual(sql_clause.operator, expected.operator)
-                if str_operator == 'multiple values':
-                    for index, _ in enumerate(sql_clause.clauses):
-                        self.assertEqual(
-                            sql_clause.clauses[index].right.value, expected_clauses[index], msg=str_operator
-                        )
-                elif str_operator == 'between':
-                    for index, _ in enumerate(sql_clause.right.clauses):
-                        self.assertEqual(
-                            sql_clause.right.clauses[index].value, expected_clauses[index], msg=str_operator
-                        )
-                else:
-                    self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
+            sql_clause = self.operator_clause_helper.build_clause_with_multiple_values(
+                field, field_operator, field_value
+            )
+            self.assertEqual(sql_clause.operator, expected.operator)
+            if str_operator == 'multiple values':
+                for index, _ in enumerate(sql_clause.clauses):
+                    self.assertEqual(sql_clause.clauses[index].right.value, expected_clauses[index], msg=str_operator)
+            elif str_operator == 'between':
+                for index, _ in enumerate(sql_clause.right.clauses):
+                    self.assertEqual(sql_clause.right.clauses[index].value, expected_clauses[index], msg=str_operator)
+            else:
+                self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
 
     def test_create_search_query_integer(self):
         doc = DocumentFactory(name='Invoice 2024-01', size=1_000_000)
@@ -294,23 +282,18 @@ class ComparisonClauseBuilderTest(BaseTest):
 
         for str_operator, test_case, expected, expected_clauses in test_cases:
             field, field_operator, field_value = test_case
-            with self.subTest(msg=str_operator):
-                sql_clause = self.operator_clause_helper.build_clause_with_multiple_values(
-                    field, field_operator, field_value
-                )
-                self.assertEqual(sql_clause.operator, expected.operator)
-                if str_operator == 'multiple values':
-                    for index, _ in enumerate(sql_clause.clauses):
-                        self.assertEqual(
-                            sql_clause.clauses[index].right.value, expected_clauses[index], msg=str_operator
-                        )
-                elif str_operator == 'between':
-                    for index, _ in enumerate(sql_clause.right.clauses):
-                        self.assertEqual(
-                            sql_clause.right.clauses[index].value, expected_clauses[index], msg=str_operator
-                        )
-                else:
-                    self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
+            sql_clause = self.operator_clause_helper.build_clause_with_multiple_values(
+                field, field_operator, field_value
+            )
+            self.assertEqual(sql_clause.operator, expected.operator)
+            if str_operator == 'multiple values':
+                for index, _ in enumerate(sql_clause.clauses):
+                    self.assertEqual(sql_clause.clauses[index].right.value, expected_clauses[index], msg=str_operator)
+            elif str_operator == 'between':
+                for index, _ in enumerate(sql_clause.right.clauses):
+                    self.assertEqual(sql_clause.right.clauses[index].value, expected_clauses[index], msg=str_operator)
+            else:
+                self.assertEqual(sql_clause.right.value, expected.right.value, msg=str_operator)
 
 
 class SQLAlchemyQueryBuilderStringsTest(BaseTest, _TestBaseCreateSearchQuery):
@@ -344,9 +327,8 @@ class SQLAlchemyQueryBuilderStringsTest(BaseTest, _TestBaseCreateSearchQuery):
         )
 
         for str_operator, test_case, expected in test_cases:
-            with self.subTest(msg=str_operator):
-                query = self.rqo.create_search_query(User, db.session.query(User.id), test_case)
-                self.assertEqual(self._get_values(query), expected, msg=str_operator)
+            query = self.rqo.create_search_query(User, db.session.query(User.id), test_case)
+            self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
     def test_create_search_query_text(self):
         software_engineer_description = 'Designs, develops, and maintains software applications.'
@@ -382,9 +364,8 @@ class SQLAlchemyQueryBuilderStringsTest(BaseTest, _TestBaseCreateSearchQuery):
         )
 
         for str_operator, test_case, expected in test_cases:
-            with self.subTest(msg=str_operator):
-                query = self.rqo.create_search_query(Role, db.session.query(Role.id), test_case)
-                self.assertEqual(self._get_values(query), expected, msg=str_operator)
+            query = self.rqo.create_search_query(Role, db.session.query(Role.id), test_case)
+            self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
     def test_create_search_query_uuid(self):
         user = UserFactory()
@@ -397,9 +378,8 @@ class SQLAlchemyQueryBuilderStringsTest(BaseTest, _TestBaseCreateSearchQuery):
         )
 
         for str_operator, test_case, expected in test_cases:
-            with self.subTest(msg=str_operator):
-                query = self.rqo.create_search_query(User, db.session.query(User.id), test_case)
-                self.assertEqual(self._get_values(query), expected, msg=str_operator)
+            query = self.rqo.create_search_query(User, db.session.query(User.id), test_case)
+            self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
 
 class SQLAlchemyQueryBuilderNoStringsTest(BaseTest, _TestBaseCreateSearchQuery):
@@ -480,9 +460,8 @@ class SQLAlchemyQueryBuilderNoStringsTest(BaseTest, _TestBaseCreateSearchQuery):
         )
 
         for str_operator, test_case, expected in test_cases:
-            with self.subTest(msg=str_operator):
-                query = self.rqo.create_search_query(Document, db.session.query(Document.id), test_case)
-                self.assertEqual(self._get_values(query), expected, msg=str_operator)
+            query = self.rqo.create_search_query(Document, db.session.query(Document.id), test_case)
+            self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
     def test_create_search_query_date(self):
         with freeze_time('2020-01-01'):
@@ -548,9 +527,8 @@ class SQLAlchemyQueryBuilderNoStringsTest(BaseTest, _TestBaseCreateSearchQuery):
         )
 
         for str_operator, test_case, expected in test_cases:
-            with self.subTest(msg=str_operator):
-                query = self.rqo.create_search_query(User, db.session.query(User.id), test_case)
-                self.assertEqual(self._get_values(query), expected, msg=str_operator)
+            query = self.rqo.create_search_query(User, db.session.query(User.id), test_case)
+            self.assertEqual(self._get_values(query), expected, msg=str_operator)
 
     def test_create_search_query_integer(self):
         doc = DocumentFactory(name='Invoice 2024-01', size=1_000_000)
@@ -596,6 +574,5 @@ class SQLAlchemyQueryBuilderNoStringsTest(BaseTest, _TestBaseCreateSearchQuery):
         )
 
         for str_operator, test_case, expected in test_cases:
-            with self.subTest(msg=str_operator):
-                query = self.rqo.create_search_query(Document, db.session.query(Document.id), test_case)
-                self.assertEqual(self._get_values(query), expected, msg=str_operator)
+            query = self.rqo.create_search_query(Document, db.session.query(Document.id), test_case)
+            self.assertEqual(self._get_values(query), expected, msg=str_operator)
