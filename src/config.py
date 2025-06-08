@@ -14,16 +14,21 @@ from kombu import Exchange, Queue
 load_dotenv()
 
 
+def _str_to_bool(env_value: str, default_env_value: str) -> bool:
+    env_value = env_value or default_env_value
+    return env_value.lower() == 'true'
+
+
 class Meta(type):
     """Metaclass for updating Config options."""
 
-    def __new__(cls, name: str, bases: tuple, dict: dict):
-        config = super().__new__(cls, name, bases, dict)
-        cls.new_settings(config)
+    def __new__(mcs, name: str, *args, **kwargs):
+        config = super().__new__(mcs, name, *args, **kwargs)
+        mcs.new_settings(config)
         return config
 
     @classmethod
-    def new_settings(cls, config: type) -> None:
+    def new_settings(mcs, config: type) -> None:
         new_settings_names = {
             'SECRET_KEY': 'JWT_SECRET_KEY',
         }
@@ -64,8 +69,8 @@ class Config(metaclass=Meta):
     MAIL_PORT = os.getenv('MAIL_PORT')
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
-    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', True)
-    MAIL_USE_SSL = os.getenv('MAIL_USE_SSL', False)
+    MAIL_USE_TLS = _str_to_bool(os.getenv('MAIL_USE_TLS'), 'True')
+    MAIL_USE_SSL = _str_to_bool(os.getenv('MAIL_USE_SSL'), 'False')
 
     # Celery
     broker_url = os.getenv('CELERY_BROKER_URL')
@@ -125,8 +130,6 @@ class Config(metaclass=Meta):
 
 class ProdConfig(Config):
     """Production configuration options."""
-
-    pass
 
 
 class DevConfig(Config):
