@@ -13,7 +13,6 @@ from config import Config
 class DocumentSerializer(ma.SQLAlchemySchema, RepositoryMixin):
     class Meta:
         model = Document
-        ordered = True
 
     repository_classes = {'document_repository': DocumentRepository}
 

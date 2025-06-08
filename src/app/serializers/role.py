@@ -10,7 +10,6 @@ from app.serializers.core import RepositoryMixin
 class RoleSerializer(ma.SQLAlchemySchema, RepositoryMixin):
     class Meta:
         model = Role
-        ordered = True
 
     repository_classes = {'role_repository': RoleRepository}
 
