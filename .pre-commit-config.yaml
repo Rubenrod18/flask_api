@@ -26,4 +26,6 @@ repos:
                 "app",
                 "--disable=R",
                 "--rcfile=src/.pylintrc",
+                # NOTE: Next line prevents next error "app:1:0: F0001: No module named app (fatal)"
+                "--init-hook=import sys; sys.path.append('src')",
             ]
