@@ -1,4 +1,4 @@
-.PHONY: help prod.build _build local.build local.start local.stop local.down local.logs
+.PHONY: help _build
 
 # Docker
 REGISTRY = rubenrod18/flask_api
