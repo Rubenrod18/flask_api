@@ -76,7 +76,8 @@ jobs:
       - name: Run Pylint
         # https://docs.astral.sh/ruff/faq/#how-does-ruffs-linter-compare-to-pylint
         run: |
-          pylint app --disable=R --exit-zero
+          make linter
+        working-directory: ${{ env.working-directory }}
 
       - name: Ruff format
         uses: astral-sh/ruff-action@v3
