@@ -3,9 +3,9 @@
   "version": "3.1.0",
   "scripts": {
     "first-release": "npm run release -- --first-release",
-    "patch": "npm run release -- --release-as patch",
-    "minor": "npm run release -- --release-as minor",
-    "major": "npm run release -- --release-as major",
+    "patch": "npm run release -- --release-as patch && python scripts/sync_version.py",
+    "minor": "npm run release -- --release-as minor && python scripts/sync_version.py",
+    "major": "npm run release -- --release-as major && python scripts/sync_version.py",
     "release": "commit-and-tag-version",
     "publish-to-master": "git push --follow-tags origin master",
     "upgrade": "npx npm-check-updates -u"
@@ -25,5 +25,11 @@
   },
   "devDependencies": {
     "commit-and-tag-version": "^12.5.1"
+  },
+  "commit-and-tag-version": {
+    "skip": {
+      "commit": true,
+      "tag": true
+    }
   }
 }
