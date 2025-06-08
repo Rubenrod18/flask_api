@@ -28,7 +28,6 @@ class VerifyRoleId(fields.Int, RepositoryMixin):
 class UserSerializer(ma.SQLAlchemySchema, RepositoryMixin):
     class Meta:
         model = User
-        ordered = True
 
     repository_classes = {'user_repository': UserRepository}
 
