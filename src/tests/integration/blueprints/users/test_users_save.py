@@ -8,7 +8,7 @@ from ._base_integration_test import _BaseUserEndpointsTest
 
 class SaveUserEndpointTest(_BaseUserEndpointsTest):
     def test_create_user_endpoint(self):
-        role = RoleFactory()
+        role = RoleFactory(deleted_at=None)
         ignore_fields = {
             'id',
             'active',
@@ -59,7 +59,7 @@ class SaveUserEndpointTest(_BaseUserEndpointsTest):
             'genre': 'string',
             'password': 'string',
             'birth_date': 'string',
-            'role_id': 1,
+            'role_id': self.admin_user.roles[0].id,
         }
 
         self.client.post(self.base_path, json=payload, headers=self.build_headers(), exp_code=422)

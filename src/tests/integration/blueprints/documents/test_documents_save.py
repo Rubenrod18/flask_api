@@ -13,7 +13,8 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
         self.local_storage = LocalStorage()
 
     def test_save_document_endpoint(self):
-        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/example.pdf'
+        pdf_filename = 'example.pdf'
+        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{pdf_filename}'
         payload = {
             'document': open(pdf_file, 'rb'),
         }
@@ -26,7 +27,7 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
         parse_url = urlparse(json_data.get('url'))
 
         self.assertEqual(self.admin_user.id, json_data.get('created_by').get('id'))
-        self.assertEqual(pdf_file, json_data.get('name'))
+        self.assertEqual(pdf_filename, json_data.get('name'))
         self.assertEqual('application/pdf', json_data.get('mime_type'))
         self.assertEqual(self.local_storage.get_filesize(pdf_file), json_data.get('size'))
         self.assertTrue(parse_url.scheme and parse_url.netloc)

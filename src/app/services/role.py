@@ -5,8 +5,8 @@ from app.services import base as b
 
 
 class RoleService(b.BaseService, b.CreationService, b.DeletionService, b.FindByIdService, b.GetService, b.SaveService):
-    def __init__(self):
-        super().__init__(repository=RoleRepository())
+    def __init__(self, role_repository: RoleRepository = None):
+        super().__init__(repository=role_repository or RoleRepository())
 
     def create(self, **kwargs) -> Role:
         role = self.repository.create(**kwargs)
@@ -21,8 +21,7 @@ class RoleService(b.BaseService, b.CreationService, b.DeletionService, b.FindByI
         return self.repository.get(**kwargs)
 
     def save(self, record_id: int, **kwargs) -> Role:
-        self.repository.save(record_id, **kwargs)
-        return self.repository.find_by_id(record_id)
+        return self.repository.save(record_id, **kwargs)
 
     def delete(self, record_id: int) -> Role:
         return self.repository.delete(record_id)

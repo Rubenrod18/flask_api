@@ -20,7 +20,7 @@ class UpdateUserEndpointTest(_BaseUserEndpointsTest):
         ignore_fields = {'id', 'active', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'roles'}
         payload = UserFactory.build_dict(exclude=ignore_fields)
         payload['password'] = os.getenv('TEST_USER_PASSWORD')
-        role = RoleFactory()
+        role = RoleFactory(deleted_at=None)
         payload['role_id'] = role.id
 
         response = self.client.put(self.endpoint, json=payload, headers=self.build_headers(user_email=self.user.email))

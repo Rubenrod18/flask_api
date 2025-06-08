@@ -7,13 +7,14 @@ from app.services import base as b, RoleService
 
 
 class UserService(b.BaseService, b.CreationService, b.DeletionService, b.FindByIdService, b.GetService, b.SaveService):
-    def __init__(self, role_service: RoleService = None):
-        super().__init__(repository=UserRepository())
+    def __init__(self, user_repository: UserRepository = None, role_service: RoleService = None):
+        super().__init__(repository=user_repository or UserRepository())
         self.role_service = role_service or RoleService()
 
     def create(self, **kwargs) -> User:
         role_id = kwargs.pop('role_id')
 
+        # QUESTION: Shall we consider save fs_uniquifier as an uuid?
         user = self.repository.get_last_record()
         fs_uniquifier = 1 if user is None else user.id + 1
 
@@ -33,14 +34,11 @@ class UserService(b.BaseService, b.CreationService, b.DeletionService, b.FindByI
         return self.repository.get(**kwargs)
 
     def save(self, record_id: int, **kwargs) -> User:
-        user = self.repository.find_by_id(record_id)
-        self.repository.save(record_id, **kwargs)
+        user = self.repository.save(record_id, **kwargs)
+        db.session.flush()
 
         if 'role_id' in kwargs:
             self.role_service.assign_role_to_user(user, kwargs['role_id'])
-
-        db.session.add(user)
-        db.session.flush()
 
         return user.reload()
 

@@ -1,3 +1,4 @@
+import random
 import shutil
 import uuid
 
@@ -18,6 +19,8 @@ class DocumentFactory(BaseFactory):
     name = factory.Sequence(lambda n: f'document_name_{n}')
     size = factory.Faker('random_int', min=2_000_000, max=10_000_000)
     mime_type = factory.Faker('random_element', elements=[PDF_MIME_TYPE])
+    created_at = factory.Faker('date_time_between', start_date='-3y', end_date='now')
+    deleted_at = random.choice([factory.Faker('date_time_between', start_date='-1y', end_date='now'), None])
 
     @factory.lazy_attribute
     def directory_path(self):
@@ -41,3 +44,12 @@ class DocumentFactory(BaseFactory):
             .limit(1)
             .first()
         )
+
+    @factory.lazy_attribute
+    def updated_at(self):
+        if self.deleted_at:
+            updated_at = self.deleted_at
+        else:
+            # NOTE: This case always applies on the creation
+            updated_at = self.created_at
+        return updated_at

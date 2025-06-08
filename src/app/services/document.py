@@ -4,8 +4,9 @@ import uuid
 
 from flask import current_app, Response, send_file
 from flask_login import current_user
-from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import BadRequest
 
+from app.exceptions import FileEmptyError
 from app.extensions import db
 from app.file_storages import LocalStorage
 from app.models import Document
@@ -18,8 +19,8 @@ logger = logging.getLogger(__name__)
 class DocumentService(
     b.BaseService, b.CreationService, b.DeletionService, b.FindByIdService, b.GetService, b.SaveService
 ):
-    def __init__(self, file_storage: LocalStorage = None):
-        super().__init__(repository=DocumentRepository())
+    def __init__(self, document_repository: DocumentRepository = None, file_storage: LocalStorage = None):
+        super().__init__(repository=document_repository or DocumentRepository())
         self.file_storage = file_storage or LocalStorage()
 
     def create(self, **kwargs) -> Document:
@@ -32,7 +33,7 @@ class DocumentService(
 
             data = {
                 'created_by': current_user.id,
-                'name': kwargs.get('filename'),
+                'name': self.file_storage.get_filename(kwargs.get('filename')),
                 'internal_filename': internal_filename,
                 'mime_type': kwargs.get('mime_type'),
                 'directory_path': current_app.config.get('STORAGE_DIRECTORY'),
@@ -41,10 +42,11 @@ class DocumentService(
             document = self.repository.create(**data)
             db.session.add(document)
             db.session.flush()
-        except Exception as e:
-            self.file_storage.delete_file(filepath)
-            logger.debug(e)
-            raise InternalServerError() from e
+        except (FileExistsError, FileEmptyError) as e:
+            if isinstance(e, FileEmptyError):
+                self.file_storage.delete_file(filepath)
+
+            raise BadRequest(description=str(e)) from e
         else:
             return document
 
@@ -63,17 +65,17 @@ class DocumentService(
             self.file_storage.save_bytes(kwargs.get('file_data'), filepath, override=True)
 
             data = {
-                'name': kwargs.get('filename'),
+                'name': self.file_storage.get_filename(kwargs.get('filename')),
                 'mime_type': kwargs.get('mime_type'),
                 'size': self.file_storage.get_filesize(filepath),
             }
             document = self.repository.save(record_id, **data)
-            db.session.add(document)
             db.session.flush()
-        except Exception as e:  # HACK: Add the proper exceptions here
-            self.file_storage.delete_file(filepath)
-            logger.debug(e)
-            raise InternalServerError() from e
+        except (FileExistsError, FileEmptyError) as e:
+            if isinstance(e, FileEmptyError):
+                self.file_storage.delete_file(filepath)
+
+            raise BadRequest(description=str(e)) from e
         else:
             return document.reload()
 
@@ -95,7 +97,7 @@ class DocumentService(
 
         if as_attachment:
             kwargs['download_name'] = (
-                document.name if document.name.find(file_extension) else f'{document.name}{file_extension}'
+                document.name if document.name.find(file_extension) != -1 else f'{document.name}{file_extension}'
             )
 
         return send_file(**kwargs)
