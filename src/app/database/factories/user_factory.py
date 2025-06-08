@@ -1,7 +1,5 @@
 import os
 import random
-from datetime import timedelta
-from random import randint
 
 import factory
 from sqlalchemy import func
@@ -60,7 +58,8 @@ class UserFactory(BaseFactory):
         if self.deleted_at:
             updated_at = self.deleted_at
         else:
-            updated_at = self.created_at + timedelta(days=randint(1, 30), minutes=randint(0, 60))
+            # NOTE: This case always applies on the creation
+            updated_at = self.created_at
         return updated_at
 
 
@@ -70,7 +69,7 @@ class AdminUserFactory(UserFactory):
 
     @factory.lazy_attribute
     def roles(self):
-        return [AdminRoleFactory()]
+        return [AdminRoleFactory(deleted_at=None)]
 
 
 class TeamLeaderUserFactory(UserFactory):
@@ -79,7 +78,7 @@ class TeamLeaderUserFactory(UserFactory):
 
     @factory.lazy_attribute
     def roles(self):
-        return [TeamLeaderRoleFactory()]
+        return [TeamLeaderRoleFactory(deleted_at=None)]
 
 
 class WorkerUserFactory(UserFactory):
@@ -88,4 +87,4 @@ class WorkerUserFactory(UserFactory):
 
     @factory.lazy_attribute
     def roles(self):
-        return [WorkerRoleFactory()]
+        return [WorkerRoleFactory(deleted_at=None)]

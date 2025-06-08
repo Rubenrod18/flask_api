@@ -13,17 +13,17 @@ class LocalStorage(BaseFileStorage):
     def save_bytes(self, file_content: bytes, filename: str, override: bool = False):
         try:
             if not override and os.path.exists(filename):
-                raise FileExistsError(f'The file {filename} already exists!')
+                raise FileExistsError('The file already exists!')
             else:
                 with open(filename, 'wb') as f:
                     f.write(file_content)
 
                 filesize = self.get_filesize(filename)
                 if filesize == 0:
-                    raise FileEmptyError(f'The file {filename} was created empty')
+                    raise FileEmptyError('The file is empty!')
 
                 return True
-        except Exception as e:
+        except (FileExistsError, FileEmptyError) as e:
             logger.debug(e)
             if not isinstance(e, FileExistsError):
                 if os.path.exists(filename):
@@ -38,6 +38,10 @@ class LocalStorage(BaseFileStorage):
 
     def get_basename(self, filename: str) -> str:
         return os.path.splitext(os.path.basename(filename))[0]
+
+    @staticmethod
+    def get_filename(filename: str) -> str:
+        return os.path.basename(filename)
 
     def rename(self, src: str, dst: str) -> None:
         os.rename(src, dst)

@@ -10,8 +10,8 @@ from app.services.base import BaseService
 
 
 class AuthService(BaseService):
-    def __init__(self):
-        super().__init__(repository=UserRepository())
+    def __init__(self, user_repository: UserRepository = None):
+        super().__init__(repository=user_repository or UserRepository())
 
     @staticmethod
     def _authenticate_user(user: User) -> dict:

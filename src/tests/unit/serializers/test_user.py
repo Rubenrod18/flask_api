@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from marshmallow import ValidationError
 from werkzeug.exceptions import BadRequest, NotFound
 
+from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.models import Role, User
 from app.models.user import Genre
@@ -27,6 +28,7 @@ class UserSerializerTest(BaseTest):
             created_at=datetime.now(UTC),
             updated_at=datetime.now(UTC),
             deleted_at=None,
+            roles=[RoleFactory(deleted_at=None)],
         )
         self.user_repository = MagicMock(spec=UserRepository)
         self.user_repository.find_by_email.return_value = None

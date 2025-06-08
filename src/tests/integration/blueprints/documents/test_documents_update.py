@@ -20,7 +20,8 @@ class UpdateDocumentEndpointTest(_BaseDocumentEndpointsTest):
         self.local_storage = LocalStorage()
 
     def test_update_document_endpoint(self):
-        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/example.pdf'
+        pdf_filename = 'example.pdf'
+        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{pdf_filename}'
         data = {'document': open(pdf_file, 'rb')}
 
         response = self.client.put(
@@ -33,7 +34,7 @@ class UpdateDocumentEndpointTest(_BaseDocumentEndpointsTest):
         parse_url = urlparse(json_data.get('url'))
 
         self.assertTrue(isinstance(json_data.get('created_by').get('id'), int))
-        self.assertEqual(pdf_file, json_data.get('name'))
+        self.assertEqual(pdf_filename, json_data.get('name'))
         self.assertEqual(self.document.mime_type, json_data.get('mime_type'))
         self.assertEqual(self.local_storage.get_filesize(pdf_file), json_data.get('size'))
         self.assertTrue(parse_url.scheme and parse_url.netloc)
