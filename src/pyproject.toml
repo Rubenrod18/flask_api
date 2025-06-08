@@ -1,6 +1,6 @@
 [project]
 name = "flask-api"
-version = "3.1.0"
+version = "4.0.0"
 description = "API Application with Flask for CRUD users"
 authors = [
     {name = "Rubén Rodríguez Ramírez", email = "rubenrod.018@gmail.com"}

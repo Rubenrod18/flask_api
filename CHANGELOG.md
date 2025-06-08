@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [4.0.0](https://github.com/rubenrod18/flask_api/compare/v3.1.0...v4.0.0) (2025-06-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* manager classes have been removed, use repository instead
+* migrate from pip-tools to poetry
+
+### Build System
+
+* **npm:** update doc commands ([11dc8fe](https://github.com/rubenrod18/flask_api/commit/11dc8fe4c34241ee55f4ec5e9c2fffeede6de864))
+* **pip:** add pylint as an extra python linter ([#105](https://github.com/rubenrod18/flask_api/issues/105)) ([eecb1d1](https://github.com/rubenrod18/flask_api/commit/eecb1d1bfb969c5317d899ee79d4a3980f940dd5))
+* **pip:** bump coverage from 7.8.0 to 7.8.1 in /src ([#100](https://github.com/rubenrod18/flask_api/issues/100)) ([8bb0387](https://github.com/rubenrod18/flask_api/commit/8bb0387f6425596adc31158e2b0436b2922785d9))
+* **pip:** bump coverage from 7.8.1 to 7.8.2 in /src ([#103](https://github.com/rubenrod18/flask_api/issues/103)) ([15acc2f](https://github.com/rubenrod18/flask_api/commit/15acc2f908072302851ee3a5de30986117265d22))
+* **pip:** bump faker from 37.1.0 to 37.3.0 in /src ([#89](https://github.com/rubenrod18/flask_api/issues/89)) ([647cd8a](https://github.com/rubenrod18/flask_api/commit/647cd8a8a4c120fa86d771b3e861ba8f7807233c))
+* **pip:** bump flask from 3.1.0 to 3.1.1 in /src ([#87](https://github.com/rubenrod18/flask_api/issues/87)) ([988e37e](https://github.com/rubenrod18/flask_api/commit/988e37e8dbf57df450d955c350d7c88a5386aff6))
+* **pip:** bump flask-security-too from 5.6.1 to 5.6.2 in /src ([#82](https://github.com/rubenrod18/flask_api/issues/82)) ([f4dae5b](https://github.com/rubenrod18/flask_api/commit/f4dae5beb67f705a814c7db7378934fc0dd6d634))
+* **pip:** bump freezegun from 1.5.1 to 1.5.2 in /src ([#102](https://github.com/rubenrod18/flask_api/issues/102)) ([2d16a1c](https://github.com/rubenrod18/flask_api/commit/2d16a1c908ac4a6fd2bce6d7398be51a9d195705))
+* **pip:** bump pytest from 8.3.5 to 8.4.0 in /src ([#115](https://github.com/rubenrod18/flask_api/issues/115)) ([1ab1276](https://github.com/rubenrod18/flask_api/commit/1ab12765c5d442d3a068d9bff9baa897681f16cb))
+* **pip:** bump pytest-xdist from 3.6.1 to 3.7.0 in /src ([#104](https://github.com/rubenrod18/flask_api/issues/104)) ([3ae5d00](https://github.com/rubenrod18/flask_api/commit/3ae5d00c0a72153860f18913edcc6680467125bf))
+* **pip:** bump sqlalchemy from 2.0.40 to 2.0.41 in /src ([#88](https://github.com/rubenrod18/flask_api/issues/88)) ([26b7a56](https://github.com/rubenrod18/flask_api/commit/26b7a5682025a63e35776f27b2fd5cc5cd3e3bcc))
+* **pip:** bump tornado from 6.4.2 to 6.5 ([#94](https://github.com/rubenrod18/flask_api/issues/94)) ([83dffce](https://github.com/rubenrod18/flask_api/commit/83dffcea13164e2316fd7d89023f18297111ee2c))
+* **pre-commit:** add new argument in pylint hook ([add8c3b](https://github.com/rubenrod18/flask_api/commit/add8c3bb42d5637d81f34be97c2f21d81bf93823))
+* replace pip-tools to poetry as python dependencies manager ([#109](https://github.com/rubenrod18/flask_api/issues/109)) ([6d4f4d5](https://github.com/rubenrod18/flask_api/commit/6d4f4d556375ee4b7ec648c5c3b6c84b453a86de))
+
+
+### Features
+
+* **repositories:** add new repository concept ([#83](https://github.com/rubenrod18/flask_api/issues/83)) ([a3886d7](https://github.com/rubenrod18/flask_api/commit/a3886d7ee3b1344909036b6131f9a8418c21129c))
+
+
+### Bug Fixes
+
+* verify user authentication and permissions before swagger models ([#85](https://github.com/rubenrod18/flask_api/issues/85)) ([9cc798c](https://github.com/rubenrod18/flask_api/commit/9cc798cfff209dbb666b07a89b701cd371af405d))
+
+
+### Code Refactoring
+
+* **auth-serializers:** change way to get user_repository in auth serializers ([b07ec42](https://github.com/rubenrod18/flask_api/commit/b07ec4288dfe0b75bcf88c1a10cc2c952040fb9c))
+* **logging:** move logging config to a python module ([4f4063e](https://github.com/rubenrod18/flask_api/commit/4f4063e014ddd7a059ef53c604afdd15ea493528))
+* move file_storage as an app layer component ([#111](https://github.com/rubenrod18/flask_api/issues/111)) ([22c59fd](https://github.com/rubenrod18/flask_api/commit/22c59fd87a716a06de6d8ab52a636c337c0df4a8))
+* remove manager classes and migrate to repositories ([#118](https://github.com/rubenrod18/flask_api/issues/118)) ([84dff2a](https://github.com/rubenrod18/flask_api/commit/84dff2a0851452ec835e0036178bad80e82cf3c6))
+* rename find method from base_service and base_manager ([#114](https://github.com/rubenrod18/flask_api/issues/114)) ([ea293dc](https://github.com/rubenrod18/flask_api/commit/ea293dce95e18ecaf65a6e6f08c6ee23970c4dd2))
+* **serializers:** add ma.auto_field in user and role ([#84](https://github.com/rubenrod18/flask_api/issues/84)) ([55e8073](https://github.com/rubenrod18/flask_api/commit/55e8073059333c46c1802cb509654ed90cd4895a))
+* **services:** split base service actions in abstract classes ([7e7838b](https://github.com/rubenrod18/flask_api/commit/7e7838b57b68a209fb89523eecf99c44666e6ada))
+
 ## [3.1.0](https://github.com/rubenrod18/flask_api/compare/v3.0.0...v3.1.0) (2025-05-02)
 
 
