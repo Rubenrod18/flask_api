@@ -44,7 +44,7 @@ coverage-html: ## Create an HTML report of the coverage of the files
 	coverage run -m pytest && coverage html
 
 linter: ## Run Pylint on the app directory, disabling refactor warnings
-	pylint app --disable=R
+	pylint . --disable=R --rcfile=.pylintrc
 
 test: ## Run tests
 	pytest
