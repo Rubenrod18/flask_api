@@ -54,11 +54,10 @@ class DocumentRepositoryTest(BaseTest):
         ]
 
         for description, args, kwargs in test_cases:
-            with self.subTest():
-                result = self.repository.find(*args, **kwargs)
-                self.assertIsNotNone(result, (description, args, kwargs))
-                self.assertTrue(isinstance(result, Document), (description, args, kwargs))
-                self.assertEqual(result.id, document.id, (description, args, kwargs))
+            result = self.repository.find(*args, **kwargs)
+            self.assertIsNotNone(result, (description, args, kwargs))
+            self.assertTrue(isinstance(result, Document), (description, args, kwargs))
+            self.assertEqual(result.id, document.id, (description, args, kwargs))
 
     def test_delete_soft_document(self):
         user = UserFactory()

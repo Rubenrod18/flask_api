@@ -48,11 +48,10 @@ class UserRepositoryTest(BaseTest):
         ]
 
         for description, args, kwargs in test_cases:
-            with self.subTest():
-                result = self.repository.find(*args, **kwargs)
-                self.assertIsNotNone(result, (description, args, kwargs))
-                self.assertTrue(isinstance(result, User), (description, args, kwargs))
-                self.assertEqual(result.id, user.id, (description, args, kwargs))
+            result = self.repository.find(*args, **kwargs)
+            self.assertIsNotNone(result, (description, args, kwargs))
+            self.assertTrue(isinstance(result, User), (description, args, kwargs))
+            self.assertEqual(result.id, user.id, (description, args, kwargs))
 
     def test_find_by_email_user(self):
         user = UserFactory(

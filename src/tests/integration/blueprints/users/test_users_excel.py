@@ -15,12 +15,11 @@ class WordUserEndpointTest(_BaseUserEndpointsTest):
         ]
 
         for uri, auth_headers, payload in test_cases:
-            with self.subTest(uri=uri):
-                response = self.client.post(uri, json=payload, headers=auth_headers, exp_code=202)
-                json_response = response.get_json()
+            response = self.client.post(uri, json=payload, headers=auth_headers, exp_code=202)
+            json_response = response.get_json()
 
-                self.assertTrue(json_response.get('task'))
-                self.assertTrue(json_response.get('url'))
+            self.assertTrue(json_response.get('task'))
+            self.assertTrue(json_response.get('url'))
 
     def test_check_user_roles_in_export_word_endpoint(self):
         test_cases = [
@@ -30,10 +29,9 @@ class WordUserEndpointTest(_BaseUserEndpointsTest):
         ]
 
         for user_email, response_status in test_cases:
-            with self.subTest(user_email=user_email):
-                self.client.post(
-                    f'{self.base_path}/word',
-                    json={},
-                    headers=self.build_headers(user_email=user_email),
-                    exp_code=response_status,
-                )
+            self.client.post(
+                f'{self.base_path}/word',
+                json={},
+                headers=self.build_headers(user_email=user_email),
+                exp_code=response_status,
+            )

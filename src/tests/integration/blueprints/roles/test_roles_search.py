@@ -45,10 +45,9 @@ class SearchRoleEndpointTest(_BaseRoleEndpointsTest):
         ]
 
         for user_email, response_status in test_cases:
-            with self.subTest(user_email=user_email):
-                response = self.client.post(
-                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-                )
-                json_response = response.get_json()
+            response = self.client.post(
+                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+            )
+            json_response = response.get_json()
 
-                self.assertEqual(response_status, response.status_code, json_response)
+            self.assertEqual(response_status, response.status_code, json_response)

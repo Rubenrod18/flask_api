@@ -37,21 +37,19 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
         ]
 
         for user_email, response_status in test_cases:
-            with self.subTest(user_email=user_email):
-                self.client.get(
-                    self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-                )
+            self.client.get(
+                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
+            )
 
     def test_get_document_file_content_endpoint(self):
         test_cases = ['as_attachment=1', 'as_attachment=0', '']
 
         for test_case in test_cases:
-            with self.subTest(test_case):
-                response = self.client.get(
-                    f'{self.endpoint}?{test_case}',
-                    headers=self.build_headers(
-                        extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
-                    ),
-                )
+            response = self.client.get(
+                f'{self.endpoint}?{test_case}',
+                headers=self.build_headers(
+                    extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
+                ),
+            )
 
-                self.assertTrue(isinstance(response.get_data(), bytes))
+            self.assertTrue(isinstance(response.get_data(), bytes))
