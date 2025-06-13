@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, UTC
 
 from app.database.factories.document_factory import DocumentFactory
-from tests.integration.blueprints.documents._base_integration_test import _BaseDocumentEndpointsTest
+from tests.acceptance.blueprints.documents._base_documents_test import _BaseDocumentEndpointsTest
 
 
 class DeleteDocumentEndpointTest(_BaseDocumentEndpointsTest):

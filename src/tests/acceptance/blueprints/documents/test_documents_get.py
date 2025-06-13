@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 from app.database.factories.document_factory import DocumentFactory
 
-from ._base_integration_test import _BaseDocumentEndpointsTest
+from ._base_documents_test import _BaseDocumentEndpointsTest
 
 
 class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):

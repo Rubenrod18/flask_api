@@ -1,6 +1,6 @@
 from flask_jwt_extended import create_refresh_token, decode_token
 
-from ._base_auth_integration_test import _BaseAuthEndpointsTest
+from ._base_auth_test import _BaseAuthEndpointsTest
 
 
 class RefreshAuthEndpointTest(_BaseAuthEndpointsTest):

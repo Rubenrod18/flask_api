@@ -3,7 +3,7 @@ import os
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 
-from ._base_integration_test import _BaseUserEndpointsTest
+from ._base_users_test import _BaseUserEndpointsTest
 
 
 class SaveUserEndpointTest(_BaseUserEndpointsTest):

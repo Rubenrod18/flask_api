@@ -2,7 +2,7 @@ import os
 
 from app.helpers.otp_token import OTPTokenManager
 
-from ._base_auth_integration_test import _BaseAuthEndpointsTest
+from ._base_auth_test import _BaseAuthEndpointsTest
 
 
 class ConfirmResetPasswordEndpointTest(_BaseAuthEndpointsTest):

@@ -1,6 +1,6 @@
 from app.database.factories.role_factory import RoleFactory
 
-from ._base_integration_test import _BaseRoleEndpointsTest
+from ._base_roles_test import _BaseRoleEndpointsTest
 
 
 class GetRoleEndpointTest(_BaseRoleEndpointsTest):

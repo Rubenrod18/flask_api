@@ -3,7 +3,7 @@ from app.extensions import db
 from app.models import Role
 from app.models.role import TEAM_LEADER_ROLE
 
-from ._base_integration_test import _BaseUserEndpointsTest
+from ._base_users_test import _BaseUserEndpointsTest
 
 
 class DeleteUserEndpointTest(_BaseUserEndpointsTest):
