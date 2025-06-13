@@ -22,9 +22,6 @@ class Document(Base):
     directory_path = sa.Column(sa.String(255), nullable=False)
     size = sa.Column(sa.Integer, nullable=False)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     @property
     def url(self):
         return url_for('documents_document_resource', document_id=self.id, _external=True)
