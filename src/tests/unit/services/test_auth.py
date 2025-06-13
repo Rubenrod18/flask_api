@@ -1,6 +1,8 @@
 import os
 from unittest.mock import MagicMock, patch
 
+from flask_security import UserMixin
+
 from app.database.factories.user_factory import UserFactory
 from app.repositories import UserRepository
 from app.services import AuthService
@@ -34,25 +36,29 @@ class LoginAuthServiceTest(_AuthBaseServiceTest):
 
 
 class LogoutAuthServiceTest(_AuthBaseServiceTest):
-    @patch('app.services.auth.flask_security.current_user', autospec=True)
-    @patch('app.services.auth.flask_security.logout_user', autospec=True)
-    def test_logout_user(self, mock_logout_user, mock_current_user):
-        mock_current_user.is_authenticated = True
+    def test_logout_user(self):
+        class MockCurrentUser(UserMixin):
+            is_authenticated = True
 
-        response = self.auth_service.logout_user()
+        with patch(
+            'app.services.auth.flask_security', MagicMock(current_user=MockCurrentUser())
+        ) as mock_flask_security:
+            response = self.auth_service.logout_user()
 
-        mock_logout_user.assert_called_once()
-        self.assertFalse(response)
+            mock_flask_security.logout_user.assert_called_once()
+            self.assertFalse(response)
 
-    @patch('app.services.auth.flask_security.current_user', autospec=True)
-    @patch('app.services.auth.flask_security.logout_user', autospec=True)
-    def test_logout_user_already_logged_out(self, mock_logout_user, mock_current_user):
-        mock_current_user.is_authenticated = False
+    def test_logout_user_already_logged_out(self):
+        class MockCurrentUser(UserMixin):
+            is_authenticated = False
 
-        response = self.auth_service.logout_user()
+        with patch(
+            'app.services.auth.flask_security', MagicMock(current_user=MockCurrentUser())
+        ) as mock_flask_security:
+            response = self.auth_service.logout_user()
 
-        mock_logout_user.assert_not_called()
-        self.assertEqual(response, {'message': 'Already logged out'})
+            mock_flask_security.logout_user.assert_not_called()
+            self.assertEqual(response, {'message': 'Already logged out'})
 
 
 class RequestResetPasswordAuthServiceTest(_AuthBaseServiceTest):

@@ -79,7 +79,6 @@ class BaseTest(unittest.TestCase):
         self.app = None
         self.client = None
         self.runner = None
-        self.session = None
 
     @classmethod
     def setUpClass(cls):
