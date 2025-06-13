@@ -1,5 +1,5 @@
 from app.database.factories.role_factory import RoleFactory
-from tests.integration.blueprints.roles._base_integration_test import _BaseRoleEndpointsTest
+from tests.acceptance.blueprints.roles._base_roles_test import _BaseRoleEndpointsTest
 
 
 class DeleteRoleEndpointTest(_BaseRoleEndpointsTest):

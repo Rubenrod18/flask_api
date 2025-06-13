@@ -1,4 +1,4 @@
-from ._base_integration_test import _BaseUserEndpointsTest
+from ._base_users_test import _BaseUserEndpointsTest
 
 
 class ExcelUserEndpointTest(_BaseUserEndpointsTest):

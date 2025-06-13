@@ -1,6 +1,6 @@
 from unittest import mock
 
-from ._base_auth_integration_test import _BaseAuthEndpointsTest
+from ._base_auth_test import _BaseAuthEndpointsTest
 
 
 class RequestResetPasswordAuthEndpointTest(_BaseAuthEndpointsTest):

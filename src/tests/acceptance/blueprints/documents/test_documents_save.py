@@ -4,7 +4,7 @@ from flask import current_app
 
 from app.file_storages import LocalStorage
 
-from ._base_integration_test import _BaseDocumentEndpointsTest
+from ._base_documents_test import _BaseDocumentEndpointsTest
 
 
 class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):

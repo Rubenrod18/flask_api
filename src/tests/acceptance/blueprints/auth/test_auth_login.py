@@ -5,7 +5,7 @@ import flask_security
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 
-from ._base_auth_integration_test import _BaseAuthEndpointsTest
+from ._base_auth_test import _BaseAuthEndpointsTest
 
 
 class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
