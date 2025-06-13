@@ -13,3 +13,8 @@ class LogoutAuthEndpointTest(_BaseAuthEndpointsTest):
         json_response = response.get_json()
 
         self.assertFalse(json_response)
+
+    def test_user_logout_missing_auth_header(self):
+        response = self.client.post(f'{self.base_path}/logout', json={}, exp_code=401)
+
+        self.assertDictEqual({'msg': 'Missing Authorization Header'}, response.get_json())

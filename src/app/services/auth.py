@@ -1,6 +1,7 @@
 import flask_security
 from flask import url_for
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
+from flask_login import UserMixin
 
 from app.celery.tasks import reset_password_email_task
 from app.helpers.otp_token import OTPTokenManager
@@ -28,7 +29,9 @@ class AuthService(BaseService):
 
     @staticmethod
     def logout_user() -> dict:
-        if flask_security.current_user.is_authenticated:
+        current_user = flask_security.current_user
+
+        if isinstance(current_user, UserMixin) and current_user.is_authenticated:
             flask_security.logout_user()
             response = {}
         else:
