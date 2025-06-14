@@ -1,21 +1,22 @@
 """Module for testing mail."""
 
+from flask import current_app
+
 from app.extensions import mail
-from tests.base.base_test import BaseTest
 
 
-class MailTest(BaseTest):
-    def test_mail_record_messages(self):
+class TestMail:
+    def test_mail_record_messages(self, app, faker):
         """Check if an email is sent."""
         with mail.record_messages() as outbox:
-            subject = self.faker.sentence()
+            subject = faker.sentence()
 
             mail.send_message(
                 subject=subject,
-                body=self.faker.text(),
-                sender=self.faker.email(),
-                recipients=[self.app.config.get('TEST_USER_EMAIL')],
+                body=faker.text(),
+                sender=faker.email(),
+                recipients=[current_app.config.get('TEST_USER_EMAIL')],
             )
 
-            self.assertEqual(len(outbox), 1)
-            self.assertEqual(outbox[0].subject, subject)
+            assert len(outbox) == 1
+            assert outbox[0].subject == subject
