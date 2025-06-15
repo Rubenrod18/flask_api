@@ -1,9 +1,9 @@
 """Module for testing task module."""
 
+import os
 from datetime import datetime, timedelta, UTC
 from unittest.mock import MagicMock, patch
 
-from celery import chain, chord
 from flask import url_for
 
 from app.celery.excel.tasks import export_user_data_in_excel_task
@@ -18,8 +18,11 @@ from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db, mail
+from app.file_storages import LocalStorage
 from app.helpers.otp_token import OTPTokenManager
+from app.models import Document
 from app.models.role import ADMIN_ROLE
+from app.utils.constants import MS_EXCEL_MIME_TYPE, MS_WORD_MIME_TYPE, PDF_MIME_TYPE
 from tests.base.base_test import BaseTest
 
 
@@ -31,6 +34,7 @@ class CeleryTasksTest(BaseTest):
             salt=self.app.config.get('SECURITY_PASSWORD_SALT'),
             expiration=self.app.config.get('RESET_TOKEN_EXPIRES'),
         )
+        self.local_storage = LocalStorage()
 
     def test_create_user_email_task(self):
         ignore_fields = {'role', 'created_by'}
@@ -67,7 +71,9 @@ class CeleryTasksTest(BaseTest):
             }
         ]
 
-        self.assertTrue(send_email_with_attachments_task.apply(args=(args,)).get())
+        with mail.record_messages() as outbox:
+            self.assertTrue(send_email_with_attachments_task.apply(args=(args,)).get())
+            self.assertEqual(len(outbox), 1)
 
     def test_create_word_and_excel_documents_chord_returns_success_result(self):
         role = RoleFactory()
@@ -131,9 +137,97 @@ class CeleryTasksTest(BaseTest):
             mock_rollback.assert_called_once()
             mock_close.assert_called_once()
 
+    def test_export_user_data_in_word_task(self):
+        user = UserFactory()
+        request_data = {
+            'search': [],
+            'order': [
+                {'field_name': 'name', 'sorting': 'asc'},
+            ],
+            'items_per_page': 100,
+            'page_number': 1,
+        }
+
+        test_cases = [
+            ({'created_by': user.id, 'request_data': request_data, 'to_pdf': 1}, PDF_MIME_TYPE, 'pdf'),
+            ({'created_by': user.id, 'request_data': request_data, 'to_pdf': 0}, MS_WORD_MIME_TYPE, 'docx'),
+        ]
+        doc_id = 0
+
+        for kwargs, mimetype, file_ext in test_cases:
+            task_result = export_user_data_in_word_task.apply(kwargs=kwargs).get()
+            doc_id += 1
+
+            self.assertTrue(isinstance(task_result, dict), task_result)
+            self.assertEqual(task_result.get('current'), 3, task_result)
+            self.assertEqual(task_result.get('total'), 3, task_result)
+            self.assertEqual(task_result.get('status'), 'Task completed!', task_result)
+            self.assertTrue(isinstance(task_result.get('result'), dict), task_result)
+            self.assertEqual(task_result['result'].get('id'), doc_id, task_result)
+            self.assertTrue(task_result['result'].get('name').find(f'_users.{file_ext}') != -1, task_result)
+            self.assertEqual(task_result['result'].get('mime_type'), mimetype, task_result)
+            self.assertGreater(task_result['result'].get('size'), 0, task_result)
+            self.assertIsNotNone(task_result['result'].get('created_at'), task_result)
+            self.assertIsNotNone(task_result['result'].get('updated_at'), task_result)
+            self.assertIsNone(task_result['result'].get('deleted_at'), task_result)
+            self.assertEqual(
+                task_result['result'].get('url'),
+                f'http://{os.getenv("SERVER_NAME")}/api/documents/{doc_id}',
+                task_result,
+            )
+            self.assertEqual(
+                task_result['result'].get('created_by'),
+                {'id': user.id, 'email': user.email, 'name': user.name, 'last_name': user.last_name},
+                task_result,
+            )
+
+            query = db.session.query(Document)
+            self.assertEqual(len(query.filter(Document.mime_type == mimetype).all()), 1)
+            self.assertTrue(os.path.exists(query.first().get_filepath()))
+            self.assertGreater(self.local_storage.get_filesize(query.first().get_filepath()), 0)
+
+    def test_export_user_data_in_excel_task(self):
+        user = UserFactory()
+        request_data = {
+            'search': [],
+            'order': [
+                {'field_name': 'name', 'sorting': 'asc'},
+            ],
+            'items_per_page': 100,
+            'page_number': 1,
+        }
+        kwargs = {'created_by': user.id, 'request_data': request_data}
+
+        task_result = export_user_data_in_excel_task.apply(kwargs=kwargs).get()
+
+        self.assertTrue(isinstance(task_result, dict), task_result)
+        self.assertEqual(task_result.get('current'), 3, task_result)
+        self.assertEqual(task_result.get('total'), 3, task_result)
+        self.assertEqual(task_result.get('status'), 'Task completed!', task_result)
+        self.assertTrue(isinstance(task_result.get('result'), dict), task_result)
+        self.assertEqual(task_result['result'].get('id'), 1, task_result)
+        self.assertTrue(task_result['result'].get('name').find('_users.xlsx') != -1, task_result)
+        self.assertEqual(task_result['result'].get('mime_type'), MS_EXCEL_MIME_TYPE, task_result)
+        self.assertGreater(task_result['result'].get('size'), 0, task_result)
+        self.assertIsNotNone(task_result['result'].get('created_at'), task_result)
+        self.assertIsNotNone(task_result['result'].get('updated_at'), task_result)
+        self.assertIsNone(task_result['result'].get('deleted_at'), task_result)
+        self.assertEqual(
+            task_result['result'].get('url'), f'http://{os.getenv("SERVER_NAME")}/api/documents/1', task_result
+        )
+        self.assertEqual(
+            task_result['result'].get('created_by'),
+            {'id': user.id, 'email': user.email, 'name': user.name, 'last_name': user.last_name},
+            task_result,
+        )
+
+        query = db.session.query(Document)
+        self.assertEqual(len(query.filter().all()), 1)
+        self.assertTrue(os.path.exists(query.first().get_filepath()))
+        self.assertGreater(self.local_storage.get_filesize(query.first().get_filepath()), 0)
+
     def test_create_word_and_excel_documents_tasks_are_called(self):
-        role = RoleFactory()
-        user = UserFactory(roles=[role])
+        user = UserFactory()
         request_data = {
             'search': [],
             'order': [
@@ -144,67 +238,9 @@ class CeleryTasksTest(BaseTest):
         }
         kwargs = {'created_by': user.id, 'request_data': request_data, 'to_pdf': 1}
 
-        mock_callback_result = MagicMock()
-        mock_callback_result.successful.return_value = True
-        mock_callback_result.result = 'Success'
-        mock_callback_result.traceback = None
+        # NOTE: I didn't find the way to check that the tasks called in this task
+        #       ran as I expected, the only way to check it out is to do a test
+        #       per each task.
+        result = create_word_and_excel_documents_task.apply(kwargs=kwargs).get()
 
-        with (
-            patch.object(export_user_data_in_word_task, 'apply_async') as mock_word_task,
-            patch.object(export_user_data_in_excel_task, 'apply_async') as mock_excel_task,
-        ):
-            mock_word_task.return_value.get.return_value = {'status': 'SUCCESS'}
-            mock_excel_task.return_value.get.return_value = {'status': 'SUCCESS'}
-
-            create_word_and_excel_documents_task.apply(kwargs=kwargs).get()
-
-            mock_word_task.assert_called_once()
-            mock_excel_task.assert_called_once()
-
-    # TODO: pending to resume the chord callback. I didn't find the way to check if the callback is called with chord.
-    def xtest_create_word_and_excel_documents_callback_task_is_called(self):
-        # pylint: disable=all
-        role = RoleFactory()
-        user = UserFactory(roles=[role])
-        request_data = {
-            'search': [],
-            'order': [
-                {'field_name': 'name', 'sorting': 'asc'},
-            ],
-            'items_per_page': 100,
-            'page_number': 1,
-        }
-        kwargs = {'created_by': user.id, 'request_data': request_data, 'to_pdf': 1}
-
-        with (
-            # patch.object(export_user_data_in_word_task, 'apply_async') as mock_word_task,
-            # patch.object(export_user_data_in_excel_task, 'apply_async') as mock_excel_task,
-            # patch.object(send_email_with_attachments_task, 'apply_async') as mock_callback,
-            mail.record_messages() as outbox
-        ):
-            # mock_callback.return_value.get.return_value = {'status': 'SUCCESS'}
-
-            """
-            mock_word_task.return_value.get.return_value = {'status': 'SUCCESS'}
-            mock_excel_task.return_value.get.return_value = {'status': 'SUCCESS'}
-            mock_callback.return_value.get.return_value = {'status': 'SUCCESS'}
-
-            create_word_and_excel_documents_task.apply(kwargs=kwargs).get()
-            """
-
-            group_tasks = [
-                export_user_data_in_word_task.s(1, {}, 0),
-                export_user_data_in_excel_task.s(1, {}),
-            ]
-            callback_task = send_email_with_attachments_task.s()
-
-            result = chord(chain(*group_tasks))(callback_task)
-            task_results = result.get()
-
-            # print(f"Callback status: {mock_callback.called}")
-            # print(f"Callback call arguments: {mock_callback.call_args}")
-
-            # print(f'Task results: {task_results}')
-
-            self.assertEqual(len(outbox), 1)
-            # mock_callback.assert_called_once()
+        self.assertTrue(result)

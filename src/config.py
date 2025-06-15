@@ -69,7 +69,7 @@ class Config(metaclass=Meta):
     MAIL_PORT = os.getenv('MAIL_PORT')
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
-    MAIL_USE_TLS = _str_to_bool(os.getenv('MAIL_USE_TLS'), 'True')
+    MAIL_USE_TLS = _str_to_bool(os.getenv('MAIL_USE_TLS'), 'False')
     MAIL_USE_SSL = _str_to_bool(os.getenv('MAIL_USE_SSL'), 'False')
 
     # Celery
