@@ -2,6 +2,8 @@ import unittest
 
 from flask import current_app
 
+from app.celery import ContextTask
+
 
 class TestCeleryAppContext(unittest.TestCase):
     def setUp(self):
@@ -14,8 +16,6 @@ class TestCeleryAppContext(unittest.TestCase):
         self.celery = make_celery(self.app)
 
     def test_task_runs_with_app_context(self):
-        from app.celery import ContextTask
-
         result_holder = {}
 
         @self.celery.task(base=ContextTask)
@@ -28,8 +28,6 @@ class TestCeleryAppContext(unittest.TestCase):
         self.assertEqual(result_holder['app_name'], self.app.name)
 
     def test_task_runs_without_app_context(self):
-        from app.celery import ContextTask
-
         def __call__(self, *args, **kwargs):
             return self.run(*args, **kwargs)
 
