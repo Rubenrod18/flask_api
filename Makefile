@@ -44,3 +44,12 @@ local.down:  ## Stop and remove Docker containers, networks, volumes, and orphan
 
 local.logs:  ## View logs from all Docker containers (following logs in real-time).
 	docker compose logs -f
+
+# ================================
+# =========== CELERY =============
+# ================================
+celery.list_scheduled:
+	celery -A app.celery inspect scheduled
+
+celery.remove_task:
+	celery -A app.celery control revoke "${task_id}"

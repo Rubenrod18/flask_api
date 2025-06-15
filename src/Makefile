@@ -23,7 +23,7 @@ shell:  ## Shell context for an interactive shell for this application
 # ==== DATABASE COMMANDS ======
 # =============================
 migration:  ## Create a new migration based in new changes from database models
-	docker compose exec app flask db migrate -m '$(msg)' --directory "${MIGRATIONS_DIRECTORY}"
+	docker compose exec app flask db migrate -m "$(msg)" --directory "${MIGRATIONS_DIRECTORY}"
 
 migrate:  ## Upgrade to a later database migration
 	docker compose exec app flask db upgrade --directory "${MIGRATIONS_DIRECTORY}"
