@@ -69,7 +69,7 @@ class Config(metaclass=Meta):
     MAIL_PORT = os.getenv('MAIL_PORT')
     MAIL_USERNAME = os.getenv('MAIL_USERNAME')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
-    MAIL_USE_TLS = _str_to_bool(os.getenv('MAIL_USE_TLS'), 'True')
+    MAIL_USE_TLS = _str_to_bool(os.getenv('MAIL_USE_TLS'), 'False')
     MAIL_USE_SSL = _str_to_bool(os.getenv('MAIL_USE_SSL'), 'False')
 
     # Celery
@@ -90,8 +90,6 @@ class Config(metaclass=Meta):
     worker_log_format = '%(asctime)s - %(levelname)s - %(processName)s - %(message)s'
     worker_task_log_format = '%(asctime)s - %(levelname)s - %(processName)s - %(task_name)s - %(task_id)s - %(message)s'
     result_extended = True
-    task_default_rate_limit = 3
-    task_max_retries = 5
     task_always_eager = False
 
     # Flask Swagger UI
