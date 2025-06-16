@@ -90,8 +90,6 @@ class Config(metaclass=Meta):
     worker_log_format = '%(asctime)s - %(levelname)s - %(processName)s - %(message)s'
     worker_task_log_format = '%(asctime)s - %(levelname)s - %(processName)s - %(task_name)s - %(task_id)s - %(message)s'
     result_extended = True
-    task_default_rate_limit = 3
-    task_max_retries = 5
     task_always_eager = False
 
     # Flask Swagger UI

@@ -97,5 +97,4 @@ def make_celery(app: Flask) -> Celery:
     ContextTask.__call__ = __call__
     celery.Task = ContextTask  # pylint: disable=invalid-name
 
-    celery.register_task(ContextTask())
     return celery
