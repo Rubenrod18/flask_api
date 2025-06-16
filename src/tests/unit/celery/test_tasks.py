@@ -2,17 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
-from app.celery.tasks import (
-    create_word_and_excel_documents_task,
-)
-from app.database.factories.user_factory import UserFactory
-from tests.base.base_test import BaseTest
+from app.celery.tasks import create_word_and_excel_documents_task
 
 
-class CeleryTasksTest(BaseTest):
-    def test_unit_create_word_and_excel_documents_tasks_are_called(self):
-        user = UserFactory()
-        user_id = user.id
+class TestCeleryTasks:
+    def test_unit_create_word_and_excel_documents_tasks_are_called(self, app):
+        user_id = 1
         request_data = {
             'search': [],
             'order': [
