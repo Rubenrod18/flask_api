@@ -22,7 +22,6 @@ repos:
         language: system
         pass_filenames: false
         types: [python]
-        pass_filenames: false
         args:
             [
                 "app",
