@@ -48,6 +48,10 @@ def reset_password_email_task(email_data) -> bool:
 
 @celery.task(base=ContextTask)
 def send_email_with_attachments_task(task_data: list) -> bool:
+    return send_email_with_attachments_task_logic(task_data)
+
+
+def send_email_with_attachments_task_logic(task_data: list) -> bool:
     document_repository = DocumentRepository()
     auth_user_data = task_data[0].get('result').get('created_by')
 

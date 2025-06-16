@@ -98,8 +98,7 @@ def _find_longest_word(word_list: list) -> str:
     return str(longest_word)
 
 
-@celery.task(bind=True, base=ContextTask, queue='fast')
-def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
+def export_user_data_in_excel_task_logic(self, created_by: int, request_data: dict):
     def _write_excel_rows(rows: list, workbook: Workbook, worksheet: Worksheet) -> int:
         excel_longest_word = ''
 
@@ -197,3 +196,10 @@ def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
         'status': 'Task completed!',
         'result': document_data,
     }
+
+
+@celery.task(bind=True, base=ContextTask, queue='fast')
+def export_user_data_in_excel_task(self, created_by: int, request_data: dict):
+    # HACK: Consider to move self logic outside of task_logic function.
+    #       It helps both maintainability and testability.
+    return export_user_data_in_excel_task_logic(self, created_by, request_data)

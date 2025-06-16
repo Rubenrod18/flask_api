@@ -62,8 +62,7 @@ def _get_user_data(request_data: dict) -> list:
     return user_list
 
 
-@celery.task(bind=True, base=ContextTask, queue='fast')
-def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_pdf: int):
+def export_user_data_in_word_task_logic(self, created_by: int, request_data: dict, to_pdf: int):
     def _write_docx_content(rows: list, document: docx.Document) -> None:
         header_fields = rows[0]
         assert len(header_fields) == len(_COLUMN_DISPLAY_ORDER)
@@ -145,3 +144,10 @@ def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_
         'status': 'Task completed!',
         'result': document_data,
     }
+
+
+@celery.task(bind=True, base=ContextTask, queue='fast')
+def export_user_data_in_word_task(self, created_by: int, request_data: dict, to_pdf: int):
+    # HACK: Consider to move self logic outside of task_logic function.
+    #       It helps both maintainability and testability.
+    return export_user_data_in_word_task_logic(self, created_by, request_data, to_pdf)
