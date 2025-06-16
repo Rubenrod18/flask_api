@@ -69,5 +69,32 @@ def make_celery(app: Flask) -> Celery:
     celery.conf.update(app.config)
     logger.debug(celery.conf.__dict__)
 
-    celery.register_task(ContextTask())
+    def __call__(self, *args, **kwargs):
+        """Executes the Celery task within the Flask application context.
+
+        This method overrides the default `__call__` implementation for the custom ContextTask class.
+        By wrapping the task execution in `with app.app_context():`, it ensures that Flask's application
+        context is available during the execution of the Celery task.
+
+        Notes
+        -----
+        Without this wrapper, attempting to access Flask-specific features inside a Celery task will raise:
+            RuntimeError: Working outside of application context.
+
+        Args
+        ----
+            *args: Positional arguments passed to the task.
+            **kwargs: Keyword arguments passed to the task.
+
+        Returns
+        -------
+            The result of the task's `run` method.
+
+        """
+        with app.app_context():
+            return self.run(*args, **kwargs)
+
+    ContextTask.__call__ = __call__
+    celery.Task = ContextTask  # pylint: disable=invalid-name
+
     return celery

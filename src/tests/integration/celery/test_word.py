@@ -1,38 +1,23 @@
-"""Module for testing word module."""
+import os
 
-from urllib.parse import urlparse
-
-from app.celery.word.tasks import export_user_data_in_word_task
-from app.database.factories.role_factory import RoleFactory
+from app.celery import ContextTask, make_celery
+from app.celery.word.tasks import export_user_data_in_word_task_logic
 from app.database.factories.user_factory import UserFactory
+from app.extensions import db
+from app.file_storages import LocalStorage
+from app.models import Document
 from app.utils.constants import MS_WORD_MIME_TYPE, PDF_MIME_TYPE
 from tests.base.base_test import BaseTest
 
 
 class WordTaskTest(BaseTest):
-    def run_task(self, created_by: int, request_data: dict, to_pdf: int = 0):
-        result = export_user_data_in_word_task.apply(args=(created_by, request_data, to_pdf)).get()
+    def setUp(self):
+        super().setUp()
+        self.local_storage = LocalStorage()
+        self.celery = make_celery(self.app)
 
-        document_data = result.get('result')
-        parse_url = urlparse(document_data.get('url'))
-
-        mime_type = PDF_MIME_TYPE if to_pdf else MS_WORD_MIME_TYPE
-
-        self.assertEqual(result.get('current'), result.get('total'))
-        self.assertEqual(result.get('status'), 'Task completed!')
-
-        self.assertEqual(created_by, document_data.get('created_by').get('id'))
-        self.assertTrue(document_data.get('name'))
-        self.assertEqual(mime_type, document_data.get('mime_type'))
-        self.assertGreater(document_data.get('size'), 0)
-        self.assertTrue(parse_url.scheme and parse_url.netloc)
-        self.assertEqual(document_data.get('created_at'), document_data.get('updated_at'))
-        self.assertIsNone(document_data.get('deleted_at'))
-
-    def test_export_word_task(self):
-        role = RoleFactory()
-        user = UserFactory(roles=[role])
-
+    def test_export_user_data_in_word_task(self):
+        user = UserFactory()
         request_data = {
             'search': [],
             'order': [
@@ -41,34 +26,47 @@ class WordTaskTest(BaseTest):
             'items_per_page': 100,
             'page_number': 1,
         }
+        test_cases = [
+            ({'created_by': user.id, 'request_data': request_data, 'to_pdf': 1}, PDF_MIME_TYPE, 'pdf'),
+            ({'created_by': user.id, 'request_data': request_data, 'to_pdf': 0}, MS_WORD_MIME_TYPE, 'docx'),
+        ]
+        doc_id = 0
 
-        self.run_task(user.id, request_data)
+        @self.celery.task(bind=True, base=ContextTask)
+        def test_task(self, created_by, request_data, to_pdf):
+            return export_user_data_in_word_task_logic(self, created_by, request_data, to_pdf)
 
-    def test_export_word_task_1(self):
-        role = RoleFactory()
-        user = UserFactory(roles=[role])
+        for kwargs, mimetype, file_ext in test_cases:
+            task_result = test_task.apply(kwargs=kwargs).get()
+            # NOTE: Commit to refresh the test session and see changes made by the Celery task
+            #       Keep this here to avoid stale data issues in assertions.
+            db.session.commit()
+            doc_id += 1
 
-        request_data = {
-            'search': [],
-            'order': [
-                {'field_name': 'name', 'sorting': 'asc'},
-            ],
-            'items_per_page': 100,
-            'page_number': 1,
-        }
+            self.assertTrue(isinstance(task_result, dict), task_result)
+            self.assertEqual(task_result.get('current'), 3, task_result)
+            self.assertEqual(task_result.get('total'), 3, task_result)
+            self.assertEqual(task_result.get('status'), 'Task completed!', task_result)
+            self.assertTrue(isinstance(task_result.get('result'), dict), task_result)
+            self.assertEqual(task_result['result'].get('id'), doc_id, task_result)
+            self.assertTrue(task_result['result'].get('name').find(f'_users.{file_ext}') != -1, task_result)
+            self.assertEqual(task_result['result'].get('mime_type'), mimetype, task_result)
+            self.assertGreater(task_result['result'].get('size'), 0, task_result)
+            self.assertIsNotNone(task_result['result'].get('created_at'), task_result)
+            self.assertIsNotNone(task_result['result'].get('updated_at'), task_result)
+            self.assertIsNone(task_result['result'].get('deleted_at'), task_result)
+            self.assertEqual(
+                task_result['result'].get('url'),
+                f'http://{os.getenv("SERVER_NAME")}/api/documents/{doc_id}',
+                task_result,
+            )
+            self.assertEqual(
+                task_result['result'].get('created_by'),
+                {'id': user.id, 'email': user.email, 'name': user.name, 'last_name': user.last_name},
+                task_result,
+            )
 
-        self.run_task(**{'created_by': user.id, 'request_data': request_data, 'to_pdf': 1})
-
-    def test_export_word_task_2(self):
-        role = RoleFactory()
-        user = UserFactory(roles=[role])
-
-        request_data = {
-            'search': [],
-            'order': [
-                {'field_name': 'name', 'sorting': 'asc'},
-            ],
-            'items_per_page': 100,
-            'page_number': 1,
-        }
-        self.run_task(created_by=user.id, request_data=request_data, to_pdf=0)
+            query = db.session.query(Document)
+            self.assertEqual(len(query.filter(Document.mime_type == mimetype).all()), 1)
+            self.assertTrue(os.path.exists(query.first().get_filepath()))
+            self.assertGreater(self.local_storage.get_filesize(query.first().get_filepath()), 0)
