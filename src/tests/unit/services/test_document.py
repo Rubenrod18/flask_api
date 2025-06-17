@@ -275,25 +275,31 @@ class TestGetDocumentContentDocumentService(_TestDocumentBaseService):
     def setup_extra(self):
         self.document = DocumentFactory(deleted_at=None)
 
-    @mock.patch('app.services.document.send_file', autospec=True)
-    def test_get_document_content_document(self, mock_send_file):
-        mock_doc_repo = MagicMock(spec=DocumentRepository)
-
-        test_cases = [
+    @pytest.mark.parametrize(
+        'doc_name, as_attachment_param, expected_kwargs',
+        [
             (
-                doc := DocumentFactory(),
+                None,
                 {},
-                {'path_or_file': doc.get_filepath(), 'mimetype': PDF_MIME_TYPE, 'as_attachment': 0},
+                lambda doc: {
+                    'path_or_file': doc.get_filepath(),
+                    'mimetype': PDF_MIME_TYPE,
+                    'as_attachment': 0,
+                },
             ),
             (
-                doc := DocumentFactory(),
+                None,
                 {'as_attachment': 0},
-                {'path_or_file': doc.get_filepath(), 'mimetype': PDF_MIME_TYPE, 'as_attachment': 0},
+                lambda doc: {
+                    'path_or_file': doc.get_filepath(),
+                    'mimetype': PDF_MIME_TYPE,
+                    'as_attachment': 0,
+                },
             ),
             (
-                doc := DocumentFactory(),
+                None,
                 {'as_attachment': 1},
-                {
+                lambda doc: {
                     'path_or_file': doc.get_filepath(),
                     'mimetype': PDF_MIME_TYPE,
                     'as_attachment': 1,
@@ -301,28 +307,38 @@ class TestGetDocumentContentDocumentService(_TestDocumentBaseService):
                 },
             ),
             (
-                doc := DocumentFactory(name='document_name_0.pdf'),
+                'document_name_0.pdf',
                 {'as_attachment': 1},
-                {
+                lambda doc: {
                     'path_or_file': doc.get_filepath(),
                     'mimetype': PDF_MIME_TYPE,
                     'as_attachment': 1,
                     'download_name': doc.name,
                 },
             ),
-        ]
+        ],
+        ids=[
+            'default as_attachment',
+            'explicit as_attachment=0',
+            'explicit as_attachment=1',
+            'custom doc name with as_attachment=1',
+        ],
+    )
+    @mock.patch('app.services.document.send_file', autospec=True)
+    def test_get_document_content_document(self, mock_send_file, doc_name, as_attachment_param, expected_kwargs):
+        mock_doc_repo = mock.MagicMock(spec=DocumentRepository)
 
-        for document, request_args, send_file_kwargs in test_cases:
-            mock_doc_repo.reset_mock()
-            mock_doc_repo.find_by_id.return_value = document
-            document_service = DocumentService(mock_doc_repo)
-            mock_send_file.reset_mock()
+        document = DocumentFactory(name=doc_name) if doc_name else DocumentFactory()
+        mock_doc_repo.find_by_id.return_value = document
 
-            with current_app.test_request_context():  # NOTE: Required by `send_file` function
-                mock_send_file.return_value = send_file(**send_file_kwargs)
-                response = document_service.get_document_content(self.document.id, request_args)
+        document_service = DocumentService(mock_doc_repo)
+        expected_args = expected_kwargs(document)
 
-            mock_doc_repo.find_by_id.assert_called_once_with(self.document.id)
-            mock_send_file.assert_called_once_with(**send_file_kwargs)
-            assert isinstance(response, Response)
-            assert response.mimetype == PDF_MIME_TYPE
+        with current_app.test_request_context():
+            mock_send_file.return_value = send_file(**expected_args)
+            response = document_service.get_document_content(self.document.id, as_attachment_param)
+
+        mock_doc_repo.find_by_id.assert_called_once_with(self.document.id)
+        mock_send_file.assert_called_once_with(**expected_args)
+        assert isinstance(response, Response)
+        assert response.mimetype == PDF_MIME_TYPE

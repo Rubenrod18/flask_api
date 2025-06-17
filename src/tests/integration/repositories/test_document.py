@@ -16,7 +16,6 @@ class TestDocumentRepository:
 
     def test_create_document(self):
         document_data = DocumentFactory.build_dict()
-
         document = self.repository.create(**document_data)
 
         assert document.name == document_data['name']
@@ -27,38 +26,43 @@ class TestDocumentRepository:
         assert document.created_by_user == document_data['created_by_user']
         assert db.session.query(Document).filter_by(name=document_data['name']).one_or_none() is None
 
-    def test_find_document(self):
+    @pytest.mark.parametrize(
+        'description,args_fn,kwargs_fn',
+        [
+            ('id_kwarg', lambda d: (), lambda d: {'id': d.id}),
+            ('name_kwarg', lambda d: (), lambda d: {'name': d.name}),
+            ('size_kwarg', lambda d: (), lambda d: {'size': d.size}),
+            ('directory_path_kwarg', lambda d: (), lambda d: {'directory_path': d.directory_path}),
+            ('internal_filename_kwarg', lambda d: (), lambda d: {'internal_filename': d.internal_filename}),
+            ('mime_type_kwarg', lambda d: (), lambda d: {'mime_type': d.mime_type}),
+            ('created_by_kwarg', lambda d: (), lambda d: {'created_by': d.created_by}),
+            ('created_at_kwarg', lambda d: (), lambda d: {'created_at': d.created_at}),
+            ('updated_at_kwarg', lambda d: (), lambda d: {'updated_at': d.updated_at}),
+            ('deleted_at_kwarg', lambda d: (), lambda d: {'deleted_at': None}),
+            ('id_expr', lambda d: (Document.id == d.id,), lambda d: {}),
+            ('name_expr', lambda d: (Document.name == d.name,), lambda d: {}),
+            ('size_expr', lambda d: (Document.size == d.size,), lambda d: {}),
+            ('directory_path_expr', lambda d: (Document.directory_path == d.directory_path,), lambda d: {}),
+            ('internal_filename_expr', lambda d: (Document.internal_filename == d.internal_filename,), lambda d: {}),
+            ('mime_type_expr', lambda d: (Document.mime_type == d.mime_type,), lambda d: {}),
+            ('created_by_expr', lambda d: (Document.created_by == d.created_by,), lambda d: {}),
+            ('created_at_expr', lambda d: (Document.created_at == d.created_at,), lambda d: {}),
+            ('updated_at_expr', lambda d: (Document.updated_at == d.updated_at,), lambda d: {}),
+            ('deleted_at_expr', lambda d: (Document.deleted_at.is_(None),), lambda d: {}),
+        ],
+    )
+    def test_find_document(self, description, args_fn, kwargs_fn):
         user = UserFactory()
         document = DocumentFactory(created_by_user=user, deleted_at=None)
 
-        test_cases = [
-            ('id', (), {'id': document.id}),
-            ('name', (), {'name': document.name}),
-            ('size', (), {'size': document.size}),
-            ('directory_path', (), {'directory_path': document.directory_path}),
-            ('internal_filename', (), {'internal_filename': document.internal_filename}),
-            ('mime_type', (), {'mime_type': document.mime_type}),
-            ('created_by', (), {'created_by': document.created_by}),
-            ('created_at', (), {'created_at': document.created_at}),
-            ('updated_at', (), {'updated_at': document.updated_at}),
-            ('deleted_at', (), {'deleted_at': None}),
-            ('id', (Document.id == document.id,), {}),
-            ('name', (Document.name == document.name,), {}),
-            ('size', (Document.size == document.size,), {}),
-            ('directory_path', (Document.directory_path == document.directory_path,), {}),
-            ('internal_filename', (Document.internal_filename == document.internal_filename,), {}),
-            ('mime_type', (Document.mime_type == document.mime_type,), {}),
-            ('created_by', (Document.created_by == document.created_by,), {}),
-            ('created_at', (Document.created_at == document.created_at,), {}),
-            ('updated_at', (Document.updated_at == document.updated_at,), {}),
-            ('deleted_at', (Document.deleted_at.is_(None),), {}),
-        ]
+        args = args_fn(document)
+        kwargs = kwargs_fn(document)
 
-        for description, args, kwargs in test_cases:
-            result = self.repository.find(*args, **kwargs)
-            assert result is not None, (description, args, kwargs)
-            assert isinstance(result, Document), (description, args, kwargs)
-            assert result.id == document.id, (description, args, kwargs)
+        result = self.repository.find(*args, **kwargs)
+
+        assert result is not None, (description, args, kwargs)
+        assert isinstance(result, Document), (description, args, kwargs)
+        assert result.id == document.id, (description, args, kwargs)
 
     def test_delete_soft_document(self):
         user = UserFactory()
