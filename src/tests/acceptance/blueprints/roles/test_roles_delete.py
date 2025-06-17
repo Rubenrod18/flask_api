@@ -1,10 +1,12 @@
+import pytest
+
 from app.database.factories.role_factory import RoleFactory
-from tests.acceptance.blueprints.roles._base_roles_test import _BaseRoleEndpointsTest
+from tests.acceptance.blueprints.roles._base_roles_test import _TestBaseRoleEndpoints
 
 
-class DeleteRoleEndpointTest(_BaseRoleEndpointsTest):
-    def setUp(self):
-        super().setUp()
+class TestDeleteRoleEndpoint(_TestBaseRoleEndpoints):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = RoleFactory(deleted_at=None)
         self.endpoint = f'{self.base_path}/{self.role.id}'
 
@@ -13,9 +15,9 @@ class DeleteRoleEndpointTest(_BaseRoleEndpointsTest):
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(self.role.id, json_data.get('id'))
-        self.assertIsNotNone(json_data.get('deleted_at') is not None)
-        self.assertGreaterEqual(json_data.get('deleted_at'), json_data.get('updated_at'))
+        assert self.role.id == json_data.get('id')
+        assert json_data.get('deleted_at') is not None
+        assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
     def test_check_user_roles_in_delete_role_endpoint(self):
         test_cases = [

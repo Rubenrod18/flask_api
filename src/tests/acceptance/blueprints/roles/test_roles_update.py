@@ -1,11 +1,13 @@
+import pytest
+
 from app.database.factories.role_factory import RoleFactory
 
-from ._base_roles_test import _BaseRoleEndpointsTest
+from ._base_roles_test import _TestBaseRoleEndpoints
 
 
-class UpdateRoleEndpointTest(_BaseRoleEndpointsTest):
-    def setUp(self):
-        super().setUp()
+class TestUpdateRoleEndpoint(_TestBaseRoleEndpoints):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = RoleFactory(deleted_at=None)
         self.endpoint = f'{self.base_path}/{self.role.id}'
 
@@ -17,12 +19,12 @@ class UpdateRoleEndpointTest(_BaseRoleEndpointsTest):
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(self.role.id, json_data.get('id'))
-        self.assertEqual(payload.get('label'), json_data.get('label'))
-        self.assertEqual(payload.get('label').lower().replace(' ', '-'), json_data.get('name'))
-        self.assertTrue(json_data.get('created_at'))
-        self.assertGreaterEqual(json_data.get('updated_at'), json_data.get('created_at'))
-        self.assertIsNone(json_data.get('deleted_at'))
+        assert self.role.id == json_data.get('id')
+        assert payload.get('label') == json_data.get('label')
+        assert payload.get('label').lower().replace(' ', '-') == json_data.get('name')
+        assert json_data.get('created_at')
+        assert json_data.get('updated_at') >= json_data.get('created_at')
+        assert json_data.get('deleted_at') is None
 
     def test_check_user_roles_in_update_role_endpoint(self):
         test_cases = [

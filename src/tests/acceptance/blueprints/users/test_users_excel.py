@@ -1,9 +1,11 @@
-from ._base_users_test import _BaseUserEndpointsTest
+import pytest
+
+from ._base_users_test import _TestBaseUserEndpointsTest
 
 
-class WordUserEndpointTest(_BaseUserEndpointsTest):
-    def setUp(self):
-        super().setUp()
+class TestWordUserEndpoint(_TestBaseUserEndpointsTest):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.endpoint = f'{self.base_path}/word'
 
     def test_export_word_endpoint(self):
@@ -18,8 +20,8 @@ class WordUserEndpointTest(_BaseUserEndpointsTest):
             response = self.client.post(uri, json=payload, headers=auth_headers, exp_code=202)
             json_response = response.get_json()
 
-            self.assertTrue(json_response.get('task'))
-            self.assertTrue(json_response.get('url'))
+            assert json_response.get('task')
+            assert json_response.get('url')
 
     def test_check_user_roles_in_export_word_endpoint(self):
         test_cases = [

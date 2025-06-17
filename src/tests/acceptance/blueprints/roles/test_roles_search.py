@@ -1,11 +1,13 @@
+import pytest
+
 from app.database.factories.role_factory import RoleFactory
 
-from ._base_roles_test import _BaseRoleEndpointsTest
+from ._base_roles_test import _TestBaseRoleEndpoints
 
 
-class SearchRoleEndpointTest(_BaseRoleEndpointsTest):
-    def setUp(self):
-        super().setUp()
+class TestSearchRoleEndpoint(_TestBaseRoleEndpoints):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = RoleFactory(deleted_at=None)
         self.endpoint = f'{self.base_path}/search'
 
@@ -32,10 +34,10 @@ class SearchRoleEndpointTest(_BaseRoleEndpointsTest):
         records_total = json_response.get('records_total')
         records_filtered = json_response.get('records_filtered')
 
-        self.assertTrue(isinstance(role_data, list))
-        self.assertGreater(records_total, 0)
-        self.assertTrue(0 < records_filtered <= records_total)
-        self.assertTrue(role_data[0]['name'].find(self.role.name) != -1)
+        assert isinstance(role_data, list)
+        assert records_total > 0
+        assert 0 < records_filtered <= records_total
+        assert role_data[0]['name'].find(self.role.name) != -1
 
     def test_check_user_roles_in_search_roles_endpoint(self):
         test_cases = [
@@ -45,9 +47,6 @@ class SearchRoleEndpointTest(_BaseRoleEndpointsTest):
         ]
 
         for user_email, response_status in test_cases:
-            response = self.client.post(
+            self.client.post(
                 self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
             )
-            json_response = response.get_json()
-
-            self.assertEqual(response_status, response.status_code, json_response)

@@ -35,9 +35,10 @@ class BaseApiTest(BaseTest):
 
 class TestBaseApi:
     @pytest.fixture(autouse=True)
-    def setup(self, app, client):
+    def setup(self, app, client, faker):
         self.app = app
         self.client = client
+        self.faker = faker
         self.base_path = '/api'
         self.admin_user = AdminUserFactory(
             active=True, deleted_at=None, email=os.getenv('TEST_USER_EMAIL'), password=os.getenv('TEST_USER_PASSWORD')

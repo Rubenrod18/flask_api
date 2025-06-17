@@ -1,14 +1,16 @@
+import pytest
+
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Role
 from app.models.role import TEAM_LEADER_ROLE
 
-from ._base_users_test import _BaseUserEndpointsTest
+from ._base_users_test import _TestBaseUserEndpointsTest
 
 
-class DeleteUserEndpointTest(_BaseUserEndpointsTest):
-    def setUp(self):
-        super().setUp()
+class TestDeleteUserEndpoint(_TestBaseUserEndpointsTest):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = db.session.query(Role).filter_by(name=TEAM_LEADER_ROLE).first()
         self.user = UserFactory(active=True, deleted_at=None, roles=[self.role])
         self.endpoint = f'{self.base_path}/{self.user.id}'
@@ -18,9 +20,9 @@ class DeleteUserEndpointTest(_BaseUserEndpointsTest):
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(self.user.id, json_data.get('id'))
-        self.assertIsNotNone(json_data.get('deleted_at'))
-        self.assertGreaterEqual(json_data.get('deleted_at'), json_data.get('updated_at'))
+        assert self.user.id == json_data.get('id')
+        assert json_data.get('deleted_at') is not None
+        assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
     def test_check_user_roles_in_delete_user_endpoint(self):
         test_cases = [

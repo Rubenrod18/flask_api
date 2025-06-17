@@ -1,13 +1,15 @@
 import os
 
+import pytest
+
 from app.helpers.otp_token import OTPTokenManager
 
-from ._base_auth_test import _BaseAuthEndpointsTest
+from ._base_auth_test import _TestBaseAuthEndpoints
 
 
-class ConfirmResetPasswordEndpointTest(_BaseAuthEndpointsTest):
-    def setUp(self):
-        super().setUp()
+class TestConfirmResetPasswordEndpoint(_TestBaseAuthEndpoints):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.otp_token_manager = OTPTokenManager(
             secret_key=self.app.config.get('SECRET_KEY'),
             salt=self.app.config.get('SECURITY_PASSWORD_SALT'),
@@ -26,4 +28,4 @@ class ConfirmResetPasswordEndpointTest(_BaseAuthEndpointsTest):
         response = self.client.post(self.endpoint, json=payload, exp_code=200)
         json_response = response.get_json()
 
-        self.assertTrue(json_response.get('access_token'))
+        assert json_response.get('access_token')

@@ -1,17 +1,19 @@
-from ._base_users_test import _BaseUserEndpointsTest
+import pytest
+
+from ._base_users_test import _TestBaseUserEndpointsTest
 
 
-class ExcelUserEndpointTest(_BaseUserEndpointsTest):
-    def setUp(self):
-        super().setUp()
+class TestExcelUserEndpoint(_TestBaseUserEndpointsTest):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.endpoint = f'{self.base_path}/xlsx'
 
     def test_export_excel_endpoint(self):
         response = self.client.post(self.endpoint, json={}, headers=self.build_headers(), exp_code=202)
         json_response = response.get_json()
 
-        self.assertTrue(json_response.get('task'))
-        self.assertTrue(json_response.get('url'))
+        assert json_response.get('task')
+        assert json_response.get('url')
 
     def test_check_user_roles_in_export_excel_endpoint(self):
         test_cases = [
