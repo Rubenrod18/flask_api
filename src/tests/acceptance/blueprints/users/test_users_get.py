@@ -33,14 +33,16 @@ class TestGetUserEndpoint(_TestBaseUserEndpointsTest):
         assert role.name == role_data.get('name')
         assert role.label == role_data.get('label')
 
-    def test_check_user_roles_in_get_user_endpoint(self):
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 200),
-            (self.worker_user.email, 403),
-        ]
-
-        for user_email, response_status in test_cases:
-            self.client.get(
-                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-            )
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 200),
+            ('worker_user', 403),
+        ],
+    )
+    def test_check_user_roles_in_get_user_endpoint(self, user_email_attr, expected_status):
+        user_email = getattr(self, user_email_attr).email
+        self.client.get(
+            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+        )

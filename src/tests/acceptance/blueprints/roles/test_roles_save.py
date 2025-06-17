@@ -1,3 +1,5 @@
+import pytest
+
 from app.database.factories.role_factory import RoleFactory
 
 from ._base_roles_test import _TestBaseRoleEndpoints
@@ -18,17 +20,19 @@ class TestSaveRoleEndpointTest(_TestBaseRoleEndpoints):
         assert json_data.get('updated_at'), json_data.get('created_at')
         assert json_data.get('deleted_at') is None
 
-    def test_check_user_roles_in_save_role_endpoint(self):
-        test_cases = [
-            (self.admin_user.email, 422),
-            (self.team_leader_user.email, 403),
-            (self.worker_user.email, 403),
-        ]
-
-        for user_email, response_status in test_cases:
-            self.client.post(
-                f'{self.base_path}',
-                json={},
-                headers=self.build_headers(user_email=user_email),
-                exp_code=response_status,
-            )
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 422),
+            ('team_leader_user', 403),
+            ('worker_user', 403),
+        ],
+    )
+    def test_check_user_roles_in_save_role_endpoint(self, user_email_attr, expected_status):
+        user_email = getattr(self, user_email_attr).email
+        self.client.post(
+            f'{self.base_path}',
+            json={},
+            headers=self.build_headers(user_email=user_email),
+            exp_code=expected_status,
+        )

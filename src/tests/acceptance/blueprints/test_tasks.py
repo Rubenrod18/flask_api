@@ -61,23 +61,25 @@ class TestTaskEndpoint(TestBaseApi):
         assert json_data.get('result') is None
 
     @patch('app.blueprints.tasks.AsyncResult')
-    def test_check_user_roles_in_task_status_endpoint(self, mock_async_result_delay):
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 200),
+            ('worker_user', 200),
+        ],
+    )
+    def test_check_user_roles_in_task_status_endpoint(self, mock_async_result_delay, user_email_attr, expected_status):
         mock_task_result = MagicMock()
         mock_task_result.state = states.STARTED
         mock_task_result.info = {'current': 5, 'total': 10}
         mock_async_result_delay.return_value = mock_task_result
 
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 200),
-            (self.worker_user.email, 200),
-        ]
+        user_email = getattr(self, user_email_attr).email
 
-        for user_email, response_status in test_cases:
-            response = self.client.get(
-                f'{self.base_path}/status/{uuid.uuid4()}',
-                json={},
-                headers=self.build_headers(user_email=user_email),
-                exp_code=response_status,
-            )
-            assert response.status_code == response_status
+        self.client.get(
+            f'{self.base_path}/status/{uuid.uuid4()}',
+            json={},
+            headers=self.build_headers(user_email=user_email),
+            exp_code=expected_status,
+        )

@@ -46,7 +46,7 @@ class _CustomFlaskClient(FlaskClient):
         self.__after_request(response)
         logger.info('< === END REQUEST === >')
 
-        assert response.status_code == expected_status_code
+        assert response.status_code == expected_status_code, response.get_data(as_text=True)
         return response
 
     def get(self, *args, **kwargs):

@@ -45,14 +45,16 @@ class TestSearchDocumentEndpoint(_TestBaseDocumentEndpoints):
         assert 0 < records_filtered <= records_total
         assert document_data[0].get('name').find(self.document.name) != -1
 
-    def test_check_user_roles_in_search_document_endpoint(self):
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 200),
-            (self.worker_user.email, 200),
-        ]
-
-        for user_email, response_status in test_cases:
-            self.client.post(
-                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-            )
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 200),
+            ('worker_user', 200),
+        ],
+    )
+    def test_check_user_roles_in_search_document_endpoint(self, user_email_attr, expected_status):
+        user_email = getattr(self, user_email_attr).email
+        self.client.post(
+            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+        )

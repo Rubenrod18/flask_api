@@ -31,27 +31,34 @@ class TestGetDocumentEndpoint(_TestBaseDocumentEndpoints):
         assert self.document.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
         assert self.document.deleted_at == json_data.get('deleted_at')
 
-    def test_check_user_roles_in_get_document_endpoint(self):
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 200),
-            (self.worker_user.email, 200),
-        ]
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 200),
+            ('worker_user', 200),
+        ],
+    )
+    def test_check_user_roles_in_get_document_endpoint(self, user_email_attr, expected_status):
+        user_email = getattr(self, user_email_attr).email
+        self.client.get(
+            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+        )
 
-        for user_email, response_status in test_cases:
-            self.client.get(
-                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-            )
+    @pytest.mark.parametrize(
+        'as_attachment',
+        [
+            'as_attachment=1',
+            'as_attachment=0',
+            '',
+        ],
+    )
+    def test_get_document_file_content_endpoint(self, as_attachment):
+        response = self.client.get(
+            f'{self.endpoint}?{as_attachment}',
+            headers=self.build_headers(
+                extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
+            ),
+        )
 
-    def test_get_document_file_content_endpoint(self):
-        test_cases = ['as_attachment=1', 'as_attachment=0', '']
-
-        for test_case in test_cases:
-            response = self.client.get(
-                f'{self.endpoint}?{test_case}',
-                headers=self.build_headers(
-                    extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
-                ),
-            )
-
-            assert isinstance(response.get_data(), bytes)
+        assert isinstance(response.get_data(), bytes)

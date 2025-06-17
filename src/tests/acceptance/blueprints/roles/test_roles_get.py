@@ -23,14 +23,16 @@ class TestGetRoleEndpoint(_TestBaseRoleEndpoints):
         assert self.role.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
         assert self.role.deleted_at == json_data.get('deleted_at')
 
-    def test_check_user_roles_in_get_role_endpoint(self):
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 403),
-            (self.worker_user.email, 403),
-        ]
-
-        for user_email, response_status in test_cases:
-            self.client.get(
-                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-            )
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 403),
+            ('worker_user', 403),
+        ],
+    )
+    def test_check_user_roles_in_get_role_endpoint(self, user_email_attr, expected_status):
+        user_email = getattr(self, user_email_attr).email
+        self.client.get(
+            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+        )
