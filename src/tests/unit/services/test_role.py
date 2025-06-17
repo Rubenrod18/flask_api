@@ -2,21 +2,22 @@ from datetime import datetime, UTC
 from unittest import mock
 from unittest.mock import MagicMock
 
+import pytest
+
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import AdminUserFactory
 from app.models import Role
 from app.repositories import RoleRepository
 from app.services import RoleService
-from tests.base.base_test import BaseTest
 
 
-class _RoleBaseServiceTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class _TestRoleBaseService:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.admin_user = AdminUserFactory(deleted_at=None)
 
 
-class CreateRoleServiceTest(_RoleBaseServiceTest):
+class TestCreateRoleService(_TestRoleBaseService):
     @mock.patch('app.services.role.db.session', autospec=True)
     def test_create_role(self, mock_session):
         mock_role_repo = MagicMock(spec=RoleRepository)
@@ -31,18 +32,18 @@ class CreateRoleServiceTest(_RoleBaseServiceTest):
         mock_role_repo.create.assert_called_once_with(**role_data)
         mock_session.add.assert_called_once_with(role)
         mock_session.flush.assert_called_once_with()
-        self.assertTrue(isinstance(created_role, Role))
-        self.assertEqual(created_role.name, role.name)
-        self.assertEqual(created_role.description, role.description)
-        self.assertEqual(created_role.label, role.label)
-        self.assertTrue(created_role.created_at)
-        self.assertEqual(created_role.updated_at, created_role.created_at)
-        self.assertIsNone(created_role.deleted_at)
+        assert isinstance(created_role, Role)
+        assert created_role.name, role.name
+        assert created_role.description, role.description
+        assert created_role.label, role.label
+        assert created_role.created_at
+        assert created_role.updated_at, created_role.created_at
+        assert created_role.deleted_at is None
 
 
-class FindByIdRoleServiceTest(_RoleBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestFindByIdRoleService(_TestRoleBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = RoleFactory(deleted_at=None)
 
     def test_find_by_id_role(self):
@@ -53,13 +54,13 @@ class FindByIdRoleServiceTest(_RoleBaseServiceTest):
         role = role_service.find_by_id(self.role.id)
 
         mock_role_repo.find_by_id.assert_called_once_with(self.role.id)
-        self.assertTrue(isinstance(role, Role))
-        self.assertEqual(role.id, self.role.id)
+        assert isinstance(role, Role)
+        assert role.id == self.role.id
 
 
-class GetRoleServiceTest(_RoleBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestGetRoleService(_TestRoleBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = RoleFactory(deleted_at=None)
 
     def test_get_role(self):
@@ -76,12 +77,12 @@ class GetRoleServiceTest(_RoleBaseServiceTest):
         roles = role_service.get(**role_data)
 
         mock_role_repo.get.assert_called_once_with(**role_data)
-        self.assertEqual(len(roles), 1)
-        self.assertTrue(isinstance(roles[0], Role))
-        self.assertEqual(roles[0].id, self.role.id)
+        assert len(roles) == 1
+        assert isinstance(roles[0], Role)
+        assert roles[0].id == self.role.id
 
 
-class SaveRoleServiceTest(_RoleBaseServiceTest):
+class TestSaveRoleService(_TestRoleBaseService):
     def test_save_role(self):
         mock_role_repo = MagicMock(spec=RoleRepository)
         role = RoleFactory(deleted_at=None)
@@ -96,18 +97,18 @@ class SaveRoleServiceTest(_RoleBaseServiceTest):
             role.id,
             **role_data,
         )
-        self.assertTrue(isinstance(updated_role, Role))
-        self.assertEqual(updated_role.name, role.name)
-        self.assertEqual(updated_role.description, role.description)
-        self.assertEqual(updated_role.label, role.label)
-        self.assertTrue(updated_role.created_at)
-        self.assertEqual(updated_role.updated_at, updated_role.created_at)
-        self.assertIsNone(updated_role.deleted_at)
+        assert isinstance(updated_role, Role)
+        assert updated_role.name == role.name
+        assert updated_role.description == role.description
+        assert updated_role.label == role.label
+        assert updated_role.created_at
+        assert updated_role.updated_at, updated_role.created_at
+        assert updated_role.deleted_at is None
 
 
-class DeleteRoleServiceTest(_RoleBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestDeleteRoleService(_TestRoleBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = RoleFactory(deleted_at=None)
 
     def test_delete_role(self):
@@ -119,14 +120,14 @@ class DeleteRoleServiceTest(_RoleBaseServiceTest):
         role = role_service.delete(self.role.id)
 
         mock_role_repo.delete.assert_called_once_with(self.role.id)
-        self.assertTrue(isinstance(role, Role))
-        self.assertEqual(role.id, self.role.id)
-        self.assertEqual(role.deleted_at, self.role.deleted_at)
+        assert isinstance(role, Role)
+        assert role.id == self.role.id
+        assert role.deleted_at == self.role.deleted_at
 
 
-class AssignRoleToUserRoleServiceTest(_RoleBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestAssignRoleToUserRoleService(_TestRoleBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = RoleFactory(deleted_at=None)
 
     @mock.patch('app.services.role.user_datastore.remove_role_from_user', autospec=True)

@@ -3,6 +3,7 @@ from datetime import datetime, UTC
 from unittest import mock
 from unittest.mock import MagicMock
 
+import pytest
 from flask import current_app, Response, send_file
 from werkzeug.exceptions import BadRequest
 
@@ -13,18 +14,17 @@ from app.models import Document
 from app.repositories import DocumentRepository
 from app.services import DocumentService
 from app.utils.constants import PDF_MIME_TYPE
-from tests.base.base_test import BaseTest
 
 
-class _DocumentBaseServiceTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class _TestDocumentBaseService:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.admin_user = AdminUserFactory(deleted_at=None)
 
 
-class CreateDocumentServiceTest(_DocumentBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestCreateDocumentServiceTest(_TestDocumentBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.pdf_filename = 'example.pdf'
         self.internal_basename = uuid.uuid1().hex
         self.internal_filename = f'{self.internal_basename}.pdf'
@@ -71,14 +71,14 @@ class CreateDocumentServiceTest(_DocumentBaseServiceTest):
         )
         mock_session.add.assert_called_once_with(self.document)
         mock_session.flush.assert_called_once_with()
-        self.assertTrue(isinstance(created_document, Document))
-        self.assertEqual(created_document.created_by, self.admin_user.id)
-        self.assertEqual(created_document.name, self.pdf_filename)
-        self.assertEqual(created_document.mime_type, PDF_MIME_TYPE)
-        self.assertEqual(created_document.size, self.document.size)
-        self.assertTrue(created_document.created_at)
-        self.assertEqual(created_document.updated_at, created_document.created_at)
-        self.assertIsNone(created_document.deleted_at)
+        assert isinstance(created_document, Document)
+        assert created_document.created_by == self.admin_user.id
+        assert created_document.name == self.pdf_filename
+        assert created_document.mime_type == PDF_MIME_TYPE
+        assert created_document.size == self.document.size
+        assert created_document.created_at
+        assert created_document.updated_at == created_document.created_at
+        assert created_document.deleted_at is None
 
     @mock.patch('app.services.document.uuid', autospec=True)
     def test_create_document_file_is_empty(self, mock_uuid):
@@ -87,7 +87,7 @@ class CreateDocumentServiceTest(_DocumentBaseServiceTest):
         document_service = DocumentService()
         document_service.file_storage.delete_file = MagicMock()
 
-        with self.assertRaises(BadRequest) as context:
+        with pytest.raises(BadRequest) as exc_info:
             document_service.create(
                 **{
                     'mime_type': PDF_MIME_TYPE,
@@ -99,8 +99,8 @@ class CreateDocumentServiceTest(_DocumentBaseServiceTest):
                 f'{current_app.config.get("STORAGE_DIRECTORY")}/{self.internal_filename}'
             )
 
-        self.assertEqual(context.exception.code, 400)
-        self.assertEqual(context.exception.description, 'The file is empty!')
+        assert exc_info.value.code == 400
+        assert exc_info.value.description == 'The file is empty!'
 
     @mock.patch('app.services.document.uuid', autospec=True)
     @mock.patch('app.file_storages.local.os.path.exists', return_value=True)
@@ -115,17 +115,17 @@ class CreateDocumentServiceTest(_DocumentBaseServiceTest):
             'file_data': b'',
         }
 
-        with self.assertRaises(BadRequest) as context:
+        with pytest.raises(BadRequest) as exc_info:
             document_service.create(**document_data)
             document_service.file_storage.delete_file.assert_not_called()
 
-        self.assertEqual(context.exception.code, 400)
-        self.assertEqual(context.exception.description, 'The file already exists!')
+        assert exc_info.value.code == 400
+        assert exc_info.value.description == 'The file already exists!'
 
 
-class FindByIdDocumentServiceTest(_DocumentBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestFindByIdDocumentService(_TestDocumentBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.document = DocumentFactory(deleted_at=None)
 
     def test_find_by_id_document(self):
@@ -136,13 +136,13 @@ class FindByIdDocumentServiceTest(_DocumentBaseServiceTest):
         document = document_service.find_by_id(self.document.id)
 
         mock_doc_repo.find_by_id.assert_called_once_with(self.document.id)
-        self.assertTrue(isinstance(document, Document))
-        self.assertEqual(document.id, self.document.id)
+        assert isinstance(document, Document)
+        assert document.id == self.document.id
 
 
-class GetDocumentServiceTest(_DocumentBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestGetDocumentService(_TestDocumentBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.document = DocumentFactory(deleted_at=None)
 
     def test_get_document(self):
@@ -159,14 +159,14 @@ class GetDocumentServiceTest(_DocumentBaseServiceTest):
         documents = document_service.get(**document_data)
 
         mock_doc_repo.get.assert_called_once_with(**document_data)
-        self.assertEqual(len(documents), 1)
-        self.assertTrue(isinstance(documents[0], Document))
-        self.assertEqual(documents[0].id, self.document.id)
+        assert len(documents) == 1
+        assert isinstance(documents[0], Document)
+        assert documents[0].id == self.document.id
 
 
-class SaveDocumentServiceTest(_DocumentBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestSaveDocumentService(_TestDocumentBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.pdf_filename = 'example.pdf'
         self.internal_basename = uuid.uuid1().hex
         self.internal_filename = f'{self.internal_basename}.pdf'
@@ -217,14 +217,14 @@ class SaveDocumentServiceTest(_DocumentBaseServiceTest):
                 'size': filesize,
             },
         )
-        self.assertTrue(isinstance(document, Document))
-        self.assertEqual(document.created_by, self.admin_user.id)
-        self.assertEqual(document.name, self.pdf_filename)
-        self.assertEqual(document.mime_type, PDF_MIME_TYPE)
-        self.assertEqual(document.size, filesize)
-        self.assertTrue(document.created_at)
-        self.assertEqual(document.updated_at, document.created_at)
-        self.assertIsNone(document.deleted_at)
+        assert isinstance(document, Document)
+        assert document.created_by == self.admin_user.id
+        assert document.name == self.pdf_filename
+        assert document.mime_type == PDF_MIME_TYPE
+        assert document.size == filesize
+        assert document.created_at
+        assert document.updated_at == document.created_at
+        assert document.deleted_at is None
 
     @mock.patch('app.services.document.uuid', autospec=True)
     def test_save_document_file_is_empty(self, mock_uuid):
@@ -234,7 +234,7 @@ class SaveDocumentServiceTest(_DocumentBaseServiceTest):
         document_service.file_storage.delete_file = MagicMock()
         document = DocumentFactory(deleted_at=None)
 
-        with self.assertRaises(BadRequest) as context:
+        with pytest.raises(BadRequest) as exc_info:
             document_service.save(
                 document.id,
                 **{
@@ -247,13 +247,13 @@ class SaveDocumentServiceTest(_DocumentBaseServiceTest):
                 f'{current_app.config.get("STORAGE_DIRECTORY")}/{self.internal_filename}'
             )
 
-        self.assertEqual(context.exception.code, 400)
-        self.assertEqual(context.exception.description, 'The file is empty!')
+        assert exc_info.value.code == 400
+        assert exc_info.value.description == 'The file is empty!'
 
 
-class DeleteDocumentServiceTest(_DocumentBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestDeleteDocumentService(_TestDocumentBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.document = DocumentFactory(deleted_at=None)
 
     def test_delete_document(self):
@@ -265,14 +265,14 @@ class DeleteDocumentServiceTest(_DocumentBaseServiceTest):
         document = document_service.delete(self.document.id)
 
         mock_doc_repo.delete.assert_called_once_with(self.document.id)
-        self.assertTrue(isinstance(document, Document))
-        self.assertEqual(document.id, self.document.id)
-        self.assertEqual(document.deleted_at, self.document.deleted_at)
+        assert isinstance(document, Document)
+        assert document.id == self.document.id
+        assert document.deleted_at == self.document.deleted_at
 
 
-class GetDocumentContentDocumentServiceTest(_DocumentBaseServiceTest):
-    def setUp(self):
-        super().setUp()
+class TestGetDocumentContentDocumentService(_TestDocumentBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.document = DocumentFactory(deleted_at=None)
 
     @mock.patch('app.services.document.send_file', autospec=True)
@@ -324,5 +324,5 @@ class GetDocumentContentDocumentServiceTest(_DocumentBaseServiceTest):
 
             mock_doc_repo.find_by_id.assert_called_once_with(self.document.id)
             mock_send_file.assert_called_once_with(**send_file_kwargs)
-            self.assertTrue(isinstance(response, Response), response)
-            self.assertEqual(response.mimetype, PDF_MIME_TYPE)
+            assert isinstance(response, Response)
+            assert response.mimetype == PDF_MIME_TYPE
