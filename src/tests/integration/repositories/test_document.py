@@ -1,16 +1,17 @@
 from datetime import datetime
 
+import pytest
+
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Document
 from app.repositories.document import DocumentRepository
-from tests.base.base_test import BaseTest
 
 
-class DocumentRepositoryTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class TestDocumentRepository:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.repository = DocumentRepository()
 
     def test_create_document(self):
@@ -18,13 +19,13 @@ class DocumentRepositoryTest(BaseTest):
 
         document = self.repository.create(**document_data)
 
-        self.assertEqual(document.name, document_data['name'])
-        self.assertEqual(document.size, document_data['size'])
-        self.assertEqual(document.directory_path, document_data['directory_path'])
-        self.assertEqual(document.internal_filename, document_data['internal_filename'])
-        self.assertEqual(document.mime_type, document_data['mime_type'])
-        self.assertEqual(document.created_by_user, document_data['created_by_user'])
-        self.assertIsNone(db.session.query(Document).filter_by(name=document_data['name']).one_or_none())
+        assert document.name == document_data['name']
+        assert document.size == document_data['size']
+        assert document.directory_path == document_data['directory_path']
+        assert document.internal_filename == document_data['internal_filename']
+        assert document.mime_type == document_data['mime_type']
+        assert document.created_by_user == document_data['created_by_user']
+        assert db.session.query(Document).filter_by(name=document_data['name']).one_or_none() is None
 
     def test_find_document(self):
         user = UserFactory()
@@ -55,9 +56,9 @@ class DocumentRepositoryTest(BaseTest):
 
         for description, args, kwargs in test_cases:
             result = self.repository.find(*args, **kwargs)
-            self.assertIsNotNone(result, (description, args, kwargs))
-            self.assertTrue(isinstance(result, Document), (description, args, kwargs))
-            self.assertEqual(result.id, document.id, (description, args, kwargs))
+            assert result is not None, (description, args, kwargs)
+            assert isinstance(result, Document), (description, args, kwargs)
+            assert result.id == document.id, (description, args, kwargs)
 
     def test_delete_soft_document(self):
         user = UserFactory()
@@ -65,14 +66,15 @@ class DocumentRepositoryTest(BaseTest):
 
         document = self.repository.delete(document.id)
 
-        self.assertTrue(isinstance(document.deleted_at, datetime))
-        self.assertIsNone(
+        assert isinstance(document.deleted_at, datetime)
+        assert (
             db.session.query(Document).filter_by(name=document.name, deleted_at=document.deleted_at).one_or_none()
+            is None
         )
 
     def test_delete_hard_document(self):
         user = UserFactory()
         document = DocumentFactory(created_by_user=user)
 
-        with self.assertRaises(NotImplementedError):
+        with pytest.raises(NotImplementedError):
             self.repository.delete(document.id, force_delete=True)

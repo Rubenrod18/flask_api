@@ -1,15 +1,16 @@
 from datetime import datetime
 
+import pytest
+
 from app.database.factories.role_factory import RoleFactory
 from app.extensions import db
 from app.models import Role
 from app.repositories.role import RoleRepository
-from tests.base.base_test import BaseTest
 
 
-class RoleRepositoryTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class TestRoleRepository:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.repository = RoleRepository()
 
     def test_create_role(self):
@@ -17,10 +18,10 @@ class RoleRepositoryTest(BaseTest):
 
         role = self.repository.create(**role_data)
 
-        self.assertEqual(role.name, role_data['name'])
-        self.assertEqual(role.description, role_data['description'])
-        self.assertEqual(role.label, role_data['label'])
-        self.assertIsNone(db.session.query(Role).filter_by(name=role_data['name']).one_or_none())
+        assert role.name == role_data['name']
+        assert role.description == role_data['description']
+        assert role.label == role_data['label']
+        assert db.session.query(Role).filter_by(name=role_data['name']).one_or_none() is None
 
     def test_find_role(self):
         role = RoleFactory(deleted_at=None)
@@ -44,9 +45,9 @@ class RoleRepositoryTest(BaseTest):
 
         for description, args, kwargs in test_cases:
             result = self.repository.find(*args, **kwargs)
-            self.assertIsNotNone(result, (description, args, kwargs))
-            self.assertTrue(isinstance(result, Role), (description, args, kwargs))
-            self.assertEqual(result.id, role.id, (description, args, kwargs))
+            assert result is not None, (description, args, kwargs)
+            assert isinstance(result, Role), (description, args, kwargs)
+            assert result.id == role.id, (description, args, kwargs)
 
     def test_find_by_name_role(self):
         role = RoleFactory(deleted_at=None)
@@ -61,27 +62,27 @@ class RoleRepositoryTest(BaseTest):
 
         for description, args in test_cases:
             result = self.repository.find_by_name(role.name, *args)
-            self.assertIsNotNone(result, (description, args))
-            self.assertTrue(isinstance(result, Role), (description, args))
-            self.assertEqual(result.id, role.id, (description, args))
+            assert result is not None, (description, args)
+            assert isinstance(result, Role), (description, args)
+            assert result.id == role.id, (description, args)
 
     def test_find_by_name_not_found_role(self):
         RoleFactory(deleted_at=None)
 
         found_role = self.repository.find_by_name('fake-role')
 
-        self.assertIsNone(found_role)
+        assert found_role is None
 
     def test_delete_soft_role(self):
         role = RoleFactory()
 
         role = self.repository.delete(role.id)
 
-        self.assertTrue(isinstance(role.deleted_at, datetime))
-        self.assertIsNone(db.session.query(Role).filter_by(name=role.name, deleted_at=role.deleted_at).one_or_none())
+        assert isinstance(role.deleted_at, datetime)
+        assert db.session.query(Role).filter_by(name=role.name, deleted_at=role.deleted_at).one_or_none() is None
 
     def test_delete_hard_role(self):
         role = RoleFactory()
 
-        with self.assertRaises(NotImplementedError):
+        with pytest.raises(NotImplementedError):
             self.repository.delete(role.id, force_delete=True)

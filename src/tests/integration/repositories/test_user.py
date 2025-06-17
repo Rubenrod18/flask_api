@@ -1,19 +1,20 @@
 from datetime import datetime, UTC
 
+import pytest
+
 from app.database.factories.user_factory import AdminUserFactory, UserFactory
 from app.extensions import db
 from app.models import User
 from app.repositories.user import UserRepository
-from tests.base.base_test import BaseTest
 
 
-class UserRepositoryTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class TestUserRepository:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.repository = UserRepository()
 
     def test_create_user(self):
-        with self.assertRaises(NotImplementedError):
+        with pytest.raises(NotImplementedError):
             self.repository.create(**{})
 
     def test_find_user(self):
@@ -49,9 +50,9 @@ class UserRepositoryTest(BaseTest):
 
         for description, args, kwargs in test_cases:
             result = self.repository.find(*args, **kwargs)
-            self.assertIsNotNone(result, (description, args, kwargs))
-            self.assertTrue(isinstance(result, User), (description, args, kwargs))
-            self.assertEqual(result.id, user.id, (description, args, kwargs))
+            assert result is not None, (description, args, kwargs)
+            assert isinstance(result, User), (description, args, kwargs)
+            assert result.id == user.id, (description, args, kwargs)
 
     def test_find_by_email_user(self):
         user = UserFactory(
@@ -73,9 +74,9 @@ class UserRepositoryTest(BaseTest):
 
         for description, args in test_cases:
             result = self.repository.find_by_email(user.email, *args)
-            self.assertIsNotNone(result, (description, args))
-            self.assertTrue(isinstance(result, User), (description, args))
-            self.assertEqual(result.id, user.id, (description, args))
+            assert result is not None, (description, args)
+            assert isinstance(result, User), (description, args)
+            assert result.id == user.id, (description, args)
 
     def test_find_by_email_not_found_user(self):
         UserFactory(
@@ -84,7 +85,7 @@ class UserRepositoryTest(BaseTest):
 
         found_user = self.repository.find_by_email('fake-user@mail.com')
 
-        self.assertIsNone(found_user)
+        assert found_user is None
 
     def test_get_last_record_user(self):
         UserFactory(deleted_at=datetime.now(UTC), created_by_user=None, active=False)
@@ -94,20 +95,20 @@ class UserRepositoryTest(BaseTest):
 
         found_user = self.repository.get_last_record()
 
-        self.assertIsNotNone(found_user)
-        self.assertTrue(isinstance(found_user, User))
-        self.assertEqual(found_user.id, 3)
+        assert found_user is not None
+        assert isinstance(found_user, User)
+        assert found_user.id == 3
 
     def test_delete_soft_user(self):
         user = UserFactory()
 
         user = self.repository.delete(user.id)
 
-        self.assertTrue(isinstance(user.deleted_at, datetime))
-        self.assertIsNone(db.session.query(User).filter_by(name=user.name, deleted_at=user.deleted_at).one_or_none())
+        assert isinstance(user.deleted_at, datetime)
+        assert db.session.query(User).filter_by(name=user.name, deleted_at=user.deleted_at).one_or_none() is None
 
     def test_delete_hard_user(self):
         user = UserFactory()
 
-        with self.assertRaises(NotImplementedError):
+        with pytest.raises(NotImplementedError):
             self.repository.delete(user.id, force_delete=True)

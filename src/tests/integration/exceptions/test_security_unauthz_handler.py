@@ -1,8 +1,8 @@
 from app.database.factories.user_factory import UserFactory
-from tests.base.base_api_test import BaseApiTest
+from tests.base.base_api_test import TestBaseApi
 
 
-class ExceptionsTest(BaseApiTest):
+class TestExceptions(TestBaseApi):
     def test_custom_unauthorized_handler_exception(self):
         user = UserFactory(active=True, deleted_at=None)
 
@@ -11,7 +11,7 @@ class ExceptionsTest(BaseApiTest):
         )
         json_response = response.get_json()
 
-        self.assertEqual(
+        assert (
             (
                 "You don't have the permission to access the requested resource. "
                 'It is either read-protected or not readable by the server.'

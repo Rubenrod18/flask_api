@@ -1,10 +1,12 @@
+import pytest
+
 from app.middleware import ContentTypeValidator, Middleware
-from tests.base.base_api_test import BaseApiTest
+from tests.base.base_api_test import TestBaseApi
 
 
-class MiddlewareTest(BaseApiTest):
-    def setUp(self):
-        super().setUp()
+class TestMiddleware(TestBaseApi):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.validator = ContentTypeValidator(allowed_types={'application/json'})
         self.app.wsgi_app = Middleware(self.app, validator=self.validator)
 
@@ -14,7 +16,7 @@ class MiddlewareTest(BaseApiTest):
         )
         json_response = response.get_json()
 
-        self.assertEqual('Invalid Content-Type', json_response.get('message'))
+        assert json_response.get('message'), 'Invalid Content-Type'
 
     def test_api_middleware_valid_content_type(self):
         self.client.post(
