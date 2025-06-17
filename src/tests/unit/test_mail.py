@@ -5,6 +5,7 @@ from flask import current_app
 from app.extensions import mail
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestMail:
     def test_mail_record_messages(self, app, faker):
         """Check if an email is sent."""

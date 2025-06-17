@@ -8,6 +8,7 @@ from app.database.factories.user_factory import UserFactory
 from ._base_users_test import _TestBaseUserEndpointsTest
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestSaveUserEndpoint(_TestBaseUserEndpointsTest):
     def test_create_user_endpoint(self):
         role = RoleFactory(deleted_at=None)

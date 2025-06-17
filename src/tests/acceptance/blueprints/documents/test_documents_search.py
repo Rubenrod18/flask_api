@@ -7,6 +7,7 @@ from app.database.factories.document_factory import DocumentFactory
 from ._base_documents_test import _TestBaseDocumentEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestSearchDocumentEndpoint(_TestBaseDocumentEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

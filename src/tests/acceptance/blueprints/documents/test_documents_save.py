@@ -9,6 +9,7 @@ from app.utils.constants import PDF_MIME_TYPE
 from ._base_documents_test import _TestBaseDocumentEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestSaveDocumentEndpoint(_TestBaseDocumentEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

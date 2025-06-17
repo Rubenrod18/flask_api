@@ -5,6 +5,7 @@ from app.database.factories.role_factory import RoleFactory
 from ._base_roles_test import _TestBaseRoleEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestSaveRoleEndpointTest(_TestBaseRoleEndpoints):
     def test_save_role_endpoint(self):
         ignore_fields = {'id', 'created_at', 'updated_at', 'deleted_at', 'name'}

@@ -10,6 +10,7 @@ from app.file_storages import LocalStorage
 from ._base_documents_test import _TestBaseDocumentEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestUpdateDocumentEndpoint(_TestBaseDocumentEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

@@ -7,6 +7,7 @@ from app.database.factories.user_factory import UserFactory
 from app.services import AuthService
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestAuthService:
     @pytest.fixture(autouse=True)
     def setup(self, app):

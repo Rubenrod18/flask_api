@@ -7,6 +7,7 @@ from app.database.factories.user_factory import UserFactory
 from app.file_storages import LocalStorage
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestWordAndExcelTask:
     @pytest.fixture(autouse=True)
     def setup(self, app):

@@ -3,6 +3,7 @@
 from tests.base.base_api_test import TestBaseApi
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestBasicEndpoint(TestBaseApi):
     def test_welcome_api(self):
         response = self.client.get(f'{self.base_path}/welcome', json={})

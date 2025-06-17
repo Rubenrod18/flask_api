@@ -4,6 +4,7 @@ from app.middleware import ContentTypeValidator, Middleware
 from tests.base.base_api_test import TestBaseApi
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestMiddleware(TestBaseApi):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

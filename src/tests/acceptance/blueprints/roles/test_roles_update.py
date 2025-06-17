@@ -5,6 +5,7 @@ from app.database.factories.role_factory import RoleFactory
 from ._base_roles_test import _TestBaseRoleEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestUpdateRoleEndpoint(_TestBaseRoleEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

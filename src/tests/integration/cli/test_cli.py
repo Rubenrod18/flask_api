@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_sqlalchemy.model import DefaultMeta
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestCli:
     def test_is_cli_seeder_ok_execute_all_seeders_process_executed_successfully(self, runner):
         result = runner.invoke(args=['seed'])

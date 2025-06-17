@@ -11,6 +11,7 @@ from app.models import Document
 from app.utils.constants import MS_EXCEL_MIME_TYPE
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestExcelTask:
     @pytest.fixture(autouse=True)
     def setup(self, app):
@@ -51,11 +52,12 @@ class TestExcelTask:
         assert task_result['result'].get('updated_at'), task_result
         assert task_result['result'].get('deleted_at') is None, task_result
         assert task_result['result'].get('url') == f'http://{os.getenv("SERVER_NAME")}/api/documents/1', task_result
-        assert (
-            task_result['result'].get('created_by')
-            == {'id': user.id, 'email': user.email, 'name': user.name, 'last_name': user.last_name},
-            task_result,
-        )
+        assert task_result['result'].get('created_by') == {
+            'id': user.id,
+            'email': user.email,
+            'name': user.name,
+            'last_name': user.last_name,
+        }, task_result
 
         query = db.session.query(Document)
         assert len(query.filter().all()) == 1

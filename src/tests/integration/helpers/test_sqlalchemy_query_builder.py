@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init, unused-argument
 from datetime import datetime, UTC
 
 import pytest
@@ -589,7 +590,11 @@ class TestSQLAlchemyQueryBuilderNoStrings(_TestBaseCreateSearchQuery):
                 lambda self, _, u2, u3: self._search_request(
                     'birth_date',
                     'between',
-                    f'{u3.birth_date.strftime("%Y-%m-%d")}{rqo.REQUEST_QUERY_DELIMITER}{u2.birth_date.strftime("%Y-%m-%d")}',
+                    (
+                        f'{u3.birth_date.strftime("%Y-%m-%d")}'
+                        f'{rqo.REQUEST_QUERY_DELIMITER}'
+                        f'{u2.birth_date.strftime("%Y-%m-%d")}'
+                    ),
                 ),
                 lambda self, _, u2, u3: {u2.id, u3.id},
             ),

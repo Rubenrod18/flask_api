@@ -14,6 +14,7 @@ from app.repositories import UserRepository
 from app.serializers import UserExportWordSerializer, UserSerializer
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestUserSerializer:
     @pytest.fixture(autouse=True)
     def setup(self, app, faker):
@@ -91,16 +92,13 @@ class TestUserSerializer:
         with pytest.raises(ValidationError) as exc_info:
             self.serializer.load({})
 
-        assert (
-            exc_info.value.messages,
-            {
-                'name': ['Missing data for required field.'],
-                'last_name': ['Missing data for required field.'],
-                'email': ['Missing data for required field.'],
-                'password': ['Missing data for required field.'],
-                'birth_date': ['Missing data for required field.'],
-            },
-        )
+        assert exc_info.value.messages == {
+            'name': ['Missing data for required field.'],
+            'last_name': ['Missing data for required field.'],
+            'email': ['Missing data for required field.'],
+            'password': ['Missing data for required field.'],
+            'birth_date': ['Missing data for required field.'],
+        }
 
     def test_invalid_role_id_format(self):
         with pytest.raises(NotFound) as exc_info:

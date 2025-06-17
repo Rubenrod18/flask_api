@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init, unused-argument
 import os
 from unittest.mock import MagicMock, patch
 

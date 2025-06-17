@@ -4,6 +4,7 @@ from flask import current_app
 from app.celery import ContextTask
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestCeleryAppContext:
     @pytest.fixture(autouse=True)
     def setup(self):

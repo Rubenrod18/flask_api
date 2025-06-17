@@ -6,6 +6,7 @@ from app.database.factories.document_factory import DocumentFactory
 from tests.acceptance.blueprints.documents._base_documents_test import _TestBaseDocumentEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestDeleteDocumentEndpoint(_TestBaseDocumentEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

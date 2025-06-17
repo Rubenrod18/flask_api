@@ -9,6 +9,7 @@ from app.database.factories.user_factory import UserFactory
 from ._base_auth_test import _TestBaseAuthEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestLoginAuthEndpoint(_TestBaseAuthEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

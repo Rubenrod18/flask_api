@@ -7,6 +7,7 @@ from app.exceptions import FileEmptyError
 from app.file_storages import LocalStorage
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestLocalStorage:
     @pytest.fixture(autouse=True)
     def setup(self, tmp_path):

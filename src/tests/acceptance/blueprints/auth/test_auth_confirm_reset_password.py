@@ -7,6 +7,7 @@ from app.helpers.otp_token import OTPTokenManager
 from ._base_auth_test import _TestBaseAuthEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestConfirmResetPasswordEndpoint(_TestBaseAuthEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

@@ -9,6 +9,7 @@ from app.models import Document
 from app.repositories.document import DocumentRepository
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestDocumentRepository:
     @pytest.fixture(autouse=True)
     def setup(self, app):

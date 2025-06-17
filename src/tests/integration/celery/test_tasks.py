@@ -20,6 +20,7 @@ from app.helpers.otp_token import OTPTokenManager
 from app.models.role import ADMIN_ROLE
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestCeleryTasks:
     @pytest.fixture(autouse=True)
     def setup(self, app):

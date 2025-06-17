@@ -8,6 +8,7 @@ from app.models import Role
 from app.repositories.role import RoleRepository
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestRoleRepository:
     @pytest.fixture(autouse=True)
     def setup(self, app):

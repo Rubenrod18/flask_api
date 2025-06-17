@@ -10,6 +10,7 @@ from app.repositories import RoleRepository
 from app.serializers import RoleSerializer
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestRoleSerializer:
     @pytest.fixture(autouse=True)
     def setup(self, app):

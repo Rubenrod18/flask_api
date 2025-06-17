@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from app.celery.tasks import create_word_and_excel_documents_task
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestCeleryTasks:
     def test_unit_create_word_and_excel_documents_tasks_are_called(self, app):
         user_id = 1

@@ -12,9 +12,6 @@ class TestExceptions(TestBaseApi):
         json_response = response.get_json()
 
         assert (
-            (
-                "You don't have the permission to access the requested resource. "
-                'It is either read-protected or not readable by the server.'
-            ),
-            json_response.get('message'),
-        )
+            "You don't have the permission to access the requested resource. "
+            'It is either read-protected or not readable by the server.'
+        ) == json_response.get('message')

@@ -5,6 +5,7 @@ from app.helpers.sqlalchemy_query_builder import EQUAL_OP, GREATER_THAN_OP
 from app.serializers import SearchSerializer
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestSearchSerializer:
     @pytest.fixture(autouse=True)
     def setup(self):

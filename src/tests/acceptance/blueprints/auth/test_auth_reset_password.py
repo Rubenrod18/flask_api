@@ -5,6 +5,7 @@ import pytest
 from ._base_auth_test import _TestBaseAuthEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class RequestResetPasswordAuthEndpointTest(_TestBaseAuthEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

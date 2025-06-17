@@ -3,6 +3,7 @@ from flask_jwt_extended import create_refresh_token, decode_token
 from ._base_auth_test import _TestBaseAuthEndpoints
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestRefreshAuthEndpoint(_TestBaseAuthEndpoints):
     def test_user_refresh_token(self):
         refresh_token = create_refresh_token(identity=str(self.admin_user.id))

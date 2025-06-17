@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init, unused-argument
 import unittest
 from datetime import datetime, UTC
 from unittest.mock import MagicMock, patch

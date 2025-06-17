@@ -1,3 +1,4 @@
+# pylint: disable=attribute-defined-outside-init, unused-argument
 import uuid
 from datetime import datetime, UTC
 from unittest import mock

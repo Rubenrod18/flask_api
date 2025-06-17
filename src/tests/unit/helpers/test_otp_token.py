@@ -6,6 +6,7 @@ from werkzeug.exceptions import BadRequest
 from app.helpers.otp_token import OTPTokenManager
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestOTPTokenManager:
     @pytest.fixture(autouse=True)
     def setup(self, faker):

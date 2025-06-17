@@ -8,6 +8,7 @@ from app.models import User
 from app.repositories.user import UserRepository
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestUserRepository:
     @pytest.fixture(autouse=True)
     def setup(self, app):

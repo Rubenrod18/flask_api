@@ -137,25 +137,25 @@ def app():
 
     db_uri, engine = create_app_db()
     create_celery_db()
-    app = create_app(db_uri)
+    flask_app = create_app(db_uri)
 
-    with app.app_context():
+    with flask_app.app_context():
         db.create_all()
 
-        yield app
+        yield flask_app
 
         teardown(engine)
 
 
 @pytest.fixture()
-def client(app):
+def client(app):  # pylint: disable=redefined-outer-name
     """Provide a Flask test client using the custom client."""
     app.test_client_class = _CustomFlaskClient
     return app.test_client()
 
 
 @pytest.fixture()
-def runner(app):
+def runner(app):  # pylint: disable=redefined-outer-name
     """Provide a Flask CLI runner."""
     return app.test_cli_runner()
 

@@ -3,6 +3,7 @@ import pytest
 from ._base_users_test import _TestBaseUserEndpointsTest
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestWordAndExcelUserEndpoint(_TestBaseUserEndpointsTest):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

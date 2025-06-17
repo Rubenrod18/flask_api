@@ -11,6 +11,7 @@ from app.models.role import TEAM_LEADER_ROLE
 from ._base_users_test import _TestBaseUserEndpointsTest
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestUpdateUserEndpoint(_TestBaseUserEndpointsTest):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

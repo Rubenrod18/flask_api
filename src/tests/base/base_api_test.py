@@ -6,6 +6,7 @@ from flask import current_app
 from app.database.factories.user_factory import AdminUserFactory, TeamLeaderUserFactory, WorkerUserFactory
 
 
+# pylint: disable=attribute-defined-outside-init, unused-argument
 class TestBaseApi:
     @pytest.fixture(autouse=True)
     def setup(self, app, client, faker):
