@@ -1,13 +1,13 @@
+import pytest
 from marshmallow import ValidationError
 
 from app.helpers.sqlalchemy_query_builder import EQUAL_OP, GREATER_THAN_OP
 from app.serializers import SearchSerializer
-from tests.base.base_test import BaseTest
 
 
-class SearchSerializerTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class TestSearchSerializer:
+    @pytest.fixture(autouse=True)
+    def setup(self):
         self.serializer = SearchSerializer()
 
     def test_valid_search(self):
@@ -22,41 +22,38 @@ class SearchSerializerTest(BaseTest):
         }
 
         result = self.serializer.load(valid_data)
-        self.assertEqual(result, valid_data)
+        assert result == valid_data
 
     def test_invalid_operator(self):
         invalid_data = {
             'search': [{'field_name': 'name', 'field_operator': 'invalid_op', 'field_value': 'test'}],
         }
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             self.serializer.load(invalid_data)
 
-        self.assertDictEqual(
-            {
-                'search': {
-                    0: {
-                        'field_operator': [
-                            (
-                                'Must be one of: '
-                                'between, contains, endswith, eq, gt, gte, in, lt, lte, ncontains, ne, nin, startswith.'
-                            )
-                        ]
-                    }
+        assert {
+            'search': {
+                0: {
+                    'field_operator': [
+                        (
+                            'Must be one of: '
+                            'between, contains, endswith, eq, gt, gte, in, lt, lte, ncontains, ne, nin, startswith.'
+                        )
+                    ]
                 }
-            },
-            context.exception.messages,
-        )
+            }
+        } == exc_info.value.messages
 
     def test_invalid_sorting(self):
         invalid_data = {
             'order': [{'field_name': 'name', 'sorting': 'wrong'}],
         }
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             self.serializer.load(invalid_data)
 
-        self.assertDictEqual({'order': {0: {'sorting': ['Must be one of: asc, desc.']}}}, context.exception.messages)
+        assert {'order': {0: {'sorting': ['Must be one of: asc, desc.']}}} == exc_info.value.messages
 
     def test_negative_pagination(self):
         invalid_data = {
@@ -64,20 +61,17 @@ class SearchSerializerTest(BaseTest):
             'page_number': -2,
         }
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             self.serializer.load(invalid_data)
 
-        self.assertDictEqual(
-            {
-                'items_per_page': ['Must be greater than or equal to 1.'],
-                'page_number': ['Must be greater than or equal to 1.'],
-            },
-            context.exception.messages,
-        )
+        assert {
+            'items_per_page': ['Must be greater than or equal to 1.'],
+            'page_number': ['Must be greater than or equal to 1.'],
+        } == exc_info.value.messages
 
     def test_missing_fields(self):
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             self.serializer.load({'order': [{'field_name': 'name'}]})
 
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             self.serializer.load({'search': [{'field_operator': EQUAL_OP, 'field_value': 'test'}]})

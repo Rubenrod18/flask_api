@@ -1,18 +1,18 @@
 from datetime import datetime, UTC
 from unittest.mock import MagicMock
 
+import pytest
 from werkzeug.exceptions import BadRequest, NotFound
 
 from app.database.factories.role_factory import RoleFactory
 from app.models import Role
 from app.repositories import RoleRepository
 from app.serializers import RoleSerializer
-from tests.base.base_test import BaseTest
 
 
-class RoleSerializerTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class TestRoleSerializer:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.role = RoleFactory(
             name='admin',
             description='Administrator role',
@@ -32,42 +32,44 @@ class RoleSerializerTest(BaseTest):
     def test_valid_serialization(self):
         serialized_data = self.serializer.dump(self.role)
 
-        self.assertEqual(serialized_data['id'], self.role.id)
-        self.assertEqual(serialized_data['name'], self.role.name)
-        self.assertEqual(serialized_data['description'], self.role.description)
-        self.assertEqual(serialized_data['label'], self.role.label)
+        assert serialized_data['id'] == self.role.id
+        assert serialized_data['name'] == self.role.name
+        assert serialized_data['description'] == self.role.description
+        assert serialized_data['label'] == self.role.label
 
     def test_validate_existing_role_id(self):
-        self.serializer.load({'id': 1}, partial=True)
+        role = self.serializer.load({'id': self.role.id}, partial=True)
+
+        assert role['id'] == self.role.id
 
     def test_validate_nonexistent_role_id(self):
         self.role_repository.find_by_id.return_value = None
 
-        with self.assertRaises(NotFound) as context:
+        with pytest.raises(NotFound) as exc_info:
             self.serializer.validate_id(999)
 
-        self.assertEqual(context.exception.code, 404)
-        self.assertEqual(context.exception.description, 'Role not found')
+        assert exc_info.value.code == 404
+        assert exc_info.value.description == 'Role not found'
 
     def test_validate_deleted_role_id(self):
         self.role.deleted_at = datetime.now(UTC)
 
-        with self.assertRaises(NotFound) as context:
+        with pytest.raises(NotFound) as exc_info:
             self.serializer.validate_id(1)
 
-        self.assertEqual(context.exception.description, 'Role not found')
+        assert exc_info.value.description == 'Role not found'
 
     def test_sluglify_name(self):
         data = {'label': 'New Role'}
 
         result = self.serializer.load(data, partial=True)
 
-        self.assertEqual(result['name'], 'new-role')
+        assert result['name'] == 'new-role'
 
     def test_validate_existing_role_name(self):
         self.role_repository.find_by_name.return_value = self.role
 
-        with self.assertRaises(BadRequest) as context:
+        with pytest.raises(BadRequest) as exc_info:
             self.serializer.load({'name': 'admin'}, partial=True)
 
-        self.assertEqual(context.exception.description, 'Role name already created')
+        assert exc_info.value.description == 'Role name already created'
