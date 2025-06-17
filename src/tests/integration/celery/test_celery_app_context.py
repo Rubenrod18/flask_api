@@ -1,12 +1,12 @@
-import unittest
-
+import pytest
 from flask import current_app
 
 from app.celery import ContextTask
 
 
-class TestCeleryAppContext(unittest.TestCase):
-    def setUp(self):
+class TestCeleryAppContext:
+    @pytest.fixture(autouse=True)
+    def setup(self):
         from app import create_app  # pylint: disable=import-outside-toplevel
         from app.celery import make_celery  # pylint: disable=import-outside-toplevel
 
@@ -25,4 +25,4 @@ class TestCeleryAppContext(unittest.TestCase):
 
         dummy_task()
 
-        self.assertEqual(result_holder['app_name'], self.app.name)
+        assert result_holder['app_name'] == self.app.name
