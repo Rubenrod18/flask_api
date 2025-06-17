@@ -1,7 +1,9 @@
+# pylint: disable=attribute-defined-outside-init, unused-argument
 import unittest
 from datetime import datetime, UTC
 from unittest.mock import MagicMock, patch
 
+import pytest
 from marshmallow import ValidationError
 from werkzeug.exceptions import NotFound, UnprocessableEntity
 
@@ -10,12 +12,11 @@ from app.database.factories.user_factory import UserFactory
 from app.models import Document
 from app.repositories import DocumentRepository
 from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
-from tests.base.base_test import BaseTest
 
 
-class DocumentSerializerTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class TestDocumentSerializer:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.user = UserFactory()
         self.document_repository = MagicMock(spec=DocumentRepository)
         self.document_repository.model = MagicMock(spec=Document)
@@ -38,50 +39,52 @@ class DocumentSerializerTest(BaseTest):
     def test_valid_serialization(self):
         serialized_data = self.serializer.dump(self.document)
 
-        self.assertEqual(serialized_data['id'], 1)
-        self.assertEqual(serialized_data['name'], 'test_doc.pdf')
-        self.assertEqual(serialized_data['mime_type'], 'application/pdf')
-        self.assertIn('url', serialized_data)
-        self.assertEqual(serialized_data['created_by']['name'], self.user.name)
+        assert serialized_data['id'] == 1
+        assert serialized_data['name'] == 'test_doc.pdf'
+        assert serialized_data['mime_type'] == 'application/pdf'
+        assert 'url' in serialized_data
+        assert serialized_data['created_by']['name'] == self.user.name
 
     def test_validate_existing_document_id(self):
-        self.serializer.load({'id': self.document.id}, partial=True)
+        document = self.serializer.load({'id': self.document.id}, partial=True)
+
+        assert document['id'] == self.document.id
 
     def test_validate_nonexistent_document_id(self):
         self.document_repository.find_by_id.return_value = None
 
-        with self.assertRaises(NotFound) as context:
+        with pytest.raises(NotFound) as exc_info:
             self.serializer.validate_id(999)
 
-        self.assertEqual(context.exception.code, 404)
-        self.assertEqual(context.exception.description, 'Document not found')
+        assert exc_info.value.code == 404
+        assert exc_info.value.description == 'Document not found'
 
     def test_validate_deleted_document_id(self):
         self.document.deleted_at = datetime.now(UTC)
 
-        with self.assertRaises(NotFound) as context:
+        with pytest.raises(NotFound) as exc_info:
             self.serializer.validate_id(1)
 
-        self.assertEqual(context.exception.code, 404)
-        self.assertEqual(context.exception.description, 'Document not found')
+        assert exc_info.value.code == 404
+        assert exc_info.value.description == 'Document not found'
 
     @patch('magic.from_buffer')
     def test_valid_request_file(self, mock_magic):
         mock_magic.return_value = 'application/pdf'
         data = {'mime_type': 'application/pdf', 'file_data': b'%PDF-1.4'}
 
-        self.assertEqual(DocumentSerializer.valid_request_file(data), data)
+        assert DocumentSerializer.valid_request_file(data) == data
 
     @patch('magic.from_buffer')
     def test_invalid_request_file(self, mock_magic):
         mock_magic.return_value = 'text/plain'
         data = {'mime_type': 'application/pdf', 'file_data': b'Invalid content'}
 
-        with self.assertRaises(UnprocessableEntity) as context:
+        with pytest.raises(UnprocessableEntity) as exc_info:
             DocumentSerializer.valid_request_file(data)
 
-        self.assertEqual(context.exception.code, 422)
-        self.assertEqual(context.exception.description, 'mime_type not valid')
+        assert exc_info.value.code == 422
+        assert exc_info.value.description == 'mime_type not valid'
 
 
 class TestDocumentAttachmentSerializer(unittest.TestCase):
@@ -93,12 +96,12 @@ class TestDocumentAttachmentSerializer(unittest.TestCase):
 
         result = self.serializer.load(data)
 
-        self.assertEqual(result['as_attachment'], 1)
+        assert result['as_attachment'] == 1
 
     def test_invalid_as_attachment(self):
         data = {'as_attachment': 2}
 
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             self.serializer.load(data)
 
     def test_process_input(self):
@@ -106,4 +109,4 @@ class TestDocumentAttachmentSerializer(unittest.TestCase):
 
         result = self.serializer.load(data)
 
-        self.assertEqual(result['as_attachment'], 1)
+        assert result['as_attachment'] == 1

@@ -1,49 +1,50 @@
 import time
 
+import pytest
 from werkzeug.exceptions import BadRequest
 
 from app.helpers.otp_token import OTPTokenManager
-from tests.base.base_test import BaseTest
 
 
-class OTPTokenManagerTest(BaseTest):
-    def setUp(self):
-        super().setUp()
-        self.secret_key = self.faker.sha256()
-        self.salt = self.faker.md5()
-        self.expiration = 5
-        self.manager = OTPTokenManager(self.secret_key, self.salt, self.expiration)
+# pylint: disable=attribute-defined-outside-init
+class TestOTPTokenManager:
+    @pytest.fixture(autouse=True)
+    def setup(self, faker):
+        self.faker = faker
+        self.otp_token_manager = OTPTokenManager(secret_key=faker.sha256(), salt=faker.md5(), expiration=1)
 
     def test_generate_token(self):
         data = self.faker.text()
 
-        token = self.manager.generate_token(data)
+        token = self.otp_token_manager.generate_token(data)
 
-        self.assertIsInstance(token, str)
+        assert isinstance(token, str)
 
     def test_verify_valid_token(self):
         data = self.faker.text()
 
-        token = self.manager.generate_token(data)
+        token = self.otp_token_manager.generate_token(data)
 
-        self.assertEqual(self.manager.verify_token(token), data)
+        assert self.otp_token_manager.verify_token(token) == data
 
     def test_verify_expired_token(self):
         data = self.faker.text()
 
-        token = self.manager.generate_token(data)
-        time.sleep(self.expiration + 1)
-        with self.assertRaises(BadRequest) as context:
-            self.manager.verify_token(token)
+        token = self.otp_token_manager.generate_token(data)
 
-        self.assertEqual(context.exception.code, 400)
-        self.assertEqual(context.exception.description, 'Token expired')
+        time.sleep(self.otp_token_manager.expiration + 1)
+
+        with pytest.raises(BadRequest) as exc_info:
+            self.otp_token_manager.verify_token(token)
+
+        assert exc_info.value.code == 400
+        assert exc_info.value.description == 'Token expired'
 
     def test_verify_invalid_token(self):
         invalid_token = self.faker.text()
 
-        with self.assertRaises(BadRequest) as context:
-            self.manager.verify_token(invalid_token)
+        with pytest.raises(BadRequest) as exc_info:
+            self.otp_token_manager.verify_token(invalid_token)
 
-        self.assertEqual(context.exception.code, 400)
-        self.assertEqual(context.exception.description, 'Invalid token')
+        assert exc_info.value.code == 400
+        assert exc_info.value.description == 'Invalid token'

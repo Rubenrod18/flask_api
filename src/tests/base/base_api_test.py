@@ -1,12 +1,18 @@
 import os
 
+import pytest
+from flask import current_app
+
 from app.database.factories.user_factory import AdminUserFactory, TeamLeaderUserFactory, WorkerUserFactory
-from tests.base.base_test import BaseTest
 
 
-class BaseApiTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init, unused-argument
+class TestBaseApi:
+    @pytest.fixture(autouse=True)
+    def setup(self, app, client, faker):
+        self.app = app
+        self.client = client
+        self.faker = faker
         self.base_path = '/api'
         self.admin_user = AdminUserFactory(
             active=True, deleted_at=None, email=os.getenv('TEST_USER_EMAIL'), password=os.getenv('TEST_USER_PASSWORD')
@@ -27,4 +33,4 @@ class BaseApiTest(BaseTest):
         response = self.client.post('/api/auth/login', json=payload, exp_code=200)
         token = response.get_json()['access_token']
 
-        return {self.app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER']: f'Bearer {token}'} | extra_headers
+        return {current_app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER']: f'Bearer {token}'} | extra_headers

@@ -1,15 +1,16 @@
 import os
 
+import pytest
 from flask import current_app
 
 from app.database.factories.user_factory import UserFactory
 from app.services import AuthService
-from tests.base.base_test import BaseTest
 
 
-class AuthServiceTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init, unused-argument
+class TestAuthService:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.auth_service = AuthService()
 
     def test_confirm_request_reset_password_check_new_user_password(self):
@@ -21,4 +22,4 @@ class AuthServiceTest(BaseTest):
             self.auth_service.confirm_request_reset_password(user, password)
             user.reload()
 
-        self.assertEqual(user.password, current_user_password_hash)
+        assert user.password == current_user_password_hash

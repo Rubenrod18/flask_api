@@ -1,9 +1,12 @@
-from ._base_auth_test import _BaseAuthEndpointsTest
+import pytest
+
+from ._base_auth_test import _TestBaseAuthEndpoints
 
 
-class LogoutAuthEndpointTest(_BaseAuthEndpointsTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init
+class TestLogoutAuthEndpoint(_TestBaseAuthEndpoints):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.endpoint = f'{self.base_path}/logout'
 
     def test_user_logout(self):
@@ -12,9 +15,9 @@ class LogoutAuthEndpointTest(_BaseAuthEndpointsTest):
         response = self.client.post(self.endpoint, json={}, headers=auth_header, exp_code=200)
         json_response = response.get_json()
 
-        self.assertFalse(json_response)
+        assert not json_response
 
     def test_user_logout_missing_auth_header(self):
         response = self.client.post(f'{self.base_path}/logout', json={}, exp_code=401)
 
-        self.assertDictEqual({'msg': 'Missing Authorization Header'}, response.get_json())
+        assert {'msg': 'Missing Authorization Header'} == response.get_json()

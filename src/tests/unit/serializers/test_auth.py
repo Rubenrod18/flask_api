@@ -1,5 +1,7 @@
+# pylint: disable=attribute-defined-outside-init, unused-argument
 from unittest.mock import MagicMock
 
+import pytest
 from marshmallow import ValidationError
 from werkzeug.exceptions import Forbidden, Unauthorized
 
@@ -8,13 +10,12 @@ from app.helpers.otp_token import OTPTokenManager
 from app.models import User
 from app.repositories import UserRepository
 from app.serializers import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
-from tests.base.base_test import BaseTest
 
 
-class AuthUserLoginSerializerTest(BaseTest):
-    def setUp(self):
-        super().setUp()
-
+class TestAuthUserLoginSerializer:
+    @pytest.fixture(autouse=True)
+    def setup(self, app, faker):
+        self.faker = faker
         self.plain_password = self.faker.password()
         self.user = UserFactory(
             email=self.faker.email(), password=User.ensure_password(self.plain_password), active=True, deleted_at=None
@@ -34,62 +35,63 @@ class AuthUserLoginSerializerTest(BaseTest):
 
         data = self.serializer.load({'email': self.user.email, 'password': self.plain_password})
 
-        self.assertEqual(data, self.user)
         self.user_repository.find_by_email.assert_called_once_with(
             self.user.email,
             self.user_repository.model.active.is_(True),
             self.user_repository.model.deleted_at.is_(None),
         )
+        assert data == self.user
 
     def test_invalid_email(self):
         self.user_repository.find_by_email.return_value = None
 
-        with self.assertRaises(Unauthorized) as context:
+        with pytest.raises(Unauthorized) as exc_info:
             self.serializer.load({'email': self.faker.email(), 'password': 'password'})
 
-        self.assertEqual(context.exception.code, Unauthorized.code)
-        self.assertEqual(context.exception.description, 'Credentials invalid')
+        assert exc_info.value.code == Unauthorized.code
+        assert exc_info.value.description == 'Credentials invalid'
 
     def test_inactive_user(self):
         self.user.active = False
         self.user_repository.find_by_email.return_value = self.user
 
-        with self.assertRaises(Unauthorized) as context:
+        with pytest.raises(Unauthorized) as exc_info:
             self.serializer.load({'email': self.user.email, 'password': self.plain_password})
 
-        self.assertEqual(context.exception.code, Unauthorized.code)
-        self.assertEqual(context.exception.description, 'Credentials invalid')
+        assert exc_info.value.code == Unauthorized.code
+        assert exc_info.value.description == 'Credentials invalid'
 
     def test_deleted_user(self):
         self.user.deleted_at = '2000-01-01'
         self.user_repository.find_by_email.return_value = self.user
 
-        with self.assertRaises(Unauthorized) as context:
+        with pytest.raises(Unauthorized) as exc_info:
             self.serializer.load({'email': self.user.email, 'password': self.plain_password})
 
-        self.assertEqual(context.exception.code, Unauthorized.code)
-        self.assertEqual(context.exception.description, 'Credentials invalid')
+        assert exc_info.value.code == Unauthorized.code
+        assert exc_info.value.description == 'Credentials invalid'
 
     def test_invalid_password(self):
         self.user_repository.find_by_email.return_value = self.user
 
-        with self.assertRaises(Unauthorized) as context:
+        with pytest.raises(Unauthorized) as exc_info:
             self.serializer.load({'email': self.user.email, 'password': 'wrongpassword'})
 
-        self.assertEqual(context.exception.code, Unauthorized.code)
-        self.assertEqual(context.exception.description, 'Credentials invalid')
+        assert exc_info.value.code == Unauthorized.code
+        assert exc_info.value.description == 'Credentials invalid'
 
     def test_missing_fields(self):
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             self.serializer.load({'password': self.plain_password})
 
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             self.serializer.load({'email': self.user.email})
 
 
-class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class TestAuthUserConfirmResetPasswordSerializer:
+    @pytest.fixture(autouse=True)
+    def setup(self, app, faker):
+        self.faker = faker
         self.valid_token = self.faker.sha256()
         self.valid_email = self.faker.email()
         self.valid_password = self.faker.password(
@@ -116,12 +118,12 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
             }
         )
 
-        self.assertEqual(validated_data, self.user)
+        assert validated_data == self.user
 
     def test_invalid_token(self):
         self.otp_token_manager.verify_token.side_effect = Forbidden('Invalid token')
 
-        with self.assertRaises(Forbidden) as context:
+        with pytest.raises(Forbidden) as exc_info:
             self.serializer.load(
                 {
                     'token': self.faker.sha256(),
@@ -130,14 +132,14 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
                 }
             )
 
-        self.assertEqual(context.exception.code, Forbidden.code)
-        self.assertEqual(context.exception.description, 'Invalid token')
+        assert exc_info.value.code == Forbidden.code
+        assert exc_info.value.description == 'Invalid token'
 
     def test_user_not_found(self):
         self.otp_token_manager.verify_token.return_value = self.valid_email
         self.user_repository.find_by_email.return_value = None
 
-        with self.assertRaises(Forbidden) as context:
+        with pytest.raises(Forbidden) as exc_info:
             self.serializer.load(
                 {
                     'token': self.valid_token,
@@ -146,15 +148,15 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
                 }
             )
 
-        self.assertEqual(context.exception.code, Forbidden.code)
-        self.assertEqual(context.exception.description, 'Invalid token')
+        assert exc_info.value.code == Forbidden.code
+        assert exc_info.value.description == 'Invalid token'
 
     def test_user_deleted(self):
         self.user.deleted_at = '2024-01-01'
         self.otp_token_manager.verify_token.return_value = self.valid_email
         self.user_repository.find_by_email.return_value = self.user
 
-        with self.assertRaises(Forbidden) as context:
+        with pytest.raises(Forbidden) as exc_info:
             self.serializer.load(
                 {
                     'token': self.valid_token,
@@ -163,15 +165,15 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
                 }
             )
 
-        self.assertEqual(context.exception.code, Forbidden.code)
-        self.assertEqual(context.exception.description, 'Invalid token')
+        assert exc_info.value.code == Forbidden.code
+        assert exc_info.value.description == 'Invalid token'
 
     def test_user_not_active(self):
         self.user.active = False
         self.otp_token_manager.verify_token.return_value = self.valid_email
         self.user_repository.find_by_email.return_value = self.user
 
-        with self.assertRaises(Forbidden) as context:
+        with pytest.raises(Forbidden) as exc_info:
             self.serializer.load(
                 {
                     'token': self.valid_token,
@@ -180,14 +182,14 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
                 }
             )
 
-        self.assertEqual(context.exception.code, Forbidden.code)
-        self.assertEqual(context.exception.description, 'Invalid token')
+        assert exc_info.value.code == Forbidden.code
+        assert exc_info.value.description == 'Invalid token'
 
     def test_mismatched_passwords(self):
         self.otp_token_manager.verify_token.return_value = self.valid_email
         self.user_repository.find_by_email.return_value = self.user
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as exc_info:
             self.serializer.load(
                 {
                     'token': self.valid_token,
@@ -200,4 +202,4 @@ class AuthUserConfirmResetPasswordSerializerTest(BaseTest):
                 }
             )
 
-        self.assertIn('Passwords must match', str(context.exception))
+        assert 'Passwords must match' in str(exc_info.value)

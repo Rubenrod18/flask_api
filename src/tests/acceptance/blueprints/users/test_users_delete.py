@@ -1,14 +1,17 @@
+import pytest
+
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Role
 from app.models.role import TEAM_LEADER_ROLE
 
-from ._base_users_test import _BaseUserEndpointsTest
+from ._base_users_test import _TestBaseUserEndpointsTest
 
 
-class DeleteUserEndpointTest(_BaseUserEndpointsTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init
+class TestDeleteUserEndpoint(_TestBaseUserEndpointsTest):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = db.session.query(Role).filter_by(name=TEAM_LEADER_ROLE).first()
         self.user = UserFactory(active=True, deleted_at=None, roles=[self.role])
         self.endpoint = f'{self.base_path}/{self.user.id}'
@@ -18,18 +21,20 @@ class DeleteUserEndpointTest(_BaseUserEndpointsTest):
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(self.user.id, json_data.get('id'))
-        self.assertIsNotNone(json_data.get('deleted_at'))
-        self.assertGreaterEqual(json_data.get('deleted_at'), json_data.get('updated_at'))
+        assert self.user.id == json_data.get('id')
+        assert json_data.get('deleted_at') is not None
+        assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
-    def test_check_user_roles_in_delete_user_endpoint(self):
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 404),
-            (self.worker_user.email, 403),
-        ]
-
-        for user_email, response_status in test_cases:
-            self.client.delete(
-                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-            )
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 200),
+            ('worker_user', 403),
+        ],
+    )
+    def test_check_user_roles_in_delete_user_endpoint(self, user_email_attr, expected_status):
+        user_email = getattr(self, user_email_attr).email
+        self.client.delete(
+            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+        )

@@ -1,14 +1,17 @@
+import pytest
+
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Role
 from app.models.role import TEAM_LEADER_ROLE
 
-from ._base_users_test import _BaseUserEndpointsTest
+from ._base_users_test import _TestBaseUserEndpointsTest
 
 
-class SearchUserEndpointTest(_BaseUserEndpointsTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init
+class TestSearchUserEndpoint(_TestBaseUserEndpointsTest):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.role = db.session.query(Role).filter_by(name=TEAM_LEADER_ROLE).first()
         self.user = UserFactory(active=True, deleted_at=None, roles=[self.role])
         self.endpoint = f'{self.base_path}/search'
@@ -36,19 +39,21 @@ class SearchUserEndpointTest(_BaseUserEndpointsTest):
         records_total = json_response.get('records_total')
         records_filtered = json_response.get('records_filtered')
 
-        self.assertTrue(isinstance(user_data, list))
-        self.assertGreater(records_total, 0)
-        self.assertTrue(0 < records_filtered <= records_total)
-        self.assertTrue(user_data[0]['name'].find(self.user.name) != -1)
+        assert isinstance(user_data, list)
+        assert records_total > 0
+        assert 0 < records_filtered <= records_total
+        assert user_data[0]['name'].find(self.user.name) != -1
 
-    def test_check_user_roles_in_search_users_endpoint(self):
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 200),
-            (self.worker_user.email, 403),
-        ]
-
-        for user_email, response_status in test_cases:
-            self.client.post(
-                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-            )
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 200),
+            ('worker_user', 403),
+        ],
+    )
+    def test_check_user_roles_in_search_users_endpoint(self, user_email_attr, expected_status):
+        user_email = getattr(self, user_email_attr).email
+        self.client.post(
+            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+        )

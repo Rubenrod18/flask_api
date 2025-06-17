@@ -1,21 +1,22 @@
+# pylint: disable=attribute-defined-outside-init, unused-argument
 import os
 from unittest.mock import MagicMock, patch
 
+import pytest
 from flask_security import UserMixin
 
 from app.database.factories.user_factory import UserFactory
 from app.repositories import UserRepository
 from app.services import AuthService
-from tests.base.base_test import BaseTest
 
 
-class _AuthBaseServiceTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+class _TestAuthBaseService:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.auth_service = AuthService()
 
 
-class LoginAuthServiceTest(_AuthBaseServiceTest):
+class TestLoginAuthService(_TestAuthBaseService):
     @patch('app.services.auth.flask_security.login_user', autospec=True)
     @patch('app.services.auth.create_access_token', autospec=True)
     @patch('app.services.auth.create_refresh_token', autospec=True)
@@ -30,12 +31,12 @@ class LoginAuthServiceTest(_AuthBaseServiceTest):
         mock_login_user.assert_called_once_with(user)
         mock_create_access_token.assert_called_once_with(identity=user_id_str)
         mock_create_refresh_token.assert_called_once_with(identity=user_id_str)
-        self.assertTrue(isinstance(jwt, dict))
-        self.assertEqual(jwt.get('access_token'), 'access_token')
-        self.assertEqual(jwt.get('refresh_token'), 'refresh_token')
+        assert isinstance(jwt, dict)
+        assert jwt.get('access_token') == 'access_token'
+        assert jwt.get('refresh_token') == 'refresh_token'
 
 
-class LogoutAuthServiceTest(_AuthBaseServiceTest):
+class TestLogoutAuthService(_TestAuthBaseService):
     def test_logout_user(self):
         class MockCurrentUser(UserMixin):
             is_authenticated = True
@@ -46,7 +47,7 @@ class LogoutAuthServiceTest(_AuthBaseServiceTest):
             response = self.auth_service.logout_user()
 
             mock_flask_security.logout_user.assert_called_once()
-            self.assertFalse(response)
+            assert not response
 
     def test_logout_user_already_logged_out(self):
         class MockCurrentUser(UserMixin):
@@ -58,10 +59,10 @@ class LogoutAuthServiceTest(_AuthBaseServiceTest):
             response = self.auth_service.logout_user()
 
             mock_flask_security.logout_user.assert_not_called()
-            self.assertEqual(response, {'message': 'Already logged out'})
+            assert response == {'message': 'Already logged out'}
 
 
-class RequestResetPasswordAuthServiceTest(_AuthBaseServiceTest):
+class TestRequestResetPasswordAuthService(_TestAuthBaseService):
     @patch('app.services.auth.OTPTokenManager', autospec=True)
     @patch('app.services.auth.url_for', autospec=True, return_value='http://new-url')
     @patch('app.services.auth.reset_password_email_task.delay', autospec=True)
@@ -76,7 +77,7 @@ class RequestResetPasswordAuthServiceTest(_AuthBaseServiceTest):
         mock_task_delay.assert_called_once_with({'email': user.email, 'reset_password_url': 'http://new-url'})
 
 
-class ConfirmRequestResetPasswordAuthServiceTest(_AuthBaseServiceTest):
+class TestConfirmRequestResetPasswordAuthService(_TestAuthBaseService):
     @patch('app.services.auth.flask_security.login_user', autospec=True)
     @patch('app.services.auth.create_access_token', autospec=True)
     @patch('app.services.auth.create_refresh_token', autospec=True)
@@ -98,12 +99,12 @@ class ConfirmRequestResetPasswordAuthServiceTest(_AuthBaseServiceTest):
         mock_login_user.assert_called_once_with(user)
         mock_create_access_token.assert_called_once_with(identity=user_id_str)
         mock_create_refresh_token.assert_called_once_with(identity=user_id_str)
-        self.assertTrue(isinstance(jwt, dict))
-        self.assertEqual(jwt.get('access_token'), 'access_token')
-        self.assertEqual(jwt.get('refresh_token'), 'refresh_token')
+        assert isinstance(jwt, dict)
+        assert jwt.get('access_token') == 'access_token'
+        assert jwt.get('refresh_token') == 'refresh_token'
 
 
-class RefreshTokenAuthServiceTest(_AuthBaseServiceTest):
+class TestRefreshTokenAuthService(_TestAuthBaseService):
     @patch('app.services.auth.get_jwt_identity', autospec=True)
     @patch('app.services.auth.create_access_token', autospec=True)
     def test_refresh_token(self, mock_create_access_token, mock_get_jwt_identity):
@@ -115,4 +116,4 @@ class RefreshTokenAuthServiceTest(_AuthBaseServiceTest):
 
         mock_get_jwt_identity.assert_called_once()
         mock_create_access_token.assert_called_once_with(identity=user)
-        self.assertEqual(response.get('access_token'), 'access_token')
+        assert response.get('access_token') == 'access_token'

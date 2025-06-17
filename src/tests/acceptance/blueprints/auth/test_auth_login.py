@@ -1,16 +1,18 @@
 import os
 
 import flask_security
+import pytest
 
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 
-from ._base_auth_test import _BaseAuthEndpointsTest
+from ._base_auth_test import _TestBaseAuthEndpoints
 
 
-class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init
+class TestLoginAuthEndpoint(_TestBaseAuthEndpoints):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.endpoint = f'{self.base_path}/login'
 
     def test_user_login(self):
@@ -23,9 +25,9 @@ class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
             response = self.client.post(self.endpoint, json=payload, exp_code=200)
             json_response = response.get_json()
 
-            self.assertTrue(json_response.get('access_token'))
-            self.assertTrue(json_response.get('refresh_token'))
-            self.assertTrue(flask_security.current_user.is_authenticated)
+            assert json_response.get('access_token')
+            assert json_response.get('refresh_token')
+            assert flask_security.current_user.is_authenticated
 
     def test_invalid_user(self):
         payload = {
@@ -36,7 +38,7 @@ class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
         response = self.client.post(self.endpoint, json=payload, exp_code=401)
         json_response = response.get_json()
 
-        self.assertTrue(json_response.get('message'))
+        assert json_response.get('message')
 
     def test_inactive_user(self):
         role = RoleFactory()
@@ -48,7 +50,7 @@ class LoginAuthEndpointTest(_BaseAuthEndpointsTest):
 
         self.client.post(f'{self.base_path}/login', json=payload, exp_code=401)
 
-        self.assertFalse(user.active)
+        assert user.active is False
 
     def test_invalid_password(self):
         payload = {

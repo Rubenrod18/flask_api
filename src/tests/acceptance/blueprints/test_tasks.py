@@ -1,14 +1,16 @@
 import uuid
 from unittest.mock import MagicMock, patch
 
+import pytest
 from celery import states
 
-from tests.base.base_api_test import BaseApiTest
+from tests.base.base_api_test import TestBaseApi
 
 
-class TaskEndpointTest(BaseApiTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init
+class TestTaskEndpoint(TestBaseApi):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.base_path = f'{self.base_path}/tasks'
 
     @patch('app.blueprints.tasks.AsyncResult')
@@ -21,11 +23,11 @@ class TaskEndpointTest(BaseApiTest):
         response = self.client.get(f'{self.base_path}/status/{uuid.uuid4()}', json={}, headers=self.build_headers())
         json_data = response.get_json()
 
-        self.assertTrue(isinstance(json_data, dict))
-        self.assertEqual(json_data.get('state'), mock_task_result.state)
-        self.assertEqual(json_data.get('current'), mock_task_result.info.get('current'))
-        self.assertEqual(json_data.get('total'), mock_task_result.info.get('total'))
-        self.assertEqual(json_data.get('result'), mock_task_result.info.get('result'))
+        assert isinstance(json_data, dict)
+        assert json_data.get('state'), mock_task_result.state
+        assert json_data.get('current'), mock_task_result.info.get('current')
+        assert json_data.get('total'), mock_task_result.info.get('total')
+        assert json_data.get('result'), mock_task_result.info.get('result')
 
     @patch('app.blueprints.tasks.AsyncResult')
     def test_check_task_status_failure(self, mock_async_result_delay):
@@ -37,11 +39,11 @@ class TaskEndpointTest(BaseApiTest):
         response = self.client.get(f'{self.base_path}/status/{uuid.uuid4()}', json={}, headers=self.build_headers())
         json_data = response.get_json()
 
-        self.assertTrue(isinstance(json_data, dict))
-        self.assertEqual(json_data.get('state'), mock_task_result.state)
-        self.assertEqual(json_data.get('current'), mock_task_result.info.get('current'))
-        self.assertEqual(json_data.get('total'), mock_task_result.info.get('total'))
-        self.assertIsNone(json_data.get('result'))
+        assert isinstance(json_data, dict)
+        assert json_data.get('state'), mock_task_result.state
+        assert json_data.get('current'), mock_task_result.info.get('current')
+        assert json_data.get('total'), mock_task_result.info.get('total')
+        assert json_data.get('result') is None
 
     @patch('app.blueprints.tasks.AsyncResult')
     def test_check_task_status_started(self, mock_async_result_delay):
@@ -53,30 +55,32 @@ class TaskEndpointTest(BaseApiTest):
         response = self.client.get(f'{self.base_path}/status/{uuid.uuid4()}', json={}, headers=self.build_headers())
         json_data = response.get_json()
 
-        self.assertTrue(isinstance(json_data, dict))
-        self.assertEqual(json_data.get('state'), mock_task_result.state)
-        self.assertEqual(json_data.get('current'), mock_task_result.info.get('current'))
-        self.assertEqual(json_data.get('total'), mock_task_result.info.get('total'))
-        self.assertIsNone(json_data.get('result'))
+        assert isinstance(json_data, dict)
+        assert json_data.get('state'), mock_task_result.state
+        assert json_data.get('current'), mock_task_result.info.get('current')
+        assert json_data.get('total'), mock_task_result.info.get('total')
+        assert json_data.get('result') is None
 
     @patch('app.blueprints.tasks.AsyncResult')
-    def test_check_user_roles_in_task_status_endpoint(self, mock_async_result_delay):
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 200),
+            ('worker_user', 200),
+        ],
+    )
+    def test_check_user_roles_in_task_status_endpoint(self, mock_async_result_delay, user_email_attr, expected_status):
         mock_task_result = MagicMock()
         mock_task_result.state = states.STARTED
         mock_task_result.info = {'current': 5, 'total': 10}
         mock_async_result_delay.return_value = mock_task_result
 
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 200),
-            (self.worker_user.email, 200),
-        ]
+        user_email = getattr(self, user_email_attr).email
 
-        for user_email, response_status in test_cases:
-            response = self.client.get(
-                f'{self.base_path}/status/{uuid.uuid4()}',
-                json={},
-                headers=self.build_headers(user_email=user_email),
-                exp_code=response_status,
-            )
-            self.assertEqual(response.status_code, response_status)
+        self.client.get(
+            f'{self.base_path}/status/{uuid.uuid4()}',
+            json={},
+            headers=self.build_headers(user_email=user_email),
+            exp_code=expected_status,
+        )

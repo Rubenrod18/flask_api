@@ -1,12 +1,15 @@
 from datetime import datetime, timedelta, UTC
 
+import pytest
+
 from app.database.factories.document_factory import DocumentFactory
-from tests.acceptance.blueprints.documents._base_documents_test import _BaseDocumentEndpointsTest
+from tests.acceptance.blueprints.documents._base_documents_test import _TestBaseDocumentEndpoints
 
 
-class DeleteDocumentEndpointTest(_BaseDocumentEndpointsTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init
+class TestDeleteDocumentEndpoint(_TestBaseDocumentEndpoints):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.document = DocumentFactory(
             deleted_at=None,
             created_at=datetime.now(UTC) - timedelta(days=1),
@@ -18,18 +21,20 @@ class DeleteDocumentEndpointTest(_BaseDocumentEndpointsTest):
         json_response = response.get_json()
         json_data = json_response.get('data')
 
-        self.assertEqual(self.document.id, json_data.get('id'))
-        self.assertIsNotNone(json_data.get('deleted_at'))
-        self.assertGreaterEqual(json_data.get('deleted_at'), json_data.get('updated_at'))
+        assert self.document.id == json_data.get('id')
+        assert json_data.get('deleted_at') is not None
+        assert json_data.get('deleted_at') >= json_data.get('updated_at')
 
-    def test_check_user_roles_in_delete_document_endpoint(self):
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 404),
-            (self.worker_user.email, 404),
-        ]
-
-        for user_email, response_status in test_cases:
-            self.client.delete(
-                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-            )
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 200),
+            ('worker_user', 200),
+        ],
+    )
+    def test_check_user_roles_in_delete_document_endpoint(self, user_email_attr, expected_status):
+        user_email = getattr(self, user_email_attr).email
+        self.client.delete(
+            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+        )

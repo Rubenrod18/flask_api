@@ -1,14 +1,17 @@
 from datetime import datetime, timedelta, UTC
 from urllib.parse import urlparse
 
+import pytest
+
 from app.database.factories.document_factory import DocumentFactory
 
-from ._base_documents_test import _BaseDocumentEndpointsTest
+from ._base_documents_test import _TestBaseDocumentEndpoints
 
 
-class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init
+class TestGetDocumentEndpoint(_TestBaseDocumentEndpoints):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.document = DocumentFactory(
             deleted_at=None,
             created_at=datetime.now(UTC) - timedelta(days=1),
@@ -20,36 +23,43 @@ class GetDocumentEndpointTest(_BaseDocumentEndpointsTest):
         json_data = response.get_json()
         parse_url = urlparse(json_data.get('url'))
 
-        self.assertEqual(self.document.created_by, json_data.get('created_by').get('id'))
-        self.assertEqual(self.document.name, json_data.get('name'))
-        self.assertEqual(self.document.mime_type, json_data.get('mime_type'))
-        self.assertEqual(self.document.size, json_data.get('size'))
-        self.assertTrue(parse_url.scheme and parse_url.netloc)
-        self.assertEqual(self.document.created_at.strftime('%Y-%m-%d %H:%M:%S'), json_data.get('created_at'))
-        self.assertEqual(self.document.updated_at.strftime('%Y-%m-%d %H:%M:%S'), json_data.get('updated_at'))
-        self.assertEqual(self.document.deleted_at, json_data.get('deleted_at'))
+        assert self.document.created_by == json_data.get('created_by').get('id')
+        assert self.document.name == json_data.get('name')
+        assert self.document.mime_type == json_data.get('mime_type')
+        assert self.document.size == json_data.get('size')
+        assert parse_url.scheme and parse_url.netloc
+        assert self.document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+        assert self.document.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
+        assert self.document.deleted_at == json_data.get('deleted_at')
 
-    def test_check_user_roles_in_get_document_endpoint(self):
-        test_cases = [
-            (self.admin_user.email, 200),
-            (self.team_leader_user.email, 200),
-            (self.worker_user.email, 200),
-        ]
+    @pytest.mark.parametrize(
+        'user_email_attr, expected_status',
+        [
+            ('admin_user', 200),
+            ('team_leader_user', 200),
+            ('worker_user', 200),
+        ],
+    )
+    def test_check_user_roles_in_get_document_endpoint(self, user_email_attr, expected_status):
+        user_email = getattr(self, user_email_attr).email
+        self.client.get(
+            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+        )
 
-        for user_email, response_status in test_cases:
-            self.client.get(
-                self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=response_status
-            )
+    @pytest.mark.parametrize(
+        'as_attachment',
+        [
+            'as_attachment=1',
+            'as_attachment=0',
+            '',
+        ],
+    )
+    def test_get_document_file_content_endpoint(self, as_attachment):
+        response = self.client.get(
+            f'{self.endpoint}?{as_attachment}',
+            headers=self.build_headers(
+                extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
+            ),
+        )
 
-    def test_get_document_file_content_endpoint(self):
-        test_cases = ['as_attachment=1', 'as_attachment=0', '']
-
-        for test_case in test_cases:
-            response = self.client.get(
-                f'{self.endpoint}?{test_case}',
-                headers=self.build_headers(
-                    extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
-                ),
-            )
-
-            self.assertTrue(isinstance(response.get_data(), bytes))
+        assert isinstance(response.get_data(), bytes)

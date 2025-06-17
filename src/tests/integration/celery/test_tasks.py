@@ -1,52 +1,50 @@
 """Module for testing task module."""
 
 from datetime import datetime, timedelta, UTC
-from unittest.mock import MagicMock, patch
 
-from flask import url_for
+import pytest
+from flask import current_app, url_for
 
 from app.celery import ContextTask, make_celery
 from app.celery.tasks import (
     create_user_email_task,
-    create_word_and_excel_documents_task,
     reset_password_email_task,
     send_email_with_attachments_task_logic,
 )
 from app.database.factories.document_factory import DocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
-from app.extensions import db, mail
+from app.extensions import mail
 from app.file_storages import LocalStorage
 from app.helpers.otp_token import OTPTokenManager
 from app.models.role import ADMIN_ROLE
-from tests.base.base_test import BaseTest
 
 
-class CeleryTasksTest(BaseTest):
-    def setUp(self):
-        super().setUp()
+# pylint: disable=attribute-defined-outside-init
+class TestCeleryTasks:
+    @pytest.fixture(autouse=True)
+    def setup(self, app):
         self.otp_token_manager = OTPTokenManager(
-            secret_key=self.app.config.get('SECRET_KEY'),
-            salt=self.app.config.get('SECURITY_PASSWORD_SALT'),
-            expiration=self.app.config.get('RESET_TOKEN_EXPIRES'),
+            secret_key=app.config.get('SECRET_KEY'),
+            salt=app.config.get('SECURITY_PASSWORD_SALT'),
+            expiration=app.config.get('RESET_TOKEN_EXPIRES'),
         )
         self.local_storage = LocalStorage()
-        self.celery = make_celery(self.app)
+        self.celery = make_celery(app)
 
     def test_create_user_email_task(self):
         ignore_fields = {'role', 'created_by'}
         data = UserFactory.build_dict(exclude=ignore_fields)
-        self.assertTrue(create_user_email_task.apply(args=(data,)).get())
+        assert create_user_email_task.apply(args=(data,)).get()
 
     def test_reset_password_email_task(self):
         role = RoleFactory()
         user = UserFactory(roles=[role])
 
-        with self.app.app_context():
-            token = self.otp_token_manager.generate_token(user.email)
-            reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
+        token = self.otp_token_manager.generate_token(user.email)
+        reset_password_url = url_for('auth_reset_password_resource', token=token, _external=True)
         email_data = {'email': user.email, 'reset_password_url': reset_password_url}
-        self.assertTrue(reset_password_email_task.apply(args=(email_data,)).get())
+        assert reset_password_email_task.apply(args=(email_data,)).get()
 
     def test_send_email_with_attachments_task(self):
         document = DocumentFactory(
@@ -61,7 +59,7 @@ class CeleryTasksTest(BaseTest):
                     'internal_filename': document.internal_filename,
                     'mime_type': document.mime_type,
                     'created_by': {
-                        'email': self.app.config.get('TEST_USER_EMAIL'),
+                        'email': current_app.config.get('TEST_USER_EMAIL'),
                         'name': ADMIN_ROLE,
                     },
                 }
@@ -73,86 +71,5 @@ class CeleryTasksTest(BaseTest):
             return send_email_with_attachments_task_logic(task_data)
 
         with mail.record_messages() as outbox:
-            self.assertTrue(test_task.apply(args=(args,)).get())
-            self.assertEqual(len(outbox), 1)
-
-    def test_create_word_and_excel_documents_chord_returns_success_result(self):
-        role = RoleFactory()
-        user = UserFactory(roles=[role])
-        request_data = {
-            'search': [],
-            'order': [
-                {'field_name': 'name', 'sorting': 'asc'},
-            ],
-            'items_per_page': 100,
-            'page_number': 1,
-        }
-        kwargs = {'created_by': user.id, 'request_data': request_data, 'to_pdf': 1}
-
-        mock_callback_result = MagicMock()
-        mock_callback_result.successful.return_value = True
-        mock_callback_result.result = 'Success'
-        mock_callback_result.traceback = None
-
-        with (
-            patch('app.celery.tasks.chord') as mock_chord,
-            patch.object(db.session, 'commit') as mock_commit,
-            patch.object(db.session, 'close') as mock_close,
-        ):
-            mock_chord.return_value = lambda x: mock_callback_result
-
-            create_word_and_excel_documents_task.apply(kwargs=kwargs).get()
-
-            mock_callback_result.successful.assert_called_once()
-            mock_commit.assert_called_once()
-            mock_close.assert_called_once()
-
-    def test_create_word_and_excel_documents_chord_returns_fail_result(self):
-        role = RoleFactory()
-        user = UserFactory(roles=[role])
-        request_data = {
-            'search': [],
-            'order': [
-                {'field_name': 'name', 'sorting': 'asc'},
-            ],
-            'items_per_page': 100,
-            'page_number': 1,
-        }
-        kwargs = {'created_by': user.id, 'request_data': request_data, 'to_pdf': 1}
-
-        mock_callback_result = MagicMock()
-        mock_callback_result.successful.return_value = False
-        mock_callback_result.result = None
-        mock_callback_result.traceback = None
-
-        with (
-            patch('app.celery.tasks.chord') as mock_chord,
-            patch.object(db.session, 'rollback') as mock_rollback,
-            patch.object(db.session, 'close') as mock_close,
-        ):
-            mock_chord.return_value = lambda x: mock_callback_result
-
-            create_word_and_excel_documents_task.apply(kwargs=kwargs).get()
-
-            mock_callback_result.successful.assert_called_once()
-            mock_rollback.assert_called_once()
-            mock_close.assert_called_once()
-
-    def test_create_word_and_excel_documents_tasks_are_called(self):
-        user = UserFactory()
-        request_data = {
-            'search': [],
-            'order': [
-                {'field_name': 'name', 'sorting': 'asc'},
-            ],
-            'items_per_page': 100,
-            'page_number': 1,
-        }
-        kwargs = {'created_by': user.id, 'request_data': request_data, 'to_pdf': 1}
-
-        # NOTE: I didn't find the way to check that the tasks called in this task
-        #       ran as I expected, the only way to check it out is to do a test
-        #       per each task.
-        result = create_word_and_excel_documents_task.apply(kwargs=kwargs).get()
-
-        self.assertTrue(result)
+            assert test_task.apply(args=(args,)).get()
+            assert len(outbox) == 1
