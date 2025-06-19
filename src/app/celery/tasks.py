@@ -1,5 +1,6 @@
+import logging
+
 from celery import chain, chord
-from celery.utils.log import get_task_logger
 from flask import render_template
 from flask_mail import Message
 
@@ -9,8 +10,6 @@ from app.celery.word.tasks import export_user_data_in_word_task
 from app.extensions import celery, db, mail
 from app.repositories import DocumentRepository
 from config import Config
-
-logger = get_task_logger(__name__)
 
 
 @celery.task(base=ContextTask)
@@ -31,7 +30,7 @@ def create_user_email_task(email_data) -> bool:
 
 @celery.task(base=ContextTask)
 def reset_password_email_task(email_data) -> bool:
-    logger.info(f'to: {email_data}')
+    logging.info(f'to: {email_data}')
 
     to = [email_data.get('email')]
 

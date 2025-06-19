@@ -18,8 +18,8 @@ class SeederCli(BaseCli):
                 seeder.seed()
             self.db.session.commit()
             print(' Database seeding completed successfully.')  # noqa: T201
-        except Exception as e:
+        except Exception as exc:
             self.db.session.rollback()
-            raise e
+            raise exc
         finally:
             self.db.session.close()

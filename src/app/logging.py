@@ -1,5 +1,5 @@
 import logging
-import pprint
+import os
 
 from flask import Flask
 
@@ -36,10 +36,10 @@ def _attach_handlers(app: Flask, handlers: list) -> None:
         logger.addHandler(handler)
     logger.propagate = False
     logger.setLevel(app.config.get('LOGGING_LEVEL', logging.INFO))
+    logger.info(f' Application environment: {os.getenv("FLASK_CONFIG")}')
 
     if app.config.get('DEBUG'):
-        app.logger.info(pprint.pformat(app.config, indent=4))
         sa_logger = logging.getLogger('sqlalchemy.engine')
-        sa_logger.setLevel(logging.INFO)
+        sa_logger.setLevel(app.config.get('LOGGING_LEVEL', logging.INFO))
         if not sa_logger.hasHandlers():
             sa_logger.addHandler(logging.StreamHandler())
