@@ -124,25 +124,3 @@ class TestDeleteRoleService(_TestRoleBaseService):
         assert isinstance(role, Role)
         assert role.id == self.role.id
         assert role.deleted_at == self.role.deleted_at
-
-
-class TestAssignRoleToUserRoleService(_TestRoleBaseService):
-    @pytest.fixture(autouse=True)
-    def setup_extra(self):
-        self.role = RoleFactory(deleted_at=None)
-
-    @mock.patch('app.services.role.user_datastore.remove_role_from_user', autospec=True)
-    @mock.patch('app.services.role.user_datastore.add_role_to_user', autospec=True)
-    @mock.patch('app.services.role.db.session', autospec=True)
-    def test_assign_role_to_user_role(self, mock_session, mock_add_role_to_user, mock_remove_role_from_user):
-        mock_role_repo = MagicMock(spec=RoleRepository)
-        mock_role_repo.find_by_id.return_value = self.role
-        role_service = RoleService(mock_role_repo)
-
-        role_service.assign_role_to_user(user=self.admin_user, role_id=self.role.id)
-
-        mock_role_repo.find_by_id.assert_called_once_with(self.role.id)
-        mock_remove_role_from_user.assert_called_once_with(self.admin_user, self.admin_user.roles[0])
-        mock_add_role_to_user.assert_called_once_with(self.admin_user, self.role)
-        mock_session.add.assert_called_once_with(self.admin_user)
-        mock_session.flush.assert_called_once_with()

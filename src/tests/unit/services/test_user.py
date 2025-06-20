@@ -8,7 +8,7 @@ import pytest
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.models import User
-from app.repositories import UserRepository
+from app.repositories import RoleRepository, UserRepository
 from app.services import RoleService, UserService
 
 
@@ -29,9 +29,9 @@ class TestCreateUserService(_TestUserBaseService):
 
         mock_user_repo = MagicMock(spec=UserRepository)
         mock_user_repo.get_last_record.return_value = self.user
-        mock_role_service = MagicMock(spec=RoleService)
-        mock_role_service.assign_role_to_user.return_value = None
-        user_service = UserService(mock_user_repo, mock_role_service)
+        mock_role_repository = MagicMock(spec=RoleRepository)
+        mock_role_repository.find_by_id.return_value = self.role
+        user_service = UserService(mock_user_repo, mock_role_repository)
 
         user_data = UserFactory.build_dict(exclude={'roles', 'created_by'})
         user_data['role_id'] = self.role.id
@@ -40,12 +40,13 @@ class TestCreateUserService(_TestUserBaseService):
         user_data.pop('role_id')
         user_data['created_by'] = 1
         user_data['fs_uniquifier'] = 2
+        user_data['roles'] = [self.role]
 
         mock_user_repo.get_last_record.assert_called_once()
         mock_create_user.assert_called_once_with(**user_data)
         mock_session.add.assert_called_once_with(self.user)
         mock_session.flush.assert_called_once_with()
-        mock_role_service.assign_role_to_user.assert_called_once_with(self.user, self.role.id)
+        mock_role_repository.find_by_id.assert_called_once_with(self.role.id)
         assert isinstance(created_user, User)
         assert created_user.created_by == self.user.created_by
         assert created_user.fs_uniquifier == self.user.fs_uniquifier
@@ -58,6 +59,7 @@ class TestCreateUserService(_TestUserBaseService):
         assert created_user.created_at
         assert created_user.updated_at, created_user.created_at
         assert created_user.deleted_at is None
+        assert created_user.roles[0].id == self.role.id
 
 
 class TestFindByIdUserService(_TestUserBaseService):
@@ -103,15 +105,17 @@ class TestGetUserService(_TestUserBaseService):
 
 class TestSaveUserService(_TestUserBaseService):
     @mock.patch('app.services.user.db.session', autospec=True)
+    @mock.patch('app.services.user.user_datastore.remove_role_from_user', autospec=True)
+    @mock.patch('app.services.user.user_datastore.add_role_to_user', autospec=True)
     @mock.patch('app.services.user.User.reload', autospec=True)
-    def test_save_user(self, mock_user_reload, mock_session):
+    def test_save_user(self, mock_user_reload, mock_add_role_to_user, mock_remove_role_from_user, mock_session):
         mock_user_reload.return_value = self.user
 
         mock_user_repo = MagicMock(spec=UserRepository)
         mock_user_repo.save.return_value = self.user
-        mock_role_service = MagicMock(spec=RoleService)
-        mock_role_service.assign_role_to_user.return_value = None
-        user_service = UserService(mock_user_repo, mock_role_service)
+        mock_role_repository = MagicMock(spec=RoleService)
+        mock_role_repository.find_by_id.return_value = self.role
+        user_service = UserService(mock_user_repo, mock_role_repository)
 
         user_data = UserFactory.build_dict(exclude={'roles', 'created_by'})
         user_data['role_id'] = self.role.id
@@ -123,7 +127,9 @@ class TestSaveUserService(_TestUserBaseService):
             **user_data,
         )
         mock_session.flush.assert_called_once_with()
-        mock_role_service.assign_role_to_user.assert_called_once_with(self.user, self.role.id)
+        mock_remove_role_from_user.assert_called_once_with(self.user, self.user.roles[0])
+        mock_add_role_to_user.assert_called_once_with(self.user, self.role)
+        mock_role_repository.find_by_id.assert_called_once_with(self.role.id)
         mock_user_reload.assert_called_once()
         assert isinstance(updated_user, User)
         assert updated_user.created_by == self.user.created_by
@@ -139,14 +145,18 @@ class TestSaveUserService(_TestUserBaseService):
         assert updated_user.deleted_at is None
 
     @mock.patch('app.services.user.db.session', autospec=True)
+    @mock.patch('app.services.user.user_datastore.remove_role_from_user', autospec=True)
+    @mock.patch('app.services.user.user_datastore.add_role_to_user', autospec=True)
     @mock.patch('app.services.user.User.reload', autospec=True)
-    def test_save_user_no_role_id(self, mock_user_reload, mock_session):
+    def test_save_user_no_role_id(
+        self, mock_user_reload, mock_add_role_to_user, mock_remove_role_from_user, mock_session
+    ):
         mock_user_reload.return_value = self.user
 
         mock_user_repo = MagicMock(spec=UserRepository)
         mock_user_repo.save.return_value = self.user
-        mock_role_service = MagicMock(spec=RoleService)
-        user_service = UserService(mock_user_repo, mock_role_service)
+        mock_role_repository = MagicMock(spec=RoleService)
+        user_service = UserService(mock_user_repo, mock_role_repository)
 
         user_data = UserFactory.build_dict(exclude={'roles', 'created_by'})
 
@@ -157,7 +167,9 @@ class TestSaveUserService(_TestUserBaseService):
             **user_data,
         )
         mock_session.flush.assert_called_once_with()
-        mock_role_service.assert_not_called()
+        mock_add_role_to_user.assert_not_called()
+        mock_role_repository.assert_not_called()
+        mock_remove_role_from_user.assert_not_called()
         mock_user_reload.assert_called_once()
         assert isinstance(updated_user, User)
         assert updated_user.created_by == self.user.created_by
