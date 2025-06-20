@@ -8,11 +8,27 @@ from app.repositories.base import BaseRepository
 class RepositoryMixin:
     repository_classes = {}
 
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+        cls._validate_repository_classes()
+
+    @classmethod
+    def _validate_repository_classes(cls):
+        if cls.repository_classes:
+            for name, repository in cls.repository_classes.items():
+                if not isinstance(repository, type):
+                    raise TypeError(f"{cls.__name__}.repository_classes['{name}'] must be a class")
+                if not issubclass(repository, BaseRepository):
+                    raise TypeError(f"{cls.__name__}.repository_classes['{name}'] must inherit from BaseRepository")
+
     def get_repository(self, repository_name: str) -> type[BaseRepository]:
         return self._get_repository_class(repository_name)
 
     def _get_repository_class(self, repository_name: str) -> type[BaseRepository]:
-        return self.repository_classes.get(repository_name)()
+        repository_class = self.repository_classes.get(repository_name)
+        if repository_class:
+            return repository_class()
+        raise ValueError(f"Repository '{repository_name}' not found in {self.__class__.__name__}")
 
 
 class _SearchValueSerializer(ma.Schema):
