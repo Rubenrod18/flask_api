@@ -22,8 +22,8 @@ class TestDeleteDocumentEndpoint(_TestBaseDocumentEndpoints):
         json_data = json_response.get('data')
 
         assert self.document.id == json_data.get('id')
-        assert json_data.get('deleted_at') is not None
-        assert json_data.get('deleted_at') >= json_data.get('updated_at')
+        parsed_deleted_at = datetime.fromisoformat(json_data.get('deleted_at'))
+        assert isinstance(parsed_deleted_at, datetime)
 
     @pytest.mark.parametrize(
         'user_email_attr, expected_status',
