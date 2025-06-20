@@ -1,10 +1,9 @@
 """Runs Celery and registers Celery tasks."""
 
-from celery import Celery, Task
-from celery.utils.log import get_task_logger
-from flask import Flask
+import logging
 
-logger = get_task_logger(__name__)
+from celery import Celery, Task
+from flask import Flask
 
 
 class MyCelery(Celery):
@@ -50,24 +49,98 @@ class ContextTask(Task):
     queue = 'default'
 
     def on_failure(self, exc, task_id, args, kwargs, einfo) -> None:
-        logger.info(
-            f"""
+        """Handler called when the task fails.
+
+        This method is invoked by Celery if the task raises an exception during execution.
+        It logs the failure details using the root logger to ensure proper integration
+        with Celery's logging configuration.
+
+        Notes
+        -----
+        In Celery tasks, it's recommended to use the root 'logging' module directly
+        instead of using `get_task_logger(__name__)` or `logging.getLogger(__name__)`.
+        This is because Celery configures logging in a way that can interfere with
+        logger instances created before Celery has fully initialized,
+        potentially causing them to not respect the configured log level or handlers.
+        Using the root logger (logging.exception) ensures logs are correctly routed
+        according to the Celery logging setup.
+
+        Parameters
+        ----------
+        exc : Exception
+            The exception instance raised by the task.
+        task_id : str
+            Unique identifier for the task instance.
+        args : tuple
+            Positional arguments that were passed to the task.
+        kwargs : dict
+            Keyword arguments that were passed to the task.
+        einfo : traceback.TracebackException
+            Exception traceback information, useful for detailed debugging.
+
+        Returns
+        -------
+        None
+        """
+        logging.exception(
+            f""" Celery task "{task_id}" failed:
             task id: {task_id}
             args: {args}
             kwargs: {kwargs}
             einfo: {einfo}
             exception: {exc}
-        """
+            """
         )
 
     def run(self, *args, **kwargs):
-        logger.info('Celery task started')
+        """The default entry point for executing the task logic.
+
+        This method is meant to be overridden by subclasses or by the function
+        decorated with @celery.task when using ContextTask as the base class.
+
+        Notes
+        -----
+        When you define a Celery task by decorating a function with
+        `@celery.task(base=ContextTask)`, **the decorated function itself replaces
+        this `run` method**.
+
+        Therefore, the `run` method defined here in ContextTask is not called
+        automatically unless you explicitly subclass ContextTask and override
+        the run method.
+
+        In other words, if you write:
+
+            @celery.task(base=ContextTask)
+            def my_task(...):
+                # task code here
+
+        The `my_task` function becomes the task's `run` method, effectively
+        overriding this default `run`.
+
+        This is why you might see `logging.info('Celery task started')` here,
+        but it will only be executed if the `run` method itself is directly used
+        (for example, in a subclass overriding run).
+
+        This function is an abstract-method and must be overridden.
+
+        Parameters
+        ----------
+        *args : tuple
+            Positional arguments passed to the task.
+        **kwargs : dict
+            Keyword arguments passed to the task.
+
+        Returns
+        -------
+        Any
+            The return value from the overridden run method or the decorated function.
+        """
+        logging.info('Celery task started')
 
 
 def make_celery(app: Flask) -> Celery:
     celery = MyCelery(app.import_name)
     celery.conf.update(app.config)
-    logger.debug(celery.conf.__dict__)
 
     def __call__(self, *args, **kwargs):
         """Executes the Celery task within the Flask application context.

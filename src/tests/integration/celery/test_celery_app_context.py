@@ -12,8 +12,6 @@ class TestCeleryAppContext:
         from app.celery import make_celery  # pylint: disable=import-outside-toplevel
 
         self.app = create_app('config.TestConfig')
-        self.app.config['CELERY_BROKER_URL'] = 'memory://'
-        self.app.config['CELERY_RESULT_BACKEND'] = 'rpc://'
         self.celery = make_celery(self.app)
 
     def test_task_runs_with_app_context(self):

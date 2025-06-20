@@ -6,7 +6,6 @@ from tempfile import NamedTemporaryFile
 import magic
 import xlsxwriter
 from celery import states
-from celery.utils.log import get_task_logger
 from flask import current_app
 from xlsxwriter import Workbook
 from xlsxwriter.worksheet import Worksheet
@@ -18,8 +17,6 @@ from app.helpers.sqlalchemy_query_builder import SQLAlchemyQueryBuilder
 from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
 from app.utils import to_readable
-
-logger = get_task_logger(__name__)
 
 _COLUMN_DISPLAY_ORDER = [
     'name',
@@ -180,11 +177,10 @@ def export_user_data_in_excel_task_logic(self, created_by: int, request_data: di
         document = Document(**data)
         db.session.add(document)
         db.session.flush()
-    except Exception as e:
+    except Exception as exc:
         db.session.rollback()
         local_storage.delete_file(filepath)
-        logger.debug(e)
-        raise
+        raise exc
 
     document_serializer = DocumentSerializer(exclude=('internal_filename',))
     document_data = document_serializer.dump(document)

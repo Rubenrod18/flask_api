@@ -5,7 +5,6 @@ from tempfile import NamedTemporaryFile
 
 import docx
 from celery import states
-from celery.utils.log import get_task_logger
 from flask import current_app
 
 from app.celery import ContextTask
@@ -17,8 +16,6 @@ from app.models import Document, User
 from app.serializers import DocumentSerializer, UserSerializer
 from app.utils import to_readable
 from app.utils.constants import MS_WORD_MIME_TYPE, PDF_MIME_TYPE
-
-logger = get_task_logger(__name__)
 
 _COLUMN_DISPLAY_ORDER = ['name', 'last_name', 'email', 'birth_date', 'role', 'created_at', 'updated_at', 'deleted_at']
 
@@ -128,11 +125,10 @@ def export_user_data_in_word_task_logic(self, created_by: int, request_data: dic
         document = Document(**data)
         db.session.add(document)
         db.session.flush()
-    except Exception as e:
+    except Exception as exc:
         db.session.rollback()
         local_storage.delete_file(filepath)
-        logger.debug(e)
-        raise e
+        raise exc
 
     document_serializer = DocumentSerializer(exclude=('internal_filename',))
     document_data = document_serializer.dump(document)
