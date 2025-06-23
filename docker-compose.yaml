@@ -63,7 +63,6 @@ services:
       - "15672:15672"  # RabbitMQ management console (optional)
       - "5672:5672"    # RabbitMQ AMQP protocol port (Celery will use this)
     command: bash -c "rabbitmq-plugins enable rabbitmq_management && rabbitmq-server"
-    restart: always
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
@@ -99,7 +98,6 @@ services:
       - "8025:8025"  # Web UI port for Mailpit
     networks:
       - flask_api__network
-    restart: always
 
 volumes:
   mysql_data:
