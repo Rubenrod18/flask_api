@@ -33,9 +33,6 @@ pip-log.txt
 
 .idea
 coverage_html_report
-docs/_autosummary
 node_modules
-source/_autosummary
-source/_static
-source/templates
 venv
+service_account.json

@@ -46,3 +46,15 @@ def _handle_validation_error_exception(ex: ValidationError) -> tuple:
 
 class FileEmptyError(OSError):
     pass
+
+
+class GoogleDriveError(Exception):
+    """Base exception for Google Drive operations."""
+
+
+class GoogleDrivePermissionError(GoogleDriveError):
+    """Raised when access is denied (403)."""
+
+
+class GoogleDriveNotFoundError(GoogleDriveError):
+    """Raised when the file or folder is not found (404)."""
