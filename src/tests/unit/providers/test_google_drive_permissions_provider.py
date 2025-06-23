@@ -12,7 +12,8 @@ def mock_gdrive_permissions_provider():
     with (
         patch('app.providers.google_drive._google_drive_base_provider.build', autospec=True) as mock_build,
         patch(
-            'app.providers.google_drive._google_drive_base_provider.service_account.Credentials.from_service_account_file',
+            target='app.providers.google_drive._google_drive_base_provider.'
+            'service_account.Credentials.from_service_account_file',
             autospec=True,
         ),
     ):
@@ -25,6 +26,7 @@ def mock_gdrive_permissions_provider():
         return provider, mock_permissions
 
 
+# pylint: disable=redefined-outer-name
 class TestGoogleDrivePermissionsProvider:
     @pytest.mark.parametrize(
         'item_params, item_params_called, fields',

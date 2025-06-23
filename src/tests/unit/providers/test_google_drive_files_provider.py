@@ -14,7 +14,10 @@ def mock_gdrive_files_provider():
     with (
         patch('app.providers.google_drive._google_drive_base_provider.build', autospec=True) as mock_build,
         patch(
-            'app.providers.google_drive._google_drive_base_provider.service_account.Credentials.from_service_account_file',
+            target=(
+                'app.providers.google_drive._google_drive_base_provider.'
+                'service_account.Credentials.from_service_account_file'
+            ),
             autospec=True,
         ),
     ):
@@ -27,6 +30,7 @@ def mock_gdrive_files_provider():
         return provider, mock_files
 
 
+# pylint: disable=redefined-outer-name
 class TestGoogleDriveFilesProvider:
     @pytest.mark.parametrize(
         'folder_params, folder_params_called, fields',
@@ -58,6 +62,7 @@ class TestGoogleDriveFilesProvider:
         mock_create.execute.assert_called_once()
         assert result == folder_data
 
+    # pylint: disable=protected-access, disable=unused-argument
     @pytest.mark.parametrize(
         'file_params, file_params_called, fields',
         [
@@ -87,7 +92,7 @@ class TestGoogleDriveFilesProvider:
         )
 
         mock_files.create.assert_called_once()
-        args, kwargs = mock_files.create.call_args
+        _, kwargs = mock_files.create.call_args
         assert kwargs['body']['name'] == pdf_filename
         assert kwargs['body'].get('parents') == file_params_called.get('parents')
         assert kwargs['fields'] == fields or 'id, name'
