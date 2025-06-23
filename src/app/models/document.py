@@ -1,4 +1,4 @@
-import logging
+import enum
 
 import sqlalchemy as sa
 from flask import url_for
@@ -7,7 +7,10 @@ from sqlalchemy.orm import relationship
 from app.models.base import Base
 from app.models.user import User
 
-logger = logging.getLogger(__name__)
+
+class StorageType(enum.Enum):
+    LOCAL = 'local'
+    GDRIVE = 'gdrive'
 
 
 class Document(Base):
@@ -17,14 +20,25 @@ class Document(Base):
     created_by_user = relationship(User, backref='documents')
 
     name = sa.Column(sa.String(255), nullable=False)
-    internal_filename = sa.Column(sa.String(255), nullable=False, unique=True)
     mime_type = sa.Column(sa.String(255), nullable=False)
-    directory_path = sa.Column(sa.String(255), nullable=False)
     size = sa.Column(sa.Integer, nullable=False)
 
-    @property
-    def url(self):
-        return url_for('documents_document_resource', document_id=self.id, _external=True)
+    storage_type = sa.Column(sa.Enum(StorageType), nullable=False, default=StorageType.LOCAL)
+    storage_id = sa.Column(sa.String(255), nullable=True)
 
-    def get_filepath(self):
-        return f'{self.directory_path}/{self.internal_filename}'
+    # Local-only fields (still used if storage_type == LOCAL)
+    internal_filename = sa.Column(sa.String(255), nullable=True, unique=True)
+    directory_path = sa.Column(sa.String(255), nullable=True)
+
+    @property
+    def url(self) -> str | None:
+        if self.storage_type == StorageType.LOCAL:
+            return url_for('documents_document_resource', document_id=self.id, _external=True)
+        elif self.storage_type == StorageType.GDRIVE:
+            return f'https://drive.google.com/file/d/{self.storage_id}/view'
+        return None
+
+    def get_filepath(self) -> str | None:
+        if self.storage_type == StorageType.LOCAL:
+            return f'{self.directory_path}/{self.internal_filename}'
+        return None
