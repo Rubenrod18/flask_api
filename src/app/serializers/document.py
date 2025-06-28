@@ -1,10 +1,10 @@
 import magic
-from flask import url_for
-from marshmallow import fields, post_dump, pre_load, validate, validates
+from marshmallow import fields, post_dump, pre_dump, pre_load, validate, validates
 from werkzeug.exceptions import NotFound, UnprocessableEntity
 
 from app.extensions import ma
 from app.models import Document
+from app.models.document import StorageType
 from app.repositories import DocumentRepository
 from app.serializers.core import RepositoryMixin
 from config import Config
@@ -21,6 +21,8 @@ class DocumentSerializer(ma.SQLAlchemySchema, RepositoryMixin):
     internal_filename = ma.auto_field()
     mime_type = ma.auto_field()
     size = ma.auto_field()
+    storage_type = ma.auto_field()
+    storage_id = ma.auto_field()
 
     directory_path = ma.auto_field(load_only=True)
 
@@ -28,6 +30,8 @@ class DocumentSerializer(ma.SQLAlchemySchema, RepositoryMixin):
     created_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     updated_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
     deleted_at = ma.auto_field(dump_only=True, format='%Y-%m-%d %H:%M:%S')
+
+    _document = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -41,10 +45,16 @@ class DocumentSerializer(ma.SQLAlchemySchema, RepositoryMixin):
         if document is None or document.deleted_at is not None:
             raise NotFound('Document not found')
 
+    @pre_dump()
+    def prepare_for_wrap(self, document, **kwargs):  # pylint: disable=unused-argument
+        self._document = document
+        return document
+
     @post_dump()
     def wrap(self, data, **kwargs):  # pylint: disable=unused-argument
-        data['url'] = url_for('documents_document_resource', document_id=data['id'], _external=True)
+        data['url'] = self._document.url
         data['created_by'] = data.pop('created_by_user')
+        data['storage_type'] = data['storage_type'].lower()
         return data
 
     @staticmethod
@@ -71,3 +81,7 @@ class DocumentAttachmentSerializer(ma.Schema):
         if 'as_attachment' in value:
             value['as_attachment'] = int(value.get('as_attachment'))
         return value
+
+
+class DocumentStorageTypeSerializer(ma.Schema):
+    storage_type = fields.Str(validate=validate.OneOf(StorageType.to_list()))

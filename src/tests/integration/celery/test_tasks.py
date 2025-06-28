@@ -11,7 +11,7 @@ from app.celery.tasks import (
     reset_password_email_task,
     send_email_with_attachments_task_logic,
 )
-from app.database.factories.document_factory import DocumentFactory
+from app.database.factories.document_factory import LocalDocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import mail
@@ -47,7 +47,7 @@ class TestCeleryTasks:
         assert reset_password_email_task.apply(args=(email_data,)).get()
 
     def test_send_email_with_attachments_task(self):
-        document = DocumentFactory(
+        document = LocalDocumentFactory(
             deleted_at=None,
             created_at=datetime.now(UTC) - timedelta(days=1),
         )

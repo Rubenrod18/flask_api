@@ -1,16 +1,18 @@
-import enum
-
 import sqlalchemy as sa
 from flask import url_for
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
 from app.models.user import User
+from app.utils.constants import BaseEnum
 
 
-class StorageType(enum.Enum):
+class StorageType(BaseEnum):
     LOCAL = 'local'
     GDRIVE = 'gdrive'
+
+    def __str__(self):
+        return self.value
 
 
 class Document(Base):

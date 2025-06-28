@@ -1,4 +1,3 @@
-import enum
 import logging
 import uuid
 
@@ -7,33 +6,19 @@ from flask_security import hash_password, SQLAlchemyUserDatastore, UserMixin
 from sqlalchemy.orm import backref, relationship
 
 from ..extensions import db
+from ..utils.constants import BaseEnum
 from .base import Base
 from .role import Role
 
 logger = logging.getLogger(__name__)
 
 
-class Genre(str, enum.Enum):
+class Genre(BaseEnum):
     MALE = 'm'
     FEMALE = 'f'
 
     def __str__(self):
-        """Returns str instead Genre object.
-
-        References
-        ----------
-        how to serialise an enum property in sqlalchemy using marshmallow
-        https://stackoverflow.com/questions/44717768/how-to-serialise-a-enum-property-in-sqlalchemy-using-marshmallow
-
-        """
         return self.value
-
-    @classmethod
-    def to_list(cls, get_values=True):
-        attr = 'name'
-        if get_values:
-            attr = 'value'
-        return [getattr(_, attr) for _ in list(cls)]
 
 
 class User(Base, UserMixin):

@@ -1,3 +1,4 @@
+import io
 import logging
 import os
 import uuid
@@ -164,3 +165,43 @@ def show_last_sql_query():
     """Print the most recently executed SQL query for debugging purposes."""
     info = get_recorded_queries()[-1]
     print(info.statement, info.parameters, info.duration, sep='\n')  # noqa
+
+
+class BytesIOMatcher:
+    """A helper class for comparing io.BytesIO streams in unit tests.
+
+    This matcher allows you to assert that a mock was called with a BytesIO object
+    that contains specific byte data, without requiring the exact same object identity.
+
+    Example usage in a test with unittest.mock:
+
+        expected_bytes = b'some file content'
+        mock_method.assert_called_once_with(file_stream=BytesIOMatcher(expected_bytes))
+
+    The matcher compares the contents of the BytesIO stream using `getvalue()`.
+
+    """
+
+    def __init__(self, expected_bytes: bytes):
+        """Initialize the matcher with the expected bytes content.
+
+        Parameters
+        ----------
+        expected_bytes : The exact byte content expected in the BytesIO stream.
+
+        """
+        self.expected_bytes = expected_bytes
+
+    def __eq__(self, other):
+        """Compares the expected bytes with the content of the other BytesIO object.
+
+        Parameters
+        ----------
+        other : The object being compared, expected to be an io.BytesIO.
+
+        Returns
+        -------
+        True if contents match, False otherwise.
+
+        """
+        return isinstance(other, io.BytesIO) and other.getvalue() == self.expected_bytes

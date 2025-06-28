@@ -1,6 +1,7 @@
 from flask_restx import fields
 
 from app.extensions import api
+from app.models.document import StorageType
 from app.swagger.core import creator_sw_model, record_monitoring_sw_model
 
 document_sw_model = api.clone(
@@ -12,6 +13,7 @@ document_sw_model = api.clone(
         'mime_type': fields.String(readonly=True, example='application/pdf'),
         'size': fields.Integer(readonly=True, description='File size in bytes.', example=6000000),
         'url': fields.String(readonly=True, description='URL for getting the document content.'),
+        'storage_type': fields.String(enum=StorageType.to_list(), example='local'),
     },
 )
 

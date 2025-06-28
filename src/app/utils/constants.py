@@ -10,14 +10,23 @@ MS_EXCEL_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetm
 FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder'
 
 
-class GoogleDriveUserTypes(Enum):
+class BaseEnum(str, Enum):
+    @classmethod
+    def to_list(cls, get_values=True):
+        attr = 'name'
+        if get_values:
+            attr = 'value'
+        return [getattr(_, attr) for _ in list(cls)]
+
+
+class GoogleDriveUserTypes(BaseEnum):
     ANYONE = 'anyone'
     DOMAIN = 'domain'
     GROUP = 'group'
     USER = 'user'
 
 
-class GoogleDriveRoles(Enum):
+class GoogleDriveRoles(BaseEnum):
     OWNER = 'owner'
     READER = 'reader'
     WRITER = 'writer'

@@ -7,7 +7,7 @@ from freezegun import freeze_time
 from sqlalchemy.orm import Query
 
 import app.helpers.sqlalchemy_query_builder as rqo
-from app.database.factories.document_factory import DocumentFactory
+from app.database.factories.document_factory import LocalDocumentFactory
 from app.database.factories.role_factory import RoleFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
@@ -40,10 +40,10 @@ class TestOrderByClauseBuilder:
     @pytest.fixture(autouse=True)
     def setup(self, app):
         with freeze_time('2020-01-01'):
-            self.doc = DocumentFactory(name='Invoice 2024-01')
+            self.doc = LocalDocumentFactory(name='Invoice 2024-01')
 
         with freeze_time('2015-01-01'):
-            self.doc_2 = DocumentFactory(name='Employee Contract John Doe')
+            self.doc_2 = LocalDocumentFactory(name='Employee Contract John Doe')
 
     @pytest.mark.parametrize(
         'sorting, field_name, expected_name',
@@ -274,13 +274,13 @@ class TestComparisonClauseBuilder:
         self, description, test_case_builder, expected_clause_builder, expected_clauses
     ):
         with freeze_time('2020-01-01'):
-            doc = DocumentFactory(name='Invoice 2024-01', created_at=datetime.now(UTC))
+            doc = LocalDocumentFactory(name='Invoice 2024-01', created_at=datetime.now(UTC))
 
         with freeze_time('2015-01-01'):
-            doc_2 = DocumentFactory(name='Employee Contract John Doe', created_at=datetime.now(UTC))
+            doc_2 = LocalDocumentFactory(name='Employee Contract John Doe', created_at=datetime.now(UTC))
 
         with freeze_time('2010-01-01'):
-            doc_3 = DocumentFactory(name='Monthly Sales Report March', created_at=datetime.now(UTC))
+            doc_3 = LocalDocumentFactory(name='Monthly Sales Report March', created_at=datetime.now(UTC))
 
         field, operator, value = test_case_builder(doc, doc_2, doc_3)
         expected = expected_clause_builder(doc, doc_2, doc_3)
@@ -384,9 +384,9 @@ class TestComparisonClauseBuilder:
     def test_create_search_query_integer(
         self, description, test_case_builder, expected_clause_builder, expected_clauses
     ):
-        doc = DocumentFactory(name='Invoice 2024-01', size=1_000_000)
-        doc_2 = DocumentFactory(name='Employee Contract John Doe', size=2_000_000)
-        doc_3 = DocumentFactory(name='Monthly Sales Report March', size=3_000_000)
+        doc = LocalDocumentFactory(name='Invoice 2024-01', size=1_000_000)
+        doc_2 = LocalDocumentFactory(name='Employee Contract John Doe', size=2_000_000)
+        doc_3 = LocalDocumentFactory(name='Monthly Sales Report March', size=3_000_000)
 
         field, operator, value = test_case_builder(doc, doc_2, doc_3)
         expected = expected_clause_builder(doc, doc_2, doc_3)
@@ -685,9 +685,9 @@ class TestSQLAlchemyQueryBuilderNoStrings(_TestBaseCreateSearchQuery):
         ],
     )
     def test_create_search_query_integer(self, description, request_builder, expected_ids_fn):
-        doc = DocumentFactory(size=1_000_000)
-        doc_2 = DocumentFactory(size=2_000_000)
-        doc_3 = DocumentFactory(size=3_000_000)
+        doc = LocalDocumentFactory(size=1_000_000)
+        doc_2 = LocalDocumentFactory(size=2_000_000)
+        doc_3 = LocalDocumentFactory(size=3_000_000)
 
         request_data = request_builder(self, doc, doc_2, doc_3)
         expected_ids = expected_ids_fn(self, doc, doc_2, doc_3)

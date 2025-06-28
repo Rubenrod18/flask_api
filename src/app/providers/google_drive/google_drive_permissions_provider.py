@@ -12,7 +12,7 @@ class GoogleDrivePermissionsProvider(_GoogleDriveBaseProvider):
         self.service = self.service.permissions()
 
     @handle_gdrive_errors()
-    def apply_permission(
+    def apply_public_read_access_permission(
         self,
         item_id: str,
         permission: dict = None,

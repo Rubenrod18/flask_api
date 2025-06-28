@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from app.database.factories.document_factory import DocumentFactory
+from app.database.factories.document_factory import LocalDocumentFactory
 from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Document
@@ -16,7 +16,7 @@ class TestDocumentRepository:
         self.repository = DocumentRepository()
 
     def test_create_document(self):
-        document_data = DocumentFactory.build_dict()
+        document_data = LocalDocumentFactory.build_dict()
         document = self.repository.create(**document_data)
 
         assert document.name == document_data['name']
@@ -54,7 +54,7 @@ class TestDocumentRepository:
     )
     def test_find_document(self, description, args_fn, kwargs_fn):
         user = UserFactory()
-        document = DocumentFactory(created_by_user=user, deleted_at=None)
+        document = LocalDocumentFactory(created_by_user=user, deleted_at=None)
 
         args = args_fn(document)
         kwargs = kwargs_fn(document)
@@ -67,7 +67,7 @@ class TestDocumentRepository:
 
     def test_delete_soft_document(self):
         user = UserFactory()
-        document = DocumentFactory(created_by_user=user)
+        document = LocalDocumentFactory(created_by_user=user)
 
         document = self.repository.delete(document.id)
 
@@ -79,7 +79,7 @@ class TestDocumentRepository:
 
     def test_delete_hard_document(self):
         user = UserFactory()
-        document = DocumentFactory(created_by_user=user)
+        document = LocalDocumentFactory(created_by_user=user)
 
         with pytest.raises(NotImplementedError):
             self.repository.delete(document.id, force_delete=True)

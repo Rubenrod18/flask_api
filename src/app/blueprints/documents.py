@@ -1,3 +1,5 @@
+import logging
+
 from dependency_injector.wiring import inject, Provide
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
@@ -10,13 +12,16 @@ from app.blueprints.base import BaseResource
 from app.di_container import ServiceDIContainer
 from app.extensions import api as root_api
 from app.helpers.request_helpers import get_request_file
+from app.models.document import StorageType
 from app.models.role import ROLES
+from app.serializers.document import DocumentStorageTypeSerializer
 from app.services.document import DocumentService
 
 blueprint = Blueprint('documents', __name__)
 api = root_api.namespace(
     'documents', description='Users with role admin, team_leader or worker can manage these endpoints.'
 )
+logger = logging.getLogger(__name__)
 
 
 class BaseDocumentResource(BaseResource):
@@ -40,10 +45,13 @@ class NewDocumentResource(BaseDocumentResource):
         type=WerkzeugFileStorage,
         location='files',
         required=True,
-        help='You only can upload Excel and PDF files.',
     )
+    parser.add_argument('storage_type', type=str, location='args', required=False, choices=StorageType.to_list())
 
-    serializer_class = serializers.DocumentSerializer
+    serializer_classes = {
+        'document': serializers.DocumentSerializer,
+        'document_storage_type': DocumentStorageTypeSerializer,
+    }
 
     @jwt_required()
     @roles_accepted(*ROLES)
@@ -51,8 +59,12 @@ class NewDocumentResource(BaseDocumentResource):
     @api.expect(parser)
     @api.marshal_with(swagger_models.document_sw_model, envelope='data', code=201)
     def post(self) -> tuple:
-        serializer = self.get_serializer()
+        serializer = self.get_serializer(serializer_name='document')
+        request_args = self.get_serializer(serializer_name='document_storage_type').load(
+            request.args.to_dict(), unknown=EXCLUDE
+        )
         validated_data = serializer.valid_request_file(get_request_file())
+        validated_data.update(request_args)
 
         document = self.service.create(**validated_data)
 
