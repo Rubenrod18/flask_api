@@ -65,7 +65,7 @@ class LocalDocumentFactory(DocumentFactory):
 
 class GDriveDocumentFactory(DocumentFactory):
     storage_type = StorageType.GDRIVE.value
-    storage_id = uuid.uuid4().hex
+    storage_id = str(uuid.uuid1())
 
     @factory.lazy_attribute
     def directory_path(self):

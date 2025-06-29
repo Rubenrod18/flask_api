@@ -54,11 +54,11 @@ class DocumentService(
             raise BadRequest(description=str(e)) from e
 
     def _create_gdrive_file(self, **kwargs) -> dict:
-        gdrive_folder = self.gdrive_files_provider.folder_exists(folder_name=current_user.fs_uniquifier)
-        if gdrive_folder is None:
-            gdrive_folder = self.gdrive_files_provider.create_folder(folder_name=current_user.fs_uniquifier)
-
         try:
+            gdrive_folder = self.gdrive_files_provider.folder_exists(folder_name=current_user.fs_uniquifier)
+            if gdrive_folder is None:
+                gdrive_folder = self.gdrive_files_provider.create_folder(folder_name=current_user.fs_uniquifier)
+
             gdrive_file = self.gdrive_files_provider.create_file_from_stream(
                 parent_id=gdrive_folder['id'],
                 file_name=self.file_storage.get_filename(kwargs['filename']),

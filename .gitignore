@@ -36,3 +36,4 @@ coverage_html_report
 node_modules
 venv
 service_account.json
+test_service_account.json

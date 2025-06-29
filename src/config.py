@@ -155,5 +155,4 @@ class TestConfig(Config):
 
     # Mr Developer
     STORAGE_DIRECTORY = f'{Config.STORAGE_DIRECTORY}/tests'
-    # TODO: PENDINGL
     GOOGLE_SERVICE_ACCOUNT = f'{Config.ROOT_DIRECTORY}/test_service_account.json'

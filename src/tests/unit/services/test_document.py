@@ -8,7 +8,7 @@ import pytest
 from flask import current_app, Response, send_file
 from werkzeug.exceptions import BadRequest
 
-from app.database.factories.document_factory import LocalDocumentFactory
+from app.database.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
 from app.database.factories.user_factory import AdminUserFactory
 from app.file_storages import LocalStorage
 from app.models import Document
@@ -30,7 +30,7 @@ class TestCreateDocumentService(_TestDocumentBaseService):
     @pytest.fixture(autouse=True)
     def setup_extra(self):
         self.pdf_filename = 'example.pdf'
-        self.internal_basename = uuid.uuid1().hex
+        self.internal_basename = str(uuid.uuid1())
         self.internal_filename = f'{self.internal_basename}.pdf'
         self.document = LocalDocumentFactory(name=self.pdf_filename, deleted_at=None)
 
@@ -86,12 +86,62 @@ class TestCreateDocumentService(_TestDocumentBaseService):
         assert created_document.updated_at == created_document.created_at
         assert created_document.deleted_at is None
 
+    @mock.patch('app.services.document.current_user', autospec=True)
+    def test_create_document_file_is_empty(self, mock_current_user):
+        mock_current_user.id = 1
+        document_service = DocumentService()
+        document_service.file_storage.delete_file = MagicMock()
+
+        with pytest.raises(BadRequest) as exc_info:
+            document_service.create(
+                **{
+                    'mime_type': PDF_MIME_TYPE,
+                    'filename': self.pdf_filename,
+                    'file_data': b'',
+                }
+            )
+            document_service.file_storage.delete_file.assert_called_once_with(
+                f'{current_app.config.get("STORAGE_DIRECTORY")}/{self.internal_filename}'
+            )
+
+        assert exc_info.value.code == 400
+        assert exc_info.value.description == 'The file is empty!'
+
+    @mock.patch('app.file_storages.local.os.path.exists', return_value=True)
+    @mock.patch('app.services.document.current_user', autospec=True)
+    def test_create_document_file_already_exists(self, mock_current_user, mock_exists):  # noqa # pylint: disable=unused-argument
+        mock_current_user.id = 1
+
+        document_service = DocumentService()
+        document_service.file_storage.delete_file = MagicMock()
+        document_data = {
+            'mime_type': PDF_MIME_TYPE,
+            'filename': self.pdf_filename,
+            'file_data': b'',
+        }
+
+        with pytest.raises(BadRequest) as exc_info:
+            document_service.create(**document_data)
+            document_service.file_storage.delete_file.assert_not_called()
+
+        assert exc_info.value.code == 400
+        assert exc_info.value.description == 'The file already exists!'
+
+
+class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
+        self.pdf_filename = 'example.pdf'
+        self.internal_basename = str(uuid.uuid1())
+        self.internal_filename = f'{self.internal_basename}.pdf'
+        self.document = GDriveDocumentFactory(name=self.pdf_filename, deleted_at=None)
+
     @mock.patch('app.services.document.uuid', autospec=True)
     @mock.patch('app.services.document.current_user', autospec=True)
     @mock.patch('app.services.role.db.session', autospec=True)
     def test_create_document_in_google_drive(self, mock_session, mock_current_user, mock_uuid):
         mock_current_user.id = 1
-        mock_current_user.fs_uniquifier = str(uuid.uuid4())
+        mock_current_user.fs_uniquifier = str(uuid.uuid1())
         mock_uuid.uuid1.return_value = MagicMock(hex=self.internal_basename)
 
         gdrive_files_provider = MagicMock(spec=GoogleDriveFilesProvider)
@@ -159,52 +209,14 @@ class TestCreateDocumentService(_TestDocumentBaseService):
         assert created_document.name == self.pdf_filename
         assert created_document.mime_type == PDF_MIME_TYPE
         assert created_document.size == self.document.size
-        assert created_document.storage_type == StorageType.LOCAL.value
-        assert created_document.storage_id is None
+        assert created_document.size == self.document.size
+        assert created_document.directory_path is None
+        assert created_document.internal_filename is None
+        assert created_document.storage_type == StorageType.GDRIVE.value
+        assert uuid.UUID(created_document.storage_id, version=1)
         assert created_document.created_at
         assert created_document.updated_at == created_document.created_at
         assert created_document.deleted_at is None
-
-    @mock.patch('app.services.document.current_user', autospec=True)
-    def test_create_document_file_is_empty(self, mock_current_user):
-        mock_current_user.id = 1
-        document_service = DocumentService()
-        document_service.file_storage.delete_file = MagicMock()
-
-        with pytest.raises(BadRequest) as exc_info:
-            document_service.create(
-                **{
-                    'mime_type': PDF_MIME_TYPE,
-                    'filename': self.pdf_filename,
-                    'file_data': b'',
-                }
-            )
-            document_service.file_storage.delete_file.assert_called_once_with(
-                f'{current_app.config.get("STORAGE_DIRECTORY")}/{self.internal_filename}'
-            )
-
-        assert exc_info.value.code == 400
-        assert exc_info.value.description == 'The file is empty!'
-
-    @mock.patch('app.file_storages.local.os.path.exists', return_value=True)
-    @mock.patch('app.services.document.current_user', autospec=True)
-    def test_create_document_file_already_exists(self, mock_current_user, mock_exists):  # noqa # pylint: disable=unused-argument
-        mock_current_user.id = 1
-
-        document_service = DocumentService()
-        document_service.file_storage.delete_file = MagicMock()
-        document_data = {
-            'mime_type': PDF_MIME_TYPE,
-            'filename': self.pdf_filename,
-            'file_data': b'',
-        }
-
-        with pytest.raises(BadRequest) as exc_info:
-            document_service.create(**document_data)
-            document_service.file_storage.delete_file.assert_not_called()
-
-        assert exc_info.value.code == 400
-        assert exc_info.value.description == 'The file already exists!'
 
 
 class TestFindByIdDocumentService(_TestDocumentBaseService):
