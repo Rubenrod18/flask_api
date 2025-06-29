@@ -16,7 +16,7 @@ from app.models.document import StorageType
 from app.providers.google_drive import GoogleDriveFilesProvider, GoogleDrivePermissionsProvider
 from app.repositories import DocumentRepository
 from app.services import DocumentService
-from app.utils.constants import PDF_MIME_TYPE
+from app.utils.constants import MS_EXCEL_MIME_TYPE, PDF_MIME_TYPE
 from tests.conftest import BytesIOMatcher
 
 
@@ -26,7 +26,7 @@ class _TestDocumentBaseService:
         self.admin_user = AdminUserFactory(deleted_at=None)
 
 
-class TestCreateDocumentService(_TestDocumentBaseService):
+class TestCreateLocalDocumentService(_TestDocumentBaseService):
     @pytest.fixture(autouse=True)
     def setup_extra(self):
         self.pdf_filename = 'example.pdf'
@@ -37,7 +37,7 @@ class TestCreateDocumentService(_TestDocumentBaseService):
     @mock.patch('app.services.document.uuid', autospec=True)
     @mock.patch('app.services.document.current_user', autospec=True)
     @mock.patch('app.services.role.db.session', autospec=True)
-    def test_create_document_in_local(self, mock_session, mock_current_user, mock_uuid):
+    def test_create_local_document(self, mock_session, mock_current_user, mock_uuid):
         mock_current_user.id = 1
         mock_uuid.uuid1.return_value = MagicMock(hex=self.internal_basename)
 
@@ -139,7 +139,7 @@ class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
     @mock.patch('app.services.document.uuid', autospec=True)
     @mock.patch('app.services.document.current_user', autospec=True)
     @mock.patch('app.services.role.db.session', autospec=True)
-    def test_create_document_in_google_drive(self, mock_session, mock_current_user, mock_uuid):
+    def test_create_google_drive_document(self, mock_session, mock_current_user, mock_uuid):
         mock_current_user.id = 1
         mock_current_user.fs_uniquifier = str(uuid.uuid1())
         mock_uuid.uuid1.return_value = MagicMock(hex=self.internal_basename)
@@ -151,7 +151,7 @@ class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
         gdrive_file_id = 7
         gdrive_files_provider.create_file_from_stream.return_value = {
             'id': gdrive_file_id,
-            'mimeType': 'application/pdf',
+            'mimeType': PDF_MIME_TYPE,
             'size': 9_556_144,
             'name': self.pdf_filename,
         }
@@ -214,6 +214,7 @@ class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
         assert created_document.internal_filename is None
         assert created_document.storage_type == StorageType.GDRIVE.value
         assert uuid.UUID(created_document.storage_id, version=1)
+        assert created_document.url == f'https://drive.google.com/file/d/{created_document.storage_id}/view'
         assert created_document.created_at
         assert created_document.updated_at == created_document.created_at
         assert created_document.deleted_at is None
@@ -260,63 +261,62 @@ class TestGetDocumentService(_TestDocumentBaseService):
         assert documents[0].id == self.document.id
 
 
-class TestSaveDocumentService(_TestDocumentBaseService):
+class TestSaveLocalDocumentService(_TestDocumentBaseService):
     @pytest.fixture(autouse=True)
     def setup_extra(self):
-        self.pdf_filename = 'example.pdf'
+        self.excel_filename = 'sample.xlsx'
         self.internal_basename = uuid.uuid1().hex
-        self.internal_filename = f'{self.internal_basename}.pdf'
+        self.internal_filename = f'{self.internal_basename}.xlsx'
 
     @mock.patch('app.services.document.uuid', autospec=True)
-    @mock.patch('app.services.document.current_user', autospec=True)
-    def test_save_document(self, mock_current_user, mock_uuid):
-        mock_current_user.id = self.admin_user.id
+    def test_save_local_document(self, mock_uuid):
         mock_uuid.uuid1.return_value = MagicMock(hex=self.internal_basename)
 
         local_storage = MagicMock(spec=LocalStorage)
         local_storage.save_bytes.return_value = None
-        local_storage.get_filename.return_value = self.pdf_filename
+        local_storage.get_filename.return_value = self.excel_filename
         filesize = 1_000_000
         local_storage.get_filesize.return_value = filesize
 
         mock_doc_repo = MagicMock(spec=DocumentRepository)
         document = LocalDocumentFactory(
-            name=self.pdf_filename,
+            name=self.excel_filename,
             size=filesize,
             deleted_at=None,
+            mime_type=MS_EXCEL_MIME_TYPE,
             directory_path=current_app.config.get('STORAGE_DIRECTORY'),
             internal_filename=self.internal_filename,
         )
-        mock_doc_repo.find_by_id.return_value = document
         mock_doc_repo.save.return_value = document
         document_service = DocumentService(mock_doc_repo, local_storage)
 
         filepath = f'{current_app.config.get("STORAGE_DIRECTORY")}/{self.internal_filename}'
-        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{self.pdf_filename}'
+        excel_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{self.excel_filename}'
         document_data = {
-            'mime_type': PDF_MIME_TYPE,
-            'filename': pdf_file,  # NOTE: `helpers.request_helpers.get_request_file` returns the abs path of the file
-            'file_data': open(pdf_file, 'rb').read(),
+            'mime_type': MS_EXCEL_MIME_TYPE,
+            'filename': excel_file,  # NOTE: `helpers.request_helpers.get_request_file` returns the abs path of the file
+            'file_data': open(excel_file, 'rb').read(),
+            'internal_filename': self.internal_filename,
         }
 
         document = document_service.save(document.id, **document_data)
 
-        mock_doc_repo.find_by_id.assert_called_once_with(document.id)
         local_storage.save_bytes.assert_called_once_with(document_data.get('file_data'), filepath, override=True)
-        local_storage.get_filename.assert_called_once_with(pdf_file)
+        local_storage.get_filename.assert_called_once_with(excel_file)
         local_storage.get_filesize.assert_called_once_with(filepath)
         mock_doc_repo.save.assert_called_once_with(
             document.id,
             **{
-                'name': self.pdf_filename,
-                'mime_type': PDF_MIME_TYPE,
+                'name': self.excel_filename,
+                'mime_type': MS_EXCEL_MIME_TYPE,
                 'size': filesize,
+                'internal_filename': self.internal_filename,
             },
         )
         assert isinstance(document, Document)
         assert document.created_by == self.admin_user.id
-        assert document.name == self.pdf_filename
-        assert document.mime_type == PDF_MIME_TYPE
+        assert document.name == self.excel_filename
+        assert document.mime_type == MS_EXCEL_MIME_TYPE
         assert document.size == filesize
         assert document.storage_type == StorageType.LOCAL.value
         assert document.storage_id is None
@@ -337,7 +337,7 @@ class TestSaveDocumentService(_TestDocumentBaseService):
                 document.id,
                 **{
                     'mime_type': PDF_MIME_TYPE,
-                    'filename': self.pdf_filename,
+                    'filename': self.excel_filename,
                     'file_data': b'',
                 },
             )
@@ -347,6 +347,88 @@ class TestSaveDocumentService(_TestDocumentBaseService):
 
         assert exc_info.value.code == 400
         assert exc_info.value.description == 'The file is empty!'
+
+
+class TestSaveGoogleDriveDocumentService(_TestDocumentBaseService):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
+        self.excel_file = 'sample.xlsx'
+        self.internal_basename = str(uuid.uuid1())
+        self.internal_filename = f'{self.internal_basename}.xlsx'
+        self.document = GDriveDocumentFactory(
+            name=self.excel_file,
+            deleted_at=None,
+            mime_type=MS_EXCEL_MIME_TYPE,
+        )
+
+    @mock.patch('app.services.document.current_user', autospec=True)
+    def test_save_google_drive_document(self, mock_current_user):
+        mock_current_user.fs_uniquifier = str(uuid.uuid1())
+
+        gdrive_files_provider = MagicMock(spec=GoogleDriveFilesProvider)
+        gdrive_folder_id = 5
+        gdrive_files_provider.folder_exists.return_value = {'id': gdrive_folder_id}
+        gdrive_file_id = 7
+        gdrive_files_provider.upload_file_from_stream.return_value = {
+            'id': gdrive_file_id,
+            'mimeType': MS_EXCEL_MIME_TYPE,
+            'size': 9_556_144,
+            'name': self.excel_file,
+        }
+
+        local_storage = MagicMock(spec=LocalStorage)
+        local_storage.get_filename.return_value = self.excel_file
+
+        mock_doc_repo = MagicMock(spec=DocumentRepository)
+        mock_doc_repo.find_by_id.return_value = self.document
+        mock_doc_repo.save.return_value = self.document
+        document_service = DocumentService(
+            document_repository=mock_doc_repo,
+            file_storage=local_storage,
+            gdrive_files_provider=gdrive_files_provider,
+        )
+
+        excel_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{self.excel_file}'
+        document_data = {
+            'mime_type': MS_EXCEL_MIME_TYPE,
+            'filename': excel_file,  # NOTE: `helpers.request_helpers.get_request_file` returns the abs path of the file
+            'file_data': open(excel_file, 'rb').read(),
+            'storage_type': StorageType.GDRIVE.value,
+        }
+
+        created_document = document_service.save(self.document.id, **document_data)
+
+        mock_doc_repo.find_by_id.assert_called_once_with(self.document.id)
+        local_storage.get_filename.assert_called_once_with(excel_file)
+        gdrive_files_provider.upload_file_from_stream.assert_called_once_with(
+            file_id=self.document.storage_id,
+            file_name=self.excel_file,
+            file_stream=BytesIOMatcher(document_data.get('file_data')),
+            mime_type=MS_EXCEL_MIME_TYPE,
+            fields='name, mimeType, size',
+        )
+        mock_doc_repo.save.assert_called_once_with(
+            self.document.id,
+            **{
+                'name': self.excel_file,
+                'mime_type': MS_EXCEL_MIME_TYPE,
+                'size': 9_556_144,
+            },
+        )
+        assert isinstance(created_document, Document)
+        assert created_document.created_by == self.admin_user.id
+        assert created_document.name == self.excel_file
+        assert created_document.mime_type == MS_EXCEL_MIME_TYPE
+        assert created_document.size == self.document.size
+        assert created_document.size == self.document.size
+        assert created_document.directory_path is None
+        assert created_document.internal_filename is None
+        assert created_document.storage_type == StorageType.GDRIVE.value
+        assert uuid.UUID(created_document.storage_id, version=1)
+        assert created_document.url == f'https://drive.google.com/file/d/{created_document.storage_id}/view'
+        assert created_document.created_at
+        assert created_document.updated_at == created_document.created_at
+        assert created_document.deleted_at is None
 
 
 class TestDeleteDocumentService(_TestDocumentBaseService):

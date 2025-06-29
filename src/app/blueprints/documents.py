@@ -85,10 +85,12 @@ class DocumentResource(BaseDocumentResource):
         ),
     )
     parser.add_argument('as_attachment', type=int, location='args', required=False, choices=(0, 1))
+    parser.add_argument('storage_type', type=str, location='args', required=False, choices=StorageType.to_list())
 
     serializer_classes = {
         'document': serializers.DocumentSerializer,
         'document_attachment': serializers.DocumentAttachmentSerializer,
+        'document_storage_type': DocumentStorageTypeSerializer,
     }
 
     @jwt_required()
@@ -131,10 +133,14 @@ class DocumentResource(BaseDocumentResource):
     @api.marshal_with(swagger_models.document_sw_model, envelope='data')
     def put(self, document_id: int) -> tuple:
         serializer = self.get_serializer(serializer_name='document')
+        request_args = self.get_serializer(serializer_name='document_storage_type').load(
+            request.args.to_dict(), unknown=EXCLUDE
+        )
         serializer.load({'id': document_id}, partial=True)
-        data = serializer.valid_request_file(get_request_file())
+        validated_data = serializer.valid_request_file(get_request_file())
+        validated_data.update(request_args)
 
-        document = self.service.save(document_id, **data)
+        document = self.service.save(document_id, **validated_data)
 
         return serializer.dump(document), 200
 

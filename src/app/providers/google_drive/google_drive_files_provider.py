@@ -89,14 +89,10 @@ class GoogleDriveFilesProvider(_GoogleDriveBaseProvider):
         file_name: str,
         file_stream: IO[bytes],
         mime_type: str,
-        parent_id: str = None,
         fields: str = None,
     ) -> dict:
         fields = fields or 'id, name, mimeType'
         file_metadata = {'name': file_name}
-
-        if parent_id:
-            file_metadata['parents'] = [parent_id]
 
         return self.service.update(
             fileId=file_id,

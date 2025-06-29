@@ -1,5 +1,4 @@
 import io
-import logging
 import mimetypes
 import uuid
 
@@ -15,8 +14,6 @@ from app.models.document import StorageType
 from app.providers.google_drive import GoogleDriveFilesProvider, GoogleDrivePermissionsProvider
 from app.repositories import DocumentRepository
 from app.services import base as b
-
-logger = logging.getLogger(__name__)
 
 
 class DocumentService(
@@ -104,29 +101,59 @@ class DocumentService(
     def get(self, **kwargs) -> dict:
         return self.repository.get(**kwargs)
 
-    def save(self, record_id: int, **kwargs) -> Document:
-        # HACK: PENDING TO ADD GDRIVE
-        document = self.repository.find_by_id(record_id)
-        # QUESTION: The app doesn't have file versioning, should we consider this feature in the future?
-        filepath = f'{document.directory_path}/{document.internal_filename}'
+    def _save_local_file(self, **kwargs) -> dict:
+        file_extension = mimetypes.guess_extension(kwargs['mime_type'])
+        internal_filename = f'{uuid.uuid1().hex}{file_extension}'
+        filepath = f'{current_app.config.get("STORAGE_DIRECTORY")}/{internal_filename}'
 
         try:
             self.file_storage.save_bytes(kwargs.get('file_data'), filepath, override=True)
 
-            data = {
+            return {
                 'name': self.file_storage.get_filename(kwargs.get('filename')),
+                'internal_filename': internal_filename,
                 'mime_type': kwargs.get('mime_type'),
                 'size': self.file_storage.get_filesize(filepath),
             }
-            document = self.repository.save(record_id, **data)
-            db.session.flush()
         except (FileExistsError, FileEmptyError) as e:
             if isinstance(e, FileEmptyError):
                 self.file_storage.delete_file(filepath)
 
             raise BadRequest(description=str(e)) from e
-        else:
-            return document.reload()
+
+    def _save_gdrive_file(self, **kwargs) -> dict:
+        try:
+            gdrive_file = self.gdrive_files_provider.upload_file_from_stream(
+                file_id=kwargs['document'].storage_id,
+                file_name=self.file_storage.get_filename(kwargs['filename']),
+                file_stream=io.BytesIO(kwargs['file_data']),
+                mime_type=kwargs['mime_type'],
+                fields='name, mimeType, size',
+            )
+
+            return {
+                'name': gdrive_file['name'],
+                'mime_type': gdrive_file['mimeType'],
+                'size': gdrive_file['size'],
+            }
+        except (Exception, GoogleDriveError) as e:
+            if 'gdrive_file' in locals():
+                self.gdrive_files_provider.delete_file(gdrive_file['id'])
+
+            raise e
+
+    def save(self, record_id: int, **kwargs) -> Document:
+        storage_type = kwargs.get('storage_type', StorageType.LOCAL.value)
+        storage_types = {
+            StorageType.LOCAL.value: self._save_local_file,
+            StorageType.GDRIVE.value: self._save_gdrive_file,
+        }
+
+        document = self.repository.find_by_id(record_id)
+        kwargs['document'] = document
+        data = storage_types.get(storage_type, self._save_local_file)(**kwargs)
+
+        return self.repository.save(record_id, **data)
 
     def delete(self, record_id: int) -> Document:
         return self.repository.delete(record_id)

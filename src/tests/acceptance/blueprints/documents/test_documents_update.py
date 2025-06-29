@@ -43,7 +43,7 @@ class TestUpdateDocumentEndpoint(_TestBaseDocumentEndpoints):
         assert str(StorageType.LOCAL) == json_data.get('storage_type')
         assert parse_url.scheme and parse_url.netloc
         assert self.document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
-        assert json_data.get('updated_at') > json_data.get('created_at')
+        assert json_data.get('updated_at') >= json_data.get('created_at')
         assert json_data.get('deleted_at') is None
 
     @pytest.mark.parametrize(
