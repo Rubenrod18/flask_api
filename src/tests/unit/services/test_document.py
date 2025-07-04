@@ -12,7 +12,7 @@ from app.database.factories.document_factory import GDriveDocumentFactory, Local
 from app.database.factories.user_factory import AdminUserFactory
 from app.file_storages import LocalStorage
 from app.models import Document
-from app.models.document import StorageType
+from app.models.document import StorageTypes
 from app.repositories import DocumentRepository
 from app.services import DocumentService
 from app.utils.constants import MS_EXCEL_MIME_TYPE, PDF_MIME_TYPE
@@ -83,7 +83,7 @@ class TestCreateLocalDocumentService(_TestDocumentBaseService):
         assert created_document.name == self.pdf_filename
         assert created_document.mime_type == PDF_MIME_TYPE
         assert created_document.size == self.document.size
-        assert created_document.storage_type == StorageType.LOCAL.value
+        assert created_document.storage_type == StorageTypes.LOCAL.value
         assert created_document.storage_id is None
         assert created_document.created_at
         assert created_document.updated_at == created_document.created_at
@@ -183,7 +183,7 @@ class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
             'mime_type': PDF_MIME_TYPE,
             'filename': pdf_file,  # NOTE: `helpers.request_helpers.get_request_file` returns the abs path of the file
             'file_data': open(pdf_file, 'rb').read(),
-            'storage_type': StorageType.GDRIVE.value,
+            'storage_type': StorageTypes.GDRIVE.value,
         }
 
         created_document = document_service.create(**document_data)
@@ -211,7 +211,7 @@ class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
                 'name': self.pdf_filename,
                 'mime_type': PDF_MIME_TYPE,
                 'size': 9_556_144,
-                'storage_type': StorageType.GDRIVE,
+                'storage_type': StorageTypes.GDRIVE,
                 'storage_id': gdrive_file_id,
             }
         )
@@ -225,7 +225,7 @@ class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
         assert created_document.size == self.document.size
         assert created_document.directory_path is None
         assert created_document.internal_filename is None
-        assert created_document.storage_type == StorageType.GDRIVE.value
+        assert created_document.storage_type == StorageTypes.GDRIVE.value
         assert uuid.UUID(created_document.storage_id, version=1)
         assert created_document.url == f'https://drive.google.com/file/d/{created_document.storage_id}/view'
         assert created_document.created_at
@@ -344,7 +344,7 @@ class TestSaveLocalDocumentService(_TestDocumentBaseService):
         assert document.name == self.excel_filename
         assert document.mime_type == MS_EXCEL_MIME_TYPE
         assert document.size == filesize
-        assert document.storage_type == StorageType.LOCAL.value
+        assert document.storage_type == StorageTypes.LOCAL.value
         assert document.storage_id is None
         assert document.created_at
         assert document.updated_at == document.created_at
@@ -422,7 +422,7 @@ class TestSaveGoogleDriveDocumentService(_TestDocumentBaseService):
             'mime_type': MS_EXCEL_MIME_TYPE,
             'filename': excel_file,  # NOTE: `helpers.request_helpers.get_request_file` returns the abs path of the file
             'file_data': open(excel_file, 'rb').read(),
-            'storage_type': StorageType.GDRIVE.value,
+            'storage_type': StorageTypes.GDRIVE.value,
         }
 
         created_document = document_service.save(self.document.id, **document_data)
@@ -453,7 +453,7 @@ class TestSaveGoogleDriveDocumentService(_TestDocumentBaseService):
         assert created_document.size == self.document.size
         assert created_document.directory_path is None
         assert created_document.internal_filename is None
-        assert created_document.storage_type == StorageType.GDRIVE.value
+        assert created_document.storage_type == StorageTypes.GDRIVE.value
         assert uuid.UUID(created_document.storage_id, version=1)
         assert created_document.url == f'https://drive.google.com/file/d/{created_document.storage_id}/view'
         assert created_document.created_at
@@ -528,7 +528,7 @@ class TestGetDocumentContentDocumentService(_TestDocumentBaseService):
             ),
             (
                 None,
-                {'storage_type': StorageType.LOCAL.value},
+                {'storage_type': StorageTypes.LOCAL.value},
                 lambda doc: {
                     'path_or_file': b'',
                     'mimetype': PDF_MIME_TYPE,
@@ -575,7 +575,7 @@ class TestGetDocumentContentDocumentService(_TestDocumentBaseService):
         'request_args, expected_kwargs',
         [
             (
-                {'storage_type': StorageType.GDRIVE.value},
+                {'storage_type': StorageTypes.GDRIVE.value},
                 lambda doc: {
                     'path_or_file': b'',
                     'mimetype': PDF_MIME_TYPE,

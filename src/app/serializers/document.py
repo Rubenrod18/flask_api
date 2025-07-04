@@ -4,7 +4,7 @@ from werkzeug.exceptions import NotFound, UnprocessableEntity
 
 from app.extensions import ma
 from app.models import Document
-from app.models.document import StorageType
+from app.models.document import StorageTypes
 from app.repositories import DocumentRepository
 from app.serializers.core import RepositoryMixin
 from config import Config
@@ -84,4 +84,4 @@ class DocumentAttachmentSerializer(ma.Schema):
 
 
 class DocumentStorageTypeSerializer(ma.Schema):
-    storage_type = fields.Str(validate=validate.OneOf(StorageType.to_list()))
+    storage_type = fields.Str(validate=validate.OneOf(StorageTypes.to_list()))

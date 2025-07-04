@@ -10,7 +10,7 @@ from app.exceptions import FileEmptyError, GoogleDriveError
 from app.extensions import db
 from app.file_storages import LocalStorage
 from app.models import Document
-from app.models.document import StorageType
+from app.models.document import StorageTypes
 from app.providers.google_drive import GoogleDriveFilesProvider, GoogleDrivePermissionsProvider
 from app.repositories import DocumentRepository
 from app.services import base as b
@@ -69,7 +69,7 @@ class DocumentService(
                 'name': gdrive_file['name'],
                 'mime_type': gdrive_file['mimeType'],
                 'size': gdrive_file['size'],
-                'storage_type': StorageType.GDRIVE,
+                'storage_type': StorageTypes.GDRIVE,
                 'storage_id': gdrive_file['id'],
             }
         except (Exception, GoogleDriveError) as e:
@@ -79,10 +79,10 @@ class DocumentService(
             raise e
 
     def create(self, **kwargs) -> Document:
-        storage_type = kwargs.get('storage_type', StorageType.LOCAL.value)
+        storage_type = kwargs.get('storage_type', StorageTypes.LOCAL.value)
         storage_types = {
-            StorageType.LOCAL.value: self._create_local_file,
-            StorageType.GDRIVE.value: self._create_gdrive_file,
+            StorageTypes.LOCAL.value: self._create_local_file,
+            StorageTypes.GDRIVE.value: self._create_gdrive_file,
         }
 
         document_data = {'created_by': current_user.id}
@@ -143,10 +143,10 @@ class DocumentService(
             raise e
 
     def save(self, record_id: int, **kwargs) -> Document:
-        storage_type = kwargs.get('storage_type', StorageType.LOCAL.value)
+        storage_type = kwargs.get('storage_type', StorageTypes.LOCAL.value)
         storage_types = {
-            StorageType.LOCAL.value: self._save_local_file,
-            StorageType.GDRIVE.value: self._save_gdrive_file,
+            StorageTypes.LOCAL.value: self._save_local_file,
+            StorageTypes.GDRIVE.value: self._save_gdrive_file,
         }
 
         document = self.repository.find_by_id(record_id)
@@ -167,10 +167,10 @@ class DocumentService(
 
     def get_document_content(self, document_id: int, request_args: dict) -> Response:
         as_attachment = request_args.get('as_attachment', 0)
-        storage_type = request_args.get('storage_type', StorageType.LOCAL.value)
+        storage_type = request_args.get('storage_type', StorageTypes.LOCAL.value)
         storage_types = {
-            StorageType.LOCAL.value: self._get_local_document_content,
-            StorageType.GDRIVE.value: self._get_gdrive_document_content,
+            StorageTypes.LOCAL.value: self._get_local_document_content,
+            StorageTypes.GDRIVE.value: self._get_gdrive_document_content,
         }
 
         document = self.repository.find_by_id(document_id)

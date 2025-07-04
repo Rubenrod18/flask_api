@@ -10,7 +10,7 @@ from werkzeug.exceptions import NotFound, UnprocessableEntity
 from app.database.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
 from app.database.factories.user_factory import UserFactory
 from app.models import Document
-from app.models.document import StorageType
+from app.models.document import StorageTypes
 from app.repositories import DocumentRepository
 from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
 
@@ -40,8 +40,8 @@ class TestDocumentSerializer:
     @pytest.mark.parametrize(
         'factory_cls, expected_storage_type, expected_url_substring',
         [
-            (LocalDocumentFactory, StorageType.LOCAL, 'http://flask-api.local'),
-            (GDriveDocumentFactory, StorageType.GDRIVE, 'https://drive.google.com/file/d'),
+            (LocalDocumentFactory, StorageTypes.LOCAL, 'http://flask-api.local'),
+            (GDriveDocumentFactory, StorageTypes.GDRIVE, 'https://drive.google.com/file/d'),
         ],
         ids=['local-storage', 'gdrive-storage'],
     )

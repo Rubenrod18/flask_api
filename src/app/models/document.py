@@ -7,7 +7,7 @@ from app.models.user import User
 from app.utils.constants import BaseEnum
 
 
-class StorageType(BaseEnum):
+class StorageTypes(BaseEnum):
     LOCAL = 'local'
     GDRIVE = 'gdrive'
 
@@ -25,7 +25,7 @@ class Document(Base):
     mime_type = sa.Column(sa.String(255), nullable=False)
     size = sa.Column(sa.Integer, nullable=False)
 
-    storage_type = sa.Column(sa.Enum(StorageType), nullable=False, default=StorageType.LOCAL)
+    storage_type = sa.Column(sa.Enum(StorageTypes), nullable=False, default=StorageTypes.LOCAL)
     storage_id = sa.Column(sa.String(255), nullable=True)
 
     # Local-only fields (still used if storage_type == LOCAL)
@@ -34,13 +34,13 @@ class Document(Base):
 
     @property
     def url(self) -> str | None:
-        if self.storage_type == StorageType.LOCAL:
+        if self.storage_type == StorageTypes.LOCAL:
             return url_for('documents_document_resource', document_id=self.id, _external=True)
-        elif self.storage_type == StorageType.GDRIVE:
+        elif self.storage_type == StorageTypes.GDRIVE:
             return f'https://drive.google.com/file/d/{self.storage_id}/view'
         return None
 
     def get_filepath(self) -> str | None:
-        if self.storage_type == StorageType.LOCAL:
+        if self.storage_type == StorageTypes.LOCAL:
             return f'{self.directory_path}/{self.internal_filename}'
         return None

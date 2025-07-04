@@ -10,7 +10,7 @@ from app.blueprints.base import BaseResource
 from app.di_container import ServiceDIContainer
 from app.extensions import api as root_api
 from app.helpers.request_helpers import get_request_file
-from app.models.document import StorageType
+from app.models.document import StorageTypes
 from app.models.role import ROLES
 from app.serializers.document import DocumentStorageTypeSerializer
 from app.services.document import DocumentService
@@ -43,7 +43,7 @@ class NewDocumentResource(BaseDocumentResource):
         location='files',
         required=True,
     )
-    parser.add_argument('storage_type', type=str, location='args', required=False, choices=StorageType.to_list())
+    parser.add_argument('storage_type', type=str, location='args', required=False, choices=StorageTypes.to_list())
 
     serializer_classes = {
         'document': serializers.DocumentSerializer,
@@ -82,7 +82,7 @@ class DocumentResource(BaseDocumentResource):
         ),
     )
     parser.add_argument('as_attachment', type=int, location='args', required=False, choices=(0, 1))
-    parser.add_argument('storage_type', type=str, location='args', required=False, choices=StorageType.to_list())
+    parser.add_argument('storage_type', type=str, location='args', required=False, choices=StorageTypes.to_list())
 
     serializer_classes = {
         'document': serializers.DocumentSerializer,

@@ -4,7 +4,7 @@ import pytest
 from flask import current_app
 
 from app.file_storages import LocalStorage
-from app.models.document import StorageType
+from app.models.document import StorageTypes
 from app.utils.constants import PDF_MIME_TYPE
 
 from ._base_documents_test import _TestBaseDocumentEndpoints
@@ -34,7 +34,7 @@ class TestSaveDocumentEndpoint(_TestBaseDocumentEndpoints):
         assert pdf_filename == json_data.get('name')
         assert PDF_MIME_TYPE == json_data.get('mime_type')
         assert self.local_storage.get_filesize(pdf_file) == json_data.get('size')
-        assert str(StorageType.LOCAL) == json_data.get('storage_type')
+        assert str(StorageTypes.LOCAL) == json_data.get('storage_type')
         assert parse_url.scheme and parse_url.netloc
         assert json_data.get('created_at')
         assert json_data.get('updated_at') == json_data.get('created_at')
@@ -58,7 +58,7 @@ class TestSaveDocumentEndpoint(_TestBaseDocumentEndpoints):
         assert pdf_filename == json_data.get('name')
         assert PDF_MIME_TYPE == json_data.get('mime_type')
         assert self.local_storage.get_filesize(pdf_file) == json_data.get('size')
-        assert str(StorageType.LOCAL) == json_data.get('storage_type')
+        assert str(StorageTypes.LOCAL) == json_data.get('storage_type')
         assert parse_url.scheme and parse_url.netloc
         assert json_data.get('created_at')
         assert json_data.get('updated_at') == json_data.get('created_at')
