@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_marshmallow import Schema
 from flask_restx import Resource
 
@@ -47,6 +47,21 @@ class BaseResource(Resource, SerializerMixin):
     def __init__(self, rest_api: str, service, *args, **kwargs):
         super().__init__(rest_api, *args, **kwargs)
         self.service = service
+
+    @staticmethod
+    def get_request_file(field_name: str = None) -> dict:
+        field_name = field_name or 'document'
+        file = {}
+        request_file = request.files.to_dict().get(field_name)
+
+        if request_file:
+            file = {
+                'mime_type': request_file.mimetype,
+                'filename': request_file.filename,
+                'file_data': request_file.read(),
+            }
+
+        return file
 
 
 @api.route('/welcome')
