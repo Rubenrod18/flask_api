@@ -9,7 +9,6 @@ from app import serializers, swagger as swagger_models
 from app.blueprints.base import BaseResource
 from app.di_container import ServiceDIContainer
 from app.extensions import api as root_api
-from app.helpers.request_helpers import get_request_file
 from app.models.document import StorageTypes
 from app.models.role import ROLES
 from app.serializers.document import DocumentStorageTypeSerializer
@@ -60,7 +59,7 @@ class NewDocumentResource(BaseDocumentResource):
         request_args = self.get_serializer(serializer_name='document_storage_type').load(
             request.args.to_dict(), unknown=EXCLUDE
         )
-        validated_data = serializer.valid_request_file(get_request_file())
+        validated_data = serializer.valid_request_file(self.get_request_file())
         validated_data.update(request_args)
 
         document = self.service.create(**validated_data)
@@ -129,7 +128,7 @@ class DocumentResource(BaseDocumentResource):
     def put(self, document_id: int) -> tuple:
         serializer = self.get_serializer(serializer_name='document')
         serializer.load({'id': document_id}, partial=True)
-        validated_data = serializer.valid_request_file(get_request_file())
+        validated_data = serializer.valid_request_file(self.get_request_file())
 
         document = self.service.save(document_id, **validated_data)
 
