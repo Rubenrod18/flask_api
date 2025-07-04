@@ -1,6 +1,6 @@
-from app.database.factories.document_factory import DocumentFactory
-from app.database.seeds import seed_actions
-from app.database.seeds.base_seeder import FactorySeeder
+from tests.factories.document_factory import DocumentFactory
+from tests.seeds import seed_actions
+from tests.seeds.base_seeder import FactorySeeder
 
 
 class Seeder(FactorySeeder):

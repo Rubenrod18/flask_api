@@ -3,8 +3,8 @@ import pytest
 from app.celery.tasks import (
     create_word_and_excel_documents_task,
 )
-from app.database.factories.user_factory import UserFactory
 from app.file_storages import LocalStorage
+from tests.factories.user_factory import UserFactory
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument

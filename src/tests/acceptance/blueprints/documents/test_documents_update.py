@@ -4,9 +4,9 @@ from urllib.parse import urlparse
 import pytest
 from flask import current_app
 
-from app.database.factories.document_factory import LocalDocumentFactory
 from app.file_storages import LocalStorage
 from app.models.document import StorageTypes
+from tests.factories.document_factory import LocalDocumentFactory
 
 from ._base_documents_test import _TestBaseDocumentEndpoints
 

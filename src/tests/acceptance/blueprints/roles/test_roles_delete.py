@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pytest
 
-from app.database.factories.role_factory import RoleFactory
 from tests.acceptance.blueprints.roles._base_roles_test import _TestBaseRoleEndpoints
+from tests.factories.role_factory import RoleFactory
 
 
 # pylint: disable=attribute-defined-outside-init

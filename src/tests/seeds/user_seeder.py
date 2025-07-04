@@ -3,13 +3,13 @@ from random import choice
 
 from sqlalchemy import func
 
-from app.database.factories.user_factory import UserFactory
-from app.database.seeds import seed_actions
-from app.database.seeds.base_seeder import FactorySeeder, RepositorySeeder
 from app.extensions import db
 from app.models import Role, User
 from app.models.role import ADMIN_ROLE, ROLES
 from app.repositories import RoleRepository, UserRepository
+from tests.factories.user_factory import UserFactory
+from tests.seeds import seed_actions
+from tests.seeds.base_seeder import FactorySeeder, RepositorySeeder
 
 
 class Seeder(FactorySeeder, RepositorySeeder):

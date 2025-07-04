@@ -4,13 +4,13 @@ import random
 import factory
 from sqlalchemy import func
 
-from app.database.factories.base_factory import BaseFactory
-from app.database.factories.role_factory import AdminRoleFactory, RoleFactory, TeamLeaderRoleFactory, WorkerRoleFactory
 from app.extensions import db
 from app.models import Role, User
 from app.models.role import ADMIN_ROLE
 from app.models.user import Genre
 from app.serializers import UserSerializer
+from tests.factories.base_factory import BaseFactory
+from tests.factories.role_factory import AdminRoleFactory, RoleFactory, TeamLeaderRoleFactory, WorkerRoleFactory
 
 
 class UserFactory(BaseFactory):

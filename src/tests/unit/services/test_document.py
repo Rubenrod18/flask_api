@@ -8,8 +8,6 @@ import pytest
 from flask import current_app, Response, send_file
 from werkzeug.exceptions import BadRequest
 
-from app.database.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
-from app.database.factories.user_factory import AdminUserFactory
 from app.file_storages import LocalStorage
 from app.models import Document
 from app.models.document import StorageTypes
@@ -17,6 +15,8 @@ from app.repositories import DocumentRepository
 from app.services import DocumentService
 from app.utils.constants import MS_EXCEL_MIME_TYPE, PDF_MIME_TYPE
 from tests.conftest import BytesIOMatcher
+from tests.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
+from tests.factories.user_factory import AdminUserFactory
 
 
 class _TestDocumentBaseService:

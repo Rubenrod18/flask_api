@@ -3,8 +3,8 @@ import os
 import flask_security
 import pytest
 
-from app.database.factories.role_factory import RoleFactory
-from app.database.factories.user_factory import UserFactory
+from tests.factories.role_factory import RoleFactory
+from tests.factories.user_factory import UserFactory
 
 from ._base_auth_test import _TestBaseAuthEndpoints
 

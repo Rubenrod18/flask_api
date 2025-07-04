@@ -2,8 +2,8 @@ from datetime import datetime, timedelta, UTC
 
 import pytest
 
-from app.database.factories.document_factory import LocalDocumentFactory
 from tests.acceptance.blueprints.documents._base_documents_test import _TestBaseDocumentEndpoints
+from tests.factories.document_factory import LocalDocumentFactory
 
 
 # pylint: disable=attribute-defined-outside-init

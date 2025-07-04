@@ -1,5 +1,5 @@
-from app.database.factories.user_factory import UserFactory
 from tests.base.base_api_test import TestBaseApi
+from tests.factories.user_factory import UserFactory
 
 
 class TestExceptions(TestBaseApi):

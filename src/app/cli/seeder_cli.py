@@ -3,7 +3,7 @@ import collections
 import flask_sqlalchemy
 
 from app.cli.base_cli import BaseCli
-from app.database import seeds
+from tests import seeds
 
 
 class SeederCli(BaseCli):

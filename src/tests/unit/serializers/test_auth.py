@@ -5,11 +5,11 @@ import pytest
 from marshmallow import ValidationError
 from werkzeug.exceptions import Forbidden, Unauthorized
 
-from app.database.factories.user_factory import UserFactory
 from app.helpers.otp_token import OTPTokenManager
 from app.models import User
 from app.repositories import UserRepository
 from app.serializers import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
+from tests.factories.user_factory import UserFactory
 
 
 class TestAuthUserLoginSerializer:

@@ -2,10 +2,10 @@ from datetime import datetime
 
 import pytest
 
-from app.database.factories.role_factory import RoleFactory
 from app.extensions import db
 from app.models import Role
 from app.repositories.role import RoleRepository
+from tests.factories.role_factory import RoleFactory
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument

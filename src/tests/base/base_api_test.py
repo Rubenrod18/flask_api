@@ -3,7 +3,7 @@ import os
 import pytest
 from flask import current_app
 
-from app.database.factories.user_factory import AdminUserFactory, TeamLeaderUserFactory, WorkerUserFactory
+from tests.factories.user_factory import AdminUserFactory, TeamLeaderUserFactory, WorkerUserFactory
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument

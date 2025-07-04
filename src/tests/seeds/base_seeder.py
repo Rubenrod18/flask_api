@@ -1,8 +1,8 @@
 from abc import ABC
 
-from app.database.factories.base_factory import BaseFactory
-from app.database.seeds import seed_actions
 from app.repositories.base import BaseRepository
+from tests.factories.base_factory import BaseFactory
+from tests.seeds import seed_actions
 
 
 class BaseSeeder(ABC):
