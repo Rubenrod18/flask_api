@@ -21,30 +21,30 @@ logger = logging.getLogger(__name__)
 
 class _CustomFlaskClient(FlaskClient):
     @staticmethod
-    def __before_request(*args, **kwargs):
+    def _before_request(*args, **kwargs):
         logger.info(f'args: {args}')
         logger.info(f'kwargs: {kwargs}')
 
     @staticmethod
-    def __log_request_data(response: TestResponse):
+    def _log_request_data(response: TestResponse):
         if response.mimetype == 'application/json' and response.data:
             response_data = response.get_json()
         else:
             response_data = response.data
         logger.info(f'response data: {response_data}')
 
-    def __after_request(self, response: TestResponse):
+    def _after_request(self, response: TestResponse):
         logger.info(f'response status code: {response.status_code}')
         logger.info(f'response mime type: {response.mimetype}')
-        self.__log_request_data(response)
+        self._log_request_data(response)
 
-    def __make_request(self, method: str, expected_status_code: int, *args, **kwargs):
+    def _make_request(self, method: str, expected_status_code: int, *args, **kwargs):
         kwargs['method'] = method
 
         logger.info('< === START REQUEST === >')
-        self.__before_request(*args, **kwargs)
+        self._before_request(*args, **kwargs)
         response = self.open(*args, **kwargs)
-        self.__after_request(response)
+        self._after_request(response)
         logger.info('< === END REQUEST === >')
 
         assert response.status_code == expected_status_code, response.get_data(as_text=True)
@@ -52,19 +52,19 @@ class _CustomFlaskClient(FlaskClient):
 
     def get(self, *args, **kwargs):
         exp_code = kwargs.pop('exp_code', 200)
-        return self.__make_request('GET', exp_code, *args, **kwargs)
+        return self._make_request('GET', exp_code, *args, **kwargs)
 
     def post(self, *args, **kwargs):
         exp_code = kwargs.pop('exp_code', 201)
-        return self.__make_request('POST', exp_code, *args, **kwargs)
+        return self._make_request('POST', exp_code, *args, **kwargs)
 
     def put(self, *args, **kwargs):
         exp_code = kwargs.pop('exp_code', 200)
-        return self.__make_request('PUT', exp_code, *args, **kwargs)
+        return self._make_request('PUT', exp_code, *args, **kwargs)
 
     def delete(self, *args, **kwargs):
         exp_code = kwargs.pop('exp_code', 200)
-        return self.__make_request('DELETE', exp_code, *args, **kwargs)
+        return self._make_request('DELETE', exp_code, *args, **kwargs)
 
 
 @pytest.fixture(scope='session', autouse=True)
