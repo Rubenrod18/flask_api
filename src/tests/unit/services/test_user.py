@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.database.factories.role_factory import RoleFactory
-from app.database.factories.user_factory import UserFactory
 from app.models import User
 from app.repositories import RoleRepository, UserRepository
 from app.services import RoleService, UserService
+from tests.factories.role_factory import RoleFactory
+from tests.factories.user_factory import UserFactory
 
 
 class _TestUserBaseService:

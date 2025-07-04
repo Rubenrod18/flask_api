@@ -4,9 +4,9 @@ import uuid
 
 import factory
 
-from app.database.factories.base_factory import BaseFactory
 from app.models import Role
 from app.models.role import ADMIN_ROLE, ROLE_NAME_DELIMITER, TEAM_LEADER_ROLE, WORKER_ROLE
+from tests.factories.base_factory import BaseFactory
 
 
 class RoleFactory(BaseFactory):

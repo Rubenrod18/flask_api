@@ -1,10 +1,7 @@
 """Collection of functions and classes which make common patterns
 shorter and easier."""
 
-import logging
 from datetime import datetime
-
-logger = logging.getLogger(__name__)
 
 
 def to_readable(obj: object) -> object:

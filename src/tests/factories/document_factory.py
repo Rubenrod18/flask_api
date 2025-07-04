@@ -6,11 +6,11 @@ import factory
 from flask import current_app
 from sqlalchemy import func
 
-from app.database.factories.base_factory import BaseFactory
 from app.extensions import db
 from app.models import Document, User
 from app.models.document import StorageTypes
 from app.utils.constants import PDF_MIME_TYPE
+from tests.factories.base_factory import BaseFactory
 
 
 class DocumentFactory(BaseFactory):

@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask_security import UserMixin
 
-from app.database.factories.user_factory import UserFactory
 from app.repositories import UserRepository
 from app.services import AuthService
+from tests.factories.user_factory import UserFactory
 
 
 class _TestAuthBaseService:

@@ -6,12 +6,12 @@ import pytest
 from marshmallow import ValidationError
 from werkzeug.exceptions import BadRequest, NotFound
 
-from app.database.factories.role_factory import RoleFactory
-from app.database.factories.user_factory import UserFactory
 from app.models import Role, User
 from app.models.user import Genre
 from app.repositories import UserRepository
 from app.serializers import UserExportWordSerializer, UserSerializer
+from tests.factories.role_factory import RoleFactory
+from tests.factories.user_factory import UserFactory
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument

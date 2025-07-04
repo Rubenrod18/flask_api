@@ -4,11 +4,11 @@ import pytest
 
 from app.celery import ContextTask, make_celery
 from app.celery.word.tasks import export_user_data_in_word_task_logic
-from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.file_storages import LocalStorage
 from app.models import Document
 from app.utils.constants import MS_WORD_MIME_TYPE, PDF_MIME_TYPE
+from tests.factories.user_factory import UserFactory
 
 
 # pylint: disable=attribute-defined-outside-init

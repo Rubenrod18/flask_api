@@ -2,10 +2,10 @@ from datetime import datetime, UTC
 
 import pytest
 
-from app.database.factories.user_factory import AdminUserFactory, UserFactory
 from app.extensions import db
 from app.models import User
 from app.repositories.user import UserRepository
+from tests.factories.user_factory import AdminUserFactory, UserFactory
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument

@@ -7,12 +7,12 @@ import pytest
 from marshmallow import ValidationError
 from werkzeug.exceptions import NotFound, UnprocessableEntity
 
-from app.database.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
-from app.database.factories.user_factory import UserFactory
 from app.models import Document
 from app.models.document import StorageTypes
 from app.repositories import DocumentRepository
 from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
+from tests.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
+from tests.factories.user_factory import UserFactory
 
 
 class TestDocumentSerializer:

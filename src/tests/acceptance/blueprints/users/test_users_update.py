@@ -2,11 +2,11 @@ import os
 
 import pytest
 
-from app.database.factories.role_factory import RoleFactory
-from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Role
 from app.models.role import TEAM_LEADER_ROLE
+from tests.factories.role_factory import RoleFactory
+from tests.factories.user_factory import UserFactory
 
 from ._base_users_test import _TestBaseUserEndpointsTest
 

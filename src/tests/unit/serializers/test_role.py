@@ -4,10 +4,10 @@ from unittest.mock import MagicMock
 import pytest
 from werkzeug.exceptions import BadRequest, NotFound
 
-from app.database.factories.role_factory import RoleFactory
 from app.models import Role
 from app.repositories import RoleRepository
 from app.serializers import RoleSerializer
+from tests.factories.role_factory import RoleFactory
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument

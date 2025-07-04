@@ -1,7 +1,7 @@
 .PHONY: help run component shell migration migrate migrate-rollback seed linter coverage coverage-html linter test test-one test-path test-parallel
 
 # Flask-migrate
-MIGRATIONS_DIRECTORY ?= /flask-api-docker-dir/src/app/database/migrations
+MIGRATIONS_DIRECTORY ?= /flask-api-docker-dir/src/app/migrations
 # Pytest
 PARALLEL_TEST ?= auto
 MAX_FAIL_TEST ?= 5

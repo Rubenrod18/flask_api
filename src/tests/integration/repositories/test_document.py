@@ -2,11 +2,11 @@ from datetime import datetime
 
 import pytest
 
-from app.database.factories.document_factory import LocalDocumentFactory
-from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Document
 from app.repositories.document import DocumentRepository
+from tests.factories.document_factory import LocalDocumentFactory
+from tests.factories.user_factory import UserFactory
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument

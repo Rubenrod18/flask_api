@@ -1,7 +1,7 @@
-from app.database.factories.role_factory import ROLE_DEFINITIONS, RoleFactory
-from app.database.seeds import seed_actions
-from app.database.seeds.base_seeder import FactorySeeder, RepositorySeeder
 from app.repositories import RoleRepository
+from tests.factories.role_factory import ROLE_DEFINITIONS, RoleFactory
+from tests.seeds import seed_actions
+from tests.seeds.base_seeder import FactorySeeder, RepositorySeeder
 
 
 class Seeder(FactorySeeder, RepositorySeeder):

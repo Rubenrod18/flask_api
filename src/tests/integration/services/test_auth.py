@@ -3,8 +3,8 @@ import os
 import pytest
 from flask import current_app
 
-from app.database.factories.user_factory import UserFactory
 from app.services import AuthService
+from tests.factories.user_factory import UserFactory
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument

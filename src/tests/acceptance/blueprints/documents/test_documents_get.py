@@ -6,8 +6,8 @@ from urllib.parse import urlparse
 
 import pytest
 
-from app.database.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
 from app.services import DocumentService
+from tests.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
 
 from ._base_documents_test import _TestBaseDocumentEndpoints
 

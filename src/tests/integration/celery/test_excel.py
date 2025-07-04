@@ -4,11 +4,11 @@ import pytest
 
 from app.celery import ContextTask, make_celery
 from app.celery.excel.tasks import export_user_data_in_excel_task_logic
-from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.file_storages import LocalStorage
 from app.models import Document
 from app.utils.constants import MS_EXCEL_MIME_TYPE
+from tests.factories.user_factory import UserFactory
 
 
 # pylint: disable=attribute-defined-outside-init

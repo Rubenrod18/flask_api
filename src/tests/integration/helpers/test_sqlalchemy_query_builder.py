@@ -7,11 +7,11 @@ from freezegun import freeze_time
 from sqlalchemy.orm import Query
 
 import app.helpers.sqlalchemy_query_builder as rqo
-from app.database.factories.document_factory import LocalDocumentFactory
-from app.database.factories.role_factory import RoleFactory
-from app.database.factories.user_factory import UserFactory
 from app.extensions import db
 from app.models import Document, Role, User
+from tests.factories.document_factory import LocalDocumentFactory
+from tests.factories.role_factory import RoleFactory
+from tests.factories.user_factory import UserFactory
 
 
 class _TestBaseCreateSearchQuery:

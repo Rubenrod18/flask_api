@@ -1,6 +1,6 @@
 import pytest
 
-from app.database.factories.role_factory import RoleFactory
+from tests.factories.role_factory import RoleFactory
 
 from ._base_roles_test import _TestBaseRoleEndpoints
 

@@ -11,13 +11,13 @@ from app.celery.tasks import (
     reset_password_email_task,
     send_email_with_attachments_task_logic,
 )
-from app.database.factories.document_factory import LocalDocumentFactory
-from app.database.factories.role_factory import RoleFactory
-from app.database.factories.user_factory import UserFactory
 from app.extensions import mail
 from app.file_storages import LocalStorage
 from app.helpers.otp_token import OTPTokenManager
 from app.models.role import ADMIN_ROLE
+from tests.factories.document_factory import LocalDocumentFactory
+from tests.factories.role_factory import RoleFactory
+from tests.factories.user_factory import UserFactory
 
 
 # pylint: disable=attribute-defined-outside-init
