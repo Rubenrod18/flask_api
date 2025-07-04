@@ -1,22 +1,20 @@
-"""Module for managing exceptions.
+"""Module for managing exceptions."""
 
-References
-----------
-flask-restx: https://flask-restx.readthedocs.io/en/latest/errors.html
-
-"""
-
+import logging
 import traceback
 
 from flask import current_app, Flask
 from marshmallow import ValidationError
-from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import Forbidden, HTTPException, InternalServerError
 
 from app.extensions import security
 
+logger = logging.getLogger(__name__)
+
 
 def init_app(app: Flask) -> None:
-    app.errorhandler(ValidationError)(_handle_validation_error_exception)
+    app.errorhandler(ValidationError)(_validation_error_handler)
+    app.errorhandler(Exception)(_general_exception_handler)
 
     @security.unauthz_handler
     def custom_unauthorized_handler(func_name: str, params: list[str]) -> None:  # noqa: F841
@@ -38,10 +36,22 @@ def init_app(app: Flask) -> None:
         raise Forbidden()
 
 
-def _handle_validation_error_exception(ex: ValidationError) -> tuple:
+def _general_exception_handler(exc: Exception) -> tuple[dict, int]:
+    """Custom general error handler."""
+    logger.exception(exc)
+
+    if isinstance(exc, HTTPException):
+        return {'message': exc.description}, exc.code
+
+    return {'message': InternalServerError.description}, InternalServerError.code
+
+
+def _validation_error_handler(exc: ValidationError) -> tuple[dict, int]:
+    """Custom validation error handler."""
     if current_app.debug:
         traceback.print_exc()
-    return {'message': ex.messages}, 422
+
+    return {'message': exc.messages}, 422
 
 
 class FileEmptyError(OSError):
