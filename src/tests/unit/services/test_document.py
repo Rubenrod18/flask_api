@@ -308,6 +308,7 @@ class TestSaveLocalDocumentService(_TestDocumentBaseService):
             directory_path=current_app.config.get('STORAGE_DIRECTORY'),
             internal_filename=self.internal_filename,
         )
+        mock_doc_repo.find_by_id.return_value = document
         mock_doc_repo.save.return_value = document
         document_service = DocumentService(
             mock_doc_repo,
@@ -327,6 +328,7 @@ class TestSaveLocalDocumentService(_TestDocumentBaseService):
 
         document = document_service.save(document.id, **document_data)
 
+        mock_doc_repo.find_by_id.assert_called_once_with(document.id)
         local_storage.save_bytes.assert_called_once_with(document_data.get('file_data'), filepath, override=True)
         local_storage.get_filename.assert_called_once_with(excel_file)
         local_storage.get_filesize.assert_called_once_with(filepath)

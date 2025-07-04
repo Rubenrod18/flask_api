@@ -143,15 +143,14 @@ class DocumentService(
             raise e
 
     def save(self, record_id: int, **kwargs) -> Document:
-        storage_type = kwargs.get('storage_type', StorageTypes.LOCAL.value)
+        document = self.repository.find_by_id(record_id)
+        kwargs['document'] = document
         storage_types = {
             StorageTypes.LOCAL.value: self._save_local_file,
             StorageTypes.GDRIVE.value: self._save_gdrive_file,
         }
 
-        document = self.repository.find_by_id(record_id)
-        kwargs['document'] = document
-        document_data = storage_types.get(storage_type)(**kwargs)
+        document_data = storage_types.get(document.storage_type.value)(**kwargs)
 
         return self.repository.save(record_id, **document_data)
 
@@ -167,7 +166,6 @@ class DocumentService(
 
     def get_document_content(self, document_id: int, request_args: dict) -> Response:
         as_attachment = request_args.get('as_attachment', 0)
-        storage_type = request_args.get('storage_type', StorageTypes.LOCAL.value)
         storage_types = {
             StorageTypes.LOCAL.value: self._get_local_document_content,
             StorageTypes.GDRIVE.value: self._get_gdrive_document_content,
@@ -176,7 +174,7 @@ class DocumentService(
         document = self.repository.find_by_id(document_id)
         file_extension = mimetypes.guess_extension(document.mime_type)
 
-        file_data = storage_types.get(storage_type)(document)
+        file_data = storage_types.get(document.storage_type.value)(document)
         file_data.update(
             {
                 'as_attachment': as_attachment,
