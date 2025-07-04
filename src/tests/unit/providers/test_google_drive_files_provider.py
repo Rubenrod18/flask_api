@@ -11,7 +11,8 @@ from app.utils.constants import FOLDER_MIME_TYPE, PDF_MIME_TYPE
 
 
 @pytest.fixture
-def mock_gdrive_files_provider(app):
+def stub_gdrive_files_provider(app):  # pylint: disable=unused-argument
+    """Returns a real GoogleDriveFilesProvider instance with a mocked service."""
     with (
         patch('app.providers.google_drive._google_drive_base_provider.build', autospec=True) as mock_build,
         patch(
@@ -27,7 +28,8 @@ def mock_gdrive_files_provider(app):
         mock_service.files.return_value = mock_files
         mock_build.return_value = mock_service
 
-        provider = GoogleDriveFilesProvider()
+        provider = GoogleDriveFilesProvider(service=mock_service, enable_google_drive=False)
+
         return provider, mock_files
 
 
@@ -49,8 +51,8 @@ class TestGoogleDriveFilesProvider:
         ],
         ids=['with-parents', 'without-parents'],
     )
-    def test_create_folder(self, folder_params, payload, fields, mock_gdrive_files_provider):
-        provider, mock_files = mock_gdrive_files_provider
+    def test_create_folder(self, folder_params, payload, fields, stub_gdrive_files_provider):
+        provider, mock_files = stub_gdrive_files_provider
         folder_data = {'id': uuid.uuid4().hex, 'name': 'custom-folder'}
         mock_create = MagicMock()
         mock_create.execute.return_value = folder_data
@@ -95,9 +97,9 @@ class TestGoogleDriveFilesProvider:
         ids=['with-parents', 'without-parents'],
     )
     def test_folder_exists(
-        self, folder_params, payload, fields, request_response, method_response, mock_gdrive_files_provider
+        self, folder_params, payload, fields, request_response, method_response, stub_gdrive_files_provider
     ):
-        provider, mock_files = mock_gdrive_files_provider
+        provider, mock_files = stub_gdrive_files_provider
         mock_list = MagicMock()
         mock_list.execute.return_value = request_response
         mock_files.list.return_value = mock_list
@@ -127,9 +129,9 @@ class TestGoogleDriveFilesProvider:
     )
     @mock.patch('app.providers.google_drive.google_drive_files_provider.MediaFileUpload', autospec=True)
     def test_create_file_from_path(
-        self, mock_media_file_upload, file_params, payload, fields, mock_gdrive_files_provider, app
+        self, mock_media_file_upload, file_params, payload, fields, stub_gdrive_files_provider, app
     ):
-        provider, mock_files = mock_gdrive_files_provider
+        provider, mock_files = stub_gdrive_files_provider
         pdf_filename = 'example.pdf'
         file_data = {'id': uuid.uuid4().hex, 'name': pdf_filename}
 
@@ -171,9 +173,9 @@ class TestGoogleDriveFilesProvider:
     )
     @mock.patch('app.providers.google_drive.google_drive_files_provider.MediaIoBaseUpload', autospec=True)
     def test_create_file_from_stream(
-        self, mock_media_io_base_upload, file_params, payload, fields, mock_gdrive_files_provider, app
+        self, mock_media_io_base_upload, file_params, payload, fields, stub_gdrive_files_provider, app
     ):
-        provider, mock_files = mock_gdrive_files_provider
+        provider, mock_files = stub_gdrive_files_provider
         pdf_filename = 'example.pdf'
         file_data = {'id': uuid.uuid4().hex, 'name': pdf_filename}
 
@@ -221,9 +223,9 @@ class TestGoogleDriveFilesProvider:
     )
     @mock.patch('app.providers.google_drive.google_drive_files_provider.MediaFileUpload', autospec=True)
     def test_upload_file_from_path(
-        self, mock_media_file_upload, file_params, payload, fields, mock_gdrive_files_provider, app
+        self, mock_media_file_upload, file_params, payload, fields, stub_gdrive_files_provider, app
     ):
-        provider, mock_files = mock_gdrive_files_provider
+        provider, mock_files = stub_gdrive_files_provider
         pdf_filename = 'example.pdf'
         file_data = {'id': uuid.uuid4().hex, 'name': pdf_filename}
 
@@ -273,9 +275,9 @@ class TestGoogleDriveFilesProvider:
     )
     @mock.patch('app.providers.google_drive.google_drive_files_provider.MediaIoBaseUpload', autospec=True)
     def test_upload_file_from_stream(
-        self, mock_media_io_base_upload, file_params, payload, fields, mock_gdrive_files_provider, app
+        self, mock_media_io_base_upload, file_params, payload, fields, stub_gdrive_files_provider, app
     ):
-        provider, mock_files = mock_gdrive_files_provider
+        provider, mock_files = stub_gdrive_files_provider
         pdf_filename = 'example.pdf'
         file_data = {'id': uuid.uuid4().hex, 'name': pdf_filename}
 
@@ -308,8 +310,8 @@ class TestGoogleDriveFilesProvider:
             ),
         ],
     )
-    def test_get_files(self, file_params, payload, mock_gdrive_files_provider):
-        provider, mock_files = mock_gdrive_files_provider
+    def test_get_files(self, file_params, payload, stub_gdrive_files_provider):
+        provider, mock_files = stub_gdrive_files_provider
         expected_result = [{'id': uuid.uuid4().hex, 'name': 'document.pdf'}]
         mock_get = MagicMock()
         mock_get.execute.return_value = expected_result
@@ -334,8 +336,8 @@ class TestGoogleDriveFilesProvider:
             ),
         ],
     )
-    def test_get_file_metadata(self, file_id, fields, mock_gdrive_files_provider):
-        provider, mock_files = mock_gdrive_files_provider
+    def test_get_file_metadata(self, file_id, fields, stub_gdrive_files_provider):
+        provider, mock_files = stub_gdrive_files_provider
         expected_result = [{'id': uuid.uuid4().hex, 'name': 'document.pdf'}]
         mock_get = MagicMock()
         mock_get.execute.return_value = expected_result
@@ -348,8 +350,8 @@ class TestGoogleDriveFilesProvider:
         mock_get.execute.assert_called_once()
         assert result == expected_result
 
-    def test_delete_file(self, mock_gdrive_files_provider):
-        provider, mock_files = mock_gdrive_files_provider
+    def test_delete_file(self, stub_gdrive_files_provider):
+        provider, mock_files = stub_gdrive_files_provider
         file_id = uuid.uuid4().hex
         expected_result = [{'id': file_id, 'name': 'document.pdf'}]
         mock_delete = MagicMock()
@@ -362,8 +364,8 @@ class TestGoogleDriveFilesProvider:
         mock_delete.execute.assert_called_once()
 
     @mock.patch('app.providers.google_drive.google_drive_files_provider.MediaIoBaseDownload', autospec=True)
-    def test_download_file_content(self, mock_media_io_base_download, mock_gdrive_files_provider):
-        provider, mock_files = mock_gdrive_files_provider
+    def test_download_file_content(self, mock_media_io_base_download, stub_gdrive_files_provider):
+        provider, mock_files = stub_gdrive_files_provider
         mock_files.get_media.return_value = MagicMock()
         mock_downloader_instance = MagicMock()
         mock_downloader_instance.next_chunk.side_effect = [(mock.Mock(progress=mock.Mock(return_value=1.0)), True)]

@@ -7,9 +7,15 @@ from app.utils.constants import GoogleDriveRoles, GoogleDriveUserTypes
 
 # pylint: disable=no-member
 class GoogleDrivePermissionsProvider(_GoogleDriveBaseProvider):
-    def __init__(self, credentials: service_account.Credentials = None):
-        super().__init__(credentials)
-        self.service = self.service.permissions()
+    def __init__(
+        self,
+        credentials: service_account.Credentials = None,
+        service=None,
+        service_account_path: str | None = None,
+        enable_google_drive: bool = True,
+    ):
+        super().__init__(credentials, service, service_account_path, enable_google_drive)
+        self.service = self.service.permissions() if self.service else None
 
     @handle_gdrive_errors()
     def apply_public_read_access_permission(

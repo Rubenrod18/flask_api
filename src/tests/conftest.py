@@ -3,7 +3,6 @@ import logging
 import os
 import uuid
 
-import pytest
 import sqlalchemy
 from dotenv import find_dotenv, load_dotenv
 from faker import Faker
@@ -15,6 +14,7 @@ from sqlalchemy_utils import create_database, database_exists
 from werkzeug.test import TestResponse
 
 from app.extensions import db
+from tests.fixtures.gdrive_mocks import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 logger = logging.getLogger(__name__)
 

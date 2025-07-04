@@ -68,6 +68,10 @@ def _init_python_dependency_injector(flask_app: Flask):
             'secret_key': flask_app.config.get('SECRET_KEY'),
             'salt': flask_app.config.get('SECURITY_PASSWORD_SALT'),
             'expiration': flask_app.config.get('RESET_TOKEN_EXPIRES'),
+            'gdrive': {
+                'service_account_path': f'{flask_app.config["ROOT_DIRECTORY"]}/service_account.json',
+                'enable': not flask_app.config['TESTING'],
+            },
         }
     )
     flask_app.container = container

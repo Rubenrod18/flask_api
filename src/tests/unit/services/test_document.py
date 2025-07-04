@@ -13,7 +13,6 @@ from app.database.factories.user_factory import AdminUserFactory
 from app.file_storages import LocalStorage
 from app.models import Document
 from app.models.document import StorageType
-from app.providers.google_drive import GoogleDriveFilesProvider, GoogleDrivePermissionsProvider
 from app.repositories import DocumentRepository
 from app.services import DocumentService
 from app.utils.constants import MS_EXCEL_MIME_TYPE, PDF_MIME_TYPE
@@ -22,8 +21,10 @@ from tests.conftest import BytesIOMatcher
 
 class _TestDocumentBaseService:
     @pytest.fixture(autouse=True)
-    def setup(self, app):
+    def setup(self, app, mock_gdrive_files_provider, mock_gdrive_permissions_provider):
         self.admin_user = AdminUserFactory(deleted_at=None)
+        self.mock_gdrive_files_provider, _ = mock_gdrive_files_provider
+        self.mock_gdrive_permissions_provider, _ = mock_gdrive_permissions_provider
 
 
 class TestCreateLocalDocumentService(_TestDocumentBaseService):
@@ -48,7 +49,9 @@ class TestCreateLocalDocumentService(_TestDocumentBaseService):
 
         mock_doc_repo = MagicMock(spec=DocumentRepository)
         mock_doc_repo.create.return_value = self.document
-        document_service = DocumentService(mock_doc_repo, local_storage)
+        document_service = DocumentService(
+            mock_doc_repo, local_storage, self.mock_gdrive_files_provider, self.mock_gdrive_permissions_provider
+        )
 
         filepath = f'{current_app.config.get("STORAGE_DIRECTORY")}/{self.internal_filename}'
         pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{self.pdf_filename}'
@@ -89,7 +92,10 @@ class TestCreateLocalDocumentService(_TestDocumentBaseService):
     @mock.patch('app.services.document.current_user', autospec=True)
     def test_create_document_file_is_empty(self, mock_current_user):
         mock_current_user.id = 1
-        document_service = DocumentService()
+        document_service = DocumentService(
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
+        )
         document_service.file_storage.delete_file = MagicMock()
 
         with pytest.raises(BadRequest) as exc_info:
@@ -112,7 +118,10 @@ class TestCreateLocalDocumentService(_TestDocumentBaseService):
     def test_create_document_file_already_exists(self, mock_current_user, mock_exists):  # noqa # pylint: disable=unused-argument
         mock_current_user.id = 1
 
-        document_service = DocumentService()
+        document_service = DocumentService(
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
+        )
         document_service.file_storage.delete_file = MagicMock()
         document_data = {
             'mime_type': PDF_MIME_TYPE,
@@ -144,12 +153,11 @@ class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
         mock_current_user.fs_uniquifier = str(uuid.uuid1())
         mock_uuid.uuid1.return_value = MagicMock(hex=self.internal_basename)
 
-        gdrive_files_provider = MagicMock(spec=GoogleDriveFilesProvider)
-        gdrive_files_provider.folder_exists.return_value = None
+        self.mock_gdrive_files_provider.folder_exists.return_value = None
         gdrive_folder_id = 5
-        gdrive_files_provider.create_folder.return_value = {'id': gdrive_folder_id}
+        self.mock_gdrive_files_provider.create_folder.return_value = {'id': gdrive_folder_id}
         gdrive_file_id = 7
-        gdrive_files_provider.create_file_from_stream.return_value = {
+        self.mock_gdrive_files_provider.create_file_from_stream.return_value = {
             'id': gdrive_file_id,
             'mimeType': PDF_MIME_TYPE,
             'size': 9_556_144,
@@ -159,16 +167,15 @@ class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
         local_storage = MagicMock(spec=LocalStorage)
         local_storage.get_filename.return_value = self.pdf_filename
 
-        gdrive_permissions_provider = MagicMock(spec=GoogleDrivePermissionsProvider)
-        gdrive_permissions_provider.apply_public_read_access_permission.return_value = {}
+        self.mock_gdrive_permissions_provider.apply_public_read_access_permission.return_value = {}
 
         mock_doc_repo = MagicMock(spec=DocumentRepository)
         mock_doc_repo.create.return_value = self.document
         document_service = DocumentService(
             document_repository=mock_doc_repo,
             file_storage=local_storage,
-            gdrive_files_provider=gdrive_files_provider,
-            gdrive_permissions_provider=gdrive_permissions_provider,
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
         )
 
         pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{self.pdf_filename}'
@@ -181,17 +188,23 @@ class TestCreateGoogleDriveDocumentService(_TestDocumentBaseService):
 
         created_document = document_service.create(**document_data)
 
-        gdrive_files_provider.folder_exists.assert_called_once_with(folder_name=mock_current_user.fs_uniquifier)
-        gdrive_files_provider.create_folder.assert_called_once_with(folder_name=mock_current_user.fs_uniquifier)
+        self.mock_gdrive_files_provider.folder_exists.assert_called_once_with(
+            folder_name=mock_current_user.fs_uniquifier
+        )
+        self.mock_gdrive_files_provider.create_folder.assert_called_once_with(
+            folder_name=mock_current_user.fs_uniquifier
+        )
         local_storage.get_filename.assert_called_once_with(pdf_file)
-        gdrive_files_provider.create_file_from_stream.assert_called_once_with(
+        self.mock_gdrive_files_provider.create_file_from_stream.assert_called_once_with(
             parent_id=gdrive_folder_id,
             file_name=self.pdf_filename,
             file_stream=BytesIOMatcher(document_data.get('file_data')),
             mime_type=PDF_MIME_TYPE,
             fields='id, name, mimeType, size',
         )
-        gdrive_permissions_provider.apply_public_read_access_permission.assert_called_once_with(item_id=gdrive_file_id)
+        self.mock_gdrive_permissions_provider.apply_public_read_access_permission.assert_called_once_with(
+            item_id=gdrive_file_id
+        )
         mock_doc_repo.create.assert_called_once_with(
             **{
                 'created_by': self.admin_user.id,
@@ -228,7 +241,11 @@ class TestFindByIdDocumentService(_TestDocumentBaseService):
     def test_find_by_id_document(self):
         mock_doc_repo = MagicMock(spec=DocumentRepository)
         mock_doc_repo.find_by_id.return_value = self.document
-        document_service = DocumentService(mock_doc_repo)
+        document_service = DocumentService(
+            mock_doc_repo,
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
+        )
 
         document = document_service.find_by_id(self.document.id)
 
@@ -245,7 +262,11 @@ class TestGetDocumentService(_TestDocumentBaseService):
     def test_get_document(self):
         mock_doc_repo = MagicMock(spec=DocumentRepository)
         mock_doc_repo.get.return_value = [self.document]
-        document_service = DocumentService(mock_doc_repo)
+        document_service = DocumentService(
+            mock_doc_repo,
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
+        )
 
         document_data = {
             'items_per_page': 10,
@@ -288,7 +309,12 @@ class TestSaveLocalDocumentService(_TestDocumentBaseService):
             internal_filename=self.internal_filename,
         )
         mock_doc_repo.save.return_value = document
-        document_service = DocumentService(mock_doc_repo, local_storage)
+        document_service = DocumentService(
+            mock_doc_repo,
+            local_storage,
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
+        )
 
         filepath = f'{current_app.config.get("STORAGE_DIRECTORY")}/{self.internal_filename}'
         excel_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{self.excel_filename}'
@@ -328,7 +354,10 @@ class TestSaveLocalDocumentService(_TestDocumentBaseService):
     def test_save_document_file_is_empty(self, mock_uuid):
         mock_uuid.uuid1.return_value = MagicMock(hex=self.internal_basename)
 
-        document_service = DocumentService()
+        document_service = DocumentService(
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
+        )
         document_service.file_storage.delete_file = MagicMock()
         document = LocalDocumentFactory(deleted_at=None)
 
@@ -365,11 +394,10 @@ class TestSaveGoogleDriveDocumentService(_TestDocumentBaseService):
     def test_save_google_drive_document(self, mock_current_user):
         mock_current_user.fs_uniquifier = str(uuid.uuid1())
 
-        gdrive_files_provider = MagicMock(spec=GoogleDriveFilesProvider)
         gdrive_folder_id = 5
-        gdrive_files_provider.folder_exists.return_value = {'id': gdrive_folder_id}
+        self.mock_gdrive_files_provider.folder_exists.return_value = {'id': gdrive_folder_id}
         gdrive_file_id = 7
-        gdrive_files_provider.upload_file_from_stream.return_value = {
+        self.mock_gdrive_files_provider.upload_file_from_stream.return_value = {
             'id': gdrive_file_id,
             'mimeType': MS_EXCEL_MIME_TYPE,
             'size': 9_556_144,
@@ -385,7 +413,8 @@ class TestSaveGoogleDriveDocumentService(_TestDocumentBaseService):
         document_service = DocumentService(
             document_repository=mock_doc_repo,
             file_storage=local_storage,
-            gdrive_files_provider=gdrive_files_provider,
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
         )
 
         excel_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{self.excel_file}'
@@ -400,7 +429,7 @@ class TestSaveGoogleDriveDocumentService(_TestDocumentBaseService):
 
         mock_doc_repo.find_by_id.assert_called_once_with(self.document.id)
         local_storage.get_filename.assert_called_once_with(excel_file)
-        gdrive_files_provider.upload_file_from_stream.assert_called_once_with(
+        self.mock_gdrive_files_provider.upload_file_from_stream.assert_called_once_with(
             file_id=self.document.storage_id,
             file_name=self.excel_file,
             file_stream=BytesIOMatcher(document_data.get('file_data')),
@@ -418,6 +447,7 @@ class TestSaveGoogleDriveDocumentService(_TestDocumentBaseService):
         assert isinstance(created_document, Document)
         assert created_document.created_by == self.admin_user.id
         assert created_document.name == self.excel_file
+        assert created_document.mime_type == MS_EXCEL_MIME_TYPE
         assert created_document.mime_type == MS_EXCEL_MIME_TYPE
         assert created_document.size == self.document.size
         assert created_document.size == self.document.size
@@ -440,7 +470,11 @@ class TestDeleteDocumentService(_TestDocumentBaseService):
         mock_doc_repo = MagicMock(spec=DocumentRepository)
         self.document.deleted_at = datetime.now(UTC)
         mock_doc_repo.delete.return_value = self.document
-        document_service = DocumentService(mock_doc_repo)
+        document_service = DocumentService(
+            mock_doc_repo,
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
+        )
 
         document = document_service.delete(self.document.id)
 
@@ -518,17 +552,21 @@ class TestGetDocumentContentDocumentService(_TestDocumentBaseService):
         mock_doc_repo.find_by_id.return_value = document
         expected_args = expected_kwargs(document)
 
-        document_service = DocumentService(mock_doc_repo)
+        document_service = DocumentService(
+            mock_doc_repo,
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
+        )
         mock_get_local_document_content = MagicMock()
         mock_get_local_document_content.return_value = {'path_or_file': expected_args['path_or_file']}
-        document_service._get_local_document_content = mock_get_local_document_content
+        document_service._get_local_document_content = mock_get_local_document_content  # pylint: disable=protected-access
 
         with current_app.test_request_context():
             mock_send_file.return_value = send_file(**expected_args)
             response = document_service.get_document_content(document.id, request_args)
 
         mock_doc_repo.find_by_id.assert_called_once_with(document.id)
-        document_service._get_local_document_content.assert_called_once_with(document)
+        document_service._get_local_document_content.assert_called_once_with(document)  # pylint: disable=protected-access
         mock_send_file.assert_called_once_with(**expected_args)
         assert isinstance(response, Response)
         assert response.mimetype == PDF_MIME_TYPE
@@ -549,25 +587,26 @@ class TestGetDocumentContentDocumentService(_TestDocumentBaseService):
             'storage_type equals to "gdrive"',
         ],
     )
-    @patch('app.providers.google_drive.GoogleDriveFilesProvider', autospec=True)
     @patch('app.services.document.send_file', autospec=True)
-    def test_get_gdrive_document_content(
-        self, mock_send_file, mock_gdrive_files_provider, request_args, expected_kwargs
-    ):
+    def test_get_gdrive_document_content(self, mock_send_file, request_args, expected_kwargs):
         mock_doc_repo = mock.MagicMock(spec=DocumentRepository)
         document = GDriveDocumentFactory()
         mock_doc_repo.find_by_id.return_value = document
         expected_args = expected_kwargs(document)
 
-        mock_gdrive_files_provider.download_file_content.return_value = b''
-        document_service = DocumentService(mock_doc_repo, gdrive_files_provider=mock_gdrive_files_provider)
+        self.mock_gdrive_files_provider.download_file_content.return_value = b''
+        document_service = DocumentService(
+            mock_doc_repo,
+            gdrive_files_provider=self.mock_gdrive_files_provider,
+            gdrive_permissions_provider=self.mock_gdrive_permissions_provider,
+        )
 
         with current_app.test_request_context():
             mock_send_file.return_value = send_file(**expected_args)
             response = document_service.get_document_content(document.id, request_args)
 
         mock_doc_repo.find_by_id.assert_called_once_with(document.id)
-        mock_gdrive_files_provider.download_file_content.assert_called_once_with(document.storage_id)
+        self.mock_gdrive_files_provider.download_file_content.assert_called_once_with(document.storage_id)
         mock_send_file.assert_called_once_with(**expected_args)
         assert isinstance(response, Response)
         assert response.mimetype == PDF_MIME_TYPE

@@ -4,6 +4,7 @@ from dependency_injector import containers, providers
 
 from app import services
 from app.helpers.otp_token import OTPTokenManager
+from app.providers.google_drive import GoogleDriveFilesProvider, GoogleDrivePermissionsProvider
 
 
 class ServiceDIContainer(containers.DeclarativeContainer):
@@ -35,8 +36,26 @@ class ServiceDIContainer(containers.DeclarativeContainer):
         expiration=config.expiration.as_int(),
     )
 
+    # Providers
+    gdrive_files_provider = providers.Factory(
+        GoogleDriveFilesProvider,
+        credentials=None,
+        service_account_path=config.gdrive.service_account_path,
+        enable_google_drive=config.gdrive.enable,
+    )
+    gdrive_permissions_provider = providers.Factory(
+        GoogleDrivePermissionsProvider,
+        credentials=None,
+        service_account_path=config.gdrive.service_account_path,
+        enable_google_drive=config.gdrive.enable,
+    )
+
     # Services
     auth_service = providers.Factory(services.AuthService)
-    document_service = providers.Factory(services.DocumentService)
+    document_service = providers.Factory(
+        services.DocumentService,
+        gdrive_files_provider=gdrive_files_provider,
+        gdrive_permissions_provider=gdrive_permissions_provider,
+    )
     role_service = providers.Factory(services.RoleService)
     user_service = providers.Factory(services.UserService)
