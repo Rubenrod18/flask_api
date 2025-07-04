@@ -10,7 +10,9 @@ from app.blueprints.base import BaseResource
 from app.di_container import ServiceDIContainer
 from app.extensions import api as root_api
 from app.helpers.request_helpers import get_request_file
+from app.models.document import StorageTypes
 from app.models.role import ROLES
+from app.serializers.document import DocumentStorageTypeSerializer
 from app.services.document import DocumentService
 
 blueprint = Blueprint('documents', __name__)
@@ -40,10 +42,13 @@ class NewDocumentResource(BaseDocumentResource):
         type=WerkzeugFileStorage,
         location='files',
         required=True,
-        help='You only can upload Excel and PDF files.',
     )
+    parser.add_argument('storage_type', type=str, location='args', required=False, choices=StorageTypes.to_list())
 
-    serializer_class = serializers.DocumentSerializer
+    serializer_classes = {
+        'document': serializers.DocumentSerializer,
+        'document_storage_type': DocumentStorageTypeSerializer,
+    }
 
     @jwt_required()
     @roles_accepted(*ROLES)
@@ -51,8 +56,12 @@ class NewDocumentResource(BaseDocumentResource):
     @api.expect(parser)
     @api.marshal_with(swagger_models.document_sw_model, envelope='data', code=201)
     def post(self) -> tuple:
-        serializer = self.get_serializer()
+        serializer = self.get_serializer(serializer_name='document')
+        request_args = self.get_serializer(serializer_name='document_storage_type').load(
+            request.args.to_dict(), unknown=EXCLUDE
+        )
         validated_data = serializer.valid_request_file(get_request_file())
+        validated_data.update(request_args)
 
         document = self.service.create(**validated_data)
 
@@ -96,6 +105,7 @@ class DocumentResource(BaseDocumentResource):
 
         """
         serializer = self.get_serializer(serializer_name='document')
+        serializer.load({'id': document_id}, partial=True)
 
         if request.headers.get('Accept') == 'application/octet-stream':
             request_args = self.get_serializer(serializer_name='document_attachment').load(
@@ -103,7 +113,6 @@ class DocumentResource(BaseDocumentResource):
             )
             response = self.service.get_document_content(document_id, request_args)
         else:
-            serializer.load({'id': document_id}, partial=True)
             document = self.service.find_by_id(document_id)
             response = serializer.dump(document), 200
 
@@ -115,14 +124,14 @@ class DocumentResource(BaseDocumentResource):
         responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.expect(NewDocumentResource.parser)
+    @api.expect(parser)
     @api.marshal_with(swagger_models.document_sw_model, envelope='data')
     def put(self, document_id: int) -> tuple:
         serializer = self.get_serializer(serializer_name='document')
         serializer.load({'id': document_id}, partial=True)
-        data = serializer.valid_request_file(get_request_file())
+        validated_data = serializer.valid_request_file(get_request_file())
 
-        document = self.service.save(document_id, **data)
+        document = self.service.save(document_id, **validated_data)
 
         return serializer.dump(document), 200
 

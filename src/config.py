@@ -7,6 +7,7 @@ The extension and custom configurations are defined here.
 import logging
 import os
 from datetime import timedelta
+from pathlib import Path
 
 from dotenv import load_dotenv
 from kombu import Exchange, Queue
@@ -108,13 +109,16 @@ class Config(metaclass=Meta):
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
     TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')
 
-    ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-    STORAGE_DIRECTORY = f'{ROOT_DIRECTORY}/storage'
-    MOCKUP_DIRECTORY = f'{ROOT_DIRECTORY}/storage/mockups'
-    STATIC_FOLDER = f'{ROOT_DIRECTORY}/static'
-    TEMPLATES_FOLDER = f'{ROOT_DIRECTORY}/templates'
+    ROOT_DIRECTORY = str(Path(__file__).resolve().parent.parent)
+    SRC_DIRECTORY = f'{ROOT_DIRECTORY}/src'
+    STORAGE_DIRECTORY = f'{SRC_DIRECTORY}/storage'
+    MOCKUP_DIRECTORY = f'{SRC_DIRECTORY}/storage/mockups'
+    STATIC_FOLDER = f'{SRC_DIRECTORY}/static'
+    TEMPLATES_FOLDER = f'{SRC_DIRECTORY}/templates'
 
-    RESET_TOKEN_EXPIRES = 86400  # 1 day = 86400
+    GOOGLE_SERVICE_ACCOUNT = os.getenv('GOOGLE_SERVICE_ACCOUNT', f'{ROOT_DIRECTORY}/service_account.json')
+
+    RESET_TOKEN_EXPIRES = 86_400  # 1 day = 86400
 
     ALLOWED_CONTENT_TYPES = {
         'application/json',
@@ -122,7 +126,7 @@ class Config(metaclass=Meta):
     }
     ALLOWED_MIME_TYPES = {
         'application/pdf',
-        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     }
 
 
@@ -151,3 +155,4 @@ class TestConfig(Config):
 
     # Mr Developer
     STORAGE_DIRECTORY = f'{Config.STORAGE_DIRECTORY}/tests'
+    GOOGLE_SERVICE_ACCOUNT = f'{Config.ROOT_DIRECTORY}/test_service_account.json'

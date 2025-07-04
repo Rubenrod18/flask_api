@@ -4,6 +4,7 @@ import pytest
 from flask import current_app
 
 from app.file_storages import LocalStorage
+from app.models.document import StorageTypes
 from app.utils.constants import PDF_MIME_TYPE
 
 from ._base_documents_test import _TestBaseDocumentEndpoints
@@ -33,6 +34,31 @@ class TestSaveDocumentEndpoint(_TestBaseDocumentEndpoints):
         assert pdf_filename == json_data.get('name')
         assert PDF_MIME_TYPE == json_data.get('mime_type')
         assert self.local_storage.get_filesize(pdf_file) == json_data.get('size')
+        assert str(StorageTypes.LOCAL) == json_data.get('storage_type')
+        assert parse_url.scheme and parse_url.netloc
+        assert json_data.get('created_at')
+        assert json_data.get('updated_at') == json_data.get('created_at')
+        assert json_data.get('deleted_at') is None
+
+    def test_save_document_endpoint_in_google_drive(self):
+        pdf_filename = 'example.pdf'
+        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{pdf_filename}'
+        payload = {
+            'document': open(pdf_file, 'rb'),
+        }
+        headers = self.build_headers()
+        headers['Content-Type'] = 'multipart/form-data'
+
+        response = self.client.post(self.base_path, data=payload, headers=headers)
+        json_response = response.get_json()
+        json_data = json_response.get('data')
+        parse_url = urlparse(json_data.get('url'))
+
+        assert self.admin_user.id == json_data.get('created_by').get('id')
+        assert pdf_filename == json_data.get('name')
+        assert PDF_MIME_TYPE == json_data.get('mime_type')
+        assert self.local_storage.get_filesize(pdf_file) == json_data.get('size')
+        assert str(StorageTypes.LOCAL) == json_data.get('storage_type')
         assert parse_url.scheme and parse_url.netloc
         assert json_data.get('created_at')
         assert json_data.get('updated_at') == json_data.get('created_at')

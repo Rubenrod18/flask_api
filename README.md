@@ -64,7 +64,7 @@ This will start the Flask application with the appropriate database setup.
 
 ## Application Layer Components
 
-The application follows a Domain Driven Design arquitecture:
+The application follows some of the ideas of Domain Driven Design arquitecture:
 
 ![Application Layer Components Diagram](docs/app_layer_components.png)
 
@@ -76,7 +76,9 @@ The application follows a Domain Driven Design arquitecture:
 
 4. **Database Model**: Defines the structure of the data as Python classes (typically using an ORM), mapping objects to database tables. Handles schema definition, relationships, and direct interaction with the database.
 
-5. **File Storage**: Responsible for saving, retrieving, and deleting files. Provides an interface for file operations such as uploading, downloading, copying, and deleting files. Interacts exclusively with the Service layer, keeping file-handling logic separate from business and data access logic.
+5. **File Storage**: Responsible for saving, retrieving, and deleting files. Provides an interface for file operations such as uploading, downloading, copying, and deleting files. Interacts exclusively with the Service layer, keeping file-handling logic separate from business and data access logic. Only for local environment.
+
+6. **Provider**: Responsible for external communication with others services such as Google Drive, AWS, Azure, etc.
 
 
 ## Component Interaction Diagram
@@ -99,7 +101,7 @@ The following diagram illustrates the main components and their interactions wit
    - Data flows from the Service Layer to the Repository Layer, which communicates with the Database.
 
 4. **File Storage**:
-   - The Service Layer handles file uploads/downloads via the Storage component.
+   - The Service Layer handles file uploads/downloads via the Storage component or the Provider.
 
 
 ---

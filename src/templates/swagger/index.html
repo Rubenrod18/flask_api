@@ -892,12 +892,13 @@ SwaggerUIBundle object.
                   layout: "StandaloneLayout",
                   persistAuthorization: true,
                   requestInterceptor: function (request) {
-                      request.headers['Content-Type'] = 'application/json';
+                    if (!request.headers['Content-Type'])
+                        request.headers['Content-Type'] = 'application/json';
 
-                      if (!request.headers || !request.headers['accept'])
-                          request.headers['accept'] = 'application/json';
+                    if (!request.headers['accept'])
+                        request.headers['accept'] = 'application/json';
 
-                      return request;
+                    return request;
                   }
               });
               // End Swagger UI call region

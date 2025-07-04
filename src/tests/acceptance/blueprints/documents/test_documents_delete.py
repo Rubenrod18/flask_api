@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, UTC
 
 import pytest
 
-from app.database.factories.document_factory import DocumentFactory
+from app.database.factories.document_factory import LocalDocumentFactory
 from tests.acceptance.blueprints.documents._base_documents_test import _TestBaseDocumentEndpoints
 
 
@@ -10,7 +10,7 @@ from tests.acceptance.blueprints.documents._base_documents_test import _TestBase
 class TestDeleteDocumentEndpoint(_TestBaseDocumentEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):
-        self.document = DocumentFactory(
+        self.document = LocalDocumentFactory(
             deleted_at=None,
             created_at=datetime.now(UTC) - timedelta(days=1),
         )

@@ -1,12 +1,9 @@
-import logging
 import os
 from shutil import copyfile
 
 from app.exceptions import FileEmptyError
 
 from .base import BaseFileStorage
-
-logger = logging.getLogger(__name__)
 
 
 class LocalStorage(BaseFileStorage):
@@ -24,7 +21,6 @@ class LocalStorage(BaseFileStorage):
 
                 return True
         except (FileExistsError, FileEmptyError) as e:
-            logger.debug(e)
             if not isinstance(e, FileExistsError):
                 if os.path.exists(filename):
                     os.remove(filename)
@@ -41,6 +37,7 @@ class LocalStorage(BaseFileStorage):
 
     @staticmethod
     def get_filename(filename: str) -> str:
+        # HACK: what is the diff between get_basename and get_filename?
         return os.path.basename(filename)
 
     def rename(self, src: str, dst: str) -> None:
