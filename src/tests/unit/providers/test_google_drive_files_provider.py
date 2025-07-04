@@ -253,12 +253,11 @@ class TestGoogleDriveFilesProvider:
                 {
                     'file_id': 'file-id',
                     'file_name': 'example.pdf',
-                    'parent_id': 'parent_id',
                     'mime_type': PDF_MIME_TYPE,
                 },
                 {
                     'fileId': 'file-id',
-                    'body': {'name': 'example.pdf', 'parents': ['parent_id']},
+                    'body': {'name': 'example.pdf'},
                     'media_body': None,
                     'fields': 'id, name, mimeType',
                 },
@@ -270,7 +269,7 @@ class TestGoogleDriveFilesProvider:
                 'id',
             ),
         ],
-        ids=['with-parents', 'without-parents'],
+        ids=['default-fields', 'specific-fields'],
     )
     @mock.patch('app.providers.google_drive.google_drive_files_provider.MediaIoBaseUpload', autospec=True)
     def test_upload_file_from_stream(
@@ -361,3 +360,20 @@ class TestGoogleDriveFilesProvider:
 
         mock_files.delete.assert_called_once_with(fileId=file_id)
         mock_delete.execute.assert_called_once()
+
+    @mock.patch('app.providers.google_drive.google_drive_files_provider.MediaIoBaseDownload', autospec=True)
+    def test_download_file_content(self, mock_media_io_base_download, mock_gdrive_files_provider):
+        provider, mock_files = mock_gdrive_files_provider
+        mock_files.get_media.return_value = MagicMock()
+        mock_downloader_instance = MagicMock()
+        mock_downloader_instance.next_chunk.side_effect = [(mock.Mock(progress=mock.Mock(return_value=1.0)), True)]
+        mock_media_io_base_download.return_value = mock_downloader_instance
+        file_id = uuid.uuid4().hex
+
+        result = provider.download_file_content(file_id)
+
+        mock_files.get_media.assert_called_once_with(fileId=file_id)
+        mock_media_io_base_download.assert_called_once()
+        assert isinstance(result, io.BytesIO)
+        assert result.tell() == 0  # NOTE: The .tell() method on a file-like object (such as io.BytesIO) returns
+        #       the current position of the file pointer. Ensure seek(0) was called.

@@ -110,14 +110,19 @@ class DocumentResource(BaseDocumentResource):
 
         """
         serializer = self.get_serializer(serializer_name='document')
+        serializer.load({'id': document_id}, partial=True)
 
         if request.headers.get('Accept') == 'application/octet-stream':
             request_args = self.get_serializer(serializer_name='document_attachment').load(
                 request.args.to_dict(), unknown=EXCLUDE
             )
+            request_args.update(
+                self.get_serializer(serializer_name='document_storage_type').load(
+                    request.args.to_dict(), unknown=EXCLUDE
+                )
+            )
             response = self.service.get_document_content(document_id, request_args)
         else:
-            serializer.load({'id': document_id}, partial=True)
             document = self.service.find_by_id(document_id)
             response = serializer.dump(document), 200
 

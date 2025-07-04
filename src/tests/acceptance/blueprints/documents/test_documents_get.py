@@ -1,37 +1,38 @@
+import base64
+import io
 from datetime import datetime, timedelta, UTC
+from unittest.mock import Mock
 from urllib.parse import urlparse
 
 import pytest
 
-from app.database.factories.document_factory import LocalDocumentFactory
+from app.database.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
+from app.services import DocumentService
 
 from ._base_documents_test import _TestBaseDocumentEndpoints
 
 
 # pylint: disable=attribute-defined-outside-init
 class TestGetDocumentEndpoint(_TestBaseDocumentEndpoints):
-    @pytest.fixture(autouse=True)
-    def setup_extra(self):
-        self.document = LocalDocumentFactory(
+    def test_get_document_data_endpoint(self):
+        document = LocalDocumentFactory(
             deleted_at=None,
             created_at=datetime.now(UTC) - timedelta(days=1),
         )
-        self.endpoint = f'{self.base_path}/{self.document.id}'
 
-    def test_get_document_data_endpoint(self):
-        response = self.client.get(self.endpoint, json={}, headers=self.build_headers())
+        response = self.client.get(f'{self.base_path}/{document.id}', json={}, headers=self.build_headers())
         json_data = response.get_json()
         parse_url = urlparse(json_data.get('url'))
 
-        assert self.document.created_by == json_data.get('created_by').get('id')
-        assert self.document.name == json_data.get('name')
-        assert self.document.mime_type == json_data.get('mime_type')
-        assert self.document.size == json_data.get('size')
-        assert str(self.document.storage_type) == json_data.get('storage_type')
+        assert document.created_by == json_data.get('created_by').get('id')
+        assert document.name == json_data.get('name')
+        assert document.mime_type == json_data.get('mime_type')
+        assert document.size == json_data.get('size')
+        assert str(document.storage_type) == json_data.get('storage_type')
         assert parse_url.scheme and parse_url.netloc
-        assert self.document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
-        assert self.document.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
-        assert self.document.deleted_at == json_data.get('deleted_at')
+        assert document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+        assert document.updated_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('updated_at')
+        assert document.deleted_at == json_data.get('deleted_at')
 
     @pytest.mark.parametrize(
         'user_email_attr, expected_status',
@@ -42,25 +43,82 @@ class TestGetDocumentEndpoint(_TestBaseDocumentEndpoints):
         ],
     )
     def test_check_user_roles_in_get_document_endpoint(self, user_email_attr, expected_status):
+        document = LocalDocumentFactory(
+            deleted_at=None,
+            created_at=datetime.now(UTC) - timedelta(days=1),
+        )
         user_email = getattr(self, user_email_attr).email
+
         self.client.get(
-            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+            f'{self.base_path}/{document.id}',
+            json={},
+            headers=self.build_headers(user_email=user_email),
+            exp_code=expected_status,
         )
 
     @pytest.mark.parametrize(
         'as_attachment',
-        [
-            'as_attachment=1',
-            'as_attachment=0',
-            '',
-        ],
+        ['as_attachment=1', 'as_attachment=0', '', 'storage_type=local'],
     )
-    def test_get_document_file_content_endpoint(self, as_attachment):
+    def test_get_local_document_file_content_endpoint(self, as_attachment):
+        document = LocalDocumentFactory(
+            deleted_at=None,
+            created_at=datetime.now(UTC) - timedelta(days=1),
+        )
+
         response = self.client.get(
-            f'{self.endpoint}?{as_attachment}',
+            f'{self.base_path}/{document.id}?{as_attachment}',
             headers=self.build_headers(
                 extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
             ),
         )
 
         assert isinstance(response.get_data(), bytes)
+
+    @pytest.mark.parametrize(
+        'request_args',
+        ['storage_type=gdrive&as_attachment=1', 'storage_type=gdrive&as_attachment=0', 'storage_type=gdrive'],
+    )
+    def test_get_gdrive_document_file_content_endpoint(self, app, request_args):
+        document = GDriveDocumentFactory(
+            deleted_at=None,
+            created_at=datetime.now(UTC) - timedelta(days=1),
+        )
+
+        mock_document_service = Mock(spec=DocumentService)
+        file_stream = io.BytesIO(b'')
+        decoded_file_stream = base64.b64encode(file_stream.read()).decode('utf-8')
+        mock_document_service.get_document_content.return_value = decoded_file_stream, 200
+
+        with app.container.document_service.override(mock_document_service):
+            response = self.client.get(
+                f'{self.base_path}/{document.id}?{request_args}',
+                headers=self.build_headers(
+                    extra_headers={'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}
+                ),
+            )
+
+        assert isinstance(response.get_data(), bytes)
+
+    @pytest.mark.parametrize(
+        'factory, extra_headers',
+        [
+            (LocalDocumentFactory, {'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}),
+            (GDriveDocumentFactory, {'Content-Type': 'application/json', 'Accept': 'application/octet-stream'}),
+            (LocalDocumentFactory, {}),
+            (GDriveDocumentFactory, {}),
+        ],
+        ids=['local_file_stream', 'gdrive_file_stream', 'local_json', 'gdrive_json'],
+    )
+    def test_get_document_is_deleted(self, factory, extra_headers):
+        document = factory(deleted_at=datetime.now(UTC))
+
+        response = self.client.get(
+            f'{self.base_path}/{document.id}',
+            json={},
+            headers=self.build_headers(extra_headers=extra_headers),
+            exp_code=404,
+        )
+        json_response = response.get_json()
+
+        assert json_response == {'message': 'Document not found'}, json_response

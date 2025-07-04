@@ -2,7 +2,7 @@
 import uuid
 from datetime import datetime, UTC
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from flask import current_app, Response, send_file
@@ -451,12 +451,8 @@ class TestDeleteDocumentService(_TestDocumentBaseService):
 
 
 class TestGetDocumentContentDocumentService(_TestDocumentBaseService):
-    @pytest.fixture(autouse=True)
-    def setup_extra(self):
-        self.document = LocalDocumentFactory(deleted_at=None)
-
     @pytest.mark.parametrize(
-        'doc_name, as_attachment_param, expected_kwargs',
+        'doc_name, request_args, expected_kwargs',
         [
             (
                 None,
@@ -496,29 +492,82 @@ class TestGetDocumentContentDocumentService(_TestDocumentBaseService):
                     'download_name': doc.name,
                 },
             ),
+            (
+                None,
+                {'storage_type': StorageType.LOCAL.value},
+                lambda doc: {
+                    'path_or_file': b'',
+                    'mimetype': PDF_MIME_TYPE,
+                    'as_attachment': 0,
+                },
+            ),
         ],
         ids=[
             'default as_attachment',
             'explicit as_attachment=0',
             'explicit as_attachment=1',
             'custom doc name with as_attachment=1',
+            'storage_type equals to "local"',
         ],
     )
     @mock.patch('app.services.document.send_file', autospec=True)
-    def test_get_document_content_document(self, mock_send_file, doc_name, as_attachment_param, expected_kwargs):
+    def test_get_local_document_content(self, mock_send_file, doc_name, request_args, expected_kwargs):
         mock_doc_repo = mock.MagicMock(spec=DocumentRepository)
 
         document = LocalDocumentFactory(name=doc_name) if doc_name else LocalDocumentFactory()
         mock_doc_repo.find_by_id.return_value = document
+        expected_args = expected_kwargs(document)
 
         document_service = DocumentService(mock_doc_repo)
-        expected_args = expected_kwargs(document)
+        mock_get_local_document_content = MagicMock()
+        mock_get_local_document_content.return_value = {'path_or_file': expected_args['path_or_file']}
+        document_service._get_local_document_content = mock_get_local_document_content
 
         with current_app.test_request_context():
             mock_send_file.return_value = send_file(**expected_args)
-            response = document_service.get_document_content(self.document.id, as_attachment_param)
+            response = document_service.get_document_content(document.id, request_args)
 
-        mock_doc_repo.find_by_id.assert_called_once_with(self.document.id)
+        mock_doc_repo.find_by_id.assert_called_once_with(document.id)
+        document_service._get_local_document_content.assert_called_once_with(document)
+        mock_send_file.assert_called_once_with(**expected_args)
+        assert isinstance(response, Response)
+        assert response.mimetype == PDF_MIME_TYPE
+
+    @pytest.mark.parametrize(
+        'request_args, expected_kwargs',
+        [
+            (
+                {'storage_type': StorageType.GDRIVE.value},
+                lambda doc: {
+                    'path_or_file': b'',
+                    'mimetype': PDF_MIME_TYPE,
+                    'as_attachment': 0,
+                },
+            ),
+        ],
+        ids=[
+            'storage_type equals to "gdrive"',
+        ],
+    )
+    @patch('app.providers.google_drive.GoogleDriveFilesProvider', autospec=True)
+    @patch('app.services.document.send_file', autospec=True)
+    def test_get_gdrive_document_content(
+        self, mock_send_file, mock_gdrive_files_provider, request_args, expected_kwargs
+    ):
+        mock_doc_repo = mock.MagicMock(spec=DocumentRepository)
+        document = GDriveDocumentFactory()
+        mock_doc_repo.find_by_id.return_value = document
+        expected_args = expected_kwargs(document)
+
+        mock_gdrive_files_provider.download_file_content.return_value = b''
+        document_service = DocumentService(mock_doc_repo, gdrive_files_provider=mock_gdrive_files_provider)
+
+        with current_app.test_request_context():
+            mock_send_file.return_value = send_file(**expected_args)
+            response = document_service.get_document_content(document.id, request_args)
+
+        mock_doc_repo.find_by_id.assert_called_once_with(document.id)
+        mock_gdrive_files_provider.download_file_content.assert_called_once_with(document.storage_id)
         mock_send_file.assert_called_once_with(**expected_args)
         assert isinstance(response, Response)
         assert response.mimetype == PDF_MIME_TYPE

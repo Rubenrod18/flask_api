@@ -151,30 +151,42 @@ class DocumentService(
 
         document = self.repository.find_by_id(record_id)
         kwargs['document'] = document
-        data = storage_types.get(storage_type, self._save_local_file)(**kwargs)
+        document_data = storage_types.get(storage_type)(**kwargs)
 
-        return self.repository.save(record_id, **data)
+        return self.repository.save(record_id, **document_data)
 
     def delete(self, record_id: int) -> Document:
         return self.repository.delete(record_id)
 
+    @staticmethod
+    def _get_local_document_content(document: Document) -> dict:
+        return {'path_or_file': document.get_filepath()}
+
+    def _get_gdrive_document_content(self, document: Document) -> dict:
+        return {'path_or_file': self.gdrive_files_provider.download_file_content(document.storage_id)}
+
     def get_document_content(self, document_id: int, request_args: dict) -> Response:
-        # HACK: PENDING TO ADD GDRIVE
         as_attachment = request_args.get('as_attachment', 0)
-        document = self.repository.find_by_id(document_id)
-
-        mime_type = document.mime_type
-        file_extension = mimetypes.guess_extension(mime_type)
-
-        kwargs = {
-            'path_or_file': document.get_filepath(),
-            'mimetype': mime_type,
-            'as_attachment': as_attachment,
+        storage_type = request_args.get('storage_type', StorageType.LOCAL.value)
+        storage_types = {
+            StorageType.LOCAL.value: self._get_local_document_content,
+            StorageType.GDRIVE.value: self._get_gdrive_document_content,
         }
 
+        document = self.repository.find_by_id(document_id)
+        file_extension = mimetypes.guess_extension(document.mime_type)
+
+        file_data = storage_types.get(storage_type)(document)
+        file_data.update(
+            {
+                'as_attachment': as_attachment,
+                'mimetype': document.mime_type,
+            }
+        )
+
         if as_attachment:
-            kwargs['download_name'] = (
+            file_data['download_name'] = (
                 document.name if document.name.find(file_extension) != -1 else f'{document.name}{file_extension}'
             )
 
-        return send_file(**kwargs)
+        return send_file(**file_data)

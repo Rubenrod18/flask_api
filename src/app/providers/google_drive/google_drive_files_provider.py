@@ -1,7 +1,8 @@
+import io
 from typing import IO
 
 from google.oauth2 import service_account
-from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload, MediaIoBaseUpload
 
 from app.decorators.handle_gdrive_errors import handle_gdrive_errors
 from app.providers.google_drive._google_drive_base_provider import _GoogleDriveBaseProvider
@@ -108,7 +109,7 @@ class GoogleDriveFilesProvider(_GoogleDriveBaseProvider):
         return self.service.list(pageSize=page_size).execute()
 
     @handle_gdrive_errors()
-    def get_file_metadata(self, file_id, fields: str = None) -> dict:
+    def get_file_metadata(self, file_id: str, fields: str = None) -> dict:
         fields = fields or 'id, name, mimeType, size, createdTime, modifiedTime, owners, webViewLink'
 
         return self.service.get(fileId=file_id, fields=fields).execute()
@@ -117,3 +118,17 @@ class GoogleDriveFilesProvider(_GoogleDriveBaseProvider):
     def delete_file(self, item_id: str) -> None:
         """Delete an item (file or folder)  by id."""
         self.service.delete(fileId=item_id).execute()
+
+    @handle_gdrive_errors()
+    def download_file_content(self, file_id: str) -> io.BytesIO:
+        request = self.service.get_media(fileId=file_id)
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+            # IDEA: print(f"Download {int(status.progress() * 100)}%.")
+
+        fh.seek(0)
+        return fh
