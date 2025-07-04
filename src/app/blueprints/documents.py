@@ -124,7 +124,7 @@ class DocumentResource(BaseDocumentResource):
         responses={401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 422: 'Unprocessable Entity'},
         security='auth_token',
     )
-    @api.expect(NewDocumentResource.parser)
+    @api.expect(parser)
     @api.marshal_with(swagger_models.document_sw_model, envelope='data')
     def put(self, document_id: int) -> tuple:
         serializer = self.get_serializer(serializer_name='document')
