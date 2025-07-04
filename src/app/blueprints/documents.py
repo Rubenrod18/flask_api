@@ -1,5 +1,3 @@
-import logging
-
 from dependency_injector.wiring import inject, Provide
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
@@ -21,7 +19,6 @@ blueprint = Blueprint('documents', __name__)
 api = root_api.namespace(
     'documents', description='Users with role admin, team_leader or worker can manage these endpoints.'
 )
-logger = logging.getLogger(__name__)
 
 
 class BaseDocumentResource(BaseResource):
