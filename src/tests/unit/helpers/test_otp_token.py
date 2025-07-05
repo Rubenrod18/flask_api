@@ -4,14 +4,14 @@ import pytest
 from werkzeug.exceptions import BadRequest
 
 from app.helpers.otp_token import OTPTokenManager
+from tests.base.base_unit_test import TestBaseUnit
 
 
 # pylint: disable=attribute-defined-outside-init
-class TestOTPTokenManager:
+class TestOTPTokenManager(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self, faker):
-        self.faker = faker
-        self.otp_token_manager = OTPTokenManager(secret_key=faker.sha256(), salt=faker.md5(), expiration=1)
+    def setup_extra(self):
+        self.otp_token_manager = OTPTokenManager(secret_key=self.faker.sha256(), salt=self.faker.md5(), expiration=1)
 
     def test_generate_token(self):
         data = self.faker.text()

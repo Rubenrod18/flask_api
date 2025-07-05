@@ -5,6 +5,7 @@ from googleapiclient.errors import HttpError
 
 from app.decorators.handle_gdrive_errors import handle_gdrive_errors
 from app.exceptions import GoogleDriveError, GoogleDriveNotFoundError, GoogleDrivePermissionError
+from tests.base.base_unit_test import TestBaseUnit
 
 
 def mock_http_error(status_code, message='Error'):
@@ -13,7 +14,7 @@ def mock_http_error(status_code, message='Error'):
     return HttpError(resp=resp, content=bytes(message, 'utf-8'))
 
 
-class TestHandleGDriveErrors:
+class TestHandleGDriveErrors(TestBaseUnit):
     def test_permission_error_raises_google_drive_permission_error(self):
         @handle_gdrive_errors()
         def fake_method():

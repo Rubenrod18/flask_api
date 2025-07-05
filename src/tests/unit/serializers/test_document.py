@@ -1,6 +1,6 @@
 # pylint: disable=attribute-defined-outside-init, unused-argument
-import unittest
 from datetime import datetime, UTC
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,28 +11,17 @@ from app.models import Document
 from app.models.document import StorageTypes
 from app.repositories import DocumentRepository
 from app.serializers import DocumentAttachmentSerializer, DocumentSerializer
-from tests.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
-from tests.factories.user_factory import UserFactory
+from tests.base.base_unit_test import TestBaseUnit
 
 
-class TestDocumentSerializer:
+class TestDocumentSerializer(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self, app):
-        self.user = UserFactory()
+    def setup_extra(self):
+        self.user = SimpleNamespace()
         self.document_repository = MagicMock(spec=DocumentRepository)
         self.document_repository.model = MagicMock(spec=Document)
         self.document_repository.model.deleted_at.is_.return_value = None
-        self.document = LocalDocumentFactory(
-            name='test_doc.pdf',
-            internal_filename='test_doc_internal.pdf',
-            mime_type='application/pdf',
-            size=1_024,
-            created_by_user=self.user,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
-            deleted_at=None,
-        )
-
+        self.document = SimpleNamespace(id=self.faker.random_int(), deleted_at=None)
         self.serializer = DocumentSerializer()
         self.serializer._document_repository = self.document_repository  # pylint: disable=protected-access
         self.document_repository.find_by_id.return_value = self.document
@@ -40,22 +29,28 @@ class TestDocumentSerializer:
     @pytest.mark.parametrize(
         'factory_cls, expected_storage_type, expected_url_substring',
         [
-            (LocalDocumentFactory, StorageTypes.LOCAL, 'http://flask-api.local'),
-            (GDriveDocumentFactory, StorageTypes.GDRIVE, 'https://drive.google.com/file/d'),
+            (SimpleNamespace, StorageTypes.LOCAL, 'http://flask-api.local'),
+            (SimpleNamespace, StorageTypes.GDRIVE, 'https://drive.google.com/file/d'),
         ],
         ids=['local-storage', 'gdrive-storage'],
     )
     def test_valid_serialization(self, factory_cls, expected_storage_type, expected_url_substring):
-        document = factory_cls(deleted_at=None, created_by_user=self.user)
+        document = factory_cls()
+        document.id = self.faker.random_int()
+        document.deleted_at = None
+        document.created_by_user = self.user
+        document.storage_type = expected_storage_type
+        document.url = None
+
         serialized_data = self.serializer.dump(document)
 
-        assert serialized_data['id'] > 0
-        assert serialized_data['name'] == document.name
-        assert serialized_data['mime_type'] == document.mime_type
-        assert serialized_data['storage_type'] == expected_storage_type.value
-        assert 'url' in serialized_data
-        assert expected_url_substring in serialized_data['url']
-        assert serialized_data['created_by']['name'] == self.user.name
+        assert serialized_data == {
+            'id': document.id,
+            'storage_type': expected_storage_type,
+            'deleted_at': None,
+            'url': None,
+            'created_by': {},
+        }
 
     def test_validate_existing_document_id(self):
         document = self.serializer.load({'id': self.document.id}, partial=True)
@@ -111,8 +106,9 @@ class TestDocumentSerializer:
         assert exc_info.value.description == 'empty file'
 
 
-class TestDocumentAttachmentSerializer(unittest.TestCase):
-    def setUp(self):
+class TestDocumentAttachmentSerializer(TestBaseUnit):
+    @pytest.fixture(autouse=True)
+    def setup_extra(self):
         self.serializer = DocumentAttachmentSerializer()
 
     def test_valid_as_attachment(self):

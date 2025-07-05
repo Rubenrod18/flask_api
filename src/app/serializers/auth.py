@@ -4,7 +4,6 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 
 from app.extensions import ma
 from app.helpers.otp_token import OTPTokenManager
-from app.models import User
 from app.repositories import UserRepository
 from app.serializers.core import RepositoryMixin
 from config import Config
@@ -38,7 +37,7 @@ class AuthUserLoginSerializer(ma.Schema, RepositoryMixin):
 
     @validates('password')
     def validate_password(self, password):
-        if isinstance(self._user, User) and not verify_password(password, self._user.password):
+        if self._user and not verify_password(password, self._user.password):
             raise Unauthorized('Credentials invalid')
 
     @post_load

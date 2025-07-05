@@ -1,5 +1,5 @@
 from dependency_injector.wiring import inject, Provide
-from flask import Blueprint, request
+from flask import Blueprint, request, send_file
 from flask_jwt_extended import jwt_required
 from flask_security import roles_accepted
 from marshmallow import EXCLUDE
@@ -110,7 +110,7 @@ class DocumentResource(BaseDocumentResource):
             request_args = self.get_serializer(serializer_name='document_attachment').load(
                 request.args.to_dict(), unknown=EXCLUDE
             )
-            response = self.service.get_document_content(document_id, request_args)
+            response = send_file(**self.service.get_document_content(document_id, request_args))
         else:
             document = self.service.find_by_id(document_id)
             response = serializer.dump(document), 200

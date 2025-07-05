@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 from marshmallow import ValidationError
 
@@ -5,10 +7,7 @@ from app.helpers.sqlalchemy_query_builder import EQUAL_OP, GREATER_THAN_OP
 from app.repositories.base import BaseRepository
 from app.serializers import SearchSerializer
 from app.serializers.core import RepositoryMixin
-
-
-class DummyRepository:
-    pass
+from tests.base.base_unit_test import TestBaseUnit
 
 
 class SampleRepository(BaseRepository):
@@ -21,7 +20,7 @@ class TestRepositoryMixin:
         'repository_classes_value, expected_error',
         [
             ({'sample': {}}, "repository_classes['sample'] must be a class"),
-            ({'sample': DummyRepository}, "repository_classes['sample'] must inherit from BaseRepository"),
+            ({'sample': SimpleNamespace}, "repository_classes['sample'] must inherit from BaseRepository"),
         ],
         ids=['dict', 'not-repository-class'],
     )
@@ -67,9 +66,9 @@ class TestRepositoryMixin:
 
 
 # pylint: disable=attribute-defined-outside-init
-class TestSearchSerializer:
+class TestSearchSerializer(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup_extra(self):
         self.serializer = SearchSerializer()
 
     def test_valid_search(self):

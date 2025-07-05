@@ -1,5 +1,7 @@
 # pylint: disable=attribute-defined-outside-init, unused-argument
-from unittest.mock import MagicMock
+from datetime import datetime, UTC
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 from marshmallow import ValidationError
@@ -9,16 +11,18 @@ from app.helpers.otp_token import OTPTokenManager
 from app.models import User
 from app.repositories import UserRepository
 from app.serializers import AuthUserConfirmResetPasswordSerializer, AuthUserLoginSerializer
-from tests.factories.user_factory import UserFactory
+from tests.base.base_unit_test import TestBaseUnit
 
 
-class TestAuthUserLoginSerializer:
+class TestAuthUserLoginSerializer(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self, app, faker):
-        self.faker = faker
+    def setup_extra(self):
         self.plain_password = self.faker.password()
-        self.user = UserFactory(
-            email=self.faker.email(), password=User.ensure_password(self.plain_password), active=True, deleted_at=None
+        self.user = SimpleNamespace(
+            email=self.faker.email(),
+            active=True,
+            deleted_at=None,
+            password=self.faker.password(),
         )
 
         self.user_repository = MagicMock(spec=UserRepository)
@@ -30,7 +34,9 @@ class TestAuthUserLoginSerializer:
         self.serializer = AuthUserLoginSerializer()
         self.serializer._user_repository = self.user_repository  # noqa  # pylint: disable=protected-access
 
-    def test_valid_login(self):
+    @patch('app.serializers.auth.verify_password', autospec=True)
+    def test_valid_login(self, mock_verify_password):
+        mock_verify_password.return_value = True
         self.user_repository.find_by_email.return_value = self.user
 
         data = self.serializer.load({'email': self.user.email, 'password': self.plain_password})
@@ -40,6 +46,7 @@ class TestAuthUserLoginSerializer:
             self.user_repository.model.active.is_(True),
             self.user_repository.model.deleted_at.is_(None),
         )
+        mock_verify_password.assert_called_once_with(self.plain_password, self.user.password)
         assert data == self.user
 
     def test_invalid_email(self):
@@ -71,12 +78,15 @@ class TestAuthUserLoginSerializer:
         assert exc_info.value.code == Unauthorized.code
         assert exc_info.value.description == 'Credentials invalid'
 
-    def test_invalid_password(self):
+    @patch('app.serializers.auth.verify_password', autospec=True)
+    def test_invalid_password(self, mock_verify_password):
+        mock_verify_password.return_value = False
         self.user_repository.find_by_email.return_value = self.user
 
         with pytest.raises(Unauthorized) as exc_info:
-            self.serializer.load({'email': self.user.email, 'password': 'wrongpassword'})
+            self.serializer.load({'email': self.user.email, 'password': self.plain_password})
 
+        mock_verify_password.assert_called_once_with(self.plain_password, self.user.password)
         assert exc_info.value.code == Unauthorized.code
         assert exc_info.value.description == 'Credentials invalid'
 
@@ -88,16 +98,19 @@ class TestAuthUserLoginSerializer:
             self.serializer.load({'email': self.user.email})
 
 
-class TestAuthUserConfirmResetPasswordSerializer:
+class TestAuthUserConfirmResetPasswordSerializer(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self, app, faker):
-        self.faker = faker
+    def setup_extra(self):
         self.valid_token = self.faker.sha256()
         self.valid_email = self.faker.email()
         self.valid_password = self.faker.password(
             length=12, special_chars=True, digits=True, upper_case=True, lower_case=True
         )
-        self.user = UserFactory(email=self.valid_email, active=True, deleted_at=None)
+        self.user = SimpleNamespace(
+            email=self.valid_email,
+            active=True,
+            deleted_at=None,
+        )
 
         self.user_repository = MagicMock(spec=UserRepository)
         self.user_repository.find_by_email.return_value = None
@@ -152,7 +165,7 @@ class TestAuthUserConfirmResetPasswordSerializer:
         assert exc_info.value.description == 'Invalid token'
 
     def test_user_deleted(self):
-        self.user.deleted_at = '2024-01-01'
+        self.user.deleted_at = datetime.now(UTC)
         self.otp_token_manager.verify_token.return_value = self.valid_email
         self.user_repository.find_by_email.return_value = self.user
 

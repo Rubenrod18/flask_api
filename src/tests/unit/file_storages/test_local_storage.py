@@ -1,16 +1,17 @@
 import os
 
 import pytest
-from flask import current_app
 
 from app.exceptions import FileEmptyError
 from app.file_storages import LocalStorage
+from config import TestConfig
+from tests.base.base_unit_test import TestBaseUnit
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument
-class TestLocalStorage:
+class TestLocalStorage(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self, tmp_path):
+    def setup_extra(self, tmp_path):
         self.local_storage = LocalStorage()
         self.file_path = tmp_path / 'tempfile'
 
@@ -51,9 +52,9 @@ class TestLocalStorage:
 
         assert self.local_storage.get_filesize(self.file_path) == 5
 
-    def test_get_basename(self, app):
+    def test_get_basename(self):
         assert self.local_storage.get_basename('/tmp/myfile.txt') == 'myfile'
-        assert self.local_storage.get_basename(f'{current_app.config["ROOT_DIRECTORY"]}/src/config.py') == 'config'
+        assert self.local_storage.get_basename(f'{TestConfig.ROOT_DIRECTORY}/src/config.py') == 'config'
 
     def test_rename(self):
         new_name = str(self.file_path) + '_renamed'

@@ -1,4 +1,5 @@
 from datetime import datetime, UTC
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,21 +8,14 @@ from werkzeug.exceptions import BadRequest, NotFound
 from app.models import Role
 from app.repositories import RoleRepository
 from app.serializers import RoleSerializer
-from tests.factories.role_factory import RoleFactory
+from tests.base.base_unit_test import TestBaseUnit
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument
-class TestRoleSerializer:
+class TestRoleSerializer(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self, app):
-        self.role = RoleFactory(
-            name='admin',
-            description='Administrator role',
-            label='Administrator',
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
-            deleted_at=None,
-        )
+    def setup_extra(self):
+        self.role = SimpleNamespace(id=self.faker.random_int(), name=self.faker.word(), deleted_at=None)
         self.role_repository = MagicMock(spec=RoleRepository)
         self.role_repository.find_by_id.return_value = self.role
         self.role_repository.model = MagicMock(spec=Role)
@@ -33,10 +27,7 @@ class TestRoleSerializer:
     def test_valid_serialization(self):
         serialized_data = self.serializer.dump(self.role)
 
-        assert serialized_data['id'] == self.role.id
-        assert serialized_data['name'] == self.role.name
-        assert serialized_data['description'] == self.role.description
-        assert serialized_data['label'] == self.role.label
+        assert serialized_data == {'id': self.role.id, 'name': self.role.name, 'deleted_at': None}
 
     def test_validate_existing_role_id(self):
         role = self.serializer.load({'id': self.role.id}, partial=True)
