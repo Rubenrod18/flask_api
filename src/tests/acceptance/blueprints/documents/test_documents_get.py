@@ -1,4 +1,3 @@
-import base64
 import io
 from datetime import datetime, timedelta, UTC
 from unittest.mock import Mock
@@ -7,6 +6,7 @@ from urllib.parse import urlparse
 import pytest
 
 from app.services import DocumentService
+from app.utils.constants import PDF_MIME_TYPE
 from tests.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
 
 from ._base_documents_test import _TestBaseDocumentEndpoints
@@ -76,19 +76,45 @@ class TestGetDocumentEndpoint(_TestBaseDocumentEndpoints):
         assert isinstance(response.get_data(), bytes)
 
     @pytest.mark.parametrize(
-        'request_args',
-        ['storage_type=gdrive&as_attachment=1', 'storage_type=gdrive&as_attachment=0', 'storage_type=gdrive'],
+        'request_args, send_file_kwargs',
+        [
+            (
+                'storage_type=gdrive&as_attachment=1',
+                {
+                    'path_or_file': io.BytesIO(b''),
+                    'as_attachment': 1,
+                    'mimetype': PDF_MIME_TYPE,
+                    'download_name': 'document_name_0.pdf',
+                },
+            ),
+            (
+                'storage_type=gdrive&as_attachment=0',
+                {
+                    'path_or_file': io.BytesIO(b''),
+                    'as_attachment': 0,
+                    'mimetype': PDF_MIME_TYPE,
+                    'download_name': 'document_name_1.pdf',
+                },
+            ),
+            (
+                'storage_type=gdrive',
+                {
+                    'path_or_file': io.BytesIO(b''),
+                    'as_attachment': 0,
+                    'mimetype': PDF_MIME_TYPE,
+                    'download_name': 'document_name_2.pdf',
+                },
+            ),
+        ],
     )
-    def test_get_gdrive_document_file_content_endpoint(self, app, request_args):
+    def test_get_gdrive_document_file_content_endpoint(self, app, request_args, send_file_kwargs):
         document = GDriveDocumentFactory(
             deleted_at=None,
             created_at=datetime.now(UTC) - timedelta(days=1),
         )
 
         mock_document_service = Mock(spec=DocumentService)
-        file_stream = io.BytesIO(b'')
-        decoded_file_stream = base64.b64encode(file_stream.read()).decode('utf-8')
-        mock_document_service.get_document_content.return_value = decoded_file_stream, 200
+        mock_document_service.get_document_content.return_value = send_file_kwargs
 
         with app.container.document_service.override(mock_document_service):
             response = self.client.get(

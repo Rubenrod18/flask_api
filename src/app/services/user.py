@@ -1,3 +1,5 @@
+import uuid
+
 from flask_login import current_user
 
 from app.extensions import db
@@ -15,11 +17,7 @@ class UserService(b.BaseService, b.CreationService, b.DeletionService, b.FindByI
         role = self.role_repository.find_by_id(kwargs['role_id'])
         kwargs.pop('role_id')
 
-        # QUESTION: Shall we consider save fs_uniquifier as an uuid?
-        user = self.repository.get_last_record()
-        fs_uniquifier = 1 if user is None else user.id + 1
-
-        kwargs.update({'created_by': current_user.id, 'fs_uniquifier': fs_uniquifier, 'roles': [role]})
+        kwargs.update({'created_by': current_user.id, 'fs_uniquifier': str(uuid.uuid4()), 'roles': [role]})
         user = user_datastore.create_user(**kwargs)
         db.session.add(user)
         db.session.flush()

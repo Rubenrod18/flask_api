@@ -8,7 +8,7 @@ from app.utils.constants import GoogleDriveRoles, GoogleDriveUserTypes
 
 
 @pytest.fixture
-def stub_gdrive_permissions_provider(app):  # pylint: disable=unused-argument
+def stub_gdrive_permissions_provider():  # pylint: disable=unused-argument
     """Returns a real GoogleDrivePermissionsProvider instance with a mocked service."""
     with (
         patch('app.providers.google_drive._google_drive_base_provider.build', autospec=True) as mock_build,

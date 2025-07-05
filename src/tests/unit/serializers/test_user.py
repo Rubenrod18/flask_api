@@ -1,38 +1,25 @@
-from datetime import datetime, UTC
-from random import choice
-from unittest.mock import MagicMock
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 from marshmallow import ValidationError
 from werkzeug.exceptions import BadRequest, NotFound
 
 from app.models import Role, User
-from app.models.user import Genre
 from app.repositories import UserRepository
 from app.serializers import UserExportWordSerializer, UserSerializer
-from tests.factories.role_factory import RoleFactory
-from tests.factories.user_factory import UserFactory
+from app.serializers.user import VerifyRoleId
+from tests.base.base_unit_test import TestBaseUnit
 
 
 # pylint: disable=attribute-defined-outside-init, unused-argument
-class TestUserSerializer:
+class TestUserSerializer(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self, app, faker):
-        self.faker = faker
-        self.user = UserFactory(
-            name=self.faker.name(),
-            last_name=self.faker.last_name(),
-            email=self.faker.email(),
-            password=self.faker.password(length=12, special_chars=True, digits=True, upper_case=True, lower_case=True),
-            genre=choice(Genre.to_list()),
-            birth_date='1990-01-01',
-            active=True,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
-            deleted_at=None,
-            roles=[RoleFactory(deleted_at=None)],
-        )
+    def setup_extra(self):
+        self.user = SimpleNamespace(id=self.faker.random_int(), email=self.faker.email())
+
         self.user_repository = MagicMock(spec=UserRepository)
+        self.user_repository.find_by_id.return_value = None
         self.user_repository.find_by_email.return_value = None
         self.user_repository.model = MagicMock(spec=User)
         self.user_repository.model.deleted_at.is_.return_value = None
@@ -43,16 +30,15 @@ class TestUserSerializer:
     def test_valid_serialization(self):
         serialized_data = self.serializer.dump(self.user)
 
-        assert serialized_data['id'] == self.user.id
-        assert serialized_data['email'] == self.user.email
-        assert 'roles' in serialized_data
-        assert len(serialized_data['roles']) == 1
-        assert serialized_data['roles'][0]['name'] == self.user.roles[0].name
+        assert serialized_data == {'id': self.user.id, 'email': self.user.email}
 
     def test_valid_email_validation(self):
         self.user_repository.find_by_email.return_value = None
+        new_email = self.faker.email()
 
-        self.serializer.load({'email': 'new_email@example.com'}, partial=True)
+        self.serializer.load({'email': new_email}, partial=True)
+
+        self.user_repository.find_by_email.assert_called_once_with(new_email)
 
     def test_invalid_email_validation(self):
         self.user_repository.find_by_email.return_value = self.user
@@ -60,28 +46,41 @@ class TestUserSerializer:
         with pytest.raises(BadRequest) as exc_info:
             self.serializer.load({'email': self.user.email}, partial=True)
 
+        self.user_repository.find_by_email.assert_called_once_with(self.user.email)
         assert exc_info.value.code == 400
         assert exc_info.value.description == 'User email already created'
 
     def test_validate_existing_user_id(self):
-        self.user_repository.find_by_id.return_value = self.user
+        self.user.deleted_at = None
         self.user_repository.find_by_id.return_value = self.user
 
-        self.serializer.load({'id': 1}, partial=True)
+        self.serializer.load({'id': self.user.id}, partial=True)
+
+        self.user_repository.find_by_id.assert_called_once_with(self.user.id, None)
 
     def test_validate_nonexistent_user_id(self):
         self.user_repository.find_by_id.return_value = None
+        fake_user_id = self.faker.random_int()
 
         with pytest.raises(NotFound) as exc_info:
-            self.serializer.validate_id(999)
+            self.serializer.validate_id(fake_user_id)
 
+        self.user_repository.find_by_id.assert_called_once_with(fake_user_id, None)
         assert exc_info.value.code == 404
         assert exc_info.value.description == 'User not found'
 
-    def test_valid_role_id(self):
-        self.serializer.load({'role_id': self.user.roles[0].id}, partial=True)
+    @patch.object(VerifyRoleId, '_deserialize', autospec=True)
+    def test_valid_role_id(self, mock_deserialize):
+        mock_deserialize.return_value = True
 
-    def test_invalid_role_id(self):
+        self.serializer.load({'role_id': self.faker.random_int()}, partial=True)
+
+        mock_deserialize.assert_called_once()
+
+    @patch.object(VerifyRoleId, '_deserialize', autospec=True)
+    def test_invalid_role_id(self, mock_deserialize):
+        mock_deserialize.side_effect = NotFound('Role not found')
+
         with pytest.raises(NotFound) as exc_info:
             self.serializer.load({'role_id': 999}, partial=True)
 
@@ -100,7 +99,10 @@ class TestUserSerializer:
             'birth_date': ['Missing data for required field.'],
         }
 
-    def test_invalid_role_id_format(self):
+    @patch.object(VerifyRoleId, '_deserialize', autospec=True)
+    def test_invalid_role_id_format(self, mock_deserialize):
+        mock_deserialize.side_effect = NotFound('Role not found')
+
         with pytest.raises(NotFound) as exc_info:
             self.serializer.load({'role_id': 'invalid_role'}, partial=True)
 

@@ -18,6 +18,11 @@ from tests.fixtures.gdrive_mocks import *  # pylint: disable=wildcard-import,unu
 
 logger = logging.getLogger(__name__)
 
+fake = Faker()
+fake.add_provider(person)
+fake.add_provider(date_time)
+fake.add_provider(file)
+
 
 class _CustomFlaskClient(FlaskClient):
     @staticmethod
@@ -75,10 +80,6 @@ def load_test_env():
 
 @pytest.fixture(scope='session')
 def faker():
-    fake = Faker()
-    fake.add_provider(person)
-    fake.add_provider(date_time)
-    fake.add_provider(file)
     return fake
 
 

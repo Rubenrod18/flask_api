@@ -2,7 +2,7 @@ import io
 import mimetypes
 import uuid
 
-from flask import current_app, Response, send_file
+from flask import current_app
 from flask_login import current_user
 from werkzeug.exceptions import BadRequest
 
@@ -164,7 +164,7 @@ class DocumentService(
     def _get_gdrive_document_content(self, document: Document) -> dict:
         return {'path_or_file': self.gdrive_files_provider.download_file_content(document.storage_id)}
 
-    def get_document_content(self, document_id: int, request_args: dict) -> Response:
+    def get_document_content(self, document_id: int, request_args: dict) -> dict:
         as_attachment = request_args.get('as_attachment', 0)
         storage_types = {
             StorageTypes.LOCAL.value: self._get_local_document_content,
@@ -187,4 +187,4 @@ class DocumentService(
                 document.name if document.name.find(file_extension) != -1 else f'{document.name}{file_extension}'
             )
 
-        return send_file(**file_data)
+        return file_data

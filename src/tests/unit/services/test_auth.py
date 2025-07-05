@@ -1,5 +1,6 @@
 # pylint: disable=attribute-defined-outside-init, unused-argument
 import os
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,12 +8,17 @@ from flask_security import UserMixin
 
 from app.repositories import UserRepository
 from app.services import AuthService
-from tests.factories.user_factory import UserFactory
+from tests.base.base_unit_test import TestBaseUnit
 
 
-class _TestAuthBaseService:
+class _UserStub(SimpleNamespace):
+    def reload(self):
+        return True
+
+
+class _TestAuthBaseService(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self, app):
+    def base_setup(self):
         self.auth_service = AuthService()
 
 
@@ -23,7 +29,7 @@ class TestLoginAuthService(_TestAuthBaseService):
     def test_login_user(self, mock_create_refresh_token, mock_create_access_token, mock_login_user):
         mock_create_refresh_token.return_value = 'refresh_token'
         mock_create_access_token.return_value = 'access_token'
-        user = UserFactory()
+        user = SimpleNamespace(id=self.faker.random_int())
         user_id_str = str(user.id)
 
         jwt = self.auth_service.login_user(user)
@@ -68,7 +74,7 @@ class TestRequestResetPasswordAuthService(_TestAuthBaseService):
     @patch('app.services.auth.reset_password_email_task.delay', autospec=True)
     def test_request_reset_password(self, mock_task_delay, mock_url_for, mock_otp_token_manager):
         mock_otp_token_manager.generate_token.return_value = 'new_token'
-        user = UserFactory()
+        user = SimpleNamespace(email=self.faker.email())
 
         self.auth_service.request_reset_password(mock_otp_token_manager, user)
 
@@ -89,14 +95,17 @@ class TestConfirmRequestResetPasswordAuthService(_TestAuthBaseService):
         mock_user_repo.save.return_value = True
         auth_service = AuthService(mock_user_repo)
 
-        user = UserFactory()
-        user_id_str = str(user.id)
+        mock_user = MagicMock(spec=_UserStub)
+        mock_user.id = self.faker.random_int()
+        mock_user.reload.return_value = mock_user
+        user_id_str = str(mock_user.id)
         password = os.getenv('TEST_USER_PASSWORD')
 
-        jwt = auth_service.confirm_request_reset_password(user, password)
+        jwt = auth_service.confirm_request_reset_password(mock_user, password)
 
-        auth_service.repository.save.assert_called_once_with(user.id, **{'password': password})
-        mock_login_user.assert_called_once_with(user)
+        auth_service.repository.save.assert_called_once_with(mock_user.id, **{'password': password})
+        mock_user.reload.assert_called_once()
+        mock_login_user.assert_called_once_with(mock_user)
         mock_create_access_token.assert_called_once_with(identity=user_id_str)
         mock_create_refresh_token.assert_called_once_with(identity=user_id_str)
         assert isinstance(jwt, dict)
@@ -108,7 +117,7 @@ class TestRefreshTokenAuthService(_TestAuthBaseService):
     @patch('app.services.auth.get_jwt_identity', autospec=True)
     @patch('app.services.auth.create_access_token', autospec=True)
     def test_refresh_token(self, mock_create_access_token, mock_get_jwt_identity):
-        user = UserFactory()
+        user = SimpleNamespace()
         mock_get_jwt_identity.return_value = user
         mock_create_access_token.return_value = 'access_token'
 

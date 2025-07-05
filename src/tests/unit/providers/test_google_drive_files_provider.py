@@ -8,10 +8,11 @@ from flask import current_app
 
 from app.providers.google_drive import GoogleDriveFilesProvider
 from app.utils.constants import FOLDER_MIME_TYPE, PDF_MIME_TYPE
+from tests.base.base_unit_test import TestBaseUnit
 
 
 @pytest.fixture
-def stub_gdrive_files_provider(app):  # pylint: disable=unused-argument
+def stub_gdrive_files_provider():  # pylint: disable=unused-argument
     """Returns a real GoogleDriveFilesProvider instance with a mocked service."""
     with (
         patch('app.providers.google_drive._google_drive_base_provider.build', autospec=True) as mock_build,
@@ -34,7 +35,7 @@ def stub_gdrive_files_provider(app):  # pylint: disable=unused-argument
 
 
 # pylint: disable=redefined-outer-name
-class TestGoogleDriveFilesProvider:
+class TestGoogleDriveFilesProvider(TestBaseUnit):
     @pytest.mark.parametrize(
         'folder_params, payload, fields',
         [

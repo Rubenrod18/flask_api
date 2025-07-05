@@ -1,23 +1,22 @@
+from types import SimpleNamespace
+
 import pytest
 
 from app.blueprints.base import SerializerMixin
 from app.extensions import ma
-
-
-class DummySerializer:
-    pass
+from tests.base.base_unit_test import TestBaseUnit
 
 
 class SchemaSerializer(ma.Schema):
     pass
 
 
-class TestSerializerMixin:
+class TestSerializerMixin(TestBaseUnit):
     @pytest.mark.parametrize(
         'serializer_class_value, expected_error',
         [
             ({}, 'serializer_class must be a class'),
-            (DummySerializer, 'serializer_class must inherit from marshmallow.Schema'),
+            (SimpleNamespace, 'serializer_class must inherit from marshmallow.Schema'),
         ],
         ids=['dict', 'not-serializer-class'],
     )
@@ -39,7 +38,7 @@ class TestSerializerMixin:
         'serializer_classes_value, expected_error',
         [
             ({'schema': {}}, "serializer_classes['schema'] must be a class"),
-            ({'schema': DummySerializer}, "serializer_classes['schema'] must inherit from marshmallow.Schema"),
+            ({'schema': SimpleNamespace}, "serializer_classes['schema'] must inherit from marshmallow.Schema"),
         ],
         ids=['dict', 'not-serializer-class'],
     )

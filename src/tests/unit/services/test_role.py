@@ -1,69 +1,52 @@
 # pylint: disable=attribute-defined-outside-init, unused-argument
 from datetime import datetime, UTC
+from types import SimpleNamespace
 from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
 
-from app.models import Role
 from app.repositories import RoleRepository
 from app.services import RoleService
-from tests.factories.role_factory import RoleFactory
-from tests.factories.user_factory import AdminUserFactory
+from tests.base.base_unit_test import TestBaseUnit
 
 
-class _TestRoleBaseService:
+class _TestRoleBaseService(TestBaseUnit):
     @pytest.fixture(autouse=True)
-    def setup(self, app):
-        self.admin_user = AdminUserFactory(deleted_at=None)
+    def base_setup(self, faker):
+        self.role_id = faker.random_int()
+        self.role = MagicMock(SimpleNamespace, autospec=True)
 
 
 class TestCreateRoleService(_TestRoleBaseService):
-    @mock.patch('app.services.role.db.session', autospec=True)
+    @mock.patch('app.services.role.db.session')
     def test_create_role(self, mock_session):
         mock_role_repo = MagicMock(spec=RoleRepository)
-        role = RoleFactory(deleted_at=None)
-        mock_role_repo.create.return_value = role
+        mock_role_repo.create.return_value = self.role
         role_service = RoleService(mock_role_repo)
-
-        role_data = RoleFactory.build_dict()
+        role_data = {'label': self.faker.name(), 'description': self.faker.sentence()}
 
         created_role = role_service.create(**role_data)
 
         mock_role_repo.create.assert_called_once_with(**role_data)
-        mock_session.add.assert_called_once_with(role)
+        mock_session.add.assert_called_once_with(self.role)
         mock_session.flush.assert_called_once_with()
-        assert isinstance(created_role, Role)
-        assert created_role.name, role.name
-        assert created_role.description, role.description
-        assert created_role.label, role.label
-        assert created_role.created_at
-        assert created_role.updated_at, created_role.created_at
-        assert created_role.deleted_at is None
+        assert isinstance(created_role, SimpleNamespace)
 
 
 class TestFindByIdRoleService(_TestRoleBaseService):
-    @pytest.fixture(autouse=True)
-    def setup_extra(self):
-        self.role = RoleFactory(deleted_at=None)
-
     def test_find_by_id_role(self):
         mock_role_repo = MagicMock(spec=RoleRepository)
         mock_role_repo.find_by_id.return_value = self.role
         role_service = RoleService(mock_role_repo)
 
-        role = role_service.find_by_id(self.role.id)
+        role = role_service.find_by_id(self.role_id)
 
-        mock_role_repo.find_by_id.assert_called_once_with(self.role.id)
-        assert isinstance(role, Role)
-        assert role.id == self.role.id
+        mock_role_repo.find_by_id.assert_called_once_with(self.role_id)
+        assert isinstance(role, SimpleNamespace)
 
 
 class TestGetRoleService(_TestRoleBaseService):
-    @pytest.fixture(autouse=True)
-    def setup_extra(self):
-        self.role = RoleFactory(deleted_at=None)
-
     def test_get_role(self):
         mock_role_repo = MagicMock(spec=RoleRepository)
         mock_role_repo.get.return_value = [self.role]
@@ -79,48 +62,33 @@ class TestGetRoleService(_TestRoleBaseService):
 
         mock_role_repo.get.assert_called_once_with(**role_data)
         assert len(roles) == 1
-        assert isinstance(roles[0], Role)
-        assert roles[0].id == self.role.id
+        assert isinstance(roles[0], SimpleNamespace)
 
 
 class TestSaveRoleService(_TestRoleBaseService):
     def test_save_role(self):
         mock_role_repo = MagicMock(spec=RoleRepository)
-        role = RoleFactory(deleted_at=None)
-        mock_role_repo.save.return_value = role
+        mock_role_repo.save.return_value = self.role
         role_service = RoleService(mock_role_repo)
+        role_data = {'label': self.faker.name(), 'description': self.faker.sentence()}
 
-        role_data = RoleFactory.build_dict()
-
-        updated_role = role_service.save(role.id, **role_data)
+        updated_role = role_service.save(self.role_id, **role_data)
 
         mock_role_repo.save.assert_called_once_with(
-            role.id,
+            self.role_id,
             **role_data,
         )
-        assert isinstance(updated_role, Role)
-        assert updated_role.name == role.name
-        assert updated_role.description == role.description
-        assert updated_role.label == role.label
-        assert updated_role.created_at
-        assert updated_role.updated_at, updated_role.created_at
-        assert updated_role.deleted_at is None
+        assert isinstance(updated_role, SimpleNamespace)
 
 
 class TestDeleteRoleService(_TestRoleBaseService):
-    @pytest.fixture(autouse=True)
-    def setup_extra(self):
-        self.role = RoleFactory(deleted_at=None)
-
     def test_delete_role(self):
         mock_role_repo = MagicMock(spec=RoleRepository)
         self.role.deleted_at = datetime.now(UTC)
         mock_role_repo.delete.return_value = self.role
         role_service = RoleService(mock_role_repo)
 
-        role = role_service.delete(self.role.id)
+        role = role_service.delete(self.role_id)
 
-        mock_role_repo.delete.assert_called_once_with(self.role.id)
-        assert isinstance(role, Role)
-        assert role.id == self.role.id
-        assert role.deleted_at == self.role.deleted_at
+        mock_role_repo.delete.assert_called_once_with(self.role_id)
+        assert isinstance(role, SimpleNamespace)
