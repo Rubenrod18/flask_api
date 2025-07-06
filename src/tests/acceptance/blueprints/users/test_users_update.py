@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, UTC
 
 import pytest
 
@@ -55,3 +56,39 @@ class TestUpdateUserEndpoint(_TestBaseUserEndpointsTest):
         self.client.put(
             self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
         )
+
+    @pytest.mark.parametrize(
+        'user_email',
+        (
+            lambda: UserFactory(active=False, deleted_at=None).email,
+            lambda: UserFactory(active=True, deleted_at=None).email,
+            lambda: UserFactory(active=False, deleted_at=datetime.now(UTC)).email,
+            lambda: UserFactory(active=True, deleted_at=datetime.now(UTC)).email,
+        ),
+        ids=['inactive', 'active', 'inactive_deleted', 'active_deleted'],
+    )
+    def test_update_user_email_already_created(self, user_email):
+        role = RoleFactory(deleted_at=None)
+        ignore_fields = {
+            'id',
+            'active',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+            'created_by',
+            'fs_uniquifier',
+            'roles',
+        }
+        payload = UserFactory.build_dict(exclude=ignore_fields)
+        payload.update(
+            {
+                'email': user_email(),
+                'password': os.getenv('TEST_USER_PASSWORD'),
+                'role_id': role.id,
+            }
+        )
+
+        response = self.client.put(self.endpoint, json=payload, headers=self.build_headers(), exp_code=422)
+        json_response = response.get_json()
+
+        assert json_response == {'message': {'email': ['User email already created']}}

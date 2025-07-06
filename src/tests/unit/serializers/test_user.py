@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from marshmallow import ValidationError
-from werkzeug.exceptions import BadRequest, NotFound
+from werkzeug.exceptions import NotFound
 
 from app.models import Role, User
 from app.repositories import UserRepository
@@ -43,12 +43,11 @@ class TestUserSerializer(TestBaseUnit):
     def test_invalid_email_validation(self):
         self.user_repository.find_by_email.return_value = self.user
 
-        with pytest.raises(BadRequest) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             self.serializer.load({'email': self.user.email}, partial=True)
 
         self.user_repository.find_by_email.assert_called_once_with(self.user.email)
-        assert exc_info.value.code == 400
-        assert exc_info.value.description == 'User email already created'
+        assert exc_info.value.messages == {'email': ['User email already created']}
 
     def test_validate_existing_user_id(self):
         self.user.deleted_at = None
