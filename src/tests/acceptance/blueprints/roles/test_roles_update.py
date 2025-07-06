@@ -1,5 +1,8 @@
+from datetime import datetime, UTC
+
 import pytest
 
+from app.models.role import ROLE_NAME_DELIMITER
 from tests.factories.role_factory import RoleFactory
 
 from ._base_roles_test import _TestBaseRoleEndpoints
@@ -22,7 +25,7 @@ class TestUpdateRoleEndpoint(_TestBaseRoleEndpoints):
 
         assert self.role.id == json_data.get('id')
         assert payload.get('label') == json_data.get('label')
-        assert payload.get('label').lower().replace(' ', '-') == json_data.get('name')
+        assert payload.get('label').lower().replace(' ', ROLE_NAME_DELIMITER) == json_data.get('name')
         assert json_data.get('created_at')
         assert json_data.get('updated_at') >= json_data.get('created_at')
         assert json_data.get('deleted_at') is None
@@ -40,3 +43,19 @@ class TestUpdateRoleEndpoint(_TestBaseRoleEndpoints):
         self.client.put(
             self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
         )
+
+    @pytest.mark.parametrize(
+        'role_label',
+        (
+            lambda: RoleFactory(deleted_at=None).label,
+            lambda: RoleFactory(deleted_at=datetime.now(UTC)).label,
+        ),
+        ids=['no_deleted', 'deleted'],
+    )
+    def test_update_role_already_created(self, role_label):
+        payload = {'label': role_label(), 'description': self.faker.sentence()}
+
+        response = self.client.put(self.endpoint, json=payload, headers=self.build_headers(), exp_code=422)
+        json_response = response.get_json()
+
+        assert json_response == {'message': {'name': ['Role name already created']}}

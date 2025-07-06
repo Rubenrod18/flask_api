@@ -3,9 +3,11 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from werkzeug.exceptions import BadRequest, NotFound
+from marshmallow import ValidationError
+from werkzeug.exceptions import NotFound
 
 from app.models import Role
+from app.models.role import ROLE_NAME_DELIMITER
 from app.repositories import RoleRepository
 from app.serializers import RoleSerializer
 from tests.base.base_unit_test import TestBaseUnit
@@ -52,16 +54,17 @@ class TestRoleSerializer(TestBaseUnit):
         assert exc_info.value.description == 'Role not found'
 
     def test_sluglify_name(self):
+        self.role_repository.find_by_name.return_value = None
         data = {'label': 'New Role'}
 
         result = self.serializer.load(data, partial=True)
 
-        assert result['name'] == 'new-role'
+        assert result['name'] == f'new{ROLE_NAME_DELIMITER}role'
 
     def test_validate_existing_role_name(self):
         self.role_repository.find_by_name.return_value = self.role
 
-        with pytest.raises(BadRequest) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             self.serializer.load({'name': 'admin'}, partial=True)
 
-        assert exc_info.value.description == 'Role name already created'
+        assert exc_info.value.messages == {'name': ['Role name already created']}

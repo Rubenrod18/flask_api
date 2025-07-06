@@ -1,3 +1,5 @@
+from datetime import datetime, UTC
+
 import pytest
 
 from tests.factories.role_factory import RoleFactory
@@ -37,3 +39,19 @@ class TestSaveRoleEndpointTest(_TestBaseRoleEndpoints):
             headers=self.build_headers(user_email=user_email),
             exp_code=expected_status,
         )
+
+    @pytest.mark.parametrize(
+        'role_label',
+        (
+            lambda: RoleFactory(deleted_at=None).label,
+            lambda: RoleFactory(deleted_at=datetime.now(UTC)).label,
+        ),
+        ids=['no_deleted', 'deleted'],
+    )
+    def test_save_role_already_created(self, role_label):
+        payload = {'label': role_label(), 'description': self.faker.sentence()}
+
+        response = self.client.post(self.base_path, json=payload, headers=self.build_headers(), exp_code=422)
+        json_response = response.get_json()
+
+        assert json_response == {'message': {'name': ['Role name already created']}}

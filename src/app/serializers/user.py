@@ -1,5 +1,5 @@
-from marshmallow import fields, pre_load, validate, validates
-from werkzeug.exceptions import BadRequest, NotFound
+from marshmallow import fields, pre_load, validate, validates, ValidationError
+from werkzeug.exceptions import NotFound
 
 from app.extensions import ma
 from app.models import User
@@ -62,7 +62,7 @@ class UserSerializer(ma.SQLAlchemySchema, RepositoryMixin):
     @validates('email')
     def validate_email(self, email: str):
         if self._user_repository.find_by_email(email):
-            raise BadRequest('User email already created')
+            raise ValidationError('User email already created')
 
 
 class UserExportWordSerializer(ma.Schema):

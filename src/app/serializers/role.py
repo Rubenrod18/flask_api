@@ -1,8 +1,9 @@
-from marshmallow import post_load, validates
-from werkzeug.exceptions import BadRequest, NotFound
+from marshmallow import pre_load, validates, ValidationError
+from werkzeug.exceptions import NotFound
 
 from app.extensions import ma
 from app.models import Role
+from app.models.role import ROLE_NAME_DELIMITER
 from app.repositories import RoleRepository
 from app.serializers.core import RepositoryMixin
 
@@ -33,13 +34,13 @@ class RoleSerializer(ma.SQLAlchemySchema, RepositoryMixin):
         if role is None or role.deleted_at is not None:
             raise NotFound('Role not found')
 
-    @post_load
+    @pre_load
     def sluglify_name(self, item, many, **kwargs):  # pylint: disable=unused-argument
-        if item.get('label'):
-            item['name'] = item['label'].lower().strip().replace(' ', '-')
+        if item.get('label') and not item.get('name'):
+            item['name'] = item['label'].lower().strip().replace(' ', ROLE_NAME_DELIMITER)
         return item
 
     @validates('name')
     def validate_name(self, value):
         if self._role_repository.find_by_name(name=value):
-            raise BadRequest('Role name already created')
+            raise ValidationError('Role name already created')
