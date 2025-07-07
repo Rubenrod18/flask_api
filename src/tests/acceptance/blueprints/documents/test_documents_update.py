@@ -6,7 +6,9 @@ from flask import current_app
 
 from app.file_storages import LocalStorage
 from app.models.document import StorageTypes
-from tests.factories.document_factory import LocalDocumentFactory
+from app.services import DocumentService
+from app.utils.constants import MS_EXCEL_MIME_TYPE
+from tests.factories.document_factory import GDriveDocumentFactory, LocalDocumentFactory
 
 from ._base_documents_test import _TestBaseDocumentEndpoints
 
@@ -15,20 +17,20 @@ from ._base_documents_test import _TestBaseDocumentEndpoints
 class TestUpdateDocumentEndpoint(_TestBaseDocumentEndpoints):
     @pytest.fixture(autouse=True)
     def setup_extra(self):
-        self.document = LocalDocumentFactory(
-            deleted_at=None,
-            created_at=datetime.now(UTC) - timedelta(days=1),
-        )
-        self.endpoint = f'{self.base_path}/{self.document.id}'
         self.local_storage = LocalStorage()
 
     def test_update_document_endpoint(self):
-        pdf_filename = 'example.pdf'
-        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{pdf_filename}'
-        data = {'document': open(pdf_file, 'rb')}
+        document = LocalDocumentFactory(
+            deleted_at=None,
+            created_at=datetime.now(UTC) - timedelta(days=1),
+        )
+
+        filename = 'sample.xlsx'
+        abs_filepath = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{filename}'
+        data = {'document': open(abs_filepath, 'rb')}
 
         response = self.client.put(
-            self.endpoint,
+            f'{self.base_path}/{document.id}',
             headers=self.build_headers(extra_headers={'Content-Type': 'multipart/form-data'}),
             data=data,
         )
@@ -37,12 +39,55 @@ class TestUpdateDocumentEndpoint(_TestBaseDocumentEndpoints):
         parse_url = urlparse(json_data.get('url'))
 
         assert isinstance(json_data.get('created_by').get('id'), int)
-        assert pdf_filename == json_data.get('name')
-        assert self.document.mime_type == json_data.get('mime_type')
-        assert self.local_storage.get_filesize(pdf_file) == json_data.get('size')
+        assert filename == json_data.get('name')
+        assert document.mime_type == json_data.get('mime_type')
+        assert self.local_storage.get_filesize(abs_filepath) == json_data.get('size')
         assert str(StorageTypes.LOCAL) == json_data.get('storage_type')
         assert parse_url.scheme and parse_url.netloc
-        assert self.document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+        assert document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
+        assert json_data.get('updated_at') >= json_data.get('created_at')
+        assert json_data.get('deleted_at') is None
+
+    def test_update_document_endpoint_in_google_drive(
+        self, mock_gdrive_files_provider, mock_gdrive_permissions_provider
+    ):
+        document = GDriveDocumentFactory(
+            deleted_at=None,
+            created_at=datetime.now(UTC) - timedelta(days=1),
+        )
+        filename = 'sample.xlsx'
+        abs_filepath = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{filename}'
+
+        mock_gdrive_files_provider, _ = mock_gdrive_files_provider
+        mock_gdrive_files_provider.upload_file_from_stream.return_value = {
+            'id': document.storage_id,
+            'mimeType': MS_EXCEL_MIME_TYPE,
+            'size': 5_425,
+            'name': filename,
+        }
+        mock_gdrive_permissions_provider, _ = mock_gdrive_permissions_provider
+        mock_document_service = DocumentService(
+            gdrive_files_provider=mock_gdrive_files_provider,
+            gdrive_permissions_provider=mock_gdrive_permissions_provider,
+        )
+
+        with self.app.container.document_service.override(mock_document_service):
+            response = self.client.put(
+                f'{self.base_path}/{document.id}?storage_type={StorageTypes.GDRIVE.value}',
+                data={'document': open(abs_filepath, 'rb')},
+                headers=self.build_headers(extra_headers={'Content-Type': 'multipart/form-data'}),
+            )
+        json_response = response.get_json()
+        json_data = json_response.get('data')
+        parse_url = urlparse(json_data.get('url'))
+
+        assert isinstance(json_data.get('created_by').get('id'), int)
+        assert filename == json_data.get('name')
+        assert document.mime_type == json_data.get('mime_type')
+        assert self.local_storage.get_filesize(abs_filepath) == json_data.get('size')
+        assert str(StorageTypes.GDRIVE) == json_data.get('storage_type')
+        assert parse_url.scheme and parse_url.netloc
+        assert document.created_at.strftime('%Y-%m-%d %H:%M:%S') == json_data.get('created_at')
         assert json_data.get('updated_at') >= json_data.get('created_at')
         assert json_data.get('deleted_at') is None
 
@@ -55,7 +100,15 @@ class TestUpdateDocumentEndpoint(_TestBaseDocumentEndpoints):
         ],
     )
     def test_check_user_roles_in_update_document_endpoint(self, user_email_attr, expected_status):
+        document = LocalDocumentFactory(
+            deleted_at=None,
+            created_at=datetime.now(UTC) - timedelta(days=1),
+        )
+
         user_email = getattr(self, user_email_attr).email
         self.client.put(
-            self.endpoint, json={}, headers=self.build_headers(user_email=user_email), exp_code=expected_status
+            f'{self.base_path}/{document.id}',
+            json={},
+            headers=self.build_headers(user_email=user_email),
+            exp_code=expected_status,
         )
