@@ -20,6 +20,11 @@ def _str_to_bool(env_value: str, default_env_value: str) -> bool:
     return env_value.lower() == 'true'
 
 
+def _str_to_int(env_value: str, default_env_value: str) -> int:
+    env_value = env_value or default_env_value
+    return int(env_value)
+
+
 class Meta(type):
     """Metaclass for updating Config options."""
 
@@ -104,7 +109,7 @@ class Config(metaclass=Meta):
 
     # Mr Developer
     HOME = os.getenv('HOME')
-    LOGGING_LEVEL = os.getenv('LOGGING_LEVEL', logging.INFO)
+    LOGGING_LEVEL = _str_to_int(os.getenv('LOGGING_LEVEL', logging.INFO))
 
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
     TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')
