@@ -110,8 +110,7 @@ def app():
         assert database_exists(dbname)
 
     def create_app(db_uri):
-        from app import create_app  # pylint: disable=(import-outside-toplevel
-        from config import TestConfig  # pylint: disable=(import-outside-toplevel
+        from app import create_app  # pylint: disable=import-outside-toplevel
 
         TestConfig.SQLALCHEMY_DATABASE_URI = db_uri
         return create_app('config.TestConfig')
