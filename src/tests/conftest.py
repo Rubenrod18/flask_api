@@ -2,6 +2,7 @@ import io
 import logging
 import os
 import uuid
+from pathlib import Path
 
 import sqlalchemy
 from dotenv import find_dotenv, load_dotenv
@@ -14,6 +15,7 @@ from sqlalchemy_utils import create_database, database_exists
 from werkzeug.test import TestResponse
 
 from app.extensions import db
+from config import TestConfig
 from tests.fixtures.gdrive_mocks import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 logger = logging.getLogger(__name__)
@@ -166,6 +168,20 @@ def show_last_sql_query():
     """Print the most recently executed SQL query for debugging purposes."""
     info = get_recorded_queries()[-1]
     print(info.statement, info.parameters, info.duration, sep='\n')  # noqa
+
+
+@pytest.fixture(scope='session', autouse=True)
+def remove_test_files():
+    """Remove test files after all tests are done."""
+    yield  # NOTE: Let all tests run first
+
+    dir_path = Path(TestConfig.STORAGE_DIRECTORY)
+
+    for item in dir_path.iterdir():
+        if item.name == '.gitignore':
+            continue
+        else:
+            item.unlink(missing_ok=True)
 
 
 class BytesIOMatcher:
