@@ -20,6 +20,11 @@ def _str_to_bool(env_value: str, default_env_value: str) -> bool:
     return env_value.lower() == 'true'
 
 
+def _str_to_int(env_value: str, default_env_value: int) -> int:
+    env_value = env_value or default_env_value
+    return int(env_value)
+
+
 class Meta(type):
     """Metaclass for updating Config options."""
 
@@ -104,7 +109,7 @@ class Config(metaclass=Meta):
 
     # Mr Developer
     HOME = os.getenv('HOME')
-    LOGGING_LEVEL = logging.INFO
+    LOGGING_LEVEL = _str_to_int(os.getenv('LOGGING_LEVEL'), logging.INFO)
 
     TEST_USER_EMAIL = os.getenv('TEST_USER_EMAIL')
     TEST_USER_PASSWORD = os.getenv('TEST_USER_PASSWORD')
@@ -115,8 +120,6 @@ class Config(metaclass=Meta):
     MOCKUP_DIRECTORY = f'{SRC_DIRECTORY}/storage/mockups'
     STATIC_FOLDER = f'{SRC_DIRECTORY}/static'
     TEMPLATES_FOLDER = f'{SRC_DIRECTORY}/templates'
-
-    GOOGLE_SERVICE_ACCOUNT = os.getenv('GOOGLE_SERVICE_ACCOUNT', f'{ROOT_DIRECTORY}/service_account.json')
 
     RESET_TOKEN_EXPIRES = 86_400  # 1 day = 86400
 
@@ -155,4 +158,4 @@ class TestConfig(Config):
 
     # Mr Developer
     STORAGE_DIRECTORY = f'{Config.STORAGE_DIRECTORY}/tests'
-    GOOGLE_SERVICE_ACCOUNT = f'{Config.ROOT_DIRECTORY}/test_service_account.json'
+    SQLALCHEMY_LOGGING_ENABLED = _str_to_bool(os.getenv('SQLALCHEMY_LOGGING_ENABLED'), 'False')

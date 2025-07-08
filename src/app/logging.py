@@ -36,9 +36,9 @@ def _attach_handlers(app: Flask, handlers: list) -> None:
         logger.addHandler(handler)
     logger.propagate = False
     logger.setLevel(app.config.get('LOGGING_LEVEL', logging.INFO))
-    logger.info(f' Application environment: {os.getenv("FLASK_CONFIG")}')
+    logger.debug(f' Application environment: {os.getenv("FLASK_CONFIG")}')
 
-    if app.config.get('DEBUG'):
+    if app.config.get('SQLALCHEMY_LOGGING_ENABLED'):
         sa_logger = logging.getLogger('sqlalchemy.engine')
         sa_logger.setLevel(app.config.get('LOGGING_LEVEL', logging.INFO))
         if not sa_logger.hasHandlers():
