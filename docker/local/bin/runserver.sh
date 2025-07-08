@@ -14,5 +14,5 @@ set -o nounset
 # If the script tries to use an undefined variable, it will immediately exit with an error, preventing subtle bugs.
 
 flask create_db
-flask db upgrade --directory "/flask-api-docker-dir/src/app/database/migrations"
+flask db upgrade --directory "$MIGRATIONS_DIR"
 flask run --host 0.0.0.0 --debug
