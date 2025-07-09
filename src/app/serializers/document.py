@@ -1,6 +1,6 @@
 import magic
-from marshmallow import fields, post_dump, pre_dump, pre_load, validate, validates
-from werkzeug.exceptions import NotFound, UnprocessableEntity
+from marshmallow import fields, post_dump, pre_dump, pre_load, validate, validates, ValidationError
+from werkzeug.exceptions import NotFound
 
 from app.extensions import ma
 from app.models import Document
@@ -60,7 +60,7 @@ class DocumentSerializer(ma.SQLAlchemySchema, RepositoryMixin):
     @staticmethod
     def valid_request_file(data):
         if not data.get('file_data'):
-            raise UnprocessableEntity('empty file')
+            raise ValidationError('empty file')
 
         is_valid_mime_type = data.get('mime_type') in Config.ALLOWED_MIME_TYPES
 
@@ -68,7 +68,7 @@ class DocumentSerializer(ma.SQLAlchemySchema, RepositoryMixin):
         is_valid_file_content_type = file_content_type in Config.ALLOWED_MIME_TYPES
 
         if not is_valid_mime_type or not is_valid_file_content_type:
-            raise UnprocessableEntity('mime_type not valid')
+            raise ValidationError('mime_type not valid')
 
         return data
 

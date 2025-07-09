@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from marshmallow import ValidationError
-from werkzeug.exceptions import NotFound, UnprocessableEntity
+from werkzeug.exceptions import NotFound
 
 from app.models import Document
 from app.models.document import StorageTypes
@@ -87,11 +87,11 @@ class TestDocumentSerializer(TestBaseUnit):
         mock_magic.return_value = 'text/plain'
         data = {'mime_type': 'application/pdf', 'file_data': b'Invalid content'}
 
-        with pytest.raises(UnprocessableEntity) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             DocumentSerializer.valid_request_file(data)
 
-        assert exc_info.value.code == 422
-        assert exc_info.value.description == 'mime_type not valid'
+        assert isinstance(exc_info.value, ValidationError)
+        assert exc_info.value.messages == ['mime_type not valid']
 
     @pytest.mark.parametrize(
         'file_data',
@@ -99,11 +99,11 @@ class TestDocumentSerializer(TestBaseUnit):
         ids=['none', 'empty-bytes', 'empty-string'],
     )
     def test_empty_request_file(self, file_data):
-        with pytest.raises(UnprocessableEntity) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             DocumentSerializer.valid_request_file({'file_data': file_data})
 
-        assert exc_info.value.code == 422
-        assert exc_info.value.description == 'empty file'
+        assert isinstance(exc_info.value, ValidationError)
+        assert exc_info.value.messages == ['empty file']
 
 
 class TestDocumentAttachmentSerializer(TestBaseUnit):
