@@ -84,6 +84,34 @@ class TestSaveDocumentEndpoint(_TestBaseDocumentEndpoints):
         assert json_data.get('updated_at') == json_data.get('created_at')
         assert json_data.get('deleted_at') is None
 
+    def test_save_document_empty_file(self):
+        pdf_filename = 'empty_file.txt'
+        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{pdf_filename}'
+        payload = {
+            'document': open(pdf_file, 'rb'),
+        }
+        headers = self.build_headers()
+        headers['Content-Type'] = 'multipart/form-data'
+
+        response = self.client.post(self.base_path, data=payload, headers=headers, exp_code=422)
+        json_response = response.get_json()
+
+        assert json_response == {'message': ['empty file']}
+
+    def test_save_document_invalid_file(self):
+        pdf_filename = 'python_logo.png'
+        pdf_file = f'{current_app.config.get("MOCKUP_DIRECTORY")}/{pdf_filename}'
+        payload = {
+            'document': open(pdf_file, 'rb'),
+        }
+        headers = self.build_headers()
+        headers['Content-Type'] = 'multipart/form-data'
+
+        response = self.client.post(self.base_path, data=payload, headers=headers, exp_code=422)
+        json_response = response.get_json()
+
+        assert json_response == {'message': ['mime_type not valid']}
+
     @pytest.mark.parametrize(
         'user_email_attr, expected_status',
         [
