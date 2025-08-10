@@ -45,7 +45,7 @@ freezegun = "^1.5.4"
 pytest = "^8.4.1"
 pytest-xdist = "^3.8.0"
 sqlalchemy-utils = "^0.41.2"
-pre-commit = "^4.2.0"
+pre-commit = "^4.3.0"
 pylint = "^3.3.7"
 
 [tool.poetry]
