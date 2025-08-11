@@ -41,7 +41,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.10.2"
-freezegun = "^1.5.4"
+freezegun = "^1.5.5"
 pytest = "^8.4.1"
 pytest-xdist = "^3.8.0"
 sqlalchemy-utils = "^0.41.2"
