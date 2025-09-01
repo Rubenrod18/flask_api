@@ -44,7 +44,7 @@ coverage = "^7.10.6"
 freezegun = "^1.5.5"
 pytest = "^8.4.1"
 pytest-xdist = "^3.8.0"
-sqlalchemy-utils = "^0.41.2"
+sqlalchemy-utils = "^0.42.0"
 pre-commit = "^4.3.0"
 pylint = "^3.3.8"
 
