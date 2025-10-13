@@ -8,7 +8,7 @@
 # -------------------------------------------
 # Use the official Python 3.13 slim image as the base image.
 # The slim variant is minimal and avoids unnecessary components, reducing image size.
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 # -------------------------------------------
 # Environment Variable Setup
