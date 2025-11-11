@@ -20,6 +20,8 @@ updates:
     interval: daily
     time: "01:00"
     timezone: Europe/Madrid
+  allow:
+    - dependency-type: "all"
   open-pull-requests-limit: 10
   commit-message:
     prefix: "build(pip): "
