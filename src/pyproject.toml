@@ -46,7 +46,7 @@ pytest = "^9.0.1"
 pytest-xdist = "^3.8.0"
 sqlalchemy-utils = "^0.42.0"
 pre-commit = "^4.4.0"
-pylint = "^4.0.2"
+pylint = "^4.0.3"
 
 [tool.poetry]
 package-mode = false
