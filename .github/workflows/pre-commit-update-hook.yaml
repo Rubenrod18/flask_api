@@ -44,7 +44,7 @@ jobs:
           echo "pre_commit_version=$PRE_COMMIT_VERSION" >> $GITHUB_ENV
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           title: "ci(pre-commit): update pre-commit hook version to ${{ env.pre_commit_version }}"
           body: "This PR updates pre-commit hook to the latest version."
