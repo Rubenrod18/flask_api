@@ -12,7 +12,7 @@ from app.serializers.user import VerifyRoleId
 from tests.base.base_unit_test import TestBaseUnit
 
 
-# pylint: disable=attribute-defined-outside-init, unused-argument
+# pylint: disable=attribute-defined-outside-init, unused-argument, protected-access
 class TestUserSerializer(TestBaseUnit):
     @pytest.fixture(autouse=True)
     def setup_extra(self):

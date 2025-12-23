@@ -1,4 +1,4 @@
-# pylint: disable=attribute-defined-outside-init, unused-argument
+# pylint: disable=attribute-defined-outside-init, unused-argument, protected-access
 from datetime import datetime, UTC
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
