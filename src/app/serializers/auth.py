@@ -24,8 +24,7 @@ class AuthUserLoginSerializer(ma.Schema, RepositoryMixin):
         super().__init__(*args, **kwargs)
         self._user_repository = self.get_repository('user_repository')
 
-    @validates('email')
-    def validate_email(self, email):
+    def _validate_email(self, email: str) -> None:
         args = (
             self._user_repository.model.active.is_(True),
             self._user_repository.model.deleted_at.is_(None),
@@ -35,10 +34,16 @@ class AuthUserLoginSerializer(ma.Schema, RepositoryMixin):
         if self._user is None or self._user.active is False or self._user.deleted_at is not None:
             raise Unauthorized('Credentials invalid')
 
-    @validates('password')
-    def validate_password(self, password):
+    def _validate_password(self, password: str) -> None:
         if self._user and not verify_password(password, self._user.password):
             raise Unauthorized('Credentials invalid')
+
+    @validates('email', 'password')
+    def validate_fields(self, value: str, data_key: str) -> None:
+        if data_key == 'email':
+            self._validate_email(value)
+        elif data_key == 'password':
+            self._validate_password(value)
 
     @post_load
     def make_object(self, data, **kwargs):  # pylint: disable=unused-argument
@@ -65,13 +70,17 @@ class AuthUserConfirmResetPasswordSerializer(ma.Schema, RepositoryMixin):
         self._user_repository = self.get_repository('user_repository')
         self.otp_token_manager = otp_token_manager
 
-    @validates('token')
-    def validate_token(self, token):
+    def _validate_token(self, token: str) -> None:
         email = self.otp_token_manager.verify_token(token)
         user = self._user_repository.find_by_email(email)
 
         if not user or user.deleted_at is not None or not user.active:
             raise Forbidden('Invalid token')
+
+    @validates('token')
+    def validate_fields(self, value: str, data_key: str) -> None:
+        if data_key == 'token':
+            self._validate_token(value)
 
     @validates_schema
     def validate_passwords(self, data, **kwargs):  # pylint: disable=unused-argument

@@ -37,13 +37,17 @@ class DocumentSerializer(ma.SQLAlchemySchema, RepositoryMixin):
         super().__init__(*args, **kwargs)
         self._document_repository = self.get_repository('document_repository')
 
-    @validates('id')
-    def validate_id(self, document_id):
+    def _validate_id(self, document_id: int) -> None:
         args = (self._document_repository.model.deleted_at.is_(None),)
         document = self._document_repository.find_by_id(document_id, *args)
 
         if document is None or document.deleted_at is not None:
             raise NotFound('Document not found')
+
+    @validates('id')
+    def validate_id(self, value: str | int, data_key: str) -> None:
+        if data_key == 'id':
+            self._validate_id(value)
 
     @pre_dump()
     def prepare_for_wrap(self, document, **kwargs):  # pylint: disable=unused-argument

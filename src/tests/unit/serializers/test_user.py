@@ -62,7 +62,7 @@ class TestUserSerializer(TestBaseUnit):
         fake_user_id = self.faker.random_int()
 
         with pytest.raises(NotFound) as exc_info:
-            self.serializer.validate_id(fake_user_id)
+            self.serializer._validate_id(fake_user_id)
 
         self.user_repository.find_by_id.assert_called_once_with(fake_user_id, None)
         assert exc_info.value.code == 404
