@@ -51,18 +51,23 @@ class UserSerializer(ma.SQLAlchemySchema, RepositoryMixin):
         super().__init__(*args, **kwargs)
         self._user_repository = self.get_repository('user_repository')
 
-    @validates('id')
-    def validate_id(self, user_id: int):
+    def _validate_id(self, user_id: int) -> None:
         args = (self._user_repository.model.deleted_at.is_(None),)
         user = self._user_repository.find_by_id(user_id, *args)
 
         if user is None or user.deleted_at is not None:
             raise NotFound('User not found')
 
-    @validates('email')
-    def validate_email(self, email: str):
+    def _validate_email(self, email: str) -> None:
         if self._user_repository.find_by_email(email):
             raise ValidationError('User email already created')
+
+    @validates('id', 'email')
+    def validate_fields(self, value: str | int, data_key: str) -> None:
+        if data_key == 'id':
+            self._validate_id(value)
+        elif data_key == 'email':
+            self._validate_email(value)
 
 
 class UserExportWordSerializer(ma.Schema):

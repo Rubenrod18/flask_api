@@ -1,4 +1,4 @@
-# pylint: disable=attribute-defined-outside-init, unused-argument
+# pylint: disable=attribute-defined-outside-init, unused-argument, protected-access
 from datetime import datetime, UTC
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -61,7 +61,7 @@ class TestDocumentSerializer(TestBaseUnit):
         self.document_repository.find_by_id.return_value = None
 
         with pytest.raises(NotFound) as exc_info:
-            self.serializer.validate_id(999)
+            self.serializer._validate_id(999)
 
         assert exc_info.value.code == 404
         assert exc_info.value.description == 'Document not found'
@@ -70,7 +70,7 @@ class TestDocumentSerializer(TestBaseUnit):
         self.document.deleted_at = datetime.now(UTC)
 
         with pytest.raises(NotFound) as exc_info:
-            self.serializer.validate_id(1)
+            self.serializer._validate_id(1)
 
         assert exc_info.value.code == 404
         assert exc_info.value.description == 'Document not found'

@@ -13,7 +13,7 @@ from app.serializers import RoleSerializer
 from tests.base.base_unit_test import TestBaseUnit
 
 
-# pylint: disable=attribute-defined-outside-init, unused-argument
+# pylint: disable=attribute-defined-outside-init, unused-argument, protected-access
 class TestRoleSerializer(TestBaseUnit):
     @pytest.fixture(autouse=True)
     def setup_extra(self):
@@ -40,7 +40,7 @@ class TestRoleSerializer(TestBaseUnit):
         self.role_repository.find_by_id.return_value = None
 
         with pytest.raises(NotFound) as exc_info:
-            self.serializer.validate_id(999)
+            self.serializer._validate_id(999)
 
         assert exc_info.value.code == 404
         assert exc_info.value.description == 'Role not found'
@@ -49,7 +49,7 @@ class TestRoleSerializer(TestBaseUnit):
         self.role.deleted_at = datetime.now(UTC)
 
         with pytest.raises(NotFound) as exc_info:
-            self.serializer.validate_id(1)
+            self.serializer._validate_id(1)
 
         assert exc_info.value.description == 'Role not found'
 
