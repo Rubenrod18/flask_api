@@ -1333,20 +1333,20 @@ referencing = ">=0.31.0"
 
 [[package]]
 name = "kombu"
-version = "5.6.1"
+version = "5.6.2"
 description = "Messaging library for Python."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "kombu-5.6.1-py3-none-any.whl", hash = "sha256:b69e3f5527ec32fc5196028a36376501682973e9620d6175d1c3d4eaf7e95409"},
-    {file = "kombu-5.6.1.tar.gz", hash = "sha256:90f1febb57ad4f53ca327a87598191b2520e0c793c75ea3b88d98e3b111282e4"},
+    {file = "kombu-5.6.2-py3-none-any.whl", hash = "sha256:efcfc559da324d41d61ca311b0c64965ea35b4c55cc04ee36e55386145dace93"},
+    {file = "kombu-5.6.2.tar.gz", hash = "sha256:8060497058066c6f5aed7c26d7cd0d3b574990b09de842a8c5aaed0b92cc5a55"},
 ]
 
 [package.dependencies]
 amqp = ">=5.1.1,<6.0.0"
 packaging = "*"
-tzdata = {version = ">=2025.2", markers = "python_version >= \"3.9\""}
+tzdata = ">=2025.2"
 vine = "5.1.0"
 
 [package.extras]
