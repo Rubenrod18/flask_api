@@ -5,8 +5,8 @@ description = "API Application with Flask for CRUD users"
 authors = [
     {name = "Rubén Rodríguez Ramírez", email = "rubenrod.018@gmail.com"}
 ]
-license = {text = "MIT License"}
-readme = "README.md"
+license = "MIT"
+readme = "../README.md"
 requires-python = ">=3.13,<4"
 dependencies = [
     "python-dotenv (>=1.1.0,<2.0.0)",
