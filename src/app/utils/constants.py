@@ -1,4 +1,4 @@
-from enum import Enum
+import enum
 
 # Files
 PDF_MIME_TYPE = 'application/pdf'
@@ -10,7 +10,7 @@ MS_EXCEL_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetm
 FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder'
 
 
-class BaseEnum(str, Enum):
+class BaseEnum(enum.StrEnum):
     @classmethod
     def to_list(cls, get_values=True):
         attr = 'name'

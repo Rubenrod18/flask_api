@@ -40,7 +40,7 @@ requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.dev.dependencies]
-coverage = "^7.13.2"
+coverage = "^7.13.4"
 freezegun = "^1.5.5"
 pytest = "^9.0.2"
 pytest-xdist = "^3.8.0"
