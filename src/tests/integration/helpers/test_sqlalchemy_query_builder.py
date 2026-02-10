@@ -166,7 +166,7 @@ class TestComparisonClauseBuilder:
             (
                 'equal',
                 lambda doc, *_: (Document.created_at, rqo.EQUAL_OP, doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
-                lambda doc, *_: (Document.created_at == doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                lambda doc, *_: Document.created_at == doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 None,
             ),
             (
@@ -176,7 +176,7 @@ class TestComparisonClauseBuilder:
                     rqo.NOT_EQUAL_OP,
                     doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 ),
-                lambda doc, *_: (Document.created_at != doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                lambda doc, *_: Document.created_at != doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 None,
             ),
             (
@@ -186,7 +186,7 @@ class TestComparisonClauseBuilder:
                     rqo.LESS_THAN_OP,
                     doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 ),
-                lambda doc, *_: (Document.created_at < doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                lambda doc, *_: Document.created_at < doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 None,
             ),
             (
@@ -196,7 +196,7 @@ class TestComparisonClauseBuilder:
                     rqo.LESS_THAN_OR_EQUAL_TO_OP,
                     doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 ),
-                lambda doc, *_: (Document.created_at <= doc.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                lambda doc, *_: Document.created_at <= doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 None,
             ),
             (
@@ -206,7 +206,7 @@ class TestComparisonClauseBuilder:
                     rqo.GREATER_THAN_OP,
                     doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 ),
-                lambda _, __, doc_3: (Document.created_at > doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                lambda _, __, doc_3: Document.created_at > doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 None,
             ),
             (
@@ -216,7 +216,7 @@ class TestComparisonClauseBuilder:
                     rqo.GREATER_THAN_OR_EQUAL_TO_OP,
                     doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 ),
-                lambda _, __, doc_3: (Document.created_at >= doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S')),
+                lambda _, __, doc_3: Document.created_at >= doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 None,
             ),
             (
@@ -245,12 +245,10 @@ class TestComparisonClauseBuilder:
                     f'{rqo.REQUEST_QUERY_DELIMITER}'
                     f'{doc.created_at.strftime("%Y-%m-%d %H:%M:%S")}',
                 ),
-                lambda doc, _, doc_3: (
-                    sa.or_(
-                        *(
-                            Document.created_at > doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                            Document.created_at > doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                        )
+                lambda doc, _, doc_3: sa.or_(
+                    *(
+                        Document.created_at > doc_3.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                        Document.created_at > doc.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                     )
                 ),
                 lambda doc, _, doc_3: (
@@ -305,37 +303,37 @@ class TestComparisonClauseBuilder:
             (
                 'equals',
                 lambda doc, *_: (Document.size, rqo.EQUAL_OP, doc.size),
-                lambda doc, *_: (Document.size == doc.size),
+                lambda doc, *_: Document.size == doc.size,
                 None,
             ),
             (
                 'not equals',
                 lambda doc, *_: (Document.size, rqo.NOT_EQUAL_OP, doc.size),
-                lambda doc, *_: (Document.size != doc.size),
+                lambda doc, *_: Document.size != doc.size,
                 None,
             ),
             (
                 'less than',
                 lambda _, doc_2, __: (Document.size, rqo.LESS_THAN_OP, doc_2.size),
-                lambda _, doc_2, __: (Document.size < doc_2.size),
+                lambda _, doc_2, __: Document.size < doc_2.size,
                 None,
             ),
             (
                 'less than or equal',
                 lambda _, doc_2, __: (Document.size, rqo.LESS_THAN_OR_EQUAL_TO_OP, doc_2.size),
-                lambda _, doc_2, __: (Document.size <= doc_2.size),
+                lambda _, doc_2, __: Document.size <= doc_2.size,
                 None,
             ),
             (
                 'great than',
                 lambda _, doc_2, __: (Document.size, rqo.GREATER_THAN_OP, doc_2.size),
-                lambda _, doc_2, __: (Document.size > doc_2.size),
+                lambda _, doc_2, __: Document.size > doc_2.size,
                 None,
             ),
             (
                 'great than or equal',
                 lambda _, doc_2, __: (Document.size, rqo.GREATER_THAN_OR_EQUAL_TO_OP, doc_2.size),
-                lambda _, doc_2, __: (Document.size >= doc_2.size),
+                lambda _, doc_2, __: Document.size >= doc_2.size,
                 None,
             ),
             (
@@ -345,7 +343,7 @@ class TestComparisonClauseBuilder:
                     rqo.IN_OP,
                     f'{doc_3.size}{rqo.REQUEST_QUERY_DELIMITER}{doc_2.size}{rqo.REQUEST_QUERY_DELIMITER}{doc.size}',
                 ),
-                lambda doc, doc_2, doc_3: (Document.size.in_([f'{doc_3.size}', f'{doc_2.size}', f'{doc.size}'])),
+                lambda doc, doc_2, doc_3: Document.size.in_([f'{doc_3.size}', f'{doc_2.size}', f'{doc.size}']),
                 None,
             ),
             (
@@ -355,7 +353,7 @@ class TestComparisonClauseBuilder:
                     rqo.NOT_IN_OP,
                     f'{doc_3.size}{rqo.REQUEST_QUERY_DELIMITER}{doc_2.size}{rqo.REQUEST_QUERY_DELIMITER}{doc.size}',
                 ),
-                lambda doc, doc_2, doc_3: (~Document.size.in_([f'{doc_3.size}', f'{doc_2.size}', f'{doc.size}'])),
+                lambda doc, doc_2, doc_3: ~Document.size.in_([f'{doc_3.size}', f'{doc_2.size}', f'{doc.size}']),
                 None,
             ),
             (
@@ -365,7 +363,7 @@ class TestComparisonClauseBuilder:
                     rqo.GREATER_THAN_OP,
                     f'{doc_3.size}{rqo.REQUEST_QUERY_DELIMITER}{doc.size}',
                 ),
-                lambda doc, _, doc_3: (sa.or_(*(Document.size > doc_3.size, Document.size > doc.size))),
+                lambda doc, _, doc_3: sa.or_(*(Document.size > doc_3.size, Document.size > doc.size)),
                 lambda doc, _, doc_3: (f'{doc_3.size}', f'{doc.size}'),
             ),
         ],
