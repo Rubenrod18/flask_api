@@ -835,14 +835,14 @@ tzdata = "*"
 
 [[package]]
 name = "filelock"
-version = "3.21.1"
+version = "3.24.1"
 description = "A platform independent file lock."
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "filelock-3.21.1-py3-none-any.whl", hash = "sha256:f3aa1887cdf3514b13a379b5835ff35327d7aa24a96db4453b97531c00476760"},
-    {file = "filelock-3.21.1.tar.gz", hash = "sha256:fd13d64b92f79605f30ffaa0a2accb793f178b8aebcf56be8f1cad922fd278ad"},
+    {file = "filelock-3.24.1-py3-none-any.whl", hash = "sha256:7c59f595e3cf4887dc95b403a896849da49ed183d7c9d7ee855646ca99f10698"},
+    {file = "filelock-3.24.1.tar.gz", hash = "sha256:3440181dd03f8904c108c8e9f5b11d1663e9fc960f1c837586a11f1c5c041e54"},
 ]
 
 [[package]]
