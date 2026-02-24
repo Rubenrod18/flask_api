@@ -32,3 +32,12 @@ updates:
   open-pull-requests-limit: 10
   commit-message:
     prefix: "ci(github-actions): "
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: weekly
+  commit-message:
+    prefix: "build(npm): "
+  allow:
+    - dependency-type: "all"
+  open-pull-requests-limit: 5
