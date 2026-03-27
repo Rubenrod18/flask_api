@@ -2019,18 +2019,18 @@ wcwidth = "*"
 
 [[package]]
 name = "proto-plus"
-version = "1.27.1"
+version = "1.27.2"
 description = "Beautiful, Pythonic protocol buffers"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "proto_plus-1.27.1-py3-none-any.whl", hash = "sha256:e4643061f3a4d0de092d62aa4ad09fa4756b2cbb89d4627f3985018216f9fefc"},
-    {file = "proto_plus-1.27.1.tar.gz", hash = "sha256:912a7460446625b792f6448bade9e55cd4e41e6ac10e27009ef71a7f317fa147"},
+    {file = "proto_plus-1.27.2-py3-none-any.whl", hash = "sha256:6432f75893d3b9e70b9c412f1d2f03f65b11fb164b793d14ae2ca01821d22718"},
+    {file = "proto_plus-1.27.2.tar.gz", hash = "sha256:b2adde53adadf75737c44d3dcb0104fde65250dfc83ad59168b4aa3e574b6a24"},
 ]
 
 [package.dependencies]
-protobuf = ">=3.19.0,<7.0.0"
+protobuf = ">=4.25.8,<8.0.0"
 
 [package.extras]
 testing = ["google-api-core (>=1.31.5)"]
