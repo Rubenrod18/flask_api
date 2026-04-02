@@ -1849,24 +1849,19 @@ tests = ["pytest", "simplejson"]
 
 [[package]]
 name = "marshmallow-sqlalchemy"
-version = "1.4.2"
+version = "1.5.0"
 description = "SQLAlchemy integration with the marshmallow (de)serialization library"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "marshmallow_sqlalchemy-1.4.2-py3-none-any.whl", hash = "sha256:65aee301c4601e76a2fdb02764a65c18913afba2a3506a326c625d13ab405b40"},
-    {file = "marshmallow_sqlalchemy-1.4.2.tar.gz", hash = "sha256:6410304bf98ec26ea35f3f9d3cee82e51fd093c434612add32a0bdcdb5668f7c"},
+    {file = "marshmallow_sqlalchemy-1.5.0-py3-none-any.whl", hash = "sha256:3865232672f3dd38c4d5e4e85fdedce76904200742c3594948a2d11d0af93258"},
+    {file = "marshmallow_sqlalchemy-1.5.0.tar.gz", hash = "sha256:e51192c204770645a2fab0d72f44f8789272eef75951f84b1608d6b4b0bfe0e6"},
 ]
 
 [package.dependencies]
 marshmallow = ">=3.18.0"
 SQLAlchemy = ">=1.4.40,<3.0"
-
-[package.extras]
-dev = ["marshmallow-sqlalchemy[tests]", "pre-commit (>=3.5,<5.0)", "tox"]
-docs = ["furo (==2024.8.6)", "sphinx (==8.2.3) ; python_version >= \"3.11\"", "sphinx-copybutton (==0.5.2)", "sphinx-design (==0.6.1)", "sphinx-issues (==5.0.0)", "sphinxext-opengraph (==0.10.0)"]
-tests = ["pytest (<9)", "pytest-lazy-fixtures"]
 
 [[package]]
 name = "mccabe"
