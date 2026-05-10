@@ -928,25 +928,22 @@ flask = "*"
 
 [[package]]
 name = "flask-marshmallow"
-version = "1.4.0"
+version = "1.5.0"
 description = "Flask + marshmallow for beautiful APIs"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "flask_marshmallow-1.4.0-py3-none-any.whl", hash = "sha256:b758fc2c428d0cbee6fd0ccf0d55524fe9e426a86a177dcc0fc8cd71ad4b7c59"},
-    {file = "flask_marshmallow-1.4.0.tar.gz", hash = "sha256:98c90a253052c72d2ddddc925539ac33bbd780c6fba86478ffe18e3b89d8b471"},
+    {file = "flask_marshmallow-1.5.0-py3-none-any.whl", hash = "sha256:99951c77e5654111ed733811c6dc9310bfb4c3688c78a9e76f80b5ae0b2279a6"},
+    {file = "flask_marshmallow-1.5.0.tar.gz", hash = "sha256:7c06b56e41647eccdb3cd57c25b109f19191b4c62509362bd64920cdf601a066"},
 ]
 
 [package.dependencies]
 Flask = ">=2.2"
-marshmallow = ">=3.0.0"
+marshmallow = ">=4.0.0"
 
 [package.extras]
-dev = ["flask-marshmallow[tests]", "pre-commit (>=4.5,<5.0)", "tox"]
-docs = ["Sphinx (==9.1.0)", "marshmallow-sqlalchemy (>=0.19.0)", "sphinx-issues (==5.0.1)"]
-sqlalchemy = ["flask-sqlalchemy (>=3.0.0)", "marshmallow-sqlalchemy (>=0.29.0)"]
-tests = ["flask-marshmallow[sqlalchemy]", "pytest"]
+sqlalchemy = ["flask-sqlalchemy (>=3.0.0)", "marshmallow-sqlalchemy (>=1.4.0)"]
 
 [[package]]
 name = "flask-migrate"
@@ -2887,4 +2884,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4"
-content-hash = "831b56ca52237823efe969169ea934807e497f35ef8a8f04069601c14724c361"
+content-hash = "5ce6793c032e1a08177abe5b3b5e4bf27988b2bd1a4195a0ee070221420ed75d"
