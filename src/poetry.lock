@@ -1149,14 +1149,14 @@ uritemplate = ">=3.0.1,<5"
 
 [[package]]
 name = "google-auth"
-version = "2.50.0"
+version = "2.53.0"
 description = "Google Authentication Library"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "google_auth-2.50.0-py3-none-any.whl", hash = "sha256:04382175e28b94f49694977f0a792688b59a668def1499e9d8de996dc9ce5b15"},
-    {file = "google_auth-2.50.0.tar.gz", hash = "sha256:f35eafb191195328e8ce10a7883970877e7aeb49c2bfaa54aa0e394316d353d0"},
+    {file = "google_auth-2.53.0-py3-none-any.whl", hash = "sha256:6e7449917c599b35126a99ec268ec6880301f2fea41dce198fe8fd83ff642b68"},
+    {file = "google_auth-2.53.0.tar.gz", hash = "sha256:e7e6aa16f6bee7b2b264830fd04f08087a1d5a836df516251a5d15327b246c9c"},
 ]
 
 [package.dependencies]
@@ -1164,7 +1164,7 @@ cryptography = ">=38.0.3"
 pyasn1-modules = ">=0.2.1"
 
 [package.extras]
-aiohttp = ["aiohttp (>=3.6.2,<4.0.0)", "requests (>=2.20.0,<3.0.0)"]
+aiohttp = ["aiohttp (>=3.8.0,<4.0.0)", "requests (>=2.20.0,<3.0.0)"]
 cryptography = ["cryptography (>=38.0.3)"]
 enterprise-cert = ["pyopenssl"]
 pyjwt = ["pyjwt (>=2.0)"]
@@ -1172,7 +1172,7 @@ pyopenssl = ["pyopenssl (>=20.0.0)"]
 reauth = ["pyu2f (>=0.1.5)"]
 requests = ["requests (>=2.20.0,<3.0.0)"]
 rsa = ["rsa (>=3.1.4,<5)"]
-testing = ["aiohttp (<3.10.0)", "aiohttp (>=3.6.2,<4.0.0)", "aioresponses", "flask", "freezegun", "grpcio", "packaging", "pyjwt (>=2.0)", "pyopenssl (<24.3.0)", "pyopenssl (>=20.0.0)", "pytest", "pytest-asyncio", "pytest-cov", "pytest-localserver", "pyu2f (>=0.1.5)", "requests (>=2.20.0,<3.0.0)", "responses", "urllib3"]
+testing = ["aiohttp (<3.10.0)", "aiohttp (>=3.8.0,<4.0.0)", "aioresponses", "flask", "freezegun", "grpcio", "packaging", "pyjwt (>=2.0)", "pyopenssl (<24.3.0)", "pyopenssl (>=20.0.0)", "pytest", "pytest-asyncio", "pytest-cov", "pytest-localserver", "pyu2f (>=0.1.5)", "requests (>=2.20.0,<3.0.0)", "responses", "urllib3"]
 urllib3 = ["packaging", "urllib3"]
 
 [[package]]
