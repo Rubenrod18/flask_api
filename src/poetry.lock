@@ -1090,14 +1090,14 @@ test = ["Faker (==2.0.0)", "backports.zoneinfo ; python_version < \"3.9\"", "bli
 
 [[package]]
 name = "flask-security-too"
-version = "5.9.0"
+version = "5.9.1"
 description = "Quickly add security features to your Flask application."
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "flask_security_too-5.9.0-py3-none-any.whl", hash = "sha256:675caf9e621271ff551bcffb3b80a95f2ddf489807f667a2013b6d12a54c81a1"},
-    {file = "flask_security_too-5.9.0.tar.gz", hash = "sha256:116db335c35e46c60db3cb7efbf507ee13b24a70076ba095b3c1e2fc6945e92b"},
+    {file = "flask_security_too-5.9.1-py3-none-any.whl", hash = "sha256:77b6b3a48eb2936ae7395a6340211fc323ef3d0221ff6363fca54fc0b5c2b394"},
+    {file = "flask_security_too-5.9.1.tar.gz", hash = "sha256:3e4eed39037061efaec370705d81687d30e5a26641944bc08d3524db9ba505e8"},
 ]
 
 [package.dependencies]
@@ -3120,4 +3120,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4"
-content-hash = "3ab5d95c096e744ed96d2cdd37976a790b1ada4f389400c73d09da357b4a87f2"
+content-hash = "f3bec821cd070fcf8223d5eb827e41a26a0ff5822457b2fee4f4bae36ae7d217"
