@@ -2431,18 +2431,18 @@ six = ">=1.5"
 
 [[package]]
 name = "python-discovery"
-version = "1.6.1"
+version = "1.6.3"
 description = "Python interpreter discovery"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "python_discovery-1.6.1-py3-none-any.whl", hash = "sha256:d43fcdef879fe795352bd13ccf8d185ba5a9f86f36cfcd00529f596e737442b3"},
-    {file = "python_discovery-1.6.1.tar.gz", hash = "sha256:cf87d3627dfb4412437fdd5b13eae402607722998d21567993aedbc59b23c15e"},
+    {file = "python_discovery-1.6.3-py3-none-any.whl", hash = "sha256:cb7654125e3dcb594269a6feb56ac693f1f13b7c654493a93eba72dc22d18034"},
+    {file = "python_discovery-1.6.3.tar.gz", hash = "sha256:a62b301d96cf5489cb96ab023b32e068421867fdd5df2e42eece877869047fa2"},
 ]
 
 [package.dependencies]
-filelock = ">=3.15.4"
+filelock = ">=3.16.1"
 
 [[package]]
 name = "python-docx"
