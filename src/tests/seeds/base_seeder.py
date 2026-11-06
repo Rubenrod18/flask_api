@@ -20,6 +20,10 @@ class FactorySeeder(BaseSeeder):
         super().__init__(name, priority)
         self.factory = factory
 
+    @seed_actions
+    def seed(self, rows: int = None):
+        raise NotImplementedError
+
 
 class RepositorySeeder:
     """
